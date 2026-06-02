@@ -2,14 +2,15 @@
 
 ## Java Packages
 
-- Root package: none; use direct module packages under `src/java`.
-- Servlet controllers: `controller`.
-- DAOs: `dao`.
-- DTOs: `dto`.
-- Models: `model`.
-- Services: `service`.
-- Utilities: `util`.
-- Future JSON API code, if implemented, should use `api`, `api.action`, and `api.dto`.
+- Source root: `src/java`.
+- Shared infrastructure: `common`, with subpackages such as `common.util`, `common.dto`, and `common.web`.
+- Feature packages use lowercase names, for example `product`, `category`, `customer`, `sales`, and `payment`.
+- Feature controllers live under `<feature>.controller`.
+- Feature DAOs live under `<feature>.dao`.
+- Feature DTOs live under `<feature>.dto` when needed.
+- Feature models live under `<feature>.model`.
+- Feature services live under `<feature>.service`.
+- Future JSON API code, if implemented, should use `api`, `api.action`, and `api.dto` unless a feature-specific API convention is approved.
 - Future servlet filters, if implemented, should use `filter`.
 
 ## Java Classes
@@ -41,6 +42,7 @@
 - JSP files use lowercase kebab-case where names contain multiple words, for example `role-selection.jsp`.
 - Shared JSP fragments live under `web/WEB-INF/views/common`.
 - Future auth JSPs should live under `web/WEB-INF/views/auth`.
+- Future feature JSPs may live under `web/WEB-INF/views/<feature>`.
 
 ## Database Naming
 

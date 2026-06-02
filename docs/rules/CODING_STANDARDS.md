@@ -2,7 +2,8 @@
 
 ## Java Standards
 
-- Use direct Java packages under `src/java`: `controller`, `dao`, `dto`, `model`, `service`, and `util`.
+- Use feature-owned Java packages under `src/java`, for example `product.controller`, `product.dao`, `product.model`, and `product.service`.
+- Use `common` only for cross-feature infrastructure, shared DTOs, or focused utilities.
 - Keep servlet methods focused on request handling and delegation.
 - Keep DAO methods focused on a single persistence operation.
 - Use `PreparedStatement` for all SQL with user input.
@@ -11,6 +12,13 @@
 - Prefer clear, direct code over premature abstractions.
 - Do not swallow exceptions silently. If no logging framework exists, return safe failure values and plan logging improvement.
 - Save Java files as UTF-8 without BOM.
+
+## Package Ownership Standards
+
+- Developers should primarily edit the package for their assigned feature.
+- Do not modify another feature package without coordination or a documented reason.
+- Do not move code into `common` unless at least two real features need it or the code is application infrastructure.
+- Do not call another feature's DAO directly from a controller without an approved workflow plan.
 
 ## JSP Standards
 
@@ -39,7 +47,7 @@
 
 ## Service Standards
 
-- The `service` package currently contains workflow skeletons.
+- Feature service packages currently contain workflow skeletons.
 - Add real service behavior only for multi-DAO workflows, transaction boundaries, or logic reused by multiple controllers/future APIs.
 - Services must not depend on JSPs or servlet request/response/session objects.
 
