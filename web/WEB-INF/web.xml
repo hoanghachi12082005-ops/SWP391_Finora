@@ -27,6 +27,15 @@
     </listener>
 
     <servlet>
+        <servlet-name>CategoryManagementServlet</servlet-name>
+        <servlet-class>category.controller.CategoryManagementServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CategoryManagementServlet</servlet-name>
+        <url-pattern>/category-management</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>HomeDashboardServlet</servlet-name>
         <servlet-class>dashboard.controller.HomeDashboardServlet</servlet-class>
     </servlet>
@@ -45,15 +54,6 @@
     </servlet-mapping>
 
     <servlet>
-        <servlet-name>CategoryManagementServlet</servlet-name>
-        <servlet-class>category.controller.CategoryManagementServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>CategoryManagementServlet</servlet-name>
-        <url-pattern>/category-management</url-pattern>
-    </servlet-mapping>
-
-    <servlet>
         <servlet-name>SkeletonModuleServlet</servlet-name>
         <servlet-class>foundation.controller.SkeletonModuleServlet</servlet-class>
     </servlet>
@@ -69,8 +69,6 @@
         <url-pattern>/branch-management/*</url-pattern>
         <url-pattern>/product-management</url-pattern>
         <url-pattern>/product-management/*</url-pattern>
-        <url-pattern>/category-management</url-pattern>
-        <url-pattern>/category-management/*</url-pattern>
         <url-pattern>/supplier-management</url-pattern>
         <url-pattern>/supplier-management/*</url-pattern>
         <url-pattern>/purchase-management</url-pattern>
