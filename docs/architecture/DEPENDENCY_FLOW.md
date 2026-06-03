@@ -2,22 +2,23 @@
 
 ## Allowed Direction
 
-Dependencies must flow from web entry points toward persistence helpers. DAOs stay isolated from servlet/JSP concerns.
+Dependencies must flow from web entry points toward feature logic and persistence helpers. DAOs stay isolated from servlet/JSP concerns.
 
 ```text
 JSP views
   ↑ request attributes/session attributes
-Controllers
-  → DTOs / Models
-  → focused Utilities
-  → DAOs
-Services (when real workflows are implemented)
-  → DAOs
-  → Models / DTOs
-DAOs
-  → DatabaseUtil
-  → Models
-DatabaseUtil
+<feature>.controller
+  → <feature>.dto / <feature>.model
+  → common utilities
+  → <feature>.dao
+<feature>.service (when real workflows are implemented)
+  → <feature>.dao
+  → approved related feature DAO/service only for planned workflows
+  → <feature>.model / <feature>.dto
+<feature>.dao
+  → common.util.DatabaseUtil
+  → <feature>.model
+common.util.DatabaseUtil
   → JDBC driver
 ```
 
@@ -25,12 +26,14 @@ DatabaseUtil
 
 | From | May Depend On |
 | --- | --- |
-| `controller` | `dao`, `dto`, `model`, focused `util`, `service` only for real workflows, servlet APIs |
-| `service` | `dao`, `dto`, `model`, focused `util`, Java standard APIs |
-| `dao` | `model`, `util.DatabaseUtil`, JDBC APIs |
-| `dto` | Java standard library and other DTOs only |
-| `model` | Java standard library only |
-| `util` | Java/Jakarta/JDBC libraries as needed for focused cross-cutting helpers |
+| `<feature>.controller` | Same feature `dao`, `dto`, `model`, focused `common.util`, same feature `service`, servlet APIs |
+| `<feature>.service` | Same feature `dao`, `dto`, `model`, focused `common.util`, Java standard APIs, approved related feature DAOs/services for planned workflows |
+| `<feature>.dao` | Same feature `model`, `common.util.DatabaseUtil`, JDBC APIs |
+| `<feature>.dto` | Java standard library and other DTOs only |
+| `<feature>.model` | Java standard library only |
+| `common.util` | Java/Jakarta/JDBC libraries as needed for focused cross-cutting helpers |
+| `common.dto` | Java standard library and other shared DTOs only |
+| `common.web` | Jakarta listener/web startup APIs and approved shared utilities |
 | `JSP` | request/session attributes, JSP/JSTL/taglibs when available, static assets |
 
 Future `api` or `filter` packages must follow the same inward dependency rule and be documented when introduced.
@@ -44,16 +47,17 @@ Future `api` or `filter` packages must follow the same inward dependency rule an
 - Controllers must not contain raw JDBC calls.
 - Utility classes must not become hidden service layers.
 - Service classes must not depend on JSP or servlet request/response objects.
+- Feature controllers must not directly call another feature's DAO without an approved plan.
 
 ## Protected Dependency Rules
 
 - Authentication/session flow depends on session attributes and role-selection behavior. Changes must preserve role selection and protected route behavior when implemented.
-- Database access depends on `DatabaseUtil`. Credential or connection changes affect every DAO.
+- Database access depends on `common.util.DatabaseUtil`. Credential or connection changes affect every DAO.
 - Build/runtime compatibility depends on `build.xml`, `nbproject/project.properties`, `web.xml`, and Tomcat 10.1 APIs.
 
 ## Service Layer Policy
 
-The `service` package currently contains skeletons for future workflows. Do not add real service behavior for a single controller calling a single DAO.
+Feature service packages currently contain skeletons for future workflows. Do not add real service behavior for a single controller calling a single DAO.
 
 Introduce or expand service logic only when at least one condition is true:
 
