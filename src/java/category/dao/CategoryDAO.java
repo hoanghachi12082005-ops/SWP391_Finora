@@ -186,7 +186,7 @@ public class CategoryDAO {
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             
             setParameters(stmt, params);
-            stmt.setInt(params.size() + 1, offset);
+            stmt.setInt(params.size() + 1, offset); 
             stmt.setInt(params.size() + 2, limit);
             
             try (ResultSet rs = stmt.executeQuery()) {

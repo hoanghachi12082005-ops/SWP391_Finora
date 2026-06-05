@@ -6,14 +6,15 @@ This file is the operating contract for every AI agent and developer working in 
 
 - Project: KiotRetail
 - Repository/runtime name: SWP391_Finora
-- Type: NetBeans Ant Java WAR web application
+- Type: Maven Java WAR web application
 - Runtime: Apache Tomcat 10.1 with Jakarta Servlet/JSP APIs
 - Java level: JDK 17
+- Build System: Maven (pom.xml)
 - Architecture style: Layered MVC with JSP views, servlet controllers, DAO-based JDBC persistence, SQL Server schema scripts, and lightweight development module routing.
 - Primary Java packages: `controller`, `dao`, `dto`, `model`, `service`, `util`
 - Java source root: `src/java`
 - Web source root: `web`
-- Generated outputs: `build/`, `dist/`
+- Generated outputs: `target/`
 
 ## Mandatory First Step
 
@@ -46,7 +47,7 @@ Treat the following as protected modules:
 - Authorization: `RolePermissionUtil`, role-based session attributes, protected management/POS URL mappings when implemented.
 - Database infrastructure: `DatabaseUtil`, `web.xml` database parameters, SQL schema files under `sql`.
 - Payment and finance schema areas: `Payments`, `FinanceTransaction`, order/payment tables, and future payment service code.
-- Shared infrastructure: Tomcat/NetBeans Ant build configuration, `build.xml`, `nbproject/project.properties`, `web.xml`, and `context.xml`.
+- Shared infrastructure: Tomcat/Maven build configuration, `pom.xml`, `web.xml`, and `context.xml`.
 
 Do not modify protected areas unless the user explicitly asks or the active task cannot be completed safely without doing so. If modification is required, document impact and keep the change minimal.
 
@@ -58,7 +59,7 @@ Do not modify protected areas unless the user explicitly asks or the active task
 - Do not put SQL in servlets, JSPs, filters, API actions, or service skeletons.
 - Do not access request/session objects from DAOs.
 - Do not hardcode secrets, passwords, tokens, or production credentials.
-- Do not edit `build/`, `dist/`, `.git`, IDE private state, or generated artifacts.
+- Do not edit `build/`, `dist/`, `target/`, `.git`, IDE private state, or generated artifacts.
 - Keep naming consistent with existing package conventions.
 - Keep methods small enough to review and test.
 - Update documentation when architecture, boundaries, workflow, status, or patterns change.
@@ -101,13 +102,13 @@ Do not store temporary task noise.
 
 For source changes, run the narrowest useful verification first.
 
-Preferred full project verification when Ant is available:
+Preferred full project verification with Maven:
 
 ```powershell
-ant clean dist
+mvn clean package -DskipTests
 ```
 
-If Ant is not available, use a Java compile smoke test with the local Tomcat jars:
+If Maven is not available, use a Java compile smoke test with the local Tomcat jars:
 
 ```powershell
 javac -encoding UTF-8 -cp "C:/Tomcat 10.1_Tomcat/lib/servlet-api.jar;C:/Tomcat 10.1_Tomcat/lib/jsp-api.jar;C:/Tomcat 10.1_Tomcat/lib/el-api.jar" -d build/check-classes <all java files>
@@ -115,7 +116,7 @@ javac -encoding UTF-8 -cp "C:/Tomcat 10.1_Tomcat/lib/servlet-api.jar;C:/Tomcat 1
 
 Remove temporary compile output such as `build/check-classes` after the smoke test unless it is needed for debugging.
 
-For servlet/JSP/config changes, also manually verify in Tomcat or NetBeans when possible. If verification cannot run locally, state the reason and residual risk.
+For servlet/JSP/config changes, also manually verify in Tomcat or IDE when possible. If verification cannot run locally, state the reason and residual risk.
 
 ## Documentation Map
 
