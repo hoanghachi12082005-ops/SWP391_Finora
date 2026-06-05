@@ -1,0 +1,59 @@
+# Build outputs
+/build/
+/dist/
+/out/
+/target/
+
+# NetBeans generated/private files
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
+
+# Java compiled artifacts
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# Logs
+*.log
+logs/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE/editor local state
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+*.properties.local
+
+# Temporary/cache files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.cache/
+
+# Dependency caches
+.m2/
+.gradle/
+
+# Ant temporary files
+.ant-targets-build.xml
