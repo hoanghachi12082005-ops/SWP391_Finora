@@ -13,12 +13,18 @@ SWP391_Finora/
 ├── src/
 │   ├── conf/
 │   └── java/
-│       ├── controller/
-│       ├── dao/
-│       ├── dto/
-│       ├── model/
-│       ├── service/
-│       └── util/
+│       ├── common/
+│       ├── dashboard/
+│       ├── foundation/
+│       ├── auth/
+│       ├── product/
+│       ├── category/
+│       ├── customer/
+│       ├── supplier/
+│       ├── sales/
+│       ├── order/
+│       ├── payment/
+│       └── ... feature packages
 ├── test/
 ├── web/
 │   ├── META-INF/
@@ -35,16 +41,36 @@ SWP391_Finora/
 
 ## Java Source Structure
 
+Java source uses feature-owned packages under `src/java`.
+
 | Path | Purpose |
 | --- | --- |
-| `src/java/controller` | Servlet controllers for server-rendered page flows |
-| `src/java/dao` | JDBC data access objects |
-| `src/java/dto` | View/module DTOs and other non-domain data carriers |
-| `src/java/model` | Domain entity/data carrier classes |
-| `src/java/service` | Service skeletons and future multi-DAO workflow services |
-| `src/java/util` | Focused utility classes used across layers |
+| `src/java/common` | Shared DTOs, utilities, and web startup infrastructure |
+| `src/java/dashboard` | Development dashboard controller |
+| `src/java/foundation` | Shared skeleton module controller |
+| `src/java/auth` | Authentication, authorization, role-selection source |
+| `src/java/product` | Product controller, DAO, model, service |
+| `src/java/category` | Category controller, DAO, model, service |
+| `src/java/customer` | Customer controller, DAO, model, service |
+| `src/java/supplier` | Supplier controller, DAO, model, service |
+| `src/java/sales` | Sales/POS controller and service skeletons |
+| `src/java/order` | Order and order-detail DAO/model/controller/service source |
+| `src/java/payment` | Payment controller, DAO, model, service |
+| `src/java/finance` | Finance transaction controller, DAO, model, service |
+| `src/java/inventory` | Inventory controller and service skeletons |
+| `src/java/warehouse` | Warehouse and warehouse transaction source |
+| `src/java/stocktransfer` | Stock transfer controller, DAO, model, service |
+| Other feature packages | Branch, employee, invoice, report, website, audit, notification, system config |
 
-No root package such as `com.kiotretail` is used. Java packages are direct module packages such as `controller`, `dao`, and `model`.
+Within each feature package, use subpackages as needed:
+
+```text
+<feature>/controller
+<feature>/dao
+<feature>/model
+<feature>/dto
+<feature>/service
+```
 
 ## Web Structure
 
@@ -56,6 +82,8 @@ No root package such as `com.kiotretail` is used. Java packages are direct modul
 | `web/assets` | CSS, JavaScript, images, and static assets |
 | `web/META-INF/context.xml` | Tomcat context path configuration |
 | `web/index.html` | Welcome/static entry page |
+
+JSPs may be moved into feature view folders gradually when each feature gets a real UI. Do not mass-move JSPs unless the feature plan requires it.
 
 ## Build Structure
 
@@ -72,31 +100,6 @@ No root package such as `com.kiotretail` is used. Java packages are direct modul
 | Path | Purpose |
 | --- | --- |
 | `sql/DBFinora.sql` | Primary SQL Server database creation and seed script |
-
-## Documentation Structure
-
-The governance documentation lives under `docs`:
-
-```text
-docs/
-├── api/
-├── architecture/
-├── backend/
-├── database/
-├── decisions/
-├── devops/
-├── features/
-├── frontend/
-├── modules/
-├── patterns/
-├── planning/
-├── references/
-├── rules/
-├── security/
-├── status/
-├── testing/
-└── workflows/
-```
 
 ## Generated And Ignored Structure
 

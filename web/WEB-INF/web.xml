@@ -23,12 +23,21 @@
     </context-param>
 
     <listener>
-        <listener-class>controller.AppStartupListener</listener-class>
+        <listener-class>common.web.AppStartupListener</listener-class>
     </listener>
 
     <servlet>
+        <servlet-name>CategoryManagementServlet</servlet-name>
+        <servlet-class>category.controller.CategoryManagementServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CategoryManagementServlet</servlet-name>
+        <url-pattern>/category-management</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>HomeDashboardServlet</servlet-name>
-        <servlet-class>controller.HomeDashboardServlet</servlet-class>
+        <servlet-class>dashboard.controller.HomeDashboardServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>HomeDashboardServlet</servlet-name>
@@ -37,7 +46,7 @@
 
     <servlet>
         <servlet-name>RoleSelectionServlet</servlet-name>
-        <servlet-class>controller.RoleSelectionServlet</servlet-class>
+        <servlet-class>auth.controller.RoleSelectionServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>RoleSelectionServlet</servlet-name>
@@ -56,7 +65,7 @@
 
     <servlet>
         <servlet-name>SkeletonModuleServlet</servlet-name>
-        <servlet-class>controller.SkeletonModuleServlet</servlet-class>
+        <servlet-class>foundation.controller.SkeletonModuleServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>SkeletonModuleServlet</servlet-name>
@@ -68,8 +77,7 @@
         <url-pattern>/authorization/*</url-pattern>
         <url-pattern>/branch-management</url-pattern>
         <url-pattern>/branch-management/*</url-pattern>
-        <url-pattern>/category-management</url-pattern>
-        <url-pattern>/category-management/*</url-pattern>
+
         <url-pattern>/supplier-management</url-pattern>
         <url-pattern>/supplier-management/*</url-pattern>
         <url-pattern>/purchase-management</url-pattern>
