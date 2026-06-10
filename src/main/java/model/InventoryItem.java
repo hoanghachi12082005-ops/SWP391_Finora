@@ -1,4 +1,4 @@
-package com.storemanagement.model;
+package model;
 
     public class InventoryItem extends BaseModel {
     private int productId;

@@ -1,4 +1,4 @@
-package com.storemanagement.util.user;
+package       util.user;
 
 public final class UserStatusUtil {
     private UserStatusUtil() {}

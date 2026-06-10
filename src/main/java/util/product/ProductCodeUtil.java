@@ -1,4 +1,4 @@
-package com.storemanagement.util.product;
+package util.product;
 
 public final class ProductCodeUtil {
     private ProductCodeUtil() {}

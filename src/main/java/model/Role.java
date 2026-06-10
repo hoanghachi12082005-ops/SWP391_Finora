@@ -1,4 +1,4 @@
-package com.storemanagement.model;
+package model;
 
     public class Role extends BaseModel {
     private String description;

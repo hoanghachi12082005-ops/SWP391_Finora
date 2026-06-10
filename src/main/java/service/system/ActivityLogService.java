@@ -1,12 +1,12 @@
-package com.storemanagement.service.system;
-
-import com.storemanagement.service.common.GenericService;
-
-import com.storemanagement.dao.system.ActivityLogDAO;
-import com.storemanagement.model.ActivityLog;
-
-public class ActivityLogService extends GenericService<ActivityLog> {
-    public ActivityLogService() {
-        super(new ActivityLogDAO());
-    }
-}
+//package       service.system;
+//
+//import       service.common.GenericService;
+//
+//import       dao.system.ActivityLogDAO;
+//import       model.ActivityLog;
+//
+//public class ActivityLogService extends GenericService<ActivityLog> {
+//    public ActivityLogService() {
+//        super(new ActivityLogDAO());
+//    }
+//}

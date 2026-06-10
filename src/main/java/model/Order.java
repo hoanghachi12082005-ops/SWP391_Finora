@@ -1,4 +1,4 @@
-package com.storemanagement.model;
+package model;
 
     public class Order extends BaseModel {
     private int customerId;

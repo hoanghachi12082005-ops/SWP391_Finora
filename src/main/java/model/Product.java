@@ -1,4 +1,4 @@
-package com.storemanagement.model;
+package model;
 
     public class Product extends BaseModel {
     private String sku;

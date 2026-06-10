@@ -1,4 +1,4 @@
-package com.storemanagement.model;
+package model;
 
     public class PurchaseOrder extends BaseModel {
     private int supplierId;

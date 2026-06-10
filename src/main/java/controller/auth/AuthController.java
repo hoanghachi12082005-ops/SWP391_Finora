@@ -1,8 +1,8 @@
-package com.storemanagement.controller.auth;
+package controller.auth;
 
 import com.storemanagement.controller.common.BaseController;
 
-import com.storemanagement.model.User;
+import model.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,13 +16,19 @@ public class AuthController extends BaseController {
             throws ServletException, IOException {
         String path = request.getServletPath();
         switch (path) {
-            case "/register": forward(request, response, "auth/register"); break;
-            case "/forgot-password": forward(request, response, "auth/forgot-password"); break;
+            case "/register": 
+                forward(request, response, "auth/register"); 
+                break;
+            case "/forgot-password": 
+                forward(request, response, "auth/forgot-password"); 
+                break;
             case "/logout":
                 request.getSession().invalidate();
                 redirect(request, response, "/login");
                 break;
-            default: forward(request, response, "auth/login"); break;
+            default: 
+                forward(request, response, "auth/login"); 
+                break;
         }
     }
 

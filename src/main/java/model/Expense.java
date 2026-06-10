@@ -1,4 +1,4 @@
-package com.storemanagement.model;
+package model;
 
     public class Expense extends BaseModel {
     private double amount;

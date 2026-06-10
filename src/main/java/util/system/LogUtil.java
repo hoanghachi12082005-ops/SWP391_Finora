@@ -1,4 +1,4 @@
-package com.storemanagement.util.system;
+package       util.system;
 
 public final class LogUtil {
     private LogUtil() {}
