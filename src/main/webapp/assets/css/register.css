@@ -1,0 +1,509 @@
+:root{
+    --primary:#93000b;
+    --primary-hover:#7d0009;
+    --primary-light:#fff1f2;
+
+
+    --text-dark:#111827;
+    --text-muted:#6b7280;
+
+    --border:#d1d5db;
+    --border-light:#e5e7eb;
+
+    --white:#ffffff;
+    --bg-light:#f8fafc;
+
+    --shadow-sm:0 4px 12px rgba(0,0,0,.05);
+    --shadow-md:0 12px 32px rgba(0,0,0,.08);
+
+    --radius:12px;
+
+
+}
+
+/* ======================================
+GLOBAL
+====================================== */
+
+html,
+body{
+    height:100%;
+}
+
+body{
+    font-family:'Manrope',sans-serif;
+    background:#ffffff;
+    overflow-x:hidden;
+}
+
+/* ======================================
+LAYOUT
+====================================== */
+
+.register-container{
+    background:#ffffff;
+}
+
+.register-left{
+    position:relative;
+
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:5rem;
+
+    background:
+        url("https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1200")
+        center center / cover no-repeat;
+
+
+}
+
+.register-overlay{
+    position:absolute;
+    inset:0;
+
+
+    background:linear-gradient(
+        135deg,
+        rgba(109,0,8,.94),
+        rgba(147,0,11,.97)
+        );
+
+
+}
+
+.register-left-content{
+    position:relative;
+    z-index:2;
+
+
+    max-width:520px;
+    color:#fff;
+
+
+}
+
+.register-left-content h1{
+    font-size:3.2rem;
+    font-weight:800;
+    line-height:1.2;
+    margin-bottom:1.5rem;
+}
+
+.register-left-content p{
+    font-size:1.1rem;
+    line-height:1.7;
+    opacity:.85;
+}
+
+.register-right{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+
+    padding:3rem 2rem;
+    background:#fff;
+
+
+}
+
+.register-card{
+    width:100%;
+    max-width:1000px;
+}
+
+/* ======================================
+BRAND
+====================================== */
+
+.brand-icon{
+    width:70px;
+    height:70px;
+
+
+    margin:0 auto 1rem;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:16px;
+
+    background:var(--primary-light);
+    border:1px solid #ffe4e6;
+
+
+}
+
+.brand-icon .material-icons{
+    font-size:36px;
+    color:var(--primary);
+}
+
+.brand-title{
+    font-size:2.2rem;
+    font-weight:800;
+    color:var(--text-dark);
+}
+
+/* ======================================
+STEP
+====================================== */
+
+.wizard-step{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+
+    margin-bottom:2rem;
+
+
+}
+
+.step-item{
+    width:42px;
+    height:42px;
+
+
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-weight:700;
+
+    background:#f1f5f9;
+    color:#64748b;
+
+    transition:.3s ease;
+
+
+}
+
+.step-item.active{
+    background:var(--primary);
+    color:#fff;
+    transform:scale(1.05);
+}
+
+.step-line{
+    width:60px;
+    height:2px;
+
+
+    background:#e5e7eb;
+
+
+}
+
+/* ======================================
+STEP CONTENT
+====================================== */
+
+.wizard-content{
+    display:none;
+}
+
+.wizard-content.active{
+    display:block;
+    animation:fadeIn .3s ease;
+}
+
+@keyframes fadeIn{
+
+
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+
+
+}
+
+/* ======================================
+FORM
+====================================== */
+
+.form-label{
+    font-weight:600;
+    color:var(--text-dark);
+    margin-bottom:.5rem;
+}
+
+.custom-input{
+    height:52px;
+
+
+    border-radius:10px !important;
+    border:1px solid var(--border);
+
+    box-shadow:none !important;
+
+
+}
+
+.custom-input:focus{
+    border-color:var(--primary) !important;
+
+
+    box-shadow:
+        0 0 0 4px rgba(147,0,11,.08) !important;
+
+
+}
+
+.form-select{
+    cursor:pointer;
+}
+
+.form-check-label{
+    color:var(--text-muted);
+}
+
+/* ======================================
+BUTTON
+====================================== */
+
+.btn-finora{
+    background:var(--primary);
+    color:#fff;
+
+
+    border:1px solid var(--primary);
+
+    border-radius:10px;
+
+    padding:11px 24px;
+    min-width:150px;
+
+    font-weight:600;
+
+    transition:.25s;
+
+
+}
+
+.btn-finora:hover{
+    background:var(--primary-hover);
+    border-color:var(--primary-hover);
+
+
+    color:#fff;
+
+    transform:translateY(-1px);
+
+
+}
+
+.btn-finora:focus{
+    box-shadow:
+        0 0 0 4px rgba(147,0,11,.15);
+}
+
+/* ======================================
+INDUSTRY
+====================================== */
+
+.industry-category{
+    background:#fff;
+
+
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+
+    padding:20px;
+
+    height:100%;
+
+
+}
+
+.industry-header{
+    display:flex;
+    align-items:center;
+
+
+    gap:14px;
+    margin-bottom:20px;
+
+
+}
+
+.industry-header h4{
+    margin:0;
+
+
+    font-size:1.3rem;
+    font-weight:700;
+
+    color:#111827;
+
+
+}
+
+.industry-icon{
+    width:54px;
+    height:54px;
+
+
+    border-radius:14px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:#f3f4f6;
+
+
+}
+
+.industry-icon .material-icons{
+    color:#6366f1;
+    font-size:28px;
+}
+
+.industry-list{
+    display:flex;
+    flex-direction:column;
+
+
+    max-height:520px;
+    overflow-y:auto;
+
+
+}
+
+.industry-item{
+    width:100%;
+
+
+    border:none;
+    border-top:1px solid #e5e7eb;
+
+    background:#fff;
+
+    padding:14px 12px;
+
+    display:flex;
+    align-items:center;
+
+    gap:12px;
+
+    text-align:left;
+
+    font-size:16px;
+    font-weight:600;
+
+    transition:.25s;
+
+
+}
+
+.industry-item:hover
+
+.industry-item.selected{
+    background:#fff1f2;
+    color:#93000b;
+    font-weight:700;
+}
+
+.industry-item .material-icons{
+    color:#6b7280;
+}
+
+/* ======================================
+PASSWORD
+====================================== */
+
+.input-group .btn{
+    border-radius:0 10px 10px 0;
+}
+
+/* ======================================
+RESULT
+====================================== */
+
+.success-icon{
+    width:90px;
+    height:90px;
+
+
+    margin:auto;
+
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:#dcfce7;
+
+    color:#16a34a;
+
+    font-size:42px;
+    font-weight:700;
+
+
+}
+
+.result-card{
+    background:#f8fafc;
+
+
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+
+    padding:20px;
+
+    text-align:left;
+
+
+}
+
+.result-card div{
+    padding:12px 0;
+
+
+    border-bottom:1px solid #e5e7eb;
+
+
+}
+
+.result-card div:last-child{
+    border-bottom:none;
+}
+
+.result-card strong{
+    color:#111827;
+}
+
+.result-card span{
+    color:#64748b;
+}
+
+/* ======================================
+SCROLLBAR
+====================================== */
+
+::-webkit-scrollbar{
+    width:8px;
+}
+
+::-webkit-scrollbar-thumb{
+    background:#cbd5e1;
+    border-radius:20px;
+}
+
+::-webkit-scrollbar-thumb:hover
+
