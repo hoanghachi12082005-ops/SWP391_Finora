@@ -37,7 +37,7 @@
                         <span class="material-icons">store</span>
                     </div>
 
-                    <h2 class="brand-title">KiotRetail</h2>
+                    <h2 class="brand-title">FinoraRetail</h2>
 
                     <p class="text-muted">
                         Đăng nhập để truy cập hệ thống quản trị

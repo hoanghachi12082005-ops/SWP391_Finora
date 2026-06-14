@@ -123,7 +123,7 @@
                     </div>
 
                     <button type="submit" class="btn btn-finora w-100">
-                        Gửi mã OTP
+                        Cấp lại mật khẩu
                     </button>
 
                 </form>

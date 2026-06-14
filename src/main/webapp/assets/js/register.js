@@ -362,58 +362,21 @@ SUBMIT
 
 function submitRegister() {
 
-    const shopName =
-            document.getElementById("shopName");
-
-    const password =
-            document.getElementById("password");
-
-    const industry =
-            document.getElementById("selectedIndustry");
+    const shopName = document.getElementById("shopName");
+    const password = document.getElementById("password");
 
     if (!shopName || shopName.value.trim() === "") {
-
         alert("Vui lòng nhập tên cửa hàng.");
-
-        shopName.focus();
-
         return;
     }
 
     if (!password || password.value.trim().length < 6) {
-
         alert("Mật khẩu tối thiểu 6 ký tự.");
-
-        password.focus();
-
         return;
     }
 
-    /*
-     DEMO ACCOUNT
-     */
-    const username =
-            shopName.value
-                    .trim()
-                    .toLowerCase()
-                    .replace(/\s+/g, "_");
-
-    /*
-     HIỂN THỊ KẾT QUẢ
-     */
-    document.getElementById("resShopName")
-            .innerText = shopName.value;
-
-    document.getElementById("resUsername")
-            .innerText = username;
-
-    document.getElementById("resPassword")
-            .innerText = password.value;
-
-    showStep(4);
-
+    document.getElementById("registerForm").submit();
 }
-
 /*
 ====================================================
 BUTTON STEP 4

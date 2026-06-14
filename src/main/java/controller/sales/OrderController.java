@@ -1,6 +1,6 @@
-package com.storemanagement.controller.sales;
+package       controller.sales;
 
-import com.storemanagement.controller.common.BaseController;
+import       controller.common.BaseController;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
