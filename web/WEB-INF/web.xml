@@ -55,7 +55,7 @@
 
     <servlet>
         <servlet-name>ProductManagementServlet</servlet-name>
-        <servlet-class>controller.ProductManagementServlet</servlet-class>
+        <servlet-class>product.controller.ProductManagementServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>ProductManagementServlet</servlet-name>

@@ -1,6 +1,6 @@
-package com.storemanagement.dao.common;
+package dao.common;
 
-import com.storemanagement.util.database.DBContext;
+import util.database.DBContext;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;

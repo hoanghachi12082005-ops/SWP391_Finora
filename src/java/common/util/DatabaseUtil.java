@@ -8,7 +8,7 @@ import jakarta.servlet.ServletContext;
 /** Central JDBC helper for DBFinora. TODO: Move credentials to environment/JNDI before production. */
 public final class DatabaseUtil {
     private static final String DEFAULT_DRIVER = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-    private static final String DEFAULT_URL = "jdbc:sqlserver://localhost:1433;databaseName=DBFinora;encrypt=true;trustServerCertificate=true";
+    private static final String DEFAULT_URL = "jdbc:sqlserver://localhost:1433;databaseName=DBFinoraV2;encrypt=true;trustServerCertificate=true";
     private static final String DEFAULT_USERNAME = "sa";
     private static final String DEFAULT_PASSWORD = "1234";
     private static ServletContext servletContext;

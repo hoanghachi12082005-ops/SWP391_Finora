@@ -1,6 +1,6 @@
-package com.storemanagement.controller.finance;
+package controller.finance;
 
-import com.storemanagement.controller.common.BaseController;
+import controller.common.BaseController;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;

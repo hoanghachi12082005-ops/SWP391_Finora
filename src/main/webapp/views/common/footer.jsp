@@ -10,5 +10,6 @@
     <c:if test="${param.additionalJS != null}">
         <script src="${pageContext.request.contextPath}/assets/js/${param.additionalJS}"></script>
     </c:if>
+</div> <!-- close .app -->
 </body>
 </html>
