@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-
+//check
 public class ProductDAO {
 
     public List<Product> findAll(int offset, int limit) throws SQLException {
