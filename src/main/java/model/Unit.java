@@ -1,4 +1,4 @@
-package product.model;
+package model;
 
 public class Unit {
     private int unitID;

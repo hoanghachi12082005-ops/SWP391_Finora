@@ -1,5 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="product.model.Product, product.model.Category, product.model.Unit, java.util.List, java.text.NumberFormat, java.util.Locale" %>
+<%@ page import="model.Product, model.Category, model.Unit, java.util.List, java.text.NumberFormat, java.util.Locale" %>
 <%
     List<Product> products   = (List<Product>) request.getAttribute("products");
     List<Category> categories = (List<Category>) request.getAttribute("categories");

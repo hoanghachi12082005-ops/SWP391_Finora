@@ -1,4 +1,4 @@
-package common.util;
+package util;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -32,8 +32,8 @@ public final class DatabaseUtil {
      * Chạy trực tiếp để kiểm tra kết nối database.
      *
      * Cách chạy (trong cmd, từ thư mục gốc project):
-     *   javac -cp "C:/Tomcat 10.1_Tomcat/lib/servlet-api.jar;lib/mssql-jdbc-12.8.1.jre11.jar" -d build src/java/common/util/DatabaseUtil.java
-     *   java -cp "build;lib/mssql-jdbc-12.8.1.jre11.jar" common.util.DatabaseUtil
+     *   javac -cp "C:/Tomcat 10.1_Tomcat/lib/servlet-api.jar;lib/mssql-jdbc-12.8.1.jre11.jar" -d build src/main/java/util/DatabaseUtil.java
+     *   java -cp "build;lib/mssql-jdbc-12.8.1.jre11.jar" util.DatabaseUtil
      */
     public static void main(String[] args) {
         System.out.println("========== KIỂM TRA KẾT NỐI DATABASE ==========");
