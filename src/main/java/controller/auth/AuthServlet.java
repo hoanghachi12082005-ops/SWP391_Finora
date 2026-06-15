@@ -22,7 +22,7 @@ public class AuthServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        this.employeeDAO = new EmployeeDAO(); // ✨ Đã sửa: Khởi tạo tránh lỗi NullPointer
+        this.employeeDAO = new EmployeeDAO();
         this.authService = new AuthService();
     }
 
@@ -51,16 +51,26 @@ public class AuthServlet extends HttpServlet {
                 request.getRequestDispatcher("/views/auth/forgot-password.jsp").forward(request, response);
                 break;
             case "/role-selection":
+
                 HttpSession session = request.getSession(false);
-                // Đồng bộ kiểm tra theo kiến trúc phân quyền
-                if (session == null || session.getAttribute("currentUser") == null) {
+
+                System.out.println("Session Role = " + session);
+
+                if (session != null) {
+                    System.out.println("Session ID Role = " + session.getId());
+                    System.out.println("CurrentUser Role = "
+                            + session.getAttribute("currentUser"));
+                }
+
+                if (session == null
+                        || session.getAttribute("currentUser") == null) {
+
                     response.sendRedirect(request.getContextPath() + "/login");
                     return;
                 }
-                request.getRequestDispatcher("/views/auth/role-selection.jsp").forward(request, response);
-                break;
-            default:
-                response.sendRedirect(request.getContextPath() + "/login");
+
+                request.getRequestDispatcher("/views/auth/role-selection.jsp")
+                        .forward(request, response);
                 break;
         }
     }
@@ -90,14 +100,13 @@ public class AuthServlet extends HttpServlet {
     }
 
     /**
-     * 1. Xử lý Đăng nhập (Login) - Đã sửa lỗi đồng bộ Session
+     * 1. Xử lý Đăng nhập (Login)
      */
     private void handleLogin(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String emailOrPhone = request.getParameter("username");
         String password = request.getParameter("password");
 
-        // Thêm dòng kiểm tra Console nhanh xem nút bấm gửi data lên chưa
         System.out.println("[DEBUG] Request Login nhận được username: [" + emailOrPhone + "]");
 
         try {
@@ -106,14 +115,11 @@ public class AuthServlet extends HttpServlet {
 
             HttpSession session = request.getSession(true);
 
-            // ✨ SỬA LỖI GỐC: Thiết lập đồng bộ cả 2 biến để hệ thống nhận diện
             session.setAttribute("currentUser", employee);
-            session.setAttribute("roleName", employee.getRoleName());
-            session.setAttribute("branchId", employee.getBranchId());
 
-            System.out.println("[DEBUG] Đăng nhập thành công cho nhân viên: " + employee.getFullName());
+            System.out.println("Session ID Login = " + session.getId());
+            System.out.println("CurrentUser Login = " + session.getAttribute("currentUser"));
 
-            // Điều hướng sang phân luồng kiểm tra quyền chọn giao diện làm việc
             response.sendRedirect(request.getContextPath() + "/role-selection");
 
         } catch (RuntimeException e) {

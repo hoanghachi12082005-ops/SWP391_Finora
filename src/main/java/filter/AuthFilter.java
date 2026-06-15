@@ -12,9 +12,9 @@ import jakarta.servlet.http.HttpSession;
 import model.Employee;
 import java.io.IOException;
 
-@WebFilter(filterName = "AuthFilter", urlPatterns = {"/*"}) // Cấu hình quét toàn hệ thống
+@WebFilter(filterName = "AuthFilter", urlPatterns = {"/*"}) 
 public class AuthFilter implements Filter {
-    
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
@@ -25,49 +25,63 @@ public class AuthFilter implements Filter {
         String path = req.getRequestURI().substring(req.getContextPath().length());
 
         // 1. Loại trừ các tài nguyên tĩnh và các trang login/register/logout công khai
-        if (path.startsWith("/assets/") || path.startsWith("/css/") || path.startsWith("/js/") ||
-            path.equals("/login") || path.equals("/register") || path.equals("/forgot-password") || path.equals("/logout")) {
+        if (path.startsWith("/assets/")
+                || path.startsWith("/css/")
+                || path.startsWith("/js/")
+                || path.equals("/login")
+                || path.equals("/register")
+                || path.equals("/forgot-password")
+                || path.equals("/logout")
+                || path.equals("/role-selection")) {
+
             chain.doFilter(request, response);
             return;
         }
 
         // 2. Kiểm tra trạng thái đăng nhập (Đồng bộ key "currentEmployee")
-        Employee employee = (session == null) ? null : (Employee) session.getAttribute("currentEmployee");
+        Employee employee = (session == null) ? null : (Employee) session.getAttribute("currentUser");
         if (employee == null) {
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
 
         // 3. Phân quyền chi tiết dựa trên vai trò (Role Name) cấu hình trong Hệ thống FinoraRetail
-        String role = employee.getRoleName() != null ? employee.getRoleName().toLowerCase() : "";
+        String role = employee.getRoleName().trim().toLowerCase();
 
-        if (path.startsWith("/system/") || path.startsWith("/configuration/")) {
-            // Chỉ duy nhất hệ thống cấp Admin mới có quyền cấu hình core
-            if (!role.equals("admin")) {
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập cấu hình hệ thống.");
+        if (path.startsWith("/system/")) {
+            if (!role.equals("admin")
+                    && !role.equals("owner")) {
+
+                resp.sendError(403);
                 return;
             }
-        } 
-        else if (path.startsWith("/management/")) {
-            // Owner quản lý toàn chuỗi, Manager quản lý tại 1 chi nhánh được phép vào
-            if (!role.equals("admin") && !role.equals("owner") && !role.equals("manager")) {
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập trang quản lý.");
+        }
+        
+        if (path.startsWith("/management/")) {
+            if (!role.equals("admin")
+                    && !role.equals("owner")
+                    && !role.equals("storemanager")
+                    && !role.equals("warehousestaff")) {
+
+                resp.sendError(403);
                 return;
             }
-        } 
-        else if (path.startsWith("/pos/") || path.startsWith("/sale")) {
-            // Nhân viên bán hàng (Sales Staff) và các cấp quản lý được vào trang bán hàng
-            if (!role.equals("admin") && !role.equals("owner") && !role.equals("manager") && !role.equals("sales staff")) {
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập chức năng bán hàng.");
+        }
+        
+        if (path.startsWith("/pos/")) {
+            if (!role.equals("admin")
+                    && !role.equals("owner")
+                    && !role.equals("storemanager")
+                    && !role.equals("salesstaff")) {
+
+                resp.sendError(403);
                 return;
             }
-        } 
-        else if (path.startsWith("/inventory/") || path.startsWith("/purchase-orders/")) {
-            // Nhân viên kho (Warehouse) chịu trách nhiệm vận hành khu vực này
-            if (!role.equals("admin") && !role.equals("owner") && !role.equals("warehouse")) {
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập kho hàng.");
-                return;
-            }
+        }
+        
+        if (path.startsWith("/report/")) {
+            chain.doFilter(request, response);
+            return;
         }
 
         // Thỏa mãn tất cả các điều kiện phân quyền

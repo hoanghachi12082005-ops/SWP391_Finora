@@ -82,7 +82,9 @@ public class AuthService {
         employee.setRoleId(roleId);
         // Nếu là Owner/Admin đăng ký tự do, branchId truyền vào có thể xử lý null
         employee.setBranchId(branchId > 0 ? branchId : null);
-        employee.setStatus("ACTIVE");
+        employee.setStatus("active");
+        
+        
 
         // 5. Đồng bộ gọi hàm insertEmployee chính xác trong EmployeeDAO
         return employeeDAO.insert(employee);
