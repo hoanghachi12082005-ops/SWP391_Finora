@@ -190,9 +190,9 @@
 
                 <!-- Unified Filter Dropdown -->
                 <select id="unifiedFilter" class="filter-select" style="min-width: 200px;">
-                    <option value="">🔍 Tất cả bộ lọc</option>
+                    <option value="">Tất cả bộ lọc</option>
                     
-                    <optgroup label="📂 Danh mục">
+                    <optgroup label="Danh mục">
                         <% if (categories != null) {
                              for (Category cat : categories) {
                                  boolean selected = (filterCategoryID != null && filterCategoryID == cat.getCategoryID());
@@ -204,7 +204,7 @@
                            } %>
                     </optgroup>
                     
-                    <optgroup label="📦 Đơn vị tính">
+                    <optgroup label="Đơn vị tính">
                         <% if (units != null) {
                              for (Unit unit : units) {
                                  boolean selected = (filterUnitID != null && filterUnitID == unit.getUnitID());
@@ -216,9 +216,9 @@
                            } %>
                     </optgroup>
                     
-                    <optgroup label="🏷️ Trạng thái">
-                        <option value="status_Active" <%="Active".equals(filterStatus) ? "selected" : ""%>>✓ Active</option>
-                        <option value="status_Inactive" <%="Inactive".equals(filterStatus) ? "selected" : ""%>>✕ Inactive</option>
+                    <optgroup label="Trạng thái">
+                        <option value="status_Active" <%="Active".equals(filterStatus) ? "selected" : ""%>>Active</option>
+                        <option value="status_Inactive" <%="Inactive".equals(filterStatus) ? "selected" : ""%>>Inactive</option>
                     </optgroup>
                 </select>
 
@@ -234,7 +234,7 @@
                 </button>
 
                 <% if ((keyword != null && !keyword.isBlank()) || (filterStatus != null && !filterStatus.isBlank()) || filterCategoryID != null || filterUnitID != null) { %>
-                <a href="<%= ctx %>/products?view=<%= viewMode %>" class="btn btn-cancel" style="padding:.45rem 1rem; font-size:.8rem;">✕ Xóa lọc</a>
+                <a href="<%= ctx %>/products?view=<%= viewMode %>" class="btn btn-cancel" style="padding:.45rem 1rem; font-size:.8rem;">Xóa lọc</a>
                 <% } %>
 
                 <!-- View toggle -->
