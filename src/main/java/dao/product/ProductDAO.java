@@ -19,6 +19,10 @@ public class ProductDAO {
     }
 
     public List<Product> findAll(int offset, int limit, String keyword, String status) throws SQLException {
+        return findAll(offset, limit, keyword, status, null, null);
+    }
+
+    public List<Product> findAll(int offset, int limit, String keyword, String status, Integer categoryID, Integer unitID) throws SQLException {
         List<Product> items = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
             "SELECT p.ProductID, p.Name, p.Quantity, p.CategoryID, c.Name AS CategoryName, " +
@@ -30,6 +34,8 @@ public class ProductDAO {
         );
         if (keyword != null && !keyword.isBlank()) sql.append(" AND p.Name LIKE ?");
         if (status != null && !status.isBlank())  sql.append(" AND p.Status = ?");
+        if (categoryID != null) sql.append(" AND p.CategoryID = ?");
+        if (unitID != null) sql.append(" AND p.UnitID = ?");
         sql.append(" ORDER BY p.ProductID ASC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
         try (Connection conn = DatabaseUtil.getConnection();
@@ -39,6 +45,8 @@ public class ProductDAO {
                 stmt.setString(idx++, "%" + keyword + "%");
             }
             if (status != null && !status.isBlank()) stmt.setString(idx++, status);
+            if (categoryID != null) stmt.setInt(idx++, categoryID);
+            if (unitID != null) stmt.setInt(idx++, unitID);
             stmt.setInt(idx++, offset);
             stmt.setInt(idx, limit);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -49,9 +57,15 @@ public class ProductDAO {
     }
 
     public int getTotalCount(String keyword, String status) throws SQLException {
+        return getTotalCount(keyword, status, null, null);
+    }
+
+    public int getTotalCount(String keyword, String status, Integer categoryID, Integer unitID) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Product WHERE 1=1");
         if (keyword != null && !keyword.isBlank()) sql.append(" AND Name LIKE ?");
         if (status != null && !status.isBlank())  sql.append(" AND Status = ?");
+        if (categoryID != null) sql.append(" AND CategoryID = ?");
+        if (unitID != null) sql.append(" AND UnitID = ?");
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
@@ -59,7 +73,9 @@ public class ProductDAO {
             if (keyword != null && !keyword.isBlank()) {
                 stmt.setString(idx++, "%" + keyword + "%");
             }
-            if (status != null && !status.isBlank()) stmt.setString(idx, status);
+            if (status != null && !status.isBlank()) stmt.setString(idx++, status);
+            if (categoryID != null) stmt.setInt(idx++, categoryID);
+            if (unitID != null) stmt.setInt(idx++, unitID);
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : 0;
             }

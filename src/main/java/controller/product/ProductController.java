@@ -28,8 +28,21 @@ public class ProductController extends BaseController {
             throws ServletException, IOException {
         String keyword  = request.getParameter("keyword");
         String status   = request.getParameter("status");
+        String categoryParam = request.getParameter("categoryID");
+        String unitParam = request.getParameter("unitID");
         String viewMode = request.getParameter("view");
         if (viewMode == null) viewMode = "table";
+
+        Integer categoryID = null;
+        Integer unitID = null;
+        try {
+            if (categoryParam != null && !categoryParam.isBlank()) {
+                categoryID = Integer.parseInt(categoryParam.trim());
+            }
+            if (unitParam != null && !unitParam.isBlank()) {
+                unitID = Integer.parseInt(unitParam.trim());
+            }
+        } catch (NumberFormatException ignored) {}
 
         int page = 1;
         try {
@@ -37,17 +50,19 @@ public class ProductController extends BaseController {
                 page = Integer.parseInt(request.getParameter("page").trim());
         } catch (NumberFormatException ignored) {}
         try {
-            int totalCount = productDAO.getTotalCount(keyword, status);
+            int totalCount = productDAO.getTotalCount(keyword, status, categoryID, unitID);
             int totalPages = (int) Math.ceil((double) totalCount / ITEMS_PER_PAGE);
             page = Math.max(1, Math.min(page, totalPages > 0 ? totalPages : 1));
 
-            request.setAttribute("products",    productDAO.findAll((page - 1) * ITEMS_PER_PAGE, ITEMS_PER_PAGE, keyword, status));
+            request.setAttribute("products",    productDAO.findAll((page - 1) * ITEMS_PER_PAGE, ITEMS_PER_PAGE, keyword, status, categoryID, unitID));
             request.setAttribute("categories",  productDAO.findAllCategories());
             request.setAttribute("units",       productDAO.findAllUnits());
             request.setAttribute("currentPage", page);
             request.setAttribute("totalPages",  totalPages);
             request.setAttribute("keyword",     keyword != null ? keyword : "");
             request.setAttribute("filterStatus",status != null ? status : "");
+            request.setAttribute("filterCategoryID", categoryID);
+            request.setAttribute("filterUnitID", unitID);
             request.setAttribute("viewMode",    viewMode);
 
             forward(request, response, "products/index");
@@ -76,10 +91,14 @@ public class ProductController extends BaseController {
             // Preserve search/filter params on redirect
             String keyword = request.getParameter("keyword");
             String status  = request.getParameter("filterStatus");
+            String categoryID = request.getParameter("categoryID");
+            String unitID = request.getParameter("unitID");
             String view    = request.getParameter("view");
             StringBuilder redirect = new StringBuilder(request.getContextPath() + "/products?");
             if (keyword != null && !keyword.isBlank()) redirect.append("keyword=").append(keyword).append("&");
             if (status  != null && !status.isBlank())  redirect.append("status=").append(status).append("&");
+            if (categoryID  != null && !categoryID.isBlank())  redirect.append("categoryID=").append(categoryID).append("&");
+            if (unitID  != null && !unitID.isBlank())  redirect.append("unitID=").append(unitID).append("&");
             if (view    != null && !view.isBlank())    redirect.append("view=").append(view);
             response.sendRedirect(redirect.toString());
         } catch (Exception e) {

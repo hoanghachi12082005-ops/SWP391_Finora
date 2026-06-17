@@ -9,6 +9,8 @@
     String ctx               = request.getContextPath();
     String keyword           = (String) request.getAttribute("keyword");
     String filterStatus      = (String) request.getAttribute("filterStatus");
+    Integer filterCategoryID = (Integer) request.getAttribute("filterCategoryID");
+    Integer filterUnitID     = (Integer) request.getAttribute("filterUnitID");
     String viewMode          = (String) request.getAttribute("viewMode");
     if (viewMode == null) viewMode = "table";
     NumberFormat vndFormat   = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
@@ -114,8 +116,12 @@
         .search-box svg { color: var(--muted); }
         .search-box input { background: transparent !important; border: none !important; outline: none !important; color: var(--text) !important; font-size: 0.9rem; width: 100%; padding: 0 !important; }
         
-        .filter-select { background: #ffffff !important; border: 1px solid var(--line) !important; border-radius: 12px; color: var(--text) !important; padding: 0.55rem 1rem !important; font-size: 0.875rem; cursor: pointer; height: auto !important; }
-        .filter-select option { background: #ffffff !important; color: var(--text) !important; }
+        .filter-select { background: #ffffff !important; border: 1px solid var(--line) !important; border-radius: 12px; color: var(--text) !important; padding: 0.55rem 1rem !important; font-size: 0.875rem; cursor: pointer; height: auto !important; transition: all 0.25s ease; font-weight: 600; }
+        .filter-select:hover { border-color: rgba(220, 38, 38, 0.4) !important; box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1); }
+        .filter-select:focus { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important; outline: none; }
+        .filter-select option { background: #ffffff !important; color: var(--text) !important; padding: 0.5rem 1rem !important; }
+        .filter-select option:hover { background: rgba(220, 38, 38, 0.05) !important; }
+        .filter-select optgroup { font-weight: 800; color: #991b1b !important; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.08em; background: rgba(220, 38, 38, 0.05) !important; margin-top: 0.25rem; padding: 0.4rem 0.5rem !important; }
         .view-toggle { display: flex; gap: 0.35rem; margin-left: auto; }
 
         /* ── Card Container ── */
@@ -182,12 +188,44 @@
                     <input type="text" name="keyword" id="searchInput" placeholder="Tìm theo tên hoặc SKU…" value="<%= keyword != null ? keyword : "" %>">
                 </div>
 
-                <!-- Status filter -->
-                <select name="status" id="statusFilter" class="filter-select" onchange="document.getElementById('filterForm').submit()">
-                    <option value="" <%="".equals(filterStatus) ? "selected" : ""%>>Tất cả trạng thái</option>
-                    <option value="Active"   <%="Active".equals(filterStatus)   ? "selected" : ""%>>Active</option>
-                    <option value="Inactive" <%="Inactive".equals(filterStatus) ? "selected" : ""%>>Inactive</option>
+                <!-- Unified Filter Dropdown -->
+                <select id="unifiedFilter" class="filter-select" style="min-width: 200px;">
+                    <option value="">🔍 Tất cả bộ lọc</option>
+                    
+                    <optgroup label="📂 Danh mục">
+                        <% if (categories != null) {
+                             for (Category cat : categories) {
+                                 boolean selected = (filterCategoryID != null && filterCategoryID == cat.getCategoryID());
+                        %>
+                            <option value="cat_<%= cat.getCategoryID() %>" <%= selected ? "selected" : "" %>>
+                                <%= cat.getName() %>
+                            </option>
+                        <%   }
+                           } %>
+                    </optgroup>
+                    
+                    <optgroup label="📦 Đơn vị tính">
+                        <% if (units != null) {
+                             for (Unit unit : units) {
+                                 boolean selected = (filterUnitID != null && filterUnitID == unit.getUnitID());
+                        %>
+                            <option value="unit_<%= unit.getUnitID() %>" <%= selected ? "selected" : "" %>>
+                                <%= unit.getName() %>
+                            </option>
+                        <%   }
+                           } %>
+                    </optgroup>
+                    
+                    <optgroup label="🏷️ Trạng thái">
+                        <option value="status_Active" <%="Active".equals(filterStatus) ? "selected" : ""%>>✓ Active</option>
+                        <option value="status_Inactive" <%="Inactive".equals(filterStatus) ? "selected" : ""%>>✕ Inactive</option>
+                    </optgroup>
                 </select>
+
+                <!-- Hidden inputs to preserve filter state -->
+                <input type="hidden" name="status" id="statusInput" value="<%= filterStatus != null ? filterStatus : "" %>">
+                <input type="hidden" name="categoryID" id="categoryInput" value="<%= filterCategoryID != null ? filterCategoryID : "" %>">
+                <input type="hidden" name="unitID" id="unitInput" value="<%= filterUnitID != null ? filterUnitID : "" %>">
 
                 <!-- Search button -->
                 <button type="submit" class="btn btn-primary" style="padding:.45rem 1rem;">
@@ -195,7 +233,7 @@
                     Tìm
                 </button>
 
-                <% if ((keyword != null && !keyword.isBlank()) || (filterStatus != null && !filterStatus.isBlank())) { %>
+                <% if ((keyword != null && !keyword.isBlank()) || (filterStatus != null && !filterStatus.isBlank()) || filterCategoryID != null || filterUnitID != null) { %>
                 <a href="<%= ctx %>/products?view=<%= viewMode %>" class="btn btn-cancel" style="padding:.45rem 1rem; font-size:.8rem;">✕ Xóa lọc</a>
                 <% } %>
 
@@ -330,7 +368,9 @@
             <div class="pagination">
 <%      String baseUrl = ctx + "/products?view=" + viewMode
                 + (keyword != null && !keyword.isBlank() ? "&keyword=" + keyword : "")
-                + (filterStatus != null && !filterStatus.isBlank() ? "&status=" + filterStatus : "");
+                + (filterStatus != null && !filterStatus.isBlank() ? "&status=" + filterStatus : "")
+                + (filterCategoryID != null ? "&categoryID=" + filterCategoryID : "")
+                + (filterUnitID != null ? "&unitID=" + filterUnitID : "");
         if (currentPage > 1) { %>
                 <a href="<%= baseUrl %>&page=<%= currentPage - 1 %>">&laquo; Trước</a>
 <%      }
@@ -482,6 +522,37 @@
         /* ── Search on Enter ── */
         document.getElementById('searchInput').addEventListener('keydown', e => {
             if (e.key === 'Enter') document.getElementById('filterForm').submit();
+        });
+
+        /* ── Unified Filter Handler ── */
+        document.getElementById('unifiedFilter').addEventListener('change', function() {
+            const selectedValue = this.value;
+            
+            // Clear all filter inputs first
+            document.getElementById('statusInput').value = '';
+            document.getElementById('categoryInput').value = '';
+            document.getElementById('unitInput').value = '';
+            
+            // Parse and set the appropriate filter
+            if (selectedValue === '') {
+                // "All filters" selected - clear everything and submit
+                document.getElementById('filterForm').submit();
+            } else if (selectedValue.startsWith('cat_')) {
+                // Category filter selected
+                const categoryID = selectedValue.substring(4); // Remove "cat_" prefix
+                document.getElementById('categoryInput').value = categoryID;
+                document.getElementById('filterForm').submit();
+            } else if (selectedValue.startsWith('unit_')) {
+                // Unit filter selected
+                const unitID = selectedValue.substring(5); // Remove "unit_" prefix
+                document.getElementById('unitInput').value = unitID;
+                document.getElementById('filterForm').submit();
+            } else if (selectedValue.startsWith('status_')) {
+                // Status filter selected
+                const status = selectedValue.substring(7); // Remove "status_" prefix
+                document.getElementById('statusInput').value = status;
+                document.getElementById('filterForm').submit();
+            }
         });
     </script>
     </main>
