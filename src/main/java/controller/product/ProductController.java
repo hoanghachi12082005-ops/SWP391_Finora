@@ -91,8 +91,8 @@ public class ProductController extends BaseController {
             // Preserve search/filter params on redirect
             String keyword = request.getParameter("keyword");
             String status  = request.getParameter("filterStatus");
-            String categoryID = request.getParameter("categoryID");
-            String unitID = request.getParameter("unitID");
+            String categoryID = request.getParameter("filterCategoryID");
+            String unitID = request.getParameter("filterUnitID");
             String view    = request.getParameter("view");
             StringBuilder redirect = new StringBuilder(request.getContextPath() + "/products?");
             if (keyword != null && !keyword.isBlank()) redirect.append("keyword=").append(keyword).append("&");

@@ -400,6 +400,11 @@
                 <input type="hidden" name="action" id="modal-action" value="add">
                 <input type="hidden" name="view" value="<%= viewMode %>">
                 <input type="hidden" name="productID" id="modal-id">
+                <!-- Preserve filter state -->
+                <input type="hidden" name="keyword" value="<%= keyword != null ? keyword : "" %>">
+                <input type="hidden" name="filterStatus" value="<%= filterStatus != null ? filterStatus : "" %>">
+                <input type="hidden" name="filterCategoryID" value="<%= filterCategoryID != null ? filterCategoryID : "" %>">
+                <input type="hidden" name="filterUnitID" value="<%= filterUnitID != null ? filterUnitID : "" %>">
 
                 <div class="form-group">
                     <label for="modal-name">Tên sản phẩm</label>
@@ -457,6 +462,11 @@
         <input type="hidden" name="action" value="delete">
         <input type="hidden" name="id" id="delete-id">
         <input type="hidden" name="view" value="<%= viewMode %>">
+        <!-- Preserve filter state -->
+        <input type="hidden" name="keyword" value="<%= keyword != null ? keyword : "" %>">
+        <input type="hidden" name="filterStatus" value="<%= filterStatus != null ? filterStatus : "" %>">
+        <input type="hidden" name="filterCategoryID" value="<%= filterCategoryID != null ? filterCategoryID : "" %>">
+        <input type="hidden" name="filterUnitID" value="<%= filterUnitID != null ? filterUnitID : "" %>">
     </form>
 
     <script>
