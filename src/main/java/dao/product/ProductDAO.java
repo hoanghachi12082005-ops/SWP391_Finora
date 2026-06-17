@@ -132,27 +132,6 @@ public class ProductDAO {
         try (Connection conn = DatabaseUtil.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                // 1. Xóa OrderDetail tham chiếu đến sản phẩm này (FK_OrderDetail_Product)
-                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM OrderDetail WHERE ProductID = ?")) {
-                    stmt.setInt(1, id);
-                    stmt.executeUpdate();
-                }
-                // 2. Xóa StockTransferDetail
-                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM StockTransferDetail WHERE ProductID = ?")) {
-                    stmt.setInt(1, id);
-                    stmt.executeUpdate();
-                }
-                // 3. Xóa Inventory
-                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Inventory WHERE ProductID = ?")) {
-                    stmt.setInt(1, id);
-                    stmt.executeUpdate();
-                }
-                // 4. Xóa StockTransaction
-                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM StockTransaction WHERE ProductID = ?")) {
-                    stmt.setInt(1, id);
-                    stmt.executeUpdate();
-                }
-                // 5. Xóa Product
                 try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Product WHERE ProductID = ?")) {
                     stmt.setInt(1, id);
                     stmt.executeUpdate();
