@@ -5,25 +5,34 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBContext {
-    private static final String SERVER = "localhost";
-    private static final String PORT = "1433";
-    private static final String DATABASE = "StoreManagementDB";
+
+    private static final String DRIVER = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+
+
+    private static final String URL =
+            "jdbc:sqlserver://localhost:1433;"
+            + "databaseName=DBFinoraV2;"
+            + "encrypt=true;"
+            + "trustServerCertificate=true;";
+ 
     private static final String USERNAME = "sa";
-    private static final String PASSWORD = "12345";
+ 
+    private static final String PASSWORD = "123456";
 
-    private static final String URL = "jdbc:sqlserver://" + SERVER + ":" + PORT
-            + ";databaseName=" + DATABASE
-            + ";encrypt=true;trustServerCertificate=true";
-
-    static {
+    
+    public static Connection getConnection() throws SQLException {
         try {
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            Class.forName(DRIVER);
+            return DriverManager.getConnection(URL, USERNAME, PASSWORD);
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException("SQL Server JDBC Driver not found", e);
+            throw new SQLException(
+                    "Không tìm thấy SQL Server JDBC Driver. "
+                    + "Hãy thêm mssql-jdbc-*.jar vào thư viện dự án. "
+                    + "Chi tiết: " + e.getMessage()
+            );
         }
     }
-
-    public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USERNAME, PASSWORD);
+    // Ngăn không cho khởi tạo instance của class tiện ích này
+    private DBContext() {
     }
 }
