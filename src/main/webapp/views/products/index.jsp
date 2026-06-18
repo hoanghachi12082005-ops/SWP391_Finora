@@ -433,11 +433,12 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="modal-quantity">Số lượng</label>
-                        <input type="number" id="modal-quantity" name="quantity" required value="0" min="0">
+                        <input type="number" id="modal-quantity" name="quantity" required value="0" min="0"
+                        >
                     </div>
                     <div class="form-group">
                         <label for="modal-sellingPrice">Giá bán (VNĐ)</label>
-                        <input type="number" id="modal-sellingPrice" name="sellingPrice" required placeholder="0" min="0">
+                        <input type="number" id="modal-sellingPrice" name="sellingPrice" required placeholder="0" >
                     </div>
                 </div>
                 <div class="form-row">
