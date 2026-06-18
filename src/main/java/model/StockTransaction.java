@@ -1,4 +1,4 @@
-package com.storemanagement.model;
+package model;
 
     public class StockTransaction extends BaseModel {
     private int productId;

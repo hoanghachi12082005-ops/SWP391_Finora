@@ -1,9 +1,9 @@
-package com.storemanagement.service.purchase;
+package service.purchase;
 
-import com.storemanagement.service.common.GenericService;
+import service.common.GenericService;
 
-import com.storemanagement.dao.purchase.PurchaseOrderDAO;
-import com.storemanagement.model.PurchaseOrder;
+import dao.purchase.PurchaseOrderDAO;
+import model.PurchaseOrder;
 
 public class PurchaseOrderService extends GenericService<PurchaseOrder> {
     public PurchaseOrderService() {

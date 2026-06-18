@@ -1,9 +1,9 @@
-package com.storemanagement.service.finance;
+package service.finance;
 
-import com.storemanagement.service.common.GenericService;
+import service.common.GenericService;
 
-import com.storemanagement.dao.finance.PaymentDAO;
-import com.storemanagement.model.Payment;
+import dao.finance.PaymentDAO;
+import model.Payment;
 
 public class PaymentService extends GenericService<Payment> {
     public PaymentService() {

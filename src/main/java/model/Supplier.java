@@ -1,4 +1,4 @@
-package com.storemanagement.model;
+package model;
 
     public class Supplier extends BaseModel {
     private String phone;

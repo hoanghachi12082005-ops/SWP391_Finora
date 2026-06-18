@@ -1,4 +1,4 @@
-package com.storemanagement.filter;
+package filter;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;

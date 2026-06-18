@@ -1,9 +1,9 @@
-package com.storemanagement.service.system;
+package service.system;
 
-import com.storemanagement.service.common.GenericService;
+import service.common.GenericService;
 
-import com.storemanagement.dao.system.BusinessConfigurationDAO;
-import com.storemanagement.model.BusinessConfiguration;
+import dao.system.BusinessConfigurationDAO;
+import model.BusinessConfiguration;
 
 public class BusinessConfigurationService extends GenericService<BusinessConfiguration> {
     public BusinessConfigurationService() {

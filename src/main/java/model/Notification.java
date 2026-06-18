@@ -1,4 +1,4 @@
-package com.storemanagement.model;
+package model;
 
     public class Notification extends BaseModel {
     private int userId;

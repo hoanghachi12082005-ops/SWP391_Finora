@@ -1,8 +1,8 @@
-package com.storemanagement.dao.supplier;
+package dao.supplier;
 
-import com.storemanagement.dao.common.BaseDAO;
+import dao.common.BaseDAO;
 
-import com.storemanagement.model.Supplier;
+import model.Supplier;
 
 public class SupplierDAO extends BaseDAO<Supplier> {
     // TODO: Viết SQL cho Supplier: findAll, findById, insert, update, delete.

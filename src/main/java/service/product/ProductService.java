@@ -1,9 +1,9 @@
-package com.storemanagement.service.product;
+package service.product;
 
-import com.storemanagement.service.common.GenericService;
+import service.common.GenericService;
 
-import com.storemanagement.dao.product.ProductDAO;
-import com.storemanagement.model.Product;
+import dao.product.ProductDAO;
+import model.Product;
 
 public class ProductService extends GenericService<Product> {
     public ProductService() {

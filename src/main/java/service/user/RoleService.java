@@ -1,9 +1,9 @@
-package com.storemanagement.service.user;
+package service.user;
 
-import com.storemanagement.service.common.GenericService;
+import service.common.GenericService;
 
-import com.storemanagement.dao.user.RoleDAO;
-import com.storemanagement.model.Role;
+import dao.user.RoleDAO;
+import model.Role;
 
 public class RoleService extends GenericService<Role> {
     public RoleService() {

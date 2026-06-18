@@ -1,4 +1,4 @@
-package com.storemanagement.model;
+package model;
 
     public class Income extends BaseModel {
     private double amount;

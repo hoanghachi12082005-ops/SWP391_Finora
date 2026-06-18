@@ -1,8 +1,8 @@
-package com.storemanagement.dao.sales;
+package dao.sales;
 
-import com.storemanagement.dao.common.BaseDAO;
+import dao.common.BaseDAO;
 
-import com.storemanagement.model.OrderDetail;
+import model.OrderDetail;
 
 public class OrderDetailDAO extends BaseDAO<OrderDetail> {
     // TODO: Viết SQL cho OrderDetail: findAll, findById, insert, update, delete.

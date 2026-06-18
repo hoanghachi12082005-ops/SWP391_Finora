@@ -1,4 +1,4 @@
-package com.storemanagement.model;
+package model;
 
     public class BusinessConfiguration extends BaseModel {
     private String configKey;

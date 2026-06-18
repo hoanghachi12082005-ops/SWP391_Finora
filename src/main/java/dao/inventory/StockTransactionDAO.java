@@ -1,8 +1,8 @@
-package com.storemanagement.dao.inventory;
+package dao.inventory;
 
-import com.storemanagement.dao.common.BaseDAO;
+import dao.common.BaseDAO;
 
-import com.storemanagement.model.StockTransaction;
+import model.StockTransaction;
 
 public class StockTransactionDAO extends BaseDAO<StockTransaction> {
     // TODO: Viết SQL cho StockTransaction: findAll, findById, insert, update, delete.

@@ -1,4 +1,4 @@
-package com.storemanagement.model;
+package model;
 
     public class Category extends BaseModel {
     private String description;

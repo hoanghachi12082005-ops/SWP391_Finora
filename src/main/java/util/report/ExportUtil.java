@@ -1,4 +1,4 @@
-package com.storemanagement.util.report;
+package util.report;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

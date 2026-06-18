@@ -1,9 +1,9 @@
-package com.storemanagement.service.supplier;
+package service.supplier;
 
-import com.storemanagement.service.common.GenericService;
+import service.common.GenericService;
 
-import com.storemanagement.dao.supplier.SupplierDAO;
-import com.storemanagement.model.Supplier;
+import dao.supplier.SupplierDAO;
+import model.Supplier;
 
 public class SupplierService extends GenericService<Supplier> {
     public SupplierService() {

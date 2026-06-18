@@ -1,9 +1,9 @@
-package com.storemanagement.service.sales;
+package service.sales;
 
-import com.storemanagement.service.common.GenericService;
+import service.common.GenericService;
 
-import com.storemanagement.dao.sales.OrderDetailDAO;
-import com.storemanagement.model.OrderDetail;
+import dao.sales.OrderDetailDAO;
+import model.OrderDetail;
 
 public class OrderDetailService extends GenericService<OrderDetail> {
     public OrderDetailService() {

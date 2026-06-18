@@ -1,8 +1,8 @@
-package com.storemanagement.controller.auth;
+package controller.auth;
 
-import com.storemanagement.controller.common.BaseController;
+import controller.common.BaseController;
 
-import com.storemanagement.model.User;
+import model.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;

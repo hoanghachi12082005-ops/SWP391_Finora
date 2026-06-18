@@ -1,4 +1,4 @@
-package com.storemanagement.util.website;
+package util.website;
 
 public final class SeoUtil {
     private SeoUtil() {}

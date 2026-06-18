@@ -1,4 +1,4 @@
-package com.storemanagement.model;
+package model;
 
 import java.time.LocalDateTime;
 

@@ -1,9 +1,9 @@
-package com.storemanagement.service.store;
+package service.store;
 
-import com.storemanagement.service.common.GenericService;
+import service.common.GenericService;
 
-import com.storemanagement.dao.store.StoreDAO;
-import com.storemanagement.model.Store;
+import dao.store.StoreDAO;
+import model.Store;
 
 public class StoreService extends GenericService<Store> {
     public StoreService() {

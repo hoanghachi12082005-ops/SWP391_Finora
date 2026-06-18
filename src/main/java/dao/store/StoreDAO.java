@@ -1,8 +1,8 @@
-package com.storemanagement.dao.store;
+package dao.store;
 
-import com.storemanagement.dao.common.BaseDAO;
+import dao.common.BaseDAO;
 
-import com.storemanagement.model.Store;
+import model.Store;
 
 public class StoreDAO extends BaseDAO<Store> {
     // TODO: Viết SQL cho Store: findAll, findById, insert, update, delete.

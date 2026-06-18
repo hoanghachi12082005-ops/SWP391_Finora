@@ -1,9 +1,9 @@
-package com.storemanagement.service.customer;
+package service.customer;
 
-import com.storemanagement.service.common.GenericService;
+import service.common.GenericService;
 
-import com.storemanagement.dao.customer.CustomerDAO;
-import com.storemanagement.model.Customer;
+import dao.customer.CustomerDAO;
+import model.Customer;
 
 public class CustomerService extends GenericService<Customer> {
     public CustomerService() {

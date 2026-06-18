@@ -1,9 +1,9 @@
-package com.storemanagement.service.finance;
+package service.finance;
 
-import com.storemanagement.service.common.GenericService;
+import service.common.GenericService;
 
-import com.storemanagement.dao.finance.IncomeDAO;
-import com.storemanagement.model.Income;
+import dao.finance.IncomeDAO;
+import model.Income;
 
 public class IncomeService extends GenericService<Income> {
     public IncomeService() {

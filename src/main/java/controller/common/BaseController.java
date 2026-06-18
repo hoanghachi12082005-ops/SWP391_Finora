@@ -1,4 +1,4 @@
-package com.storemanagement.controller.common;
+package controller.common;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;

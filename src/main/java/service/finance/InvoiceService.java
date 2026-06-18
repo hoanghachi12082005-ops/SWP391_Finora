@@ -1,9 +1,9 @@
-package com.storemanagement.service.finance;
+package service.finance;
 
-import com.storemanagement.service.common.GenericService;
+import service.common.GenericService;
 
-import com.storemanagement.dao.finance.InvoiceDAO;
-import com.storemanagement.model.Invoice;
+import dao.finance.InvoiceDAO;
+import model.Invoice;
 
 public class InvoiceService extends GenericService<Invoice> {
     public InvoiceService() {

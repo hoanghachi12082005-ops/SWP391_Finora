@@ -1,6 +1,6 @@
-package com.storemanagement.service.common;
+package service.common;
 
-import com.storemanagement.dao.common.ICrudDAO;
+import dao.common.ICrudDAO;
 import java.util.List;
 
 public class GenericService<T> {

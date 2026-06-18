@@ -1,8 +1,8 @@
-package com.storemanagement.dao.system;
+package dao.system;
 
-import com.storemanagement.dao.common.BaseDAO;
+import dao.common.BaseDAO;
 
-import com.storemanagement.model.BusinessConfiguration;
+import model.BusinessConfiguration;
 
 public class BusinessConfigurationDAO extends BaseDAO<BusinessConfiguration> {
     // TODO: Viết SQL cho BusinessConfiguration: findAll, findById, insert, update, delete.

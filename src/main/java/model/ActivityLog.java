@@ -1,4 +1,4 @@
-package com.storemanagement.model;
+package model;
 
     public class ActivityLog extends BaseModel {
     private int userId;

@@ -1,4 +1,4 @@
-package com.storemanagement.util.auth;
+package util.auth;
 
 import jakarta.servlet.http.HttpSession;
 

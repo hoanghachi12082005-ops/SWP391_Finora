@@ -1,9 +1,9 @@
-package com.storemanagement.service.user;
+package service.user;
 
-import com.storemanagement.service.common.GenericService;
+import service.common.GenericService;
 
-import com.storemanagement.dao.user.UserDAO;
-import com.storemanagement.model.User;
+import dao.user.UserDAO;
+import model.User;
 
 public class UserService extends GenericService<User> {
     public UserService() {

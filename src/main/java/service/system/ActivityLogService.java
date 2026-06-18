@@ -1,9 +1,9 @@
-package com.storemanagement.service.system;
+package service.system;
 
-import com.storemanagement.service.common.GenericService;
+import service.common.GenericService;
 
-import com.storemanagement.dao.system.ActivityLogDAO;
-import com.storemanagement.model.ActivityLog;
+import dao.system.ActivityLogDAO;
+import model.ActivityLog;
 
 public class ActivityLogService extends GenericService<ActivityLog> {
     public ActivityLogService() {

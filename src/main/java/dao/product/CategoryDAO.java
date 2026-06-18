@@ -1,8 +1,8 @@
-package com.storemanagement.dao.product;
+package dao.product;
 
-import com.storemanagement.dao.common.BaseDAO;
+import dao.common.BaseDAO;
 
-import com.storemanagement.model.Category;
+import model.Category;
 
 public class CategoryDAO extends BaseDAO<Category> {
     // TODO: Viết SQL cho Category: findAll, findById, insert, update, delete.

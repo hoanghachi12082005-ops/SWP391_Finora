@@ -1,4 +1,4 @@
-package com.storemanagement.util.security;
+package util.security;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

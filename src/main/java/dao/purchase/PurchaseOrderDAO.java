@@ -1,8 +1,8 @@
-package com.storemanagement.dao.purchase;
+package dao.purchase;
 
-import com.storemanagement.dao.common.BaseDAO;
+import dao.common.BaseDAO;
 
-import com.storemanagement.model.PurchaseOrder;
+import model.PurchaseOrder;
 
 public class PurchaseOrderDAO extends BaseDAO<PurchaseOrder> {
     // TODO: Viết SQL cho PurchaseOrder: findAll, findById, insert, update, delete.

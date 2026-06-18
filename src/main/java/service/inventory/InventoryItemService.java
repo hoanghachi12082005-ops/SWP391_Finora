@@ -1,9 +1,9 @@
-package com.storemanagement.service.inventory;
+package service.inventory;
 
-import com.storemanagement.service.common.GenericService;
+import service.common.GenericService;
 
-import com.storemanagement.dao.inventory.InventoryItemDAO;
-import com.storemanagement.model.InventoryItem;
+import dao.inventory.InventoryItemDAO;
+import model.InventoryItem;
 
 public class InventoryItemService extends GenericService<InventoryItem> {
     public InventoryItemService() {
