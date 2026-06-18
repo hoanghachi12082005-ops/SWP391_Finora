@@ -415,12 +415,9 @@
 
                     <!-- STEP 4 -->
 
-                    <div class="wizard-content text-center"
-                         id="step4">
+                    <div class="wizard-content text-center" id="step4">
 
-                        <div class="success-icon mb-4">
-                            ✓
-                        </div>
+                        <div class="success-icon mb-4"> ✓ </div>
 
                         <h4 class="mb-4">Cửa hàng đã được tạo</h4>
 
@@ -428,17 +425,17 @@
 
                             <div>
                                 <strong>Tên cửa hàng:</strong>
-                                <span id="resShopName"></span>
+                                <span id="resShopName">${resShopName}</span>
                             </div>
 
                             <div>
                                 <strong>Tài khoản:</strong>
-                                <span id="resUsername"></span>
+                                <span id="resUsername">${resUsername}</span>
                             </div>
 
                             <div>
                                 <strong>Mật khẩu:</strong>
-                                <span id="resPassword"></span>
+                                <span id="resPassword">${resPassword}</span>
                             </div>
 
                         </div>
@@ -458,5 +455,5 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/register.js"></script>
-
+      
 <jsp:include page="../common/footer.jsp"/>

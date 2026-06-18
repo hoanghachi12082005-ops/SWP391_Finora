@@ -66,7 +66,7 @@ public class AuthService {
         }
 
         // 2. Kiểm tra trùng lặp email hệ thống
-        if (employeeDAO.existsByEmail(email.trim(), null)) {
+        if (employeeDAO.existsByEmail(email.trim(), phone.trim(),null)) {
             throw new RuntimeException("Email này đã được sử dụng trong hệ thống");
         }
 

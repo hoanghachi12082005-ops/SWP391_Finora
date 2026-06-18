@@ -37,13 +37,15 @@ public class EmployeeDAO {
         return null;
     }
 
-    public boolean existsByEmail(String email, Object ignore) {
-        String sql = "SELECT COUNT(*) FROM Employee WHERE LOWER(Email) = LOWER(?)";
+    public boolean existsByEmail(String email, String phone, Object ignore) {
+        String sql = "SELECT COUNT(*) FROM Employee WHERE LOWER(Email) = LOWER(?) OR Phone= ?";
         try (Connection connection = DBContext.getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, email);
+            ps.setString(2, phone);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1) > 0;
+                
             }
         } catch (SQLException e) {
             System.err.println("Lỗi existsByEmail: " + e.getMessage());
@@ -57,7 +59,7 @@ public class EmployeeDAO {
      */
     public boolean insert(Employee employee) {
         String sql = "INSERT INTO Employee (RoleID, BranchID, FullName, Email, Phone, PasswordHash, Status, CreatedAt, UpdatedAt) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
 
         Connection connection = null;
         PreparedStatement ps = null;
@@ -65,7 +67,7 @@ public class EmployeeDAO {
         try {
             // 1. Lấy Connection thủ công để tránh việc bị đóng sớm bởi cơ chế try-with-resources ngầm
             connection = DBContext.getConnection();
-            
+
             // 2. Bật chế độ tự động lưu để lệnh bắn thẳng xuống đĩa cứng SQL Server lập tức
             connection.setAutoCommit(true);
 
@@ -106,10 +108,18 @@ public class EmployeeDAO {
         } finally {
             // 4. Giải phóng tài nguyên thủ công sau khi dữ liệu đã được ghi hoàn tất
             if (ps != null) {
-                try { ps.close(); } catch (SQLException e) { e.printStackTrace(); }
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
             if (connection != null) {
-                try { connection.close(); } catch (SQLException e) { e.printStackTrace(); }
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

@@ -160,7 +160,6 @@ public class AuthServlet extends HttpServlet {
         }
 
         try {
-
             int defaultRoleId = 2;     // Owner
             int defaultBranchId = 1;   // Tạm thời
 
@@ -172,19 +171,24 @@ public class AuthServlet extends HttpServlet {
                     defaultRoleId,
                     defaultBranchId
             );
+
             if (isRegistered) {
                 request.setAttribute("step", "4");
                 request.setAttribute("resShopName", shopName);
                 request.setAttribute("resUsername", email.trim());
                 request.setAttribute("resPassword", password.trim());
-                request.setAttribute("successMessage",
-                        "Đăng ký cửa hàng thành công!");
+                request.setAttribute("successMessage", "Đăng ký cửa hàng thành công!");
             } else {
                 request.setAttribute("error", "Đăng ký thất bại! Hệ thống đang bận.");
+                request.setAttribute("step", "3"); // Thất bại thì giữ họ ở step 3 để sửa đổi
+                
             }
         } catch (RuntimeException e) {
             request.setAttribute("error", e.getMessage());
+            request.setAttribute("step", "3"); // Có lỗi phát sinh thì giữ ở step 3
         }
+
+        // Đảm bảo đường dẫn này khớp chính xác với thư mục chứa file register.jsp của bạn
         request.getRequestDispatcher("/views/auth/register.jsp").forward(request, response);
     }
 
@@ -225,7 +229,7 @@ public class AuthServlet extends HttpServlet {
                     request.setAttribute("error", "Không thể cập nhật mật khẩu mới vào Cơ sở dữ liệu!");
                 }
             } else {
-                request.setAttribute("error", "Thông tin Họ tên hoặc Email không khớp với bất kỳ tài khoản nào!");
+                request.setAttribute("error", "Sai Họ tên hoặc Email!");
             }
         } catch (Exception e) {
             request.setAttribute("error", "Có lỗi xảy ra trong quá trình khôi phục: " + e.getMessage());
@@ -247,7 +251,7 @@ public class AuthServlet extends HttpServlet {
 
         switch (role.trim().toLowerCase()) {
             case "pos":
-                response.sendRedirect(request.getContextPath() + "/pos/sale");
+                response.sendRedirect(request.getContextPath() + "/sale/pos");
                 break;
             case "management":
                 response.sendRedirect(request.getContextPath() + "/management/dashboard");
