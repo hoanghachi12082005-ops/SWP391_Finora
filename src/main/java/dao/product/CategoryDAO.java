@@ -12,46 +12,18 @@ import java.util.List;
 
 public class CategoryDAO {
 
-    public List<Category> getCategories(String keyword, String status, String parentName, int page, int limit) {
+    public List<Category> getAllCategories() {
         List<Category> categories = new ArrayList<>();
-        int offset = (page - 1) * limit;
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, ");
-        sql.append("p.Name AS ParentName, COUNT(pr.ProductID) AS ProductCount ");
-        sql.append("FROM Category c ");
-        sql.append("LEFT JOIN Category p ON c.ParentCategoryID = p.CategoryID ");
-        sql.append("LEFT JOIN Product pr ON c.CategoryID = pr.CategoryID ");
-        sql.append("WHERE 1 = 1 ");
-
-        List<Object> params = new ArrayList<>();
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append("AND (c.Name LIKE ? OR c.Description LIKE ?) ");
-            String pattern = "%" + keyword.trim() + "%";
-            params.add(pattern);
-            params.add(pattern);
-        }
-        if (status != null && !status.trim().isEmpty()) {
-            sql.append("AND c.Status = ? ");
-            params.add(status.trim());
-        }
-        if (parentName != null && !parentName.trim().isEmpty()) {
-            if (isRootParent(parentName)) {
-                sql.append("AND c.ParentCategoryID IS NULL ");
-            } else {
-                sql.append("AND p.Name = ? ");
-                params.add(parentName.trim());
-            }
-        }
-
-        sql.append("GROUP BY c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, p.Name ");
-        sql.append("ORDER BY c.CategoryID ASC ");
-        sql.append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        String sql = "SELECT c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, " +
+                "p.Name AS ParentName, COUNT(pr.ProductID) AS ProductCount " +
+                "FROM Category c " +
+                "LEFT JOIN Category p ON c.ParentCategoryID = p.CategoryID " +
+                "LEFT JOIN Product pr ON c.CategoryID = pr.CategoryID " +
+                "GROUP BY c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, p.Name " +
+                "ORDER BY c.CategoryID ASC";
 
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-            setParameters(stmt, params);
-            stmt.setInt(params.size() + 1, offset);
-            stmt.setInt(params.size() + 2, limit);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     categories.add(extractCategory(rs));
@@ -63,82 +35,28 @@ public class CategoryDAO {
         return categories;
     }
 
-    public List<Category> getAllCategories() {
-        return getCategories(null, null, null, 1, Integer.MAX_VALUE);
-    }
-
     public List<Category> getActiveCategories() {
-        return getCategories(null, "active", null, 1, Integer.MAX_VALUE);
-    }
-
-    public int countCategories(String keyword, String status, String parentName) {
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT COUNT(1) FROM Category c ");
-        sql.append("LEFT JOIN Category p ON c.ParentCategoryID = p.CategoryID ");
-        sql.append("WHERE 1 = 1 ");
-
-        List<Object> params = new ArrayList<>();
-        applyCategoryFilters(sql, params, keyword, status, parentName);
+        List<Category> categories = new ArrayList<>();
+        String sql = "SELECT c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, " +
+                "p.Name AS ParentName, COUNT(pr.ProductID) AS ProductCount " +
+                "FROM Category c " +
+                "LEFT JOIN Category p ON c.ParentCategoryID = p.CategoryID " +
+                "LEFT JOIN Product pr ON c.CategoryID = pr.CategoryID " +
+                "WHERE c.Status = 'active' " +
+                "GROUP BY c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, p.Name " +
+                "ORDER BY c.CategoryID ASC";
 
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-            setParameters(stmt, params);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
+                while (rs.next()) {
+                    categories.add(extractCategory(rs));
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return 0;
-    }
-
-    public int countRootCategories(String keyword, String status, String parentName) {
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT COUNT(1) FROM Category c ");
-        sql.append("LEFT JOIN Category p ON c.ParentCategoryID = p.CategoryID ");
-        sql.append("WHERE c.ParentCategoryID IS NULL ");
-
-        List<Object> params = new ArrayList<>();
-        applyCategoryFilters(sql, params, keyword, status, parentName);
-
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-            setParameters(stmt, params);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
-    public int countLinkedProducts(String keyword, String status, String parentName) {
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT COUNT(pr.ProductID) FROM Category c ");
-        sql.append("LEFT JOIN Category p ON c.ParentCategoryID = p.CategoryID ");
-        sql.append("LEFT JOIN Product pr ON c.CategoryID = pr.CategoryID ");
-        sql.append("WHERE 1 = 1 ");
-
-        List<Object> params = new ArrayList<>();
-        applyCategoryFilters(sql, params, keyword, status, parentName);
-
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-            setParameters(stmt, params);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
+        return categories;
     }
 
     public Category getCategoryById(int categoryId) {
@@ -273,27 +191,6 @@ public class CategoryDAO {
         }
     }
 
-    private void applyCategoryFilters(StringBuilder sql, List<Object> params, String keyword, String status, String parentName) {
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append("AND (c.Name LIKE ? OR c.Description LIKE ?) ");
-            String pattern = "%" + keyword.trim() + "%";
-            params.add(pattern);
-            params.add(pattern);
-        }
-        if (status != null && !status.trim().isEmpty()) {
-            sql.append("AND c.Status = ? ");
-            params.add(status.trim());
-        }
-        if (parentName != null && !parentName.trim().isEmpty()) {
-            if (isRootParent(parentName)) {
-                sql.append("AND c.ParentCategoryID IS NULL ");
-            } else {
-                sql.append("AND p.Name = ? ");
-                params.add(parentName.trim());
-            }
-        }
-    }
-
     private void setNullableInt(PreparedStatement stmt, int index, Integer value) throws SQLException {
         if (value == null) {
             stmt.setNull(index, java.sql.Types.INTEGER);
@@ -313,10 +210,5 @@ public class CategoryDAO {
         category.setStatus(rs.getString("Status"));
         category.setProductCount(rs.getInt("ProductCount"));
         return category;
-    }
-
-    private boolean isRootParent(String parentName) {
-        String trimmed = parentName == null ? "" : parentName.trim();
-        return trimmed.isEmpty() || "goc".equalsIgnoreCase(trimmed) || "gốc".equalsIgnoreCase(trimmed);
     }
 }

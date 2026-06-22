@@ -9,6 +9,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet(name = "CategoryController", urlPatterns = {"/category"})
@@ -61,44 +62,117 @@ public class CategoryController extends BaseController {
         }
     }
 
-    private void listCategories(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
+    private void listCategories(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String keyword = request.getParameter("keyword");
         String status = request.getParameter("status");
         String parentName = request.getParameter("parentName");
         
-        int page = 1;
-        int limit = 10;
+        int page = parseOrDefault(request.getParameter("page"), 1);
+        int limit = parseOrDefault(request.getParameter("limit"), 10);
+        List<Category> allRawCategories = categoryDAO.getAllCategories();
         
-        try {
-            if (request.getParameter("page") != null) {
-                page = Integer.parseInt(request.getParameter("page"));
+        List<Category> filteredList = filterCategories(allRawCategories, keyword, status);
+        int totalItems = filteredList.size();
+        int fromIndex = 0;
+        int toIndex = 0;
+        int totalPages = 1;
+
+        
+        
+        String percentAction = request.getParameter("percentAction");
+        if (percentAction != null && !percentAction.isEmpty()) {
+            limit = Math.max(1, (int) Math.ceil(totalItems * 0.3)); 
+            totalPages = (int) Math.ceil((double) totalItems / limit);
+            
+            if ("first".equals(percentAction)) {
+                fromIndex = 0;
+                toIndex = Math.min(limit, totalItems);
+                page = 1;
+            } else if ("middle".equals(percentAction)) {
+                fromIndex = Math.max(0, (totalItems - limit) / 2);
+                toIndex = Math.min(fromIndex + limit, totalItems);
+                page = Math.max(1, (fromIndex / limit) + 1); // Trỏ tạm về page ở giữa
+            } else if ("last".equals(percentAction)) {
+                fromIndex = Math.max(0, totalItems - limit);
+                toIndex = totalItems;
+                page = totalPages;
             }
-        } catch (NumberFormatException e) {
-            page = 1;
+        } else {
+            totalPages = (int) Math.ceil((double) totalItems / limit);
+            if (page > totalPages && totalPages > 0) page = totalPages;
+            
+            fromIndex = Math.max(0, (page - 1) * limit);
+            toIndex = Math.min(fromIndex + limit, totalItems);
+        }
+        List<Category> paginatedList;
+        if (fromIndex <= totalItems && fromIndex <= toIndex) {
+            paginatedList = filteredList.subList(fromIndex, toIndex);
+        } else {
+            paginatedList = new ArrayList<>();
         }
 
-        List<Category> categories = categoryDAO.getCategories(keyword, status, parentName, page, limit);
-        int totalItems = categoryDAO.countCategories(keyword, status, parentName);
-        int totalRootCategories = categoryDAO.countRootCategories(keyword, status, parentName);
-        int totalLinkedProducts = categoryDAO.countLinkedProducts(keyword, status, parentName);
-        int totalPages = (int) Math.ceil((double) totalItems / limit);
-        
-        List<Category> parentOptions = categoryDAO.getAllCategories();
-        
-        request.setAttribute("categories", categories);
+        int totalRootCategories = 0;
+        int totalLinkedProducts = 0;
+        for (Category c : filteredList) {
+            if (c.getParentName() == null || c.getParentName().trim().isEmpty()) totalRootCategories++;
+            totalLinkedProducts += c.getProductCount();
+        }
+
+        request.setAttribute("categories", paginatedList);
         request.setAttribute("totalItems", totalItems);
         request.setAttribute("totalRootCategories", totalRootCategories);
         request.setAttribute("totalLinkedProducts", totalLinkedProducts);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("currentPage", page);
-        request.setAttribute("keyword", keyword);
-        request.setAttribute("selectedStatus", status);
-        request.setAttribute("parentNameFilter", parentName);
-        request.setAttribute("parentOptions", parentOptions);
+        request.setAttribute("currentLimit", limit);
         
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("selectedStatus", status);  
         forward(request, response, "categories/list.jsp");
+    }
+
+
+    private int parseOrDefault(String param, int defaultValue) {
+        try {
+            return (param != null && !param.trim().isEmpty()) ? Integer.parseInt(param) : defaultValue;
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    private List<Category> filterCategories(List<Category> rawList, String keyword, String status) {
+        List<Category> result = new ArrayList<>();
+        for (Category c : rawList) {
+            boolean isMatch = true;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String kw = keyword.trim().toLowerCase(); 
+                String catName = "";
+                if (c.getName() != null) {
+                    catName = c.getName().toLowerCase();
+                }
+                String catDesc = "";
+                if (c.getDescription() != null) {
+                    catDesc = c.getDescription().toLowerCase();
+                }
+                String catParentName = "";
+                if (c.getParentName() != null) {
+                    catParentName = c.getParentName().toLowerCase();
+                }
+                if (catName.contains(kw) == false && catDesc.contains(kw) == false && catParentName.contains(kw) == false) {
+                    isMatch = false;
+                }
+            }
+            if (status != null && !status.trim().isEmpty()) {
+                String st = status.trim();
+                if (st.equals(c.getStatus()) == false) {
+                    isMatch = false;
+                }
+            }
+            if (isMatch == true) {
+                result.add(c);
+            }
+        }
+        return result;
     }
 
     private void addCategory(HttpServletRequest request, HttpServletResponse response)
