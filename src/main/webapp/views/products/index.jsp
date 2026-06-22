@@ -1,173 +1,57 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="model.Product, model.Category, model.Unit, java.util.List, java.text.NumberFormat, java.util.Locale" %>
-<%
-    List<Product> products   = (List<Product>) request.getAttribute("products");
-    List<Category> categories = (List<Category>) request.getAttribute("categories");
-    List<Unit> units         = (List<Unit>) request.getAttribute("units");
-    int currentPage          = (Integer) request.getAttribute("currentPage");
-    int totalPages           = (Integer) request.getAttribute("totalPages");
-    String ctx               = request.getContextPath();
-    String keyword           = (String) request.getAttribute("keyword");
-    String filterStatus      = (String) request.getAttribute("filterStatus");
-    Integer filterCategoryID = (Integer) request.getAttribute("filterCategoryID");
-    Integer filterUnitID     = (Integer) request.getAttribute("filterUnitID");
-    String viewMode          = (String) request.getAttribute("viewMode");
-    if (viewMode == null) viewMode = "table";
-    NumberFormat vndFormat   = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
-%>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Sản phẩm - Finora</title>
-    <link rel="stylesheet" href="<%= ctx %>/assets/css/styles.css">
-    <style>
-        :root {
-            --bg: #ffffff;
-            --panel: rgba(220, 38, 38, 0.05);
-            --panel-strong: rgba(220, 38, 38, 0.1);
-            --line: rgba(220, 38, 38, 0.15);
-            --text: #000000;
-            --muted: #666666;
-            --cyan: #dc2626;
-            --violet: #b91c1c;
-            --gold: #991b1b;
-            --danger: #dc2626;
-            --ok: #16a34a;
-        }
 
-        /* ── Light theme override for main content area ── */
-        .main {
-            background: #ffffff !important;
-            color: var(--text) !important;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            padding: 2.5rem !important;
-            min-height: 100vh;
-        }
+<jsp:include page="/views/common/header.jsp">
+    <jsp:param name="title" value="Quản lý Sản phẩm"/>
+</jsp:include>
 
-        /* ── Sidebar Red Design ── */
-        .sidebar {
-            background: #dc2626 !important;
-            border-right: 1px solid rgba(0, 0, 0, 0.1);
-            padding: 2rem 1.25rem !important;
-        }
-        .sidebar h2 {
-            font-family: 'Manrope', sans-serif;
-            font-weight: 800;
-            color: #ffffff;
-            font-size: 1.5rem;
-            margin-bottom: 2rem;
-            text-shadow: none;
-            letter-spacing: 0.05em;
-        }
-        .sidebar a {
-            color: #fecaca !important;
-            font-weight: 600;
-            font-size: 0.9rem !important;
-            padding: 0.75rem 1rem !important;
-            margin-bottom: 0.35rem;
-            border-radius: 12px !important;
-            transition: all 0.25s ease !important;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .sidebar a:hover {
-            color: #ffffff !important;
-            background: rgba(0, 0, 0, 0.2) !important;
-            transform: translateX(4px);
-        }
-        .sidebar a.active, .sidebar a:nth-child(7) { /* Highlight Product Manager link */
-            color: #ffffff !important;
-            background: rgba(0, 0, 0, 0.2) !important;
-            box-shadow: none;
-            font-weight: 700;
-        }
+<style>
+/* Inline styles from product index */
+.product-hero {
+    margin-bottom: 24px;
+}
+.product-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(147, 0, 11, 0.1);
+    color: var(--primary-color);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+.product-hero-badge .material-icons { font-size: 16px; }
+.product-hero-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+}
+.product-hero-desc {
+    color: var(--text-secondary);
+    margin: 0;
+}
+/* Override internal layout classes to match D-flex */
+.header { display: none; } /* hide internal header if it exists */
+.modal { z-index: 1050; }
+</style>
 
-        /* ── Layout ── */
-        .pm-wrap { max-width: 1200px; margin: 0 auto; }
+<div class="d-flex">
+    <jsp:include page="/views/common/sidebar.jsp">
+        <jsp:param name="active" value="products"/>
+    </jsp:include>
 
-        /* ── Top bar ── */
-        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-        .topbar h1 { margin: 0; font-size: 2.25rem; font-weight: 800; color: var(--text); font-family: 'Manrope', sans-serif; text-shadow: none; }
-
-        /* ── Buttons ── */
-        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.25rem; border-radius: 14px; font-weight: 700; cursor: pointer; border: none; transition: all 0.22s ease; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none; }
-        .btn-primary  { background: #dc2626 !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2); }
-        .btn-primary:hover  { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35); background: #b91c1c !important; }
+    <div class="main-content flex-grow-1">
+        <div class="product-hero">
+            <div class="product-hero-badge">
+                <span class="material-icons">inventory_2</span> Quản lý Sản phẩm
+            </div>
+            <h1 class="product-hero-title">Danh sách sản phẩm</h1>
+            <p class="product-hero-desc">Quản lý thông tin, giá bán và tồn kho</p>
+        </div>
         
-        .btn-warning  { background: rgba(220, 38, 38, 0.12) !important; color: #991b1b !important; border: 1px solid rgba(220, 38, 38, 0.25) !important; padding: 0.4rem 0.85rem !important; border-radius: 8px !important; font-size: 0.78rem !important; }
-        .btn-warning:hover  { background: rgba(220, 38, 38, 0.25) !important; transform: translateY(-1px); }
         
-        .btn-danger   { background: rgba(220, 38, 38, 0.12) !important; color: #dc2626 !important; border: 1px solid rgba(220, 38, 38, 0.25) !important; padding: 0.4rem 0.85rem !important; border-radius: 8px !important; font-size: 0.78rem !important; }
-        .btn-danger:hover   { background: rgba(220, 38, 38, 0.25) !important; transform: translateY(-1px); }
-        
-        .btn-cancel   { background: var(--panel-strong) !important; color: var(--text) !important; border: 1px solid var(--line) !important; }
-        .btn-cancel:hover   { background: rgba(220, 38, 38, 0.2) !important; }
-        
-        .btn-ghost    { background: transparent !important; color: var(--muted) !important; border: 1px solid var(--line) !important; padding: 0.5rem 1rem; border-radius: 10px; }
-        .btn-ghost.active, .btn-ghost:hover { background: var(--panel-strong) !important; color: var(--text) !important; border-color: #dc2626 !important; }
-
-        /* ── Search & Filter Bar ── */
-        .filter-bar { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; background: rgba(220, 38, 38, 0.03) !important; border: 1px solid var(--line) !important; border-radius: 20px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; backdrop-filter: blur(0px); }
-        .search-box { flex: 1; min-width: 250px; display: flex; align-items: center; gap: 0.5rem; background: #ffffff !important; border: 1px solid var(--line) !important; border-radius: 12px; padding: 0.55rem 1rem; transition: 0.2s; }
-        .search-box:focus-within { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1); }
-        .search-box svg { color: var(--muted); }
-        .search-box input { background: transparent !important; border: none !important; outline: none !important; color: var(--text) !important; font-size: 0.9rem; width: 100%; padding: 0 !important; }
-        
-        .filter-select { background: #ffffff !important; border: 1px solid var(--line) !important; border-radius: 12px; color: var(--text) !important; padding: 0.55rem 1rem !important; font-size: 0.875rem; cursor: pointer; height: auto !important; transition: all 0.25s ease; font-weight: 600; }
-        .filter-select:hover { border-color: rgba(220, 38, 38, 0.4) !important; box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1); }
-        .filter-select:focus { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important; outline: none; }
-        .filter-select option { background: #ffffff !important; color: var(--text) !important; padding: 0.5rem 1rem !important; }
-        .filter-select option:hover { background: rgba(220, 38, 38, 0.05) !important; }
-        .filter-select optgroup { font-weight: 800; color: #991b1b !important; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.08em; background: rgba(220, 38, 38, 0.05) !important; margin-top: 0.25rem; padding: 0.4rem 0.5rem !important; }
-        .view-toggle { display: flex; gap: 0.35rem; margin-left: auto; }
-
-        /* ── Card Container ── */
-        .card { background: #ffffff !important; border: 1px solid var(--line) !important; border-radius: 24px; overflow: hidden; box-shadow: 0 2px 8px rgba(220, 38, 38, 0.08) !important; backdrop-filter: none; }
-
-        /* ── Table (Light theme overrides) ── */
-        table { width: 100%; border-collapse: collapse; background: transparent !important; }
-        th, td { padding: 1.1rem 1.25rem !important; text-align: left; border-bottom: 1px solid var(--line) !important; color: var(--text) !important; background: transparent !important; }
-        th { background: rgba(220, 38, 38, 0.08) !important; font-weight: 800; color: #991b1b !important; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.1em; }
-        tbody tr { transition: background 0.2s ease; }
-        tbody tr:hover td { background: rgba(220, 38, 38, 0.03) !important; }
-        .action-cell { display: flex; gap: 0.4rem; }
-
-        /* ── Badges ── */
-        .badge { padding: 0.35rem 0.75rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 800; background: rgba(22, 163, 74, 0.1) !important; color: var(--ok) !important; border: 1px solid rgba(22, 163, 74, 0.25) !important; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block; }
-        .badge.inactive { background: rgba(220, 38, 38, 0.1) !important; color: #dc2626 !important; border-color: rgba(220, 38, 38, 0.25) !important; }
-
-        /* ── Showcase (Card Grid) ── */
-        .showcase-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem; padding: 1.5rem; }
-        .product-card { background: #ffffff !important; border: 1px solid var(--line) !important; border-radius: 20px; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.85rem; transition: all 0.25s ease; position: relative; overflow: hidden; }
-        .product-card:hover { transform: translateY(-4px); border-color: rgba(220, 38, 38, 0.3) !important; box-shadow: 0 8px 24px rgba(220, 38, 38, 0.08); background: rgba(220, 38, 38, 0.02) !important; }
-        .card-sku { font-size: 0.7rem; font-weight: 800; color: #dc2626; text-transform: uppercase; letter-spacing: 0.1em; }
-        .card-name { font-size: 1.05rem; font-weight: 700; color: var(--text); line-height: 1.3; }
-        .card-price { font-size: 1.2rem; font-weight: 800; color: #991b1b; }
-        .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--muted); }
-
-        /* ── Pagination ── */
-        .pagination { display: flex; justify-content: center; align-items: center; padding: 1.5rem; gap: 0.5rem; border-top: 1px solid var(--line); background: transparent !important; }
-        .pagination a, .pagination span { padding: 0.5rem 0.9rem !important; border-radius: 10px !important; border: 1px solid var(--line) !important; color: var(--muted) !important; text-decoration: none; transition: all 0.2s; font-weight: 600; font-size: 0.85rem; background: transparent !important; }
-        .pagination a:hover { background: var(--panel-strong) !important; color: var(--text) !important; border-color: #dc2626 !important; }
-        .pagination .active { background: #dc2626 !important; color: #ffffff !important; border-color: transparent !important; font-weight: 800; }
-
-        /* ── Modal Design (Light theme Overlay & Box) ── */
-        .modal { background: rgba(255, 255, 255, 0.9) !important; backdrop-filter: blur(0px) !important; display: none; align-items: center; justify-content: center; }
-        .modal-content { background: #ffffff !important; border: 1px solid rgba(220, 38, 38, 0.2) !important; border-radius: 28px !important; width: 100%; max-width: 520px; padding: 2.25rem !important; box-shadow: 0 12px 40px rgba(220, 38, 38, 0.1) !important; }
-        .modal-header h2 { font-family: 'Manrope', sans-serif; font-weight: 800; color: var(--text) !important; }
-        
-        .form-group label { color: #666666 !important; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-        .form-group input, .form-group select { background: #ffffff !important; border: 1px solid var(--line) !important; border-radius: 12px !important; color: var(--text) !important; padding: 0.7rem 1rem !important; font-size: 0.9rem; transition: 0.2s; }
-        .form-group input:focus, .form-group select:focus { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important; }
-    </style>
-</head>
-<body>
-    <jsp:include page="/views/common/header.jsp" />
-    <jsp:include page="/views/common/sidebar.jsp" />
-    <main class="main">
 
     <div class="pm-wrap">
         <!-- ====== TOP BAR ====== -->
@@ -566,7 +450,105 @@
             }
         });
     </script>
-    </main>
-    <jsp:include page="/views/common/footer.jsp" />
-</body>
-</html>
+    
+    </div>
+</div>
+
+<script>
+        /* ── Delete Product ── */
+        function deleteProduct(id) {
+            if (confirm('Xóa sản phẩm này?')) {
+                document.getElementById('delete-id').value = id;
+                document.getElementById('deleteProductForm').submit();
+            }
+        }
+
+        /* ── Product Modal ── */
+        const productModal = document.getElementById('productModal');
+
+        function openProductModal(action, id, catId, name, quantity, unitId, sellingPrice, status) {
+            document.getElementById('modal-action').value = action;
+            if (action === 'edit') {
+                document.getElementById('modal-title').innerText = 'Chỉnh sửa sản phẩm';
+                document.getElementById('modal-submit').innerText = 'Cập nhật';
+                document.getElementById('modal-id').value = id;
+                document.getElementById('modal-cat').value = catId;
+                document.getElementById('modal-name').value = name;
+                document.getElementById('modal-unit').value = unitId;
+                document.getElementById('modal-quantity').value = quantity;
+                document.getElementById('modal-sellingPrice').value = sellingPrice;
+                
+                // Chuẩn hóa status để khớp với "Active" hoặc "Inactive"
+                let normStatus = "Active";
+                if (status) {
+                    let s = status.trim().toUpperCase();
+                    if (s === "INACTIVE" || s === "DEACTIVE" || s === "DEACTIVE_OLD") {
+                        normStatus = "Inactive";
+                    }
+                }
+                document.getElementById('modal-status').value = normStatus;
+            } else {
+                document.getElementById('modal-title').innerText = 'Thêm sản phẩm mới';
+                document.getElementById('modal-submit').innerText = 'Lưu sản phẩm';
+                document.getElementById('modal-id').value = '';
+                document.getElementById('product-form').reset();
+                document.getElementById('modal-cat').value = '1';
+                document.getElementById('modal-unit').value = '1';
+                document.getElementById('modal-quantity').value = '0';
+                document.getElementById('modal-sellingPrice').value = '0';
+                document.getElementById('modal-status').value = 'Active';
+            }
+            productModal.style.display = 'flex';
+        }
+
+        function closeProductModal() { productModal.style.display = 'none'; }
+
+        /* Close on outside click */
+        window.addEventListener('click', e => {
+            if (e.target === productModal) closeProductModal();
+        });
+
+        /* ── View toggle ── */
+        function switchView(mode) {
+            document.getElementById('viewInput').value = mode;
+            document.getElementById('filterForm').submit();
+        }
+
+        /* ── Search on Enter ── */
+        document.getElementById('searchInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') document.getElementById('filterForm').submit();
+        });
+
+        /* ── Unified Filter Handler ── */
+        document.getElementById('unifiedFilter').addEventListener('change', function() {
+            const selectedValue = this.value;
+            
+            // Clear all filter inputs first
+            document.getElementById('statusInput').value = '';
+            document.getElementById('categoryInput').value = '';
+            document.getElementById('unitInput').value = '';
+            
+            // Parse and set the appropriate filter
+            if (selectedValue === '') {
+                // "All filters" selected - clear everything and submit
+                document.getElementById('filterForm').submit();
+            } else if (selectedValue.startsWith('cat_')) {
+                // Category filter selected
+                const categoryID = selectedValue.substring(4); // Remove "cat_" prefix
+                document.getElementById('categoryInput').value = categoryID;
+                document.getElementById('filterForm').submit();
+            } else if (selectedValue.startsWith('unit_')) {
+                // Unit filter selected
+                const unitID = selectedValue.substring(5); // Remove "unit_" prefix
+                document.getElementById('unitInput').value = unitID;
+                document.getElementById('filterForm').submit();
+            } else if (selectedValue.startsWith('status_')) {
+                // Status filter selected
+                const status = selectedValue.substring(7); // Remove "status_" prefix
+                document.getElementById('statusInput').value = status;
+                document.getElementById('filterForm').submit();
+            }
+        });
+    </script>
+
+<jsp:include page="/views/common/footer.jsp"/>
