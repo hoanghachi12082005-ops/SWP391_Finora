@@ -34,8 +34,8 @@
                 </h1>
 
                 <p>
-                    Xác minh thông tin tài khoản để nhận mã OTP
-                    và thiết lập mật khẩu mới một cách an toàn.
+                    Xác minh thông tin tài khoản để nhận mật khẩu mới
+                    mật khẩu mới một cách an toàn.
                 </p>
 
             </div>
@@ -60,7 +60,7 @@
                     </h2>
 
                     <p class="forgot-subtitle">
-                        Nhập thông tin để nhận mã OTP xác thực
+                        Nhập thông tin để nhận mật khẩu mới
                     </p>
 
                 </div>

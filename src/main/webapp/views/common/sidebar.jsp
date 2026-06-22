@@ -1,28 +1,112 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : 'Nhân viên'}" />
+<c:set var="fullName" value="${sessionScope.currentUser.fullName != null ? sessionScope.currentUser.fullName : 'Lê Minh Quân'}" />
+
 <aside class="sidebar">
-    <h2>StoreMS</h2>
-    <nav>
-        <a href="${pageContext.request.contextPath}/dashboard/owner">Owner Dashboard</a>
-        <a href="${pageContext.request.contextPath}/users">User Manager</a>
-        <a href="${pageContext.request.contextPath}/roles">Role Management</a>
-        <a href="${pageContext.request.contextPath}/suppliers">Supplier Manager</a>
-        <a href="${pageContext.request.contextPath}/customers">Customer Manager</a>
-        <a href="${pageContext.request.contextPath}/categories">Category Manager</a>
-        <a href="${pageContext.request.contextPath}/products">Product Manager</a>
-        <a href="${pageContext.request.contextPath}/stores">Store Manager</a>
-        <a href="${pageContext.request.contextPath}/orders/create">Create Order</a>
-        <a href="${pageContext.request.contextPath}/inventory/dashboard">Inventory</a>
-        <a href="${pageContext.request.contextPath}/purchase-orders">Purchase Order</a>
-        <a href="${pageContext.request.contextPath}/payments">Payment</a>
-        <a href="${pageContext.request.contextPath}/invoices">Invoice</a>
-        <a href="${pageContext.request.contextPath}/income">Income</a>
-        <a href="${pageContext.request.contextPath}/expenses">Expense</a>
-        <a href="${pageContext.request.contextPath}/reports/export">Export Report</a>
-        <a href="${pageContext.request.contextPath}/activity-log">Activity Log</a>
-        <a href="${pageContext.request.contextPath}/notifications">Notification</a>
-        <a href="${pageContext.request.contextPath}/configuration/business">Configuration</a>
-        <a href="${pageContext.request.contextPath}/seo">SEO Website</a>
-        <a href="${pageContext.request.contextPath}/profile">Profile</a>
-        <a href="${pageContext.request.contextPath}/logout">Logout</a>
+    <!-- Brand Logo -->
+    <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">
+            <span class="material-icons">store</span>
+        </div>
+        <div class="sidebar-brand-text">
+            <h4>FINORA</h4>
+            <small>Hệ thống Quản trị Bán hàng</small>
+        </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="sidebar-menu">
+        <div class="sidebar-menu-title">Chức năng chính</div>
+        
+        <!-- Dashboard Owner Overview (Admin, Owner, StoreManager) -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+            <a href="${pageContext.request.contextPath}/dashboard/owner" 
+               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/dashboard/owner') ? 'active' : ''}">
+                <span class="material-icons">dashboard</span>
+                <span>Tổng quan</span>
+            </a>
+        </c:if>
+
+        <!-- Inventory Dashboard (WarehouseStaff) -->
+        <c:if test="${roleName == 'WarehouseStaff'}">
+            <a href="${pageContext.request.contextPath}/inventory/dashboard" 
+               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/inventory/') ? 'active' : ''}">
+                <span class="material-icons">inventory_2</span>
+                <span>Kho hàng</span>
+            </a>
+        </c:if>
+
+        <!-- Product Management -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'WarehouseStaff'}">
+            <a href="${pageContext.request.contextPath}/products" 
+               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/products') || pageContext.request.requestURI.contains('/categories') ? 'active' : ''}">
+                <span class="material-icons">shopping_bag</span>
+                <span>Hàng hóa</span>
+            </a>
+        </c:if>
+
+        <!-- Create Order (SalesStaff, StoreManager, Admin, Owner) -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'SalesStaff'}">
+            <a href="${pageContext.request.contextPath}/orders/create" 
+               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/orders/') ? 'active' : ''}">
+                <span class="material-icons">point_of_sale</span>
+                <span>Bán hàng (POS)</span>
+            </a>
+        </c:if>
+
+        <!-- Suppliers / Partners -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+            <a href="${pageContext.request.contextPath}/suppliers" 
+               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/suppliers') ? 'active' : ''}">
+                <span class="material-icons">handshake</span>
+                <span>Đối tác</span>
+            </a>
+        </c:if>
+
+        <!-- User / Role Manager -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
+            <a href="${pageContext.request.contextPath}/users" 
+               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/users') || pageContext.request.requestURI.contains('/roles') ? 'active' : ''}">
+                <span class="material-icons">people</span>
+                <span>Nhân viên</span>
+            </a>
+        </c:if>
+
+        <!-- Reports -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+            <a href="${pageContext.request.contextPath}/reports/export" 
+               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/reports/') ? 'active' : ''}">
+                <span class="material-icons">bar_chart</span>
+                <span>Báo cáo</span>
+            </a>
+        </c:if>
+
+        <!-- Configuration -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
+            <div class="sidebar-menu-title" style="margin-top: 16px;">Hệ thống</div>
+            <a href="${pageContext.request.contextPath}/configuration/business" 
+               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/configuration/') ? 'active' : ''}">
+                <span class="material-icons">settings</span>
+                <span>Cấu hình</span>
+            </a>
+        </c:if>
     </nav>
+
+    <!-- User Profile block at bottom -->
+    <div class="sidebar-user">
+        <div class="sidebar-user-info">
+            <div class="sidebar-user-avatar">
+                ${fn:toUpperCase(fn:substring(fullName, 0, 2))}
+            </div>
+            <div class="sidebar-user-details">
+                <h6><c:out value="${fullName}" /></h6>
+                <small><c:out value="${roleName}" /></small>
+            </div>
+        </div>
+        <a href="${pageContext.request.contextPath}/logout" class="sidebar-user-logout" title="Đăng xuất">
+            <span class="material-icons">logout</span>
+        </a>
+    </div>
 </aside>
