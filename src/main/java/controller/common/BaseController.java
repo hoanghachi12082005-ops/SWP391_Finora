@@ -11,7 +11,7 @@ public abstract class BaseController extends HttpServlet {
     
     protected void forward(HttpServletRequest request, HttpServletResponse response, String jspPath) 
             throws ServletException, IOException {
-        request.getRequestDispatcher("/WEB-INF/views/" + jspPath).forward(request, response);
+        request.getRequestDispatcher("/views/" + jspPath).forward(request, response);
     }
 
     protected void redirect(HttpServletResponse response, String url) throws IOException {

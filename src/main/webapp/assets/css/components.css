@@ -1,0 +1,66 @@
+/* ============================================================
+   COMPONENTS — Shared component styles
+   ============================================================ */
+
+/* ── Main layout ── */
+.d-flex {
+    display: flex !important;
+}
+
+.flex-grow-1 {
+    flex-grow: 1 !important;
+}
+
+.main-content {
+    flex: 1;
+    min-width: 0;
+    padding: 24px 28px;
+    background: var(--bg-body);
+    min-height: 100vh;
+}
+
+/* ── Gap utilities ── */
+.gap-2 { gap: 0.5rem !important; }
+.gap-3 { gap: 1rem !important; }
+
+/* ── Pagination overrides for Bootstrap ── */
+.pagination {
+    --bs-pagination-active-bg: var(--primary-color);
+    --bs-pagination-active-border-color: var(--primary-color);
+}
+
+.pagination .page-link {
+    border-radius: var(--radius-sm);
+    margin: 0 2px;
+    border: 1px solid #e0e0e0;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 13px;
+    min-width: 36px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.pagination .page-link:hover {
+    background: var(--primary-bg);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(147, 0, 11, 0.25);
+}
+
+.pagination .page-item.disabled .page-link {
+    opacity: 0.4;
+}
+
+/* ── Responsive ── */
+@media (max-width: 992px) {
+    .main-content {
+        padding: 16px;
+    }
+}

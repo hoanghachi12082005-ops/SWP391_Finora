@@ -1,13 +1,35 @@
-package model;
+package com.kiotretail.model;
 
-public class Category extends BaseModel {
+/**
+ * Category Model
+ * Model cho nhóm hàng theo schema DBFinora.
+ */
+public class Category {
+    private int categoryId;
+    private String name;
     private String description;
     private Integer parentId;
     private String parentName;
+    private String status;
     private int productCount;
 
     public Category() {
-        super();
+    }
+   
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDescription() {
@@ -32,6 +54,14 @@ public class Category extends BaseModel {
 
     public void setParentName(String parentName) {
         this.parentName = parentName;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public int getProductCount() {

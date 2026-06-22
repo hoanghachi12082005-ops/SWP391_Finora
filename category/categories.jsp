@@ -2,12 +2,12 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
-<jsp:include page="/views/common/header.jsp">
+<jsp:include page="../common/header.jsp">
     <jsp:param name="title" value="Quản lý nhóm hàng"/>
 </jsp:include>
 
 <div class="d-flex">
-    <jsp:include page="/views/common/sidebar.jsp">
+    <jsp:include page="../common/sidebar.jsp">
         <jsp:param name="active" value="categories"/>
     </jsp:include>
 
@@ -25,7 +25,10 @@
                     <p class="cat-hero-desc">Tổ chức và quản lý danh mục sản phẩm trong hệ thống</p>
                 </div>
                 <div class="cat-hero-actions">
-                    
+                    <button class="btn cat-btn-outline" onclick="openPrintView()" type="button">
+                        <span class="material-icons">print</span>
+                        In danh sách
+                    </button>
                     <c:if test="${sessionScope.canManageCategory}">
                         <button class="btn cat-btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
                             <span class="material-icons">add_circle</span>
@@ -85,7 +88,28 @@
             </div>
         </div>
 
-        
+        <c:if test="${printMode}">
+            <div class="cat-print-toolbar">
+                <div class="cat-print-info">
+                    <div class="cat-print-icon">
+                        <span class="material-icons">print</span>
+                    </div>
+                    <div>
+                        <strong>In danh sách nhóm hàng</strong>
+                        <span>Tùy chỉnh bộ lọc bên dưới rồi bấm in danh sách</span>
+                    </div>
+                </div>
+                <div class="cat-print-actions">
+                    <button type="button" class="cat-print-action-primary" onclick="window.print()">
+                        <span class="material-icons">print</span>
+                        <span class="cat-print-action-text">In danh sách</span>
+                    </button>
+                    <button type="button" class="btn cat-print-close" onclick="window.close()" title="Đóng bản in">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+            </div>
+        </c:if>
 
         <!-- ===== Filter Bar ===== -->
         <div class="cat-filter-bar">
@@ -93,7 +117,7 @@
                 <span class="material-icons">filter_list</span>
                 <span>Bộ lọc</span>
             </div>
-            <form method="get" action="${pageContext.request.contextPath}/category" class="cat-filter-form">
+            <form method="get" action="${pageContext.request.contextPath}/admin/categories" class="cat-filter-form">
                 <div class="cat-filter-group">
                     <div class="cat-filter-item cat-filter-search">
                         <span class="material-icons cat-filter-icon">search</span>
@@ -124,7 +148,7 @@
                         <span class="material-icons">filter_alt</span>
                         <span class="cat-btn-text">Lọc</span>
                     </button>
-                    <a href="${pageContext.request.contextPath}/category" class="btn cat-btn-reset" title="Xóa bộ lọc">
+                    <a href="${pageContext.request.contextPath}/admin/categories" class="btn cat-btn-reset" title="Xóa bộ lọc">
                         <span class="material-icons">refresh</span>
                     </a>
                 </div>
@@ -183,19 +207,19 @@
                                 <c:forEach var="category" items="${categories}" varStatus="loop">
                                     <tr class="cat-row" style="animation-delay: ${loop.index * 0.04}s;">
                                         <td>
-                                            <span class="cat-id">${category.id}</span>
+                                            <span class="cat-id">${category.categoryId}</span>
                                         </td>
                                         <td>
                                             <div class="cat-name-cell">
                                                 <a class="cat-name-icon ${empty category.parentName ? 'is-root' : 'is-child'}"
-                                                   href="${pageContext.request.contextPath}/products?categoryId=${category.id}"
+                                                   href="${pageContext.request.contextPath}/admin/products?categoryId=${category.categoryId}"
                                                    title="Xem hàng hóa trong danh mục này">
                                                     <span class="material-icons">
                                                         ${empty category.parentName ? 'widgets' : 'segment'}
                                                     </span>
                                                 </a>
                                                 <a class="cat-name-text cat-name-link"
-                                                   href="${pageContext.request.contextPath}/products?categoryId=${category.id}"
+                                                   href="${pageContext.request.contextPath}/admin/products?categoryId=${category.categoryId}"
                                                    title="Xem hàng hóa trong danh mục này">
                                                     <c:out value="${category.name}"/>
                                                 </a>
@@ -255,7 +279,7 @@
                                                         title="Chỉnh sửa"
                                                         data-bs-toggle="modal"
                                                         data-bs-target="#editCategoryModal"
-                                                        data-category-id="${category.id}"
+                                                        data-category-id="${category.categoryId}"
                                                         data-category-name="${fn:escapeXml(category.name)}"
                                                         data-category-description="${fn:escapeXml(category.description)}"
                                                         data-category-parent-name="${fn:escapeXml(category.parentName)}"
@@ -283,19 +307,19 @@
                 <nav>
                     <ul class="pagination mb-0">
                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                            <a class="page-link" href="${pageContext.request.contextPath}/category?page=${currentPage - 1}&keyword=${keyword}&status=${selectedStatus}&parentName=${parentNameFilter}">
+                            <a class="page-link" href="${pageContext.request.contextPath}/admin/categories?page=${currentPage - 1}&keyword=${keyword}&status=${selectedStatus}&parentName=${parentNameFilter}">
                                 <span class="material-icons" style="font-size:18px;">chevron_left</span>
                             </a>
                         </li>
                         <c:forEach var="pageIndex" begin="1" end="${totalPages}">
                             <li class="page-item ${currentPage == pageIndex ? 'active' : ''}">
-                                <a class="page-link" href="${pageContext.request.contextPath}/category?page=${pageIndex}&keyword=${keyword}&status=${selectedStatus}&parentName=${parentNameFilter}">
+                                <a class="page-link" href="${pageContext.request.contextPath}/admin/categories?page=${pageIndex}&keyword=${keyword}&status=${selectedStatus}&parentName=${parentNameFilter}">
                                     ${pageIndex}
                                 </a>
                             </li>
                         </c:forEach>
                         <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                            <a class="page-link" href="${pageContext.request.contextPath}/category?page=${currentPage + 1}&keyword=${keyword}&status=${selectedStatus}&parentName=${parentNameFilter}">
+                            <a class="page-link" href="${pageContext.request.contextPath}/admin/categories?page=${currentPage + 1}&keyword=${keyword}&status=${selectedStatus}&parentName=${parentNameFilter}">
                                 <span class="material-icons" style="font-size:18px;">chevron_right</span>
                             </a>
                         </li>
@@ -311,7 +335,7 @@
 <div class="modal fade" id="addCategoryModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content cat-modal">
-            <form method="post" action="${pageContext.request.contextPath}/category">
+            <form method="post" action="${pageContext.request.contextPath}/admin/categories">
                 <input type="hidden" name="action" value="add">
                 <div class="modal-header cat-modal-header">
                     <div class="d-flex align-items-center gap-3">
@@ -372,7 +396,7 @@
 <div class="modal fade" id="editCategoryModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content cat-modal">
-            <form method="post" action="${pageContext.request.contextPath}/category">
+            <form method="post" action="${pageContext.request.contextPath}/admin/categories">
                 <input type="hidden" name="action" value="update">
                 <input type="hidden" name="categoryId" id="editCategoryId">
                 <div class="modal-header cat-modal-header">
@@ -451,11 +475,17 @@ function prepareEditCategory(button) {
     if (!found) parentSelect.selectedIndex = 0;
 }
 
-/category?' + params.toString();
+function openPrintView() {
+    var params = new URLSearchParams(window.location.search);
+    params.delete('page');
+    params.set('printMode', 'true');
+    var printUrl = '${pageContext.request.contextPath}/admin/categories?' + params.toString();
     window.open(printUrl, '_blank');
 }
 
-
+<c:if test="${printMode}">
+document.body.classList.add('cat-print-mode');
+</c:if>
 </script>
 
 <style>
@@ -1350,7 +1380,256 @@ function prepareEditCategory(button) {
 
 .cat-btn-cancel .material-icons { font-size: 18px; }
 
+/* ===== Print mode screen preview ===== */
+body.cat-print-mode .cat-hero,
+body.cat-print-mode .cat-toast,
+body.cat-print-mode .cat-stats-grid,
+body.cat-print-mode .cat-filter-bar,
+body.cat-print-mode .cat-pagination,
+body.cat-print-mode .sidebar,
+body.cat-print-mode .navbar,
+body.cat-print-mode .topbar,
+body.cat-print-mode header,
+body.cat-print-mode aside,
+body.cat-print-mode .cat-table th:last-child,
+body.cat-print-mode .cat-table td:last-child,
+body.cat-print-mode .cat-action-btn {
+    display: none !important;
+}
 
+body.cat-print-mode .d-flex {
+    display: block !important;
+}
+
+body.cat-print-mode .main-content {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 24px !important;
+    background: #f8fafc;
+}
+
+.cat-print-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-left: 5px solid var(--primary-color);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.cat-print-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.cat-print-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #fff1f2;
+    color: var(--primary-color);
+}
+
+.cat-print-icon .material-icons {
+    font-size: 21px;
+}
+
+.cat-print-toolbar strong {
+    display: block;
+    color: #111827;
+    font-family: var(--font-heading);
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.1px;
+    margin-bottom: 3px;
+}
+
+.cat-print-toolbar span {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.cat-print-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.cat-print-action-primary {
+    height: 40px !important;
+    min-width: 132px !important;
+    padding: 0 18px !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    background: #93000b !important;
+    color: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    text-decoration: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+}
+
+.cat-print-action-primary:hover,
+.cat-print-action-primary:focus {
+    background: #760008 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+}
+
+.cat-print-action-primary .material-icons,
+.cat-print-action-primary .cat-print-action-text,
+.cat-print-action-primary:hover .material-icons,
+.cat-print-action-primary:hover .cat-print-action-text,
+.cat-print-action-primary:focus .material-icons,
+.cat-print-action-primary:focus .cat-print-action-text {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: inline-flex !important;
+    line-height: 1 !important;
+    text-indent: 0 !important;
+    font-size: 13px !important;
+}
+
+.cat-print-action-primary .material-icons {
+    font-size: 18px !important;
+}
+
+.cat-print-close {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #f1f5f9;
+    color: #334155;
+    transition: all 0.2s ease;
+}
+
+.cat-print-close:hover,
+.cat-print-close:focus {
+    background: #e2e8f0;
+    color: #111827;
+    transform: translateY(-1px);
+}
+
+.cat-print-close .material-icons {
+    font-size: 21px;
+}
+
+body.cat-print-mode .cat-table-wrapper {
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+body.cat-print-mode .cat-name-icon,
+body.cat-print-mode .cat-name-link {
+    pointer-events: none !important;
+    cursor: default !important;
+}
+
+body.cat-print-mode .cat-name-icon {
+    text-decoration: none !important;
+}
+
+body.cat-print-mode .cat-name-link {
+    color: var(--text-primary) !important;
+    text-decoration: none !important;
+}
+
+body.cat-print-mode .cat-row:hover {
+    background-color: transparent !important;
+}
+
+body.cat-print-mode .cat-row:hover .cat-name-icon {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* ===== Print: only category list, all pages via printMode ===== */
+@media print {
+    body * {
+        visibility: hidden !important;
+    }
+
+    .cat-table-wrapper,
+    .cat-table-wrapper * {
+        visibility: visible !important;
+    }
+
+    .cat-table-wrapper {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+    }
+
+    .cat-table-header {
+        padding: 0 0 12px 0 !important;
+        border-bottom: 2px solid #111 !important;
+    }
+
+    .cat-table-count,
+    .cat-action-btn,
+    .cat-table th:last-child,
+    .cat-table td:last-child {
+        display: none !important;
+    }
+
+    .cat-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+
+    .cat-table th,
+    .cat-table td {
+        border: 1px solid #ddd !important;
+        padding: 8px !important;
+        color: #111 !important;
+        background: #fff !important;
+    }
+
+    .cat-name-icon,
+    .cat-badge,
+    .cat-status,
+    .cat-product-pill,
+    .cat-id {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+}
 @media (max-width: 992px) {
     .cat-stats-grid {
         grid-template-columns: repeat(3, 1fr);
@@ -1383,4 +1662,4 @@ function prepareEditCategory(button) {
 }
 </style>
 
-<jsp:include page="/views/common/footer.jsp"/>
+<jsp:include page="../common/footer.jsp"/>
