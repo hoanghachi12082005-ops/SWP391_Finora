@@ -23,12 +23,15 @@ CREATE TABLE Branch (
     branch_name   NVARCHAR(150)   NOT NULL,
     branch_code   NVARCHAR(50)    UNIQUE,
     address       NVARCHAR(300),
-    phone         NVARCHAR(20),
-    email         NVARCHAR(150),
+    district      NVARCHAR(150),
+    city          NVARCHAR(150),
+    phone         NVARCHAR(20)    UNIQUE,
+    email         NVARCHAR(150)   UNIQUE,
     opening_time  NVARCHAR(10),
     closing_time  NVARCHAR(10),
     status        NVARCHAR(20)    DEFAULT 'ACTIVE'
                                   CHECK (status IN ('ACTIVE','INACTIVE')),
+    image_URL      NVARCHAR(255),
     created_at    DATETIME        DEFAULT GETDATE(),
     update_at     DATETIME        DEFAULT GETDATE()
 );
@@ -48,6 +51,7 @@ CREATE TABLE Employee (
     email         NVARCHAR(150) UNIQUE,
     phone         NVARCHAR(20)  UNIQUE,
     passwordHash  NVARCHAR(255),
+    image_URL     NVARCHAR(255),
     status        NVARCHAR(20)  DEFAULT 'ACTIVE'
                                 CHECK (status IN ('ACTIVE','INACTIVE')),
     created_at    DATETIME      DEFAULT GETDATE(),
