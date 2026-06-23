@@ -147,7 +147,10 @@
 
                     <!-- Pagination -->
 <%  if (totalPages > 1) { %>
-                    <div class="d-flex justify-content-center mt-4">
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div class="text-muted small">
+                            Trang <strong><%= currentPage %></strong> / <strong><%= totalPages %></strong>
+                        </div>
                         <ul class="pagination mb-0">
 <%      String baseUrl = ctx + "/products?view=" + viewMode
                 + (keyword != null && !keyword.isBlank() ? "&keyword=" + keyword : "")

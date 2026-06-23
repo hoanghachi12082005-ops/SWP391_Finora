@@ -173,7 +173,10 @@
 
                     <!-- Pagination -->
 
-                    <div class="d-flex justify-content-center mt-4">
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div class="text-muted small">
+                            Trang <strong>${page}</strong> / <strong>${totalPage}</strong>
+                        </div>
                         <ul class="pagination mb-0">
                             <li class="page-item ${page <= 1 ? 'disabled' : ''}">
                                 <a class="page-link" href="suppliers?page=${page - 1}&keyword=${keyword}">Trước</a>
