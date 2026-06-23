@@ -132,6 +132,22 @@ public class ProductDAO {
         try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
             try {
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Inventory WHERE ProductID = ?")) {
+                    stmt.setInt(1, id);
+                    stmt.executeUpdate();
+                }
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM StockTransaction WHERE ProductID = ?")) {
+                    stmt.setInt(1, id);
+                    stmt.executeUpdate();
+                }
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM StockTransferDetail WHERE ProductID = ?")) {
+                    stmt.setInt(1, id);
+                    stmt.executeUpdate();
+                }
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM OrderDetail WHERE ProductID = ?")) {
+                    stmt.setInt(1, id);
+                    stmt.executeUpdate();
+                }
                 try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Product WHERE ProductID = ?")) {
                     stmt.setInt(1, id);
                     stmt.executeUpdate();

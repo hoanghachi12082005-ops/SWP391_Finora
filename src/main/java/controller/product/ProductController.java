@@ -86,7 +86,15 @@ public class ProductController extends BaseController {
                 p.setProductID(Integer.parseInt(request.getParameter("productID")));
                 productDAO.update(p);
             } else if ("delete".equals(action)) {
-                productDAO.delete(Integer.parseInt(request.getParameter("id")));
+                try {
+                    productDAO.delete(Integer.parseInt(request.getParameter("id")));
+                    request.getSession().setAttribute("message", "Xóa sản phẩm thành công!");
+                    request.getSession().setAttribute("messageType", "success");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    request.getSession().setAttribute("message", "Không thể xóa sản phẩm này do đang có dữ liệu liên quan (giao dịch, đơn hàng...)!");
+                    request.getSession().setAttribute("messageType", "danger");
+                }
             }
             // Preserve search/filter params on redirect
             String keyword = request.getParameter("keyword");

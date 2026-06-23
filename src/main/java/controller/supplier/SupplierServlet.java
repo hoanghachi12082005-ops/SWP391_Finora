@@ -36,7 +36,14 @@ public class SupplierServlet extends HttpServlet {
                 request.getRequestDispatcher("/views/suppliers/edit.jsp").forward(request, response);
                 break;
             case "delete":
-                service.delete(Integer.parseInt(request.getParameter("id")));
+                boolean success = service.delete(Integer.parseInt(request.getParameter("id")));
+                if (success) {
+                    request.getSession().setAttribute("message", "Xóa đối tác thành công.");
+                    request.getSession().setAttribute("messageType", "success");
+                } else {
+                    request.getSession().setAttribute("message", "Không thể xóa đối tác này do đang có dữ liệu liên quan (giao dịch, đơn hàng...)!");
+                    request.getSession().setAttribute("messageType", "danger");
+                }
                 String page = request.getParameter("page");
                 String keyword = request.getParameter("keyword");
                 StringBuilder redirect = new StringBuilder("suppliers?");

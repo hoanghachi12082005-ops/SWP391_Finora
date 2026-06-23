@@ -250,6 +250,7 @@
 <form id="deleteProductForm" action="<%= ctx %>/products" method="post" style="display:none;">
     <input type="hidden" name="action" value="delete">
     <input type="hidden" name="id" id="delete-id">
+    <input type="hidden" name="page" value="<%= currentPage %>">
     <input type="hidden" name="view" value="<%= viewMode %>">
     <input type="hidden" name="keyword" value="<%= keyword != null ? keyword : "" %>">
     <input type="hidden" name="filterStatus" value="<%= filterStatus != null ? filterStatus : "" %>">

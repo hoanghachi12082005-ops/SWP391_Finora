@@ -82,6 +82,18 @@ public class CategoryDAO {
         return null;
     }
 
+    public boolean deleteCategory(int id) {
+        String sql = "DELETE FROM Category WHERE CategoryID = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public boolean addCategory(Category category) {
         String sql = "INSERT INTO Category (Name, Description, ParentCategoryID, Status) VALUES (?, ?, ?, ?)";
         try (Connection conn = DBContext.getConnection();
