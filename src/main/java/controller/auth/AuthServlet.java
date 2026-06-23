@@ -157,7 +157,8 @@ public class AuthServlet extends HttpServlet {
                 break;
             default:
                 response.sendRedirect(request.getContextPath() + "/dashboard");
-                break;
+                break; 
+                        
         }
     }
     private String getRedirectPath(Employee employee) {
