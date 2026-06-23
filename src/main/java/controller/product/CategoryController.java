@@ -39,9 +39,14 @@ public class CategoryController extends BaseController {
                 break;
             case "delete":
                 if (request.getParameter("id") != null) {
-                    categoryDAO.deleteCategory(Integer.parseInt(request.getParameter("id")));
-                    request.getSession().setAttribute("message", "Đã cập nhật trạng thái danh mục thành 'Ngừng sử dụng' (Xóa mềm).");
-                    request.getSession().setAttribute("messageType", "success");
+                    boolean success = categoryDAO.deleteCategory(Integer.parseInt(request.getParameter("id")));
+                    if (success) {
+                        request.getSession().setAttribute("message", "Đã xóa danh mục thành công.");
+                        request.getSession().setAttribute("messageType", "success");
+                    } else {
+                        request.getSession().setAttribute("message", "Không thể xóa danh mục này do đang có sản phẩm hoặc danh mục con phụ thuộc.");
+                        request.getSession().setAttribute("messageType", "danger");
+                    }
                 }
                 String pageStr = request.getParameter("page");
                 response.sendRedirect(request.getContextPath() + "/category" + (pageStr != null && !pageStr.isBlank() ? "?page=" + pageStr : ""));
@@ -174,10 +179,6 @@ public class CategoryController extends BaseController {
             if (status != null && !status.trim().isEmpty()) {
                 String st = status.trim();
                 if (st.equals(c.getStatus()) == false) {
-                    isMatch = false;
-                }
-            } else {
-                if ("inactive".equalsIgnoreCase(c.getStatus())) {
                     isMatch = false;
                 }
             }

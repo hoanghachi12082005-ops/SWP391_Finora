@@ -211,16 +211,4 @@ public class CategoryDAO {
         category.setProductCount(rs.getInt("ProductCount"));
         return category;
     }
-
-    public boolean deleteCategory(int id) {
-        String sql = "UPDATE Category SET Status = 'inactive' WHERE CategoryID = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
 }

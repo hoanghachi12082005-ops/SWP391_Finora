@@ -33,11 +33,7 @@ public class ProductDAO {
             "WHERE 1=1"
         );
         if (keyword != null && !keyword.isBlank()) sql.append(" AND p.Name LIKE ?");
-        if (status != null && !status.isBlank()) {
-            sql.append(" AND p.Status = ?");
-        } else {
-            sql.append(" AND p.Status != 'inactive'");
-        }
+        if (status != null && !status.isBlank())  sql.append(" AND p.Status = ?");
         if (categoryID != null) sql.append(" AND p.CategoryID = ?");
         if (unitID != null) sql.append(" AND p.UnitID = ?");
         sql.append(" ORDER BY p.ProductID ASC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
@@ -67,11 +63,7 @@ public class ProductDAO {
     public int getTotalCount(String keyword, String status, Integer categoryID, Integer unitID) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Product WHERE 1=1");
         if (keyword != null && !keyword.isBlank()) sql.append(" AND Name LIKE ?");
-        if (status != null && !status.isBlank()) {
-            sql.append(" AND Status = ?");
-        } else {
-            sql.append(" AND Status != 'inactive'");
-        }
+        if (status != null && !status.isBlank())  sql.append(" AND Status = ?");
         if (categoryID != null) sql.append(" AND CategoryID = ?");
         if (unitID != null) sql.append(" AND UnitID = ?");
 
@@ -140,7 +132,7 @@ public class ProductDAO {
         try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                try (PreparedStatement stmt = conn.prepareStatement("UPDATE Product SET Status = 'inactive' WHERE ProductID = ?")) {
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Product WHERE ProductID = ?")) {
                     stmt.setInt(1, id);
                     stmt.executeUpdate();
                 }
