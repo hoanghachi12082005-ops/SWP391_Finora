@@ -65,7 +65,7 @@ public class ProductController extends BaseController {
             request.setAttribute("filterUnitID", unitID);
             request.setAttribute("viewMode",    viewMode);
 
-            forward(request, response, "products/index");
+            forward(request, response, "products/index.jsp");
         } catch (SQLException e) {
             throw new ServletException("Database error retrieving products", e);
         }
