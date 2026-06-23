@@ -719,3 +719,50 @@
 .legend-color.primary { background-color: var(--primary-color); }
 .legend-color.secondary { background-color: #cbd5e1; }
 .legend-color.highlight { background-color: #fca5a5; }
+
+/* ── Utilities & Pagination (Restored from Thắng's branch) ── */
+.d-flex {
+    display: flex !important;
+}
+
+.flex-grow-1 {
+    flex-grow: 1 !important;
+}
+
+.gap-2 { gap: 0.5rem !important; }
+.gap-3 { gap: 1rem !important; }
+
+/* ── Pagination overrides for Bootstrap ── */
+.pagination {
+    --bs-pagination-active-bg: var(--primary-color);
+    --bs-pagination-active-border-color: var(--primary-color);
+}
+
+.pagination .page-link {
+    border-radius: 8px;
+    margin: 0 2px;
+    border: 1px solid #e0e0e0;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 13px;
+    min-width: 36px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.pagination .page-link:hover {
+    background: #f8fafc;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(147, 0, 11, 0.25);
+}
+
+.pagination .page-item.disabled .page-link {
+    opacity: 0.4;
+}
