@@ -110,9 +110,6 @@
 
                 </form>
 
-                <div class="text-center mt-4">
-                    <p>Chưa có tài khoản? <a href="${pageContext.request.contextPath}/register" class="register-link">Đăng ký</a></p>
-                </div>
 
             </div>
         </div>
