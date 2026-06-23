@@ -173,13 +173,19 @@
 
                     <!-- Pagination -->
 
-                    <div class="d-flex justify-content-end">
-                        <ul class="pagination">
+                    <div class="d-flex justify-content-center mt-4">
+                        <ul class="pagination mb-0">
+                            <li class="page-item ${page <= 1 ? 'disabled' : ''}">
+                                <a class="page-link" href="suppliers?page=${page - 1}&keyword=${keyword}">Trước</a>
+                            </li>
                             <c:forEach begin="1" end="${totalPage}" var="i">
                                 <li class="page-item ${page == i ? 'active' : ''}">
                                     <a class="page-link" href="suppliers?page=${i}&keyword=${keyword}">${i}</a>
                                 </li>
                             </c:forEach>
+                            <li class="page-item ${page >= totalPage ? 'disabled' : ''}">
+                                <a class="page-link" href="suppliers?page=${page + 1}&keyword=${keyword}">Tiếp</a>
+                            </li>
                         </ul>
                     </div>
 

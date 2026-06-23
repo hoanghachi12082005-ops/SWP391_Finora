@@ -147,18 +147,25 @@
 
                     <!-- Pagination -->
 <%  if (totalPages > 1) { %>
-                    <div class="d-flex justify-content-end mt-3">
-                        <ul class="pagination">
+                    <div class="d-flex justify-content-center mt-4">
+                        <ul class="pagination mb-0">
 <%      String baseUrl = ctx + "/products?view=" + viewMode
                 + (keyword != null && !keyword.isBlank() ? "&keyword=" + keyword : "")
                 + (filterStatus != null && !filterStatus.isBlank() ? "&status=" + filterStatus : "")
                 + (filterCategoryID != null ? "&categoryID=" + filterCategoryID : "")
                 + (filterUnitID != null ? "&unitID=" + filterUnitID : "");
-        for (int i = 1; i <= totalPages; i++) { %>
+%>
+                            <li class="page-item <%= currentPage <= 1 ? "disabled" : "" %>">
+                                <a class="page-link" href="<%= baseUrl %>&page=<%= currentPage - 1 %>">Trước</a>
+                            </li>
+<%      for (int i = 1; i <= totalPages; i++) { %>
                             <li class="page-item <%= i == currentPage ? "active" : "" %>">
                                 <a class="page-link" href="<%= baseUrl %>&page=<%= i %>"><%= i %></a>
                             </li>
 <%      } %>
+                            <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
+                                <a class="page-link" href="<%= baseUrl %>&page=<%= currentPage + 1 %>">Tiếp</a>
+                            </li>
                         </ul>
                     </div>
 <%  } %>

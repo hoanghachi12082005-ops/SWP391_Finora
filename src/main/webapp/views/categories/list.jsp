@@ -89,7 +89,7 @@
                             </div>
                         </div>
                         
-                        <!-- Extra teacher checks - hidden usually but ported for functionality -->
+<!--                         Extra teacher checks - hidden usually but ported for functionality 
                         <div class="row mt-3 border-top pt-3">
                             <div class="col-md-4 d-flex align-items-center gap-2">
                                 <label class="fw-bold mb-0 text-nowrap">Hiển thị:</label>
@@ -101,7 +101,7 @@
                                 <button type="submit" class="btn btn-sm btn-outline-info" name="percentAction" value="middle">30% Giữa</button>
                                 <button type="submit" class="btn btn-sm btn-outline-info" name="percentAction" value="last">30% Cuối</button>
                             </div>
-                        </div>
+                        </div>-->
                     </form>
                 </div>
             </div>
@@ -146,10 +146,10 @@
                                                 <td>
                                                     <c:choose>
                                                         <c:when test="${empty category.parentName}">
-                                                            <span class="badge bg-light text-dark border"><span class="material-icons" style="font-size: 12px; vertical-align: middle;">hub</span> Nhóm gốc</span>
+                                                            <span class="text-dark fw-bold">Nhóm gốc</span>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <span class="badge bg-light text-primary border"><span class="material-icons" style="font-size: 12px; vertical-align: middle;">turn_right</span> <c:out value="${category.parentName}"/></span>
+                                                            <span class="text-primary"><c:out value="${category.parentName}"/></span>
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </td>
@@ -179,7 +179,7 @@
                                                     </c:choose>
                                                 </td>
                                                 <c:if test="${sessionScope.canManageCategory}">
-                                                    <td class="text-center pe-4">
+                                                    <td class="text-center pe-4 text-nowrap">
                                                         <button type="button" class="btn btn-sm btn-warning"
                                                                 data-bs-toggle="modal"
                                                                 data-bs-target="#categoryModal"
@@ -191,6 +191,7 @@
                                                                 onclick="prepareEditCategory(this)">
                                                             Sửa
                                                         </button>
+                                                        <a href="${pageContext.request.contextPath}/category?action=delete&id=${category.id}" class="btn btn-sm btn-danger ms-1" onclick="return confirm('Bạn có chắc chắn muốn xóa danh mục này?')">Xóa</a>
                                                     </td>
                                                 </c:if>
                                             </tr>
