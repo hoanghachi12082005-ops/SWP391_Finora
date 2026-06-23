@@ -43,7 +43,8 @@ public class CategoryController extends BaseController {
                     request.getSession().setAttribute("message", "Đã cập nhật trạng thái danh mục thành 'Ngừng sử dụng' (Xóa mềm).");
                     request.getSession().setAttribute("messageType", "success");
                 }
-                response.sendRedirect(request.getContextPath() + "/category");
+                String pageStr = request.getParameter("page");
+                response.sendRedirect(request.getContextPath() + "/category" + (pageStr != null && !pageStr.isBlank() ? "?page=" + pageStr : ""));
                 break;
             default:
                 listCategories(request, response);

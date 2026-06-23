@@ -191,7 +191,7 @@
                                                                 onclick="prepareEditCategory(this)">
                                                             Sửa
                                                         </button>
-                                                        <a href="${pageContext.request.contextPath}/category?action=delete&id=${category.id}" class="btn btn-sm btn-danger ms-1" onclick="return confirm('Bạn có chắc chắn muốn xóa danh mục này?')">Xóa</a>
+                                                        <a href="${pageContext.request.contextPath}/category?action=delete&id=${category.id}&page=${currentPage}" class="btn btn-sm btn-danger ms-1" onclick="return confirm('Bạn có chắc chắn muốn xóa danh mục này?')">Xóa</a>
                                                     </td>
                                                 </c:if>
                                             </tr>

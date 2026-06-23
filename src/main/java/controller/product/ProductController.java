@@ -94,12 +94,20 @@ public class ProductController extends BaseController {
             String categoryID = request.getParameter("filterCategoryID");
             String unitID = request.getParameter("filterUnitID");
             String view    = request.getParameter("view");
+            String page    = request.getParameter("page");
             StringBuilder redirect = new StringBuilder(request.getContextPath() + "/products?");
             if (keyword != null && !keyword.isBlank()) redirect.append("keyword=").append(keyword).append("&");
             if (status  != null && !status.isBlank())  redirect.append("status=").append(status).append("&");
             if (categoryID  != null && !categoryID.isBlank())  redirect.append("categoryID=").append(categoryID).append("&");
             if (unitID  != null && !unitID.isBlank())  redirect.append("unitID=").append(unitID).append("&");
-            if (view    != null && !view.isBlank())    redirect.append("view=").append(view);
+            if (view    != null && !view.isBlank())    redirect.append("view=").append(view).append("&");
+            if (page    != null && !page.isBlank())    redirect.append("page=").append(page);
+            
+            // Clean up trailing & if exists
+            if (redirect.charAt(redirect.length() - 1) == '&' || redirect.charAt(redirect.length() - 1) == '?') {
+                redirect.deleteCharAt(redirect.length() - 1);
+            }
+            
             response.sendRedirect(redirect.toString());
         } catch (Exception e) {
             throw new ServletException("Error processing request", e);

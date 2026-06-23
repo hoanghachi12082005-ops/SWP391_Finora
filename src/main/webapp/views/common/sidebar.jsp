@@ -20,10 +20,12 @@
     <nav class="sidebar-menu">
         <div class="sidebar-menu-title">Chức năng chính</div>
         
+        <c:set var="originalUri" value="${requestScope['jakarta.servlet.forward.request_uri'] != null ? requestScope['jakarta.servlet.forward.request_uri'] : pageContext.request.requestURI}" />
+
         <!-- Dashboard Owner Overview (Admin, Owner, StoreManager) -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
             <a href="${pageContext.request.contextPath}/dashboard/owner" 
-               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/dashboard/owner') ? 'active' : ''}">
+               class="sidebar-menu-item ${originalUri.contains('/dashboard/owner') ? 'active' : ''}">
                 <span class="material-icons">dashboard</span>
                 <span>Tổng quan</span>
             </a>
@@ -32,7 +34,7 @@
         <!-- Inventory Dashboard (WarehouseStaff) -->
         <c:if test="${roleName == 'WarehouseStaff'}">
             <a href="${pageContext.request.contextPath}/inventory/dashboard" 
-               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/inventory/') ? 'active' : ''}">
+               class="sidebar-menu-item ${originalUri.contains('/inventory/') ? 'active' : ''}">
                 <span class="material-icons">inventory_2</span>
                 <span>Kho hàng</span>
             </a>
@@ -40,19 +42,19 @@
 
         <!-- Product Management -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'WarehouseStaff'}">
-            <c:set var="isProductActive" value="${pageContext.request.requestURI.contains('/products') || pageContext.request.requestURI.contains('/category')}" />
+            <c:set var="isProductActive" value="${originalUri.contains('/products') || originalUri.contains('/category')}" />
             <a href="#productsCollapse" data-bs-toggle="collapse" role="button" aria-expanded="${isProductActive ? 'true' : 'false'}" aria-controls="productsCollapse"
                class="sidebar-menu-item ${isProductActive ? 'active' : ''} d-flex align-items-center">
                 <span class="material-icons">shopping_bag</span>
                 <span>Hàng hóa</span>
-                <span class="material-icons ms-auto" style="font-size: 1.2rem;">expand_more</span>
+                <span class="material-icons ms-auto transition-icon" style="font-size: 1.2rem;">expand_more</span>
             </a>
             <div class="collapse ${isProductActive ? 'show' : ''}" id="productsCollapse">
                 <div class="sidebar-submenu">
-                    <a href="${pageContext.request.contextPath}/products" class="sidebar-submenu-item ${pageContext.request.requestURI.contains('/products') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/products" class="sidebar-submenu-item ${originalUri.contains('/products') ? 'active' : ''}">
                         Sản phẩm
                     </a>
-                    <a href="${pageContext.request.contextPath}/category" class="sidebar-submenu-item ${pageContext.request.requestURI.contains('/category') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/category" class="sidebar-submenu-item ${originalUri.contains('/category') ? 'active' : ''}">
                         Danh mục
                     </a>
                 </div>

@@ -37,7 +37,16 @@ public class SupplierServlet extends HttpServlet {
                 break;
             case "delete":
                 service.delete(Integer.parseInt(request.getParameter("id")));
-                response.sendRedirect("suppliers");
+                String page = request.getParameter("page");
+                String keyword = request.getParameter("keyword");
+                StringBuilder redirect = new StringBuilder("suppliers?");
+                if (page != null && !page.isBlank()) redirect.append("page=").append(page).append("&");
+                if (keyword != null && !keyword.isBlank()) redirect.append("keyword=").append(keyword);
+                
+                if (redirect.charAt(redirect.length() - 1) == '&' || redirect.charAt(redirect.length() - 1) == '?') {
+                    redirect.deleteCharAt(redirect.length() - 1);
+                }
+                response.sendRedirect(redirect.toString());
                 break;
             default:
                 listSupplier(request, response);

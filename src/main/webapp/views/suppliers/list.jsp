@@ -162,7 +162,7 @@
                                     <td>
                                         <a href="suppliers?action=edit&id=${s.supplierID}"class="btn btn-sm btn-warning">Sửa</a>
 
-                                        <a href="suppliers?action=delete&id=${s.supplierID}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa nhà cung cấp này?')"> Xóa</a>
+                                        <a href="suppliers?action=delete&id=${s.supplierID}&page=${page}&keyword=${keyword}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa nhà cung cấp này?')"> Xóa</a>
                                     </td>
                                 </tr>
                             </c:forEach>

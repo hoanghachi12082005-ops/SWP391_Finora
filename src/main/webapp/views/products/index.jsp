@@ -227,7 +227,7 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Giá bán (VNĐ)</label>
-                    <input type="number" id="modal-sellingPrice" name="sellingPrice" class="form-control" required placeholder="0">
+                    <input type="number" id="modal-sellingPrice" name="sellingPrice" class="form-control" min="0" required placeholder="0">
                 </div>
             </div>
             <div class="mb-3">
