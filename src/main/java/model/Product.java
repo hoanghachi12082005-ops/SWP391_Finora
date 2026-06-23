@@ -1,6 +1,6 @@
 package model;
 
-    public class Product extends BaseModel {
+    public class Product  {
     private String sku;
 private int categoryId;
 private double price;

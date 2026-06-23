@@ -1,6 +1,6 @@
 package model;
 
-    public class InventoryItem extends BaseModel {
+    public class InventoryItem  {
     private int productId;
 private int storeId;
 private int quantity;

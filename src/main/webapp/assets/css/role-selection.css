@@ -107,3 +107,42 @@
     background: #dc3545;
     color: #fff;
 }
+/* Warehouse */
+.warehouse {
+    background: #f0e8ff;
+    color: #6f42c1;
+}
+
+.empty-role-box {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 40px 30px;
+    border-radius: 18px;
+    background: #fff;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+}
+
+.empty-role-box span {
+    font-size: 56px;
+    color: #dc3545;
+    margin-bottom: 15px;
+}
+
+.empty-role-box h5 {
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.empty-role-box p {
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+.module-card {
+    cursor: pointer;
+}
+
+.module-card:focus {
+    outline: none;
+}

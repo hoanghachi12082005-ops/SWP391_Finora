@@ -1,6 +1,6 @@
 package model;
 
-    public class BusinessConfiguration extends BaseModel {
+    public class BusinessConfiguration {
     private String configKey;
 private String configValue;
 

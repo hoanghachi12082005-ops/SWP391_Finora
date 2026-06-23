@@ -1,28 +1,69 @@
+<%-- 
+    Document   : sidebar
+    Created on : 27 May 2026, 21:11:59
+    Author     : PCQN
+--%>
+
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<aside class="sidebar">
-    <h2>StoreMS</h2>
-    <nav>
-        <a href="${pageContext.request.contextPath}/dashboard/owner">Owner Dashboard</a>
-        <a href="${pageContext.request.contextPath}/users">User Manager</a>
-        <a href="${pageContext.request.contextPath}/roles">Role Management</a>
-        <a href="${pageContext.request.contextPath}/suppliers">Supplier Manager</a>
-        <a href="${pageContext.request.contextPath}/customers">Customer Manager</a>
-        <a href="${pageContext.request.contextPath}/categories">Category Manager</a>
-        <a href="${pageContext.request.contextPath}/products">Product Manager</a>
-        <a href="${pageContext.request.contextPath}/stores">Store Manager</a>
-        <a href="${pageContext.request.contextPath}/orders/create">Create Order</a>
-        <a href="${pageContext.request.contextPath}/inventory/dashboard">Inventory</a>
-        <a href="${pageContext.request.contextPath}/purchase-orders">Purchase Order</a>
-        <a href="${pageContext.request.contextPath}/payments">Payment</a>
-        <a href="${pageContext.request.contextPath}/invoices">Invoice</a>
-        <a href="${pageContext.request.contextPath}/income">Income</a>
-        <a href="${pageContext.request.contextPath}/expenses">Expense</a>
-        <a href="${pageContext.request.contextPath}/reports/export">Export Report</a>
-        <a href="${pageContext.request.contextPath}/activity-log">Activity Log</a>
-        <a href="${pageContext.request.contextPath}/notifications">Notification</a>
-        <a href="${pageContext.request.contextPath}/configuration/business">Configuration</a>
-        <a href="${pageContext.request.contextPath}/seo">SEO Website</a>
-        <a href="${pageContext.request.contextPath}/profile">Profile</a>
-        <a href="${pageContext.request.contextPath}/logout">Logout</a>
-    </nav>
-</aside>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-logo">F</div>
+        <div>
+            <h1>Finora</h1>
+            <p>
+                <c:choose>
+                    <c:when test="${sessionScope.roleName == 'Admin'}">System Admin</c:when>
+                    <c:when test="${sessionScope.roleName == 'Owner'}">Shop Owner</c:when>
+                    <c:when test="${sessionScope.roleName == 'StoreManager'}">Store Manager</c:when>
+                    <c:otherwise>Employee</c:otherwise>
+                </c:choose>
+            </p>
+        </div>
+    </div>
+
+    <div class="sidebar-menu">
+        <a class="menu-item" href="${pageContext.request.contextPath}/dashboard">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span>Dashboard</span>
+        </a>
+
+        <c:if test="${sessionScope.roleName == 'Admin'}">
+            <a class="menu-item active" href="${pageContext.request.contextPath}/admin/user">
+                <span class="material-symbols-outlined">manage_accounts</span>
+                <span>Owner Accounts</span>
+            </a>
+        </c:if>
+
+        <c:if test="${sessionScope.roleName == 'Owner'}">
+            <a class="menu-item active" href="${pageContext.request.contextPath}/owner/emp">
+                <span class="material-symbols-outlined">badge</span>
+                <span>Employees</span>
+            </a>
+            <a class="menu-item" href="${pageContext.request.contextPath}/owner/branch">
+                <span class="material-symbols-outlined">storefront</span>
+                <span>Stores</span>
+            </a>
+        </c:if>
+
+        <c:if test="${sessionScope.roleName == 'StoreManager'}">
+            <a class="menu-item active" href="${pageContext.request.contextPath}/manager/emp">
+                <span class="material-symbols-outlined">badge</span>
+                <span>Branch Employees</span>
+            </a>
+        </c:if>
+    </div>
+
+    <div class="sidebar-footer">
+        <a class="menu-item" href="${pageContext.request.contextPath}/profile">
+            <span class="material-symbols-outlined">person</span>
+            <span>Profile</span>
+        </a>
+        <a class="menu-item" href="${pageContext.request.contextPath}/logout">
+            <span class="material-symbols-outlined">logout</span>
+            <span>Logout</span>
+        </a>
+    </div>
+</nav>
+

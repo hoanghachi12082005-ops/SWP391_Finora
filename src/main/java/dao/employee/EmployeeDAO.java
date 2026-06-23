@@ -3,6 +3,9 @@ package dao.employee;
 import model.Employee;
 import util.database.DBContext;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import model.EmployeeRoleOption;
 
 public class EmployeeDAO {
 
@@ -18,9 +21,9 @@ public class EmployeeDAO {
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 Employee employee = new Employee();
-                employee.setEmployeeId(rs.getInt("EmployeeID"));
-                employee.setRoleId(rs.getInt("RoleID"));
-                employee.setBranchId(rs.getObject("BranchID") != null ? rs.getInt("BranchID") : null);
+                employee.setEmployeeID(rs.getInt("EmployeeID"));
+                employee.setRoleID(rs.getInt("RoleID"));
+                employee.setBranchID(rs.getObject("BranchID") != null ? rs.getInt("BranchID") : null);
                 employee.setFullName(rs.getString("FullName"));
                 employee.setEmail(rs.getString("Email"));
                 employee.setPhone(rs.getString("Phone"));
@@ -72,11 +75,11 @@ public class EmployeeDAO {
             ps = connection.prepareStatement(sql);
 
             // Gán các tham số
-            ps.setInt(1, employee.getRoleId());
+            ps.setInt(1, employee.getRoleID());
 
             // Xử lý an toàn cho BranchID: Nếu là Owner không thuộc chi nhánh nào thì truyền NULL vào DB
-            if (employee.getBranchId() != null && employee.getBranchId() > 0) {
-                ps.setInt(2, employee.getBranchId());
+            if (employee.getBranchID() != null && employee.getBranchID() > 0) {
+                ps.setInt(2, employee.getBranchID());
             } else {
                 ps.setNull(2, java.sql.Types.INTEGER);
             }
@@ -142,4 +145,5 @@ public class EmployeeDAO {
         }
         return false;
     }
+    
 }

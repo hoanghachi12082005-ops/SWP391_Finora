@@ -1,6 +1,6 @@
 package model;
 
-    public class ActivityLog extends BaseModel {
+    public class ActivityLog {
     private int userId;
 private String action;
 private String description;

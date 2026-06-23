@@ -1,6 +1,6 @@
 package model;
 
-    public class Invoice extends BaseModel {
+    public class Invoice {
     private int orderId;
 private String invoiceCode;
 private double totalAmount;

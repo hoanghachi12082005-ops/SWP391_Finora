@@ -1,6 +1,6 @@
 package model;
 
-    public class PurchaseDetail extends BaseModel {
+    public class PurchaseDetail  {
     private int purchaseOrderId;
 private int productId;
 private int quantity;

@@ -1,6 +1,6 @@
 package model;
 
-    public class Notification extends BaseModel {
+    public class Notification {
     private int userId;
 private String message;
 private boolean read;

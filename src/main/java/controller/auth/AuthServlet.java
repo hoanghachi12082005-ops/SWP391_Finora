@@ -12,7 +12,7 @@ import model.Employee;
 import service.employee.AuthService;
 import util.email.EmailUtil;
 
-@WebServlet(name = "AuthServlet", urlPatterns = {"/login", "/logout", "/register", "/forgot-password", "/role-selection"})
+@WebServlet(name = "AuthServlet", urlPatterns = {"/login", "/logout", "/register", "/forgot-password"})
 public class AuthServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -42,6 +42,7 @@ public class AuthServlet extends HttpServlet {
 
         switch (action) {
             case "/login":
+                // Views nằm tại webapp/views/ (không có /WEB-INF/)
                 request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
                 break;
             case "/register":
@@ -49,28 +50,6 @@ public class AuthServlet extends HttpServlet {
                 break;
             case "/forgot-password":
                 request.getRequestDispatcher("/views/auth/forgot-password.jsp").forward(request, response);
-                break;
-            case "/role-selection":
-
-                HttpSession session = request.getSession(false);
-
-                System.out.println("Session Role = " + session);
-
-                if (session != null) {
-                    System.out.println("Session ID Role = " + session.getId());
-                    System.out.println("CurrentUser Role = "
-                            + session.getAttribute("currentUser"));
-                }
-
-                if (session == null
-                        || session.getAttribute("currentUser") == null) {
-
-                    response.sendRedirect(request.getContextPath() + "/login");
-                    return;
-                }
-
-                request.getRequestDispatcher("/views/auth/role-selection.jsp")
-                        .forward(request, response);
                 break;
         }
     }
@@ -90,9 +69,6 @@ public class AuthServlet extends HttpServlet {
             case "/forgot-password":
                 handleForgotPassword(request, response);
                 break;
-            case "/role-selection":
-                handleRoleSelection(request, response);
-                break;
             default:
                 response.sendRedirect(request.getContextPath() + "/login");
                 break;
@@ -107,20 +83,46 @@ public class AuthServlet extends HttpServlet {
         String emailOrPhone = request.getParameter("username");
         String password = request.getParameter("password");
 
-        System.out.println("[DEBUG] Request Login nhận được username: [" + emailOrPhone + "]");
-
         try {
             // Xác thực thông tin qua tầng xử lý mật khẩu băm AuthService
             Employee employee = authService.login(emailOrPhone, password);
 
             HttpSession session = request.getSession(true);
-
+            // Lưu user vào session với key "currentUser" — NHẤT QUÁN với toàn bộ hệ thống
             session.setAttribute("currentUser", employee);
 
-            System.out.println("Session ID Login = " + session.getId());
-            System.out.println("CurrentUser Login = " + session.getAttribute("currentUser"));
+            int roleId = employee.getRoleID();
+            session.setAttribute("activeRoleId", roleId);
 
-            response.sendRedirect(request.getContextPath() + "/role-selection");
+            switch (roleId) {
+
+                case 1: // Admin
+                    response.sendRedirect(request.getContextPath() + "/admin/user");
+                    break;
+
+                case 2: // Owner
+                    response.sendRedirect(request.getContextPath() + "/owner/emp");
+                    break;
+
+                case 3: // StoreManager
+                    response.sendRedirect(request.getContextPath() + "/manager/emp");
+                    break;
+
+                case 4: // SalesStaff
+                    response.sendRedirect(request.getContextPath() + "/pos/sale");
+                    break;
+
+                case 5: // WarehouseStaff
+                    response.sendRedirect(request.getContextPath() + "/warehouse/dashboard");
+                    break;
+
+                default:
+                    session.invalidate();
+                    request.setAttribute("error", "Tài khoản chưa được phân quyền.");
+                    request.getRequestDispatcher("/views/auth/login.jsp")
+                            .forward(request, response);
+                    break;
+            }
 
         } catch (RuntimeException e) {
             System.err.println("[DEBUG] Đăng nhập thất bại do: " + e.getMessage());
@@ -162,7 +164,7 @@ public class AuthServlet extends HttpServlet {
         try {
 
             int defaultRoleId = 2;     // Owner
-            int defaultBranchId = 1;   // Tạm thời
+            int defaultBranchId = -1;  // FIX: Không hardcode branchId, để null → tự gán sau khi tạo store
 
             boolean isRegistered = authService.register(
                     fullName.trim(),
@@ -176,9 +178,9 @@ public class AuthServlet extends HttpServlet {
                 request.setAttribute("step", "4");
                 request.setAttribute("resShopName", shopName);
                 request.setAttribute("resUsername", email.trim());
-                request.setAttribute("resPassword", password.trim());
+                // FIX: Không truyền password plaintext ra JSP — rủi ro bảo mật
                 request.setAttribute("successMessage",
-                        "Đăng ký cửa hàng thành công!");
+                        "Đăng ký cửa hàng thành công! Vui lòng đăng nhập bằng email và mật khẩu vừa đặt.");
             } else {
                 request.setAttribute("error", "Đăng ký thất bại! Hệ thống đang bận.");
             }
@@ -210,19 +212,22 @@ public class AuthServlet extends HttpServlet {
             boolean isMatch = employeeDAO.checkFullNameAndEmailMatch(fullName.trim(), email.trim());
             if (isMatch) {
                 String newPassword = EmailUtil.generateRandomPassword();
-                String hashedPassword = util.security.PasswordUtil.hash(newPassword);
 
-                boolean updated = employeeDAO.updatePasswordByEmail(email.trim(), hashedPassword);
-                if (updated) {
-                    boolean sent = EmailUtil.sendPasswordEmail(email.trim(), fullName.trim(), newPassword);
-                    if (sent) {
+                // FIX: Kiểm tra gửi email TRƯỚC khi cập nhật DB để tránh mất quyền truy cập
+                boolean sent = EmailUtil.sendPasswordEmail(email.trim(), fullName.trim(), newPassword);
+                if (!sent) {
+                    request.setAttribute("error", "Không thể gửi email. Vui lòng kiểm tra lại địa chỉ email hoặc thử lại sau!");
+                } else {
+                    // Chỉ cập nhật DB khi email gửi thành công
+                    String hashedPassword = util.security.PasswordUtil.hash(newPassword);
+                    boolean updated = employeeDAO.updatePasswordByEmail(email.trim(), hashedPassword);
+                    if (updated) {
                         request.setAttribute("successMessage", "Mật khẩu mới đã được gửi thành công qua email của bạn!");
                         request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
                         return;
+                    } else {
+                        request.setAttribute("error", "Không thể cập nhật mật khẩu mới vào Cơ sở dữ liệu!");
                     }
-                    request.setAttribute("error", "Hệ thống đã cập nhật mật khẩu mới nhưng tiến trình gửi Email bị lỗi!");
-                } else {
-                    request.setAttribute("error", "Không thể cập nhật mật khẩu mới vào Cơ sở dữ liệu!");
                 }
             } else {
                 request.setAttribute("error", "Thông tin Họ tên hoặc Email không khớp với bất kỳ tài khoản nào!");
@@ -237,30 +242,4 @@ public class AuthServlet extends HttpServlet {
     /**
      * 4. Phân luồng trang Quản lý sau Đăng nhập (Role Selection)
      */
-    private void handleRoleSelection(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        String role = request.getParameter("role");
-        if (role == null) {
-            response.sendRedirect(request.getContextPath() + "/dashboard");
-            return;
-        }
-
-        switch (role.trim().toLowerCase()) {
-            case "pos":
-                response.sendRedirect(request.getContextPath() + "/pos/sale");
-                break;
-            case "management":
-                response.sendRedirect(request.getContextPath() + "/management/dashboard");
-                break;
-            case "report":
-                response.sendRedirect(request.getContextPath() + "/report/dashboard");
-                break;
-            case "system":
-                response.sendRedirect(request.getContextPath() + "/system/config");
-                break;
-            default:
-                response.sendRedirect(request.getContextPath() + "/dashboard");
-                break;
-        }
-    }
 }

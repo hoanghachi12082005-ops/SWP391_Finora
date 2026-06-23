@@ -13,27 +13,17 @@ public class AuthService {
      */
     public Employee login(String username, String password) {
 
-        System.out.println("Username nhập: " + username);
-
         Employee employee = employeeDAO.findByEmailOrPhone(username.trim());
-
-        System.out.println("Employee: " + employee);
 
         if (employee == null) {
             throw new RuntimeException("Email/số điện thoại không tồn tại");
         }
 
-        System.out.println("Status DB: " + employee.getStatus());
-
         if (!"ACTIVE".equalsIgnoreCase(employee.getStatus())) {
             throw new RuntimeException("Tài khoản của bạn đã bị khóa hoặc chưa được kích hoạt");
         }
 
-        System.out.println("Hash DB: " + employee.getPasswordHash());
-
         boolean verify = PasswordUtil.verify(password, employee.getPasswordHash());
-
-        System.out.println("Verify result: " + verify);
 
         if (!verify) {
             throw new RuntimeException("Mật khẩu không chính xác");
@@ -79,9 +69,9 @@ public class AuthService {
         // 4. Mã hóa mật khẩu đầu vào sang chuỗi BCrypt an toàn
         employee.setPasswordHash(PasswordUtil.hash(password));
 
-        employee.setRoleId(roleId);
+        employee.setRoleID(roleId);
         // Nếu là Owner/Admin đăng ký tự do, branchId truyền vào có thể xử lý null
-        employee.setBranchId(branchId > 0 ? branchId : null);
+        employee.setBranchID(branchId > 0 ? branchId : null);
         employee.setStatus("active");
         
         

@@ -1,6 +1,6 @@
 package model;
 
-    public class Supplier extends BaseModel {
+    public class Supplier {
     private String phone;
 private String email;
 private String address;

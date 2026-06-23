@@ -1,6 +1,6 @@
 package model;
 
-    public class Payment extends BaseModel {
+    public class Payment {
     private int orderId;
 private double amount;
 private String method;

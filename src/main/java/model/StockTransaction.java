@@ -1,6 +1,6 @@
 package model;
 
-    public class StockTransaction extends BaseModel {
+    public class StockTransaction{
     private int productId;
 private int fromStoreId;
 private int toStoreId;

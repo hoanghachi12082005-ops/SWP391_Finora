@@ -1,6 +1,6 @@
 package model;
 
-    public class Category extends BaseModel {
+    public class Category  {
     private String description;
 
         public Category() {}

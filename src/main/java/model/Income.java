@@ -1,6 +1,6 @@
 package model;
 
-    public class Income extends BaseModel {
+    public class Income {
     private double amount;
 private String description;
 

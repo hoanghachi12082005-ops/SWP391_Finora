@@ -1,6 +1,6 @@
 package model;
 
-    public class OrderDetail extends BaseModel {
+    public class OrderDetail{
     private int orderId;
 private int productId;
 private int quantity;

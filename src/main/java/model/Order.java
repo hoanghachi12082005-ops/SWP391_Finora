@@ -1,6 +1,6 @@
 package model;
 
-    public class Order extends BaseModel {
+    public class Order {
     private int customerId;
 private int storeId;
 private double totalAmount;

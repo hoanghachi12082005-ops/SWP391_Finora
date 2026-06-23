@@ -410,8 +410,7 @@ INDUSTRY
 
 }
 
-.industry-item:hover
-
+.industry-item:hover,
 .industry-item.selected{
     background:#fff1f2;
     color:#93000b;
@@ -505,5 +504,6 @@ SCROLLBAR
     border-radius:20px;
 }
 
-::-webkit-scrollbar-thumb:hover
-
+::-webkit-scrollbar-thumb:hover{
+    background:#94a3b8;
+}

@@ -7,7 +7,7 @@ public class Employee {
     private int employeeID;
     private int roleID;
     private Integer branchID;
-
+    private String avatarUrl;
     private String fullName;
     private String gender;
     private Timestamp dob;
@@ -30,12 +30,14 @@ public class Employee {
     }
 
     // Full Constructor (Bao gồm các trường mới)
-    public Employee(int employeeID, int roleID, Integer branchID, String fullName, String gender,
-            Timestamp dob, String address, String email, String phone, String passwordHash,
-            String status, Timestamp createdAt, Timestamp updatedAt) {
+
+    public Employee(int employeeID, int roleID, Integer branchID, String avatarUrl, String fullName, String gender, 
+            Timestamp dob, String address, String email, String phone, String passwordHash, String status, 
+            Timestamp createdAt, Timestamp updatedAt, String roleName, String roleNames, String branchName) {
         this.employeeID = employeeID;
         this.roleID = roleID;
         this.branchID = branchID;
+        this.avatarUrl = avatarUrl;
         this.fullName = fullName;
         this.gender = gender;
         this.dob = dob;
@@ -46,11 +48,11 @@ public class Employee {
         this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.roleName = roleName;
+        this.roleNames = roleNames;
+        this.branchName = branchName;
     }
 
-    // =========================
-    // Employee ID
-    // =========================
     public int getEmployeeID() {
         return employeeID;
     }
@@ -59,18 +61,6 @@ public class Employee {
         this.employeeID = employeeID;
     }
 
-    // Alias for code using employeeId
-    public int getEmployeeId() {
-        return employeeID;
-    }
-
-    public void setEmployeeId(int employeeID) {
-        this.employeeID = employeeID;
-    }
-
-    // =========================
-    // Role ID
-    // =========================
     public int getRoleID() {
         return roleID;
     }
@@ -79,18 +69,6 @@ public class Employee {
         this.roleID = roleID;
     }
 
-    // Alias for code using roleId
-    public int getRoleId() {
-        return roleID;
-    }
-
-    public void setRoleId(int roleID) {
-        this.roleID = roleID;
-    }
-
-    // =========================
-    // Branch ID
-    // =========================
     public Integer getBranchID() {
         return branchID;
     }
@@ -99,26 +77,14 @@ public class Employee {
         this.branchID = branchID;
     }
 
-    public void setBranchID(int branchID) {
-        this.branchID = branchID;
+    public String getAvatarUrl() {
+        return avatarUrl;
     }
 
-    // Alias for code using branchId
-    public Integer getBranchId() {
-        return branchID;
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 
-    public void setBranchId(Integer branchID) {
-        this.branchID = branchID;
-    }
-
-    public void setBranchId(int branchID) {
-        this.branchID = branchID;
-    }
-
-    // =========================
-    // Basic information
-    // =========================
     public String getFullName() {
         return fullName;
     }
@@ -159,15 +125,6 @@ public class Employee {
         this.email = email;
     }
 
-    // Alias if some old code uses username as email
-    public String getUsername() {
-        return email;
-    }
-
-    public void setUsername(String username) {
-        this.email = username;
-    }
-
     public String getPhone() {
         return phone;
     }
@@ -184,15 +141,6 @@ public class Employee {
         this.passwordHash = passwordHash;
     }
 
-    // Alias if some old code uses password
-    public String getPassword() {
-        return passwordHash;
-    }
-
-    public void setPassword(String password) {
-        this.passwordHash = password;
-    }
-
     public String getStatus() {
         return status;
     }
@@ -201,9 +149,6 @@ public class Employee {
         this.status = status;
     }
 
-    // =========================
-    // Timestamps
-    // =========================
     public Timestamp getCreatedAt() {
         return createdAt;
     }
@@ -220,9 +165,6 @@ public class Employee {
         this.updatedAt = updatedAt;
     }
 
-    // =========================
-    // Role & Branch display fields
-    // =========================
     public String getRoleName() {
         return roleName;
     }
@@ -246,6 +188,7 @@ public class Employee {
     public void setBranchName(String branchName) {
         this.branchName = branchName;
     }
+    
 
     // =========================
     // ToString (Hỗ trợ Debug nhanh)

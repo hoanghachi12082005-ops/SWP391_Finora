@@ -1,6 +1,6 @@
 package model;
 
-    public class Store extends BaseModel {
+    public class Store {
     private String address;
 private String phone;
 
