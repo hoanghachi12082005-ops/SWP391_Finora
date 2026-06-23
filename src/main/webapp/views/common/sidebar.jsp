@@ -40,11 +40,23 @@
 
         <!-- Product Management -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'WarehouseStaff'}">
-            <a href="${pageContext.request.contextPath}/products" 
-               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/products') || pageContext.request.requestURI.contains('/categories') ? 'active' : ''}">
+            <c:set var="isProductActive" value="${pageContext.request.requestURI.contains('/products') || pageContext.request.requestURI.contains('/category')}" />
+            <a href="#productsCollapse" data-bs-toggle="collapse" role="button" aria-expanded="${isProductActive ? 'true' : 'false'}" aria-controls="productsCollapse"
+               class="sidebar-menu-item ${isProductActive ? 'active' : ''} d-flex align-items-center">
                 <span class="material-icons">shopping_bag</span>
                 <span>Hàng hóa</span>
+                <span class="material-icons ms-auto" style="font-size: 1.2rem;">expand_more</span>
             </a>
+            <div class="collapse ${isProductActive ? 'show' : ''}" id="productsCollapse">
+                <div class="sidebar-submenu">
+                    <a href="${pageContext.request.contextPath}/products" class="sidebar-submenu-item ${pageContext.request.requestURI.contains('/products') ? 'active' : ''}">
+                        Sản phẩm
+                    </a>
+                    <a href="${pageContext.request.contextPath}/category" class="sidebar-submenu-item ${pageContext.request.requestURI.contains('/category') ? 'active' : ''}">
+                        Danh mục
+                    </a>
+                </div>
+            </div>
         </c:if>
 
         <!-- Create Order (SalesStaff, StoreManager, Admin, Owner) -->

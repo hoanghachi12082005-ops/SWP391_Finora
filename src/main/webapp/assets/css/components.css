@@ -766,3 +766,31 @@
 .pagination .page-item.disabled .page-link {
     opacity: 0.4;
 }
+
+/* Sidebar Submenu */
+.sidebar-submenu {
+    padding-left: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+}
+.sidebar-submenu-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+.sidebar-submenu-item:hover {
+    background-color: #ffebee;
+    color: var(--primary-color);
+}
+.sidebar-submenu-item.active {
+    color: var(--primary-color);
+    font-weight: 600;
+    background-color: #ffebee;
+}
