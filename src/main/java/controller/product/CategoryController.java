@@ -91,7 +91,7 @@ public class CategoryController extends BaseController {
             } else if ("middle".equals(percentAction)) {
                 fromIndex = Math.max(0, (totalItems - limit) / 2);
                 toIndex = Math.min(fromIndex + limit, totalItems);
-                page = Math.max(1, (fromIndex / limit) + 1); // Trỏ tạm về page ở giữa
+                page = Math.max(1, (fromIndex / limit) + 1); 
             } else if ("last".equals(percentAction)) {
                 fromIndex = Math.max(0, totalItems - limit);
                 toIndex = totalItems;

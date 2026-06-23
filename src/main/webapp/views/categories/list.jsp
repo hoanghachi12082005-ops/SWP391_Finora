@@ -134,7 +134,6 @@
                 <button type="submit" name="percentAction" value="first" >30% Đầu</button>
                 <button type="submit" name="percentAction" value="middle">30% Giữa</button>
                 <button type="submit" name="percentAction" value="last">30% Cuối</button>
-                <a href="${pageContext.request.contextPath}/category" >Hiển thị tất cả</a>
             </form>
         </div>
         <!-- =====  ===== -->
