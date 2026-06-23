@@ -176,6 +176,10 @@ public class CategoryController extends BaseController {
                 if (st.equals(c.getStatus()) == false) {
                     isMatch = false;
                 }
+            } else {
+                if ("inactive".equalsIgnoreCase(c.getStatus())) {
+                    isMatch = false;
+                }
             }
             if (isMatch == true) {
                 result.add(c);
