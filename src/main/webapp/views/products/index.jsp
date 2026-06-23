@@ -195,9 +195,9 @@
                     <optgroup label="Danh mục">
                         <% if (categories != null) {
                              for (Category cat : categories) {
-                                 boolean selected = (filterCategoryID != null && filterCategoryID == cat.getCategoryID());
+                                 boolean selected = (filterCategoryID != null && filterCategoryID == cat.getId());
                         %>
-                            <option value="cat_<%= cat.getCategoryID() %>" <%= selected ? "selected" : "" %>>
+                            <option value="cat_<%= cat.getId() %>" <%= selected ? "selected" : "" %>>
                                 <%= cat.getName() %>
                             </option>
                         <%   }
@@ -415,7 +415,7 @@
                     <select id="modal-cat" name="categoryID" required>
                         <% if (categories != null) {
                              for (Category cat : categories) { %>
-                            <option value="<%= cat.getCategoryID() %>"><%= cat.getName() %></option>
+                            <option value="<%= cat.getId() %>"><%= cat.getName() %></option>
                         <%   }
                            } %>
                     </select>
