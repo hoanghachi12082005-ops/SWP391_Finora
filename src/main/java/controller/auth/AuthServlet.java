@@ -162,14 +162,14 @@ public class AuthServlet extends HttpServlet {
         }
     }
     private String getRedirectPath(Employee employee) {
-        String redirectUrl = "/views/dashboard/owner"; // Default fallback
+        String redirectUrl = "/dashboard/owner"; // Default fallback
         if (employee != null && employee.getRoleName() != null) {
             String role = employee.getRoleName().trim().toLowerCase();
             switch (role) {
                 case "admin":
                 case "owner":
                 case "storemanager":
-                    redirectUrl = "/views/dashboard/owner";
+                    redirectUrl = "/dashboard/owner";
                     break;
                 case "warehousestaff":
                     redirectUrl = "/inventory/dashboard";

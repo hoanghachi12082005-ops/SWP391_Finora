@@ -11,6 +11,9 @@ public abstract class BaseController extends HttpServlet {
     
     protected void forward(HttpServletRequest request, HttpServletResponse response, String jspPath) 
             throws ServletException, IOException {
+        if (!jspPath.endsWith(".jsp")) {
+            jspPath += ".jsp";
+        }
         request.getRequestDispatcher("/views/" + jspPath).forward(request, response);
     }
 
