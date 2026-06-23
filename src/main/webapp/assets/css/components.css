@@ -794,3 +794,169 @@
     font-weight: 600;
     background-color: #ffebee;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   Dũng's Layout Compatibility Layer
+   Maps Dũng's class names to Thắng's existing layout system
+   so user-list.jsp and profile.jsp render correctly.
+   ══════════════════════════════════════════════════════════════ */
+
+/* .app-layout → alias for .app-container */
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* .main-wrapper → alias for .main-content */
+.main-wrapper {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-color);
+}
+
+/* .page-content → alias for .page-container */
+.page-content {
+    padding: 32px;
+    flex: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* .sidebar-footer — new element for Profile + Logout links */
+.sidebar-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* .menu-item — Dũng's sidebar link style (maps to sidebar-menu-item) */
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: #475569;
+    font-weight: 500;
+    margin-bottom: 4px;
+    transition: all 0.2s ease;
+}
+
+.menu-item .material-icons,
+.menu-item .material-symbols-outlined {
+    font-size: 20px;
+    color: #64748b;
+    transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+    background-color: #f1f5f9;
+    color: var(--text-main);
+}
+
+.menu-item:hover .material-icons,
+.menu-item:hover .material-symbols-outlined {
+    color: var(--text-main);
+}
+
+.menu-item.active {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.menu-item.active .material-icons,
+.menu-item.active .material-symbols-outlined {
+    color: var(--primary-color);
+}
+
+/* .brand-logo — Dũng's sidebar brand icon */
+.brand-logo {
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+}
+
+/* Alert styles for Dũng's success/error messages */
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.alert-success {
+    background-color: var(--success-bg);
+    color: var(--success-text);
+    border: 1px solid #bbf7d0;
+}
+
+.alert-error {
+    background-color: var(--danger-bg);
+    color: var(--danger-text);
+    border: 1px solid #fca5a5;
+}
+
+/* Page header for Dũng's pages */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.page-header h2 {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.page-header p {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+/* Dũng's CSS Variables Mapping */
+.user-page, .profile-page {
+    --primary: var(--primary-color);
+    --primary-hover: #74000a;
+    --primary-fixed: #ffdadb;
+    --on-primary: #fff;
+    --on-primary-fixed: #40000d;
+    --background: var(--bg-color);
+    --surface: var(--bg-color);
+    --surface-container-lowest: var(--card-bg);
+    --surface-container-low: #f8fafc;
+    --surface-container: #f1f5f9;
+    --surface-container-high: #e2e8f0;
+    --on-background: var(--text-main);
+    --on-surface: var(--text-main);
+    --secondary: var(--text-muted);
+    --outline: #94a3b8;
+    --outline-variant: var(--border-color);
+    --error: var(--danger-color);
+    --error-container: var(--danger-bg);
+    --on-error-container: var(--danger-text);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}

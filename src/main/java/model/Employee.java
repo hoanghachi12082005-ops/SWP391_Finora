@@ -7,6 +7,7 @@ public class Employee {
     private int employeeID;
     private int roleID;
     private Integer branchID;
+    private String avatarUrl;
 
     private String fullName;
     private String gender;
@@ -117,6 +118,17 @@ public class Employee {
     }
 
     // =========================
+    // Avatar URL (added for User Management / Profile)
+    // =========================
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    // =========================
     // Basic information
     // =========================
     public String getFullName() {
@@ -194,7 +206,7 @@ public class Employee {
     }
 
     public String getStatus() {
-        return status;
+        return status != null ? status.toUpperCase() : null;
     }
 
     public void setStatus(String status) {

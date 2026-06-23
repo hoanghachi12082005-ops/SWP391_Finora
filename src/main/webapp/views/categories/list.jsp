@@ -36,53 +36,26 @@
                 <c:remove var="messageType" scope="session"/>
             </c:if>
 
-            <!-- ===== Stats Cards ===== -->
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body">
-                            <small class="text-muted text-uppercase fw-bold">Tổng danh mục</small>
-                            <h2 class="fw-bold text-primary mt-1 mb-0">${totalItems}</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body">
-                            <small class="text-muted text-uppercase fw-bold">Danh mục gốc</small>
-                            <h2 class="fw-bold text-success mt-1 mb-0">${totalRootCategories}</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body">
-                            <small class="text-muted text-uppercase fw-bold">Sản phẩm liên kết</small>
-                            <h2 class="fw-bold text-warning mt-1 mb-0">${totalLinkedProducts}</h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Search & Filter -->
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body">
                     <form method="get" action="${pageContext.request.contextPath}/category">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <input type="text" class="form-control" name="keyword" placeholder="Tìm kiếm nhóm hàng, nhóm cha..." value="${keyword}">
+                        <div class="d-flex gap-2">
+                            <div class="flex-grow-1">
+                                <input type="text" class="form-control" name="keyword" placeholder="Tìm kiếm tên danh mục..." value="${keyword}">
                             </div>
-                            <div class="col-md-3">
+                            <div style="width: 200px;">
                                 <select class="form-select" name="status">
                                     <option value="" ${empty selectedStatus ? 'selected' : ''}>Tất cả trạng thái</option>
                                     <option value="active" ${selectedStatus == 'active' ? 'selected' : ''}>Đang sử dụng</option>
                                     <option value="inactive" ${selectedStatus == 'inactive' ? 'selected' : ''}>Ngừng sử dụng</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div style="width: 120px;">
                                 <button type="submit" class="btn btn-danger w-100">Tìm kiếm</button>
                             </div>
-                            <div class="col-md-1">
+                            <div style="width: 60px;">
                                 <a href="${pageContext.request.contextPath}/category" class="btn btn-outline-secondary w-100" title="Xóa bộ lọc">
                                     <span class="material-icons" style="font-size: 20px; line-height: 1.2;">refresh</span>
                                 </a>
@@ -115,7 +88,6 @@
                                 <tr>
                                     <th class="ps-4">Mã</th>
                                     <th>Tên danh mục</th>
-                                    <th>Nhóm cha</th>
                                     <th>Mô tả</th>
                                     <th class="text-center">Sản phẩm</th>
                                     <th>Trạng thái</th>
@@ -136,22 +108,12 @@
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="category" items="${categories}">
-                                            <tr>
+                                            <tr style="cursor: pointer;" onclick="window.location.href='${pageContext.request.contextPath}/products?categoryID=${category.id}'">
                                                 <td class="ps-4 text-muted">#${category.id}</td>
                                                 <td>
-                                                    <a href="${pageContext.request.contextPath}/products?categoryId=${category.id}" class="text-decoration-none fw-bold text-dark">
+                                                    <span class="fw-bold text-dark">
                                                         <c:out value="${category.name}"/>
-                                                    </a>
-                                                </td>
-                                                <td>
-                                                    <c:choose>
-                                                        <c:when test="${empty category.parentName}">
-                                                            <span class="text-dark fw-bold">Nhóm gốc</span>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <span class="text-primary"><c:out value="${category.parentName}"/></span>
-                                                        </c:otherwise>
-                                                    </c:choose>
+                                                    </span>
                                                 </td>
                                                 <td>
                                                     <c:choose>
@@ -179,14 +141,13 @@
                                                     </c:choose>
                                                 </td>
                                                 <c:if test="${sessionScope.canManageCategory}">
-                                                    <td class="text-center pe-4 text-nowrap">
+                                                    <td class="text-center pe-4 text-nowrap" onclick="event.stopPropagation()">
                                                         <button type="button" class="btn btn-sm btn-warning"
                                                                 data-bs-toggle="modal"
                                                                 data-bs-target="#categoryModal"
                                                                 data-category-id="${category.id}"
                                                                 data-category-name="${fn:escapeXml(category.name)}"
                                                                 data-category-description="${fn:escapeXml(category.description)}"
-                                                                data-category-parent-name="${fn:escapeXml(category.parentName)}"
                                                                 data-category-status="${category.status}"
                                                                 onclick="prepareEditCategory(this)">
                                                             Sửa
@@ -254,15 +215,7 @@
                         <label class="form-label">Tên danh mục <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="name" id="categoryName" maxlength="255" required placeholder="VD: Đồ điện tử">
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nhóm cha</label>
-                        <select class="form-select" name="parentName" id="categoryParentName">
-                            <option value="">Không có (nhóm gốc)</option>
-                            <c:forEach var="parent" items="${parentOptions}">
-                                <option value="${fn:escapeXml(parent.name)}"><c:out value="${parent.name}"/></option>
-                            </c:forEach>
-                        </select>
-                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Trạng thái</label>
                         <select class="form-select" name="status" id="categoryStatus">
@@ -291,7 +244,6 @@ function prepareAddCategory() {
     document.getElementById('categoryFormAction').value = 'add';
     document.getElementById('categoryId').value = '';
     document.getElementById('categoryName').value = '';
-    document.getElementById('categoryParentName').selectedIndex = 0;
     document.getElementById('categoryStatus').value = 'active';
     document.getElementById('categoryDescription').value = '';
     
@@ -305,18 +257,6 @@ function prepareEditCategory(button) {
     document.getElementById('categoryName').value = button.dataset.categoryName || '';
     document.getElementById('categoryDescription').value = button.dataset.categoryDescription || '';
     document.getElementById('categoryStatus').value = button.dataset.categoryStatus || 'active';
-
-    var parentSelect = document.getElementById('categoryParentName');
-    var parentName = button.dataset.categoryParentName || '';
-    var found = false;
-    for (var i = 0; i < parentSelect.options.length; i++) {
-        if (parentSelect.options[i].value === parentName) {
-            parentSelect.selectedIndex = i;
-            found = true;
-            break;
-        }
-    }
-    if (!found) parentSelect.selectedIndex = 0;
     
     document.getElementById('categoryModalTitle').innerText = 'Cập nhật danh mục';
     document.getElementById('categorySubmitText').innerText = 'Cập nhật';

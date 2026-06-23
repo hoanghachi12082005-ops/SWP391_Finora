@@ -10,7 +10,7 @@ import jakarta.servlet.http.HttpSession;
 import model.Employee;
 import service.employee.AuthService;
 import util.email.EmailUtil;
-@WebServlet(name = "AuthServlet", urlPatterns = {"/login", "/logout", "/forgot-password", "/role-selection"})
+@WebServlet(name = "AuthServlet", urlPatterns = {"/login", "/register", "/logout", "/forgot-password", "/role-selection"})
 public class AuthServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private EmployeeDAO employeeDAO;
@@ -37,6 +37,10 @@ public class AuthServlet extends HttpServlet {
                 request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
                 break;
             
+            case "/register":
+                request.getRequestDispatcher("/views/auth/register.jsp").forward(request, response);
+                break;
+
             case "/forgot-password":
                 request.getRequestDispatcher("/views/auth/forgot-password.jsp").forward(request, response);
                 break;
@@ -58,6 +62,9 @@ public class AuthServlet extends HttpServlet {
         switch (action) {
             case "/login":
                 handleLogin(request, response);
+                break;
+            case "/register":
+                handleRegister(request, response);
                 break;
             case "/forgot-password":
                 handleForgotPassword(request, response);
@@ -93,6 +100,62 @@ public class AuthServlet extends HttpServlet {
             request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
         }
     }
+    /**
+     * 2. Xử lý Đăng ký cửa hàng & Nhân viên (Register)
+     */
+    private void handleRegister(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String shopName = request.getParameter("shopName");
+        String fullName = request.getParameter("fullName");
+        String email = request.getParameter("email");
+        String phone = request.getParameter("phone");
+        String password = request.getParameter("password");
+
+        request.setAttribute("shopName", shopName);
+        request.setAttribute("fullName", fullName);
+        request.setAttribute("email", email);
+        request.setAttribute("phone", phone);
+
+        if (fullName == null || email == null || phone == null || password == null
+                || fullName.trim().isEmpty()
+                || email.trim().isEmpty()
+                || phone.trim().isEmpty()
+                || password.trim().isEmpty()) {
+
+            request.setAttribute("error", "Vui lòng nhập đầy đủ các thông tin bắt buộc!");
+            request.getRequestDispatcher("/views/auth/register.jsp")
+                    .forward(request, response);
+            return;
+        }
+
+        try {
+            int defaultRoleId = 2;     // Owner
+            int defaultBranchId = -1;  // Không hardcode branchId, để null → tự gán sau khi tạo store
+
+            boolean isRegistered = authService.register(
+                    fullName.trim(),
+                    email.trim(),
+                    phone.trim(),
+                    password.trim(),
+                    defaultRoleId,
+                    defaultBranchId
+            );
+            if (isRegistered) {
+                request.setAttribute("step", "4");
+                request.setAttribute("resShopName", shopName);
+                request.setAttribute("resUsername", email.trim());
+                request.setAttribute("successMessage",
+                        "Đăng ký cửa hàng thành công! Vui lòng đăng nhập bằng email và mật khẩu vừa đặt.");
+            } else {
+                request.setAttribute("error", "Đăng ký thất bại! Hệ thống đang bận.");
+            }
+        } catch (RuntimeException e) {
+            request.setAttribute("error", e.getMessage());
+        }
+        request.getRequestDispatcher("/views/auth/register.jsp").forward(request, response);
+    }
+
     /**
      * 3. Xử lý Quên mật khẩu (Forgot Password)
      */

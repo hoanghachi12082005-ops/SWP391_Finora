@@ -79,12 +79,26 @@
             </a>
         </c:if>
 
-        <!-- User / Role Manager -->
-        <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
-            <a href="${pageContext.request.contextPath}/users" 
-               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/users') || pageContext.request.requestURI.contains('/roles') ? 'active' : ''}">
-                <span class="material-icons">people</span>
+        <!-- User / Role Manager (Dũng's User Management) -->
+        <c:if test="${roleName == 'Admin'}">
+            <a href="${pageContext.request.contextPath}/admin/user" 
+               class="sidebar-menu-item ${originalUri.contains('/admin/user') ? 'active' : ''}">
+                <span class="material-icons">manage_accounts</span>
+                <span>Quản lý Owner</span>
+            </a>
+        </c:if>
+        <c:if test="${roleName == 'Owner'}">
+            <a href="${pageContext.request.contextPath}/owner/emp" 
+               class="sidebar-menu-item ${originalUri.contains('/owner/emp') ? 'active' : ''}">
+                <span class="material-icons">badge</span>
                 <span>Nhân viên</span>
+            </a>
+        </c:if>
+        <c:if test="${roleName == 'StoreManager'}">
+            <a href="${pageContext.request.contextPath}/manager/emp" 
+               class="sidebar-menu-item ${originalUri.contains('/manager/emp') ? 'active' : ''}">
+                <span class="material-icons">badge</span>
+                <span>Nhân viên chi nhánh</span>
             </a>
         </c:if>
 
@@ -119,6 +133,9 @@
                 <small><c:out value="${roleName}" /></small>
             </div>
         </div>
+        <a href="${pageContext.request.contextPath}/profile" class="sidebar-user-logout" title="Hồ sơ">
+            <span class="material-icons">person</span>
+        </a>
         <a href="${pageContext.request.contextPath}/logout" class="sidebar-user-logout" title="Đăng xuất">
             <span class="material-icons">logout</span>
         </a>

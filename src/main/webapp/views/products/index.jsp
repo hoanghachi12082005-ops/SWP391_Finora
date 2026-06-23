@@ -44,11 +44,11 @@
                         <input type="hidden" name="categoryID" id="categoryInput" value="<%= filterCategoryID != null ? filterCategoryID : "" %>">
                         <input type="hidden" name="unitID" id="unitInput" value="<%= filterUnitID != null ? filterUnitID : "" %>">
 
-                        <div class="row g-2 mb-3">
-                            <div class="col-md-5">
+                        <div class="d-flex gap-2 mb-3">
+                            <div class="flex-grow-1">
                                 <input type="text" name="keyword" id="searchInput" class="form-control" placeholder="Tìm theo tên hoặc SKU…" value="<%= keyword != null ? keyword : "" %>">
                             </div>
-                            <div class="col-md-3">
+                            <div style="width: 200px;">
                                 <select id="unifiedFilter" class="form-select">
                                     <option value="">Tất cả bộ lọc</option>
                                     <optgroup label="Danh mục">
@@ -73,14 +73,14 @@
                                     </optgroup>
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div style="width: 120px;">
                                 <button type="submit" class="btn btn-danger w-100">Tìm kiếm</button>
                             </div>
-                            <div class="col-md-2">
-                                <% if ((keyword != null && !keyword.isBlank()) || (filterStatus != null && !filterStatus.isBlank()) || filterCategoryID != null || filterUnitID != null) { %>
-                                    <a href="<%= ctx %>/products?view=<%= viewMode %>" class="btn btn-outline-secondary w-100">Xóa lọc</a>
-                                <% } %>
+                            <% if ((keyword != null && !keyword.isBlank()) || (filterStatus != null && !filterStatus.isBlank()) || filterCategoryID != null || filterUnitID != null) { %>
+                            <div style="width: 100px;">
+                                <a href="<%= ctx %>/products?view=<%= viewMode %>" class="btn btn-outline-secondary w-100">Xóa lọc</a>
                             </div>
+                            <% } %>
                         </div>
                     </form>
 
