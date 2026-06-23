@@ -438,7 +438,7 @@
                     </div>
                     <div class="form-group">
                         <label for="modal-sellingPrice">Giá bán (VNĐ)</label>
-                        <input type="number" id="modal-sellingPrice" name="sellingPrice" required placeholder="0" >
+                        <input type="number" id="modal-sellingPrice" name="sellingPrice" required min="0" placeholder="0" >
                     </div>
                 </div>
                 <div class="form-row">

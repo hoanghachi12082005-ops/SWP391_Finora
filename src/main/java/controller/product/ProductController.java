@@ -64,6 +64,7 @@ public class ProductController extends BaseController {
             request.setAttribute("filterCategoryID", categoryID);
             request.setAttribute("filterUnitID", unitID);
             request.setAttribute("viewMode",    viewMode);
+            
 
             forward(request, response, "products/index");
         } catch (SQLException e) {
