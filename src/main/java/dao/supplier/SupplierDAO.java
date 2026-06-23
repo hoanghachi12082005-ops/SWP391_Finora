@@ -269,7 +269,7 @@ public class SupplierDAO {
     public boolean delete(int supplierId) {
 
         String sql = """
-                DELETE FROM Supplier
+                UPDATE Supplier SET Status = 'inactive'
                 WHERE SupplierID = ?
                 """;
 
@@ -283,7 +283,6 @@ public class SupplierDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return false;
     }
 

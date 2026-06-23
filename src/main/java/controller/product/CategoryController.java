@@ -37,6 +37,14 @@ public class CategoryController extends BaseController {
             case "list":
                 listCategories(request, response);
                 break;
+            case "delete":
+                if (request.getParameter("id") != null) {
+                    categoryDAO.deleteCategory(Integer.parseInt(request.getParameter("id")));
+                    request.getSession().setAttribute("message", "Đã cập nhật trạng thái danh mục thành 'Ngừng sử dụng' (Xóa mềm).");
+                    request.getSession().setAttribute("messageType", "success");
+                }
+                response.sendRedirect(request.getContextPath() + "/category");
+                break;
             default:
                 listCategories(request, response);
                 break;

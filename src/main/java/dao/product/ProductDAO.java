@@ -132,7 +132,7 @@ public class ProductDAO {
         try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Product WHERE ProductID = ?")) {
+                try (PreparedStatement stmt = conn.prepareStatement("UPDATE Product SET Status = 'inactive' WHERE ProductID = ?")) {
                     stmt.setInt(1, id);
                     stmt.executeUpdate();
                 }
