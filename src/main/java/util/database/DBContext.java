@@ -9,12 +9,13 @@ import java.sql.SQLException;
  * hệ thống FinoraRetail trên SQL Server.
  */
 public class DBContext {
+    
 
     private static final String DRIVER = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 
     private static final String DEFAULT_URL
             = "jdbc:sqlserver://localhost:1433;"
-            + "databaseName=DBFinoraV2;" 
+            + "databaseName=DBFinoraV3;" 
             + "encrypt=true;"
             + "trustServerCertificate=true;"
             + "characterEncoding=UTF-8";
