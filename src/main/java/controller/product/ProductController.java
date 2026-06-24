@@ -107,14 +107,25 @@ public class ProductController extends BaseController {
         }
     }
 
-    private Product buildProductFromRequest(HttpServletRequest request) {
-        Product p = new Product();
-        p.setCategoryID(Integer.parseInt(request.getParameter("categoryID")));
-        p.setName(request.getParameter("name"));
-        p.setQuantity(Integer.parseInt(request.getParameter("quantity")));
-        p.setUnitID(Integer.parseInt(request.getParameter("unitID")));
-        p.setSellingPrice(new BigDecimal(request.getParameter("sellingPrice")));
-        p.setStatus(request.getParameter("status"));
-        return p;
+    private Product buildProductFromRequest(HttpServletRequest request) throws IllegalArgumentException {
+    Product p = new Product();
+    
+    p.setCategoryID(Integer.parseInt(request.getParameter("categoryID")));
+    p.setName(request.getParameter("name"));
+    
+    // Lấy số lượng từ request
+    int quantity = Integer.parseInt(request.getParameter("quantity"));
+    
+    // Kiểm tra nếu số lượng nhỏ hơn 0 thì ném lỗi
+    if (quantity < 0) {
+        throw new IllegalArgumentException("Số lượng sản phẩm không được nhỏ hơn 0!");
     }
+    p.setQuantity(quantity);
+    
+    p.setUnitID(Integer.parseInt(request.getParameter("unitID")));
+    p.setSellingPrice(new BigDecimal(request.getParameter("sellingPrice")));
+    p.setStatus(request.getParameter("status"));
+    
+    return p;
+}
 }
