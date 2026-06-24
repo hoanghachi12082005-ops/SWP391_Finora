@@ -78,24 +78,35 @@ public class ProductController extends BaseController {
         try {
             String action = request.getParameter("action");
             if (action == null) action = "";
-            if ("add".equals(action)) {
-                Product p = buildProductFromRequest(request);
-                productDAO.insert(p);
-            } else if ("edit".equals(action)) {
-                Product p = buildProductFromRequest(request);
-                p.setProductID(Integer.parseInt(request.getParameter("productID")));
-                productDAO.update(p);
-            } else if ("delete".equals(action)) {
-                try {
-                    productDAO.delete(Integer.parseInt(request.getParameter("id")));
-                    request.getSession().setAttribute("message", "Xóa sản phẩm thành công!");
+            
+            try {
+                if ("add".equals(action)) {
+                    Product p = buildProductFromRequest(request);
+                    productDAO.insert(p);
+                    request.getSession().setAttribute("message", "Thêm sản phẩm thành công!");
                     request.getSession().setAttribute("messageType", "success");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    request.getSession().setAttribute("message", "Không thể xóa sản phẩm này do đang có dữ liệu liên quan (giao dịch, đơn hàng...)!");
-                    request.getSession().setAttribute("messageType", "danger");
+                } else if ("edit".equals(action)) {
+                    Product p = buildProductFromRequest(request);
+                    p.setProductID(Integer.parseInt(request.getParameter("productID")));
+                    productDAO.update(p);
+                    request.getSession().setAttribute("message", "Cập nhật sản phẩm thành công!");
+                    request.getSession().setAttribute("messageType", "success");
+                } else if ("delete".equals(action)) {
+                    try {
+                        productDAO.delete(Integer.parseInt(request.getParameter("id")));
+                        request.getSession().setAttribute("message", "Xóa sản phẩm thành công!");
+                        request.getSession().setAttribute("messageType", "success");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        request.getSession().setAttribute("message", "Không thể xóa sản phẩm này do đang có dữ liệu liên quan (giao dịch, đơn hàng...)!");
+                        request.getSession().setAttribute("messageType", "danger");
+                    }
                 }
+            } catch (IllegalArgumentException e) {
+                request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
+                request.getSession().setAttribute("messageType", "danger");
             }
+            
             // Preserve search/filter params on redirect
             String keyword = request.getParameter("keyword");
             String status  = request.getParameter("filterStatus");
@@ -117,9 +128,6 @@ public class ProductController extends BaseController {
             }
             
             response.sendRedirect(redirect.toString());
-        } catch (IllegalArgumentException e) {
-            request.setAttribute("errorMessage", e.getMessage());
-            doGet(request, response);
         } catch (Exception e) {
             throw new ServletException("Error processing request", e);
         }

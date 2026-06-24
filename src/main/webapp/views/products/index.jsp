@@ -35,13 +35,14 @@
                 </div>
             </div>
 
-            <% String errorMessage = (String) request.getAttribute("errorMessage");
-               if (errorMessage != null) { %>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <strong>Lỗi:</strong> <%= errorMessage %>
+            <% String sessionMsg = (String) session.getAttribute("message");
+               String sessionMsgType = (String) session.getAttribute("messageType");
+               if (sessionMsg != null) { %>
+            <div class="alert alert-<%= sessionMsgType != null ? sessionMsgType : "info" %> alert-dismissible fade show" role="alert">
+                <%= sessionMsg %>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <% } %>
+            <% session.removeAttribute("message"); session.removeAttribute("messageType"); } %>
 
             <!-- Search -->
             <div class="card shadow-sm border-0">
@@ -235,7 +236,7 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Giá bán (VNĐ)</label>
-                    <input type="number" id="modal-sellingPrice" name="sellingPrice" class="form-control" min="0" required placeholder="0">
+                    <input type="number" id="modal-sellingPrice" name="sellingPrice" class="form-control"  required placeholder="0">
                 </div>
             </div>
             <div class="mb-3">
