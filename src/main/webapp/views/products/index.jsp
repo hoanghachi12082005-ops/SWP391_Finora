@@ -179,6 +179,13 @@
             </button>
         </div>
 
+        <% String errorMessage = (String) request.getAttribute("errorMessage");
+           if (errorMessage != null) { %>
+        <div style="background-color: #fee2e2; color: #b91c1c; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #fca5a5;">
+            <strong>Lỗi:</strong> <%= errorMessage %>
+        </div>
+        <% } %>
+
         <!-- ====== SEARCH & FILTER BAR ====== -->
         <form id="filterForm" method="get" action="<%= ctx %>/products">
             <div class="filter-bar">
