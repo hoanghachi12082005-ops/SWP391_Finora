@@ -8,7 +8,7 @@ package dao.user;
  *
  * @author Dzung
  */
-import java.math.BigDecimal;
+import java.math.BigDecimal;    
 import model.Branch;
 import model.Employee;
 import model.Role;

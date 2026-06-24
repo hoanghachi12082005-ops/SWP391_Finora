@@ -25,7 +25,6 @@ public class ProfileDao extends DBContext {
                 "    e.FullName, " +
                 "    e.Email, " +
                 "    e.Phone, " +
-                "    e.AvatarUrl, " +
                 "    e.Status, " +
                 "    e.CreatedAt, " +
                 "    b.Name AS BranchName, " +
@@ -35,23 +34,15 @@ public class ProfileDao extends DBContext {
                 "LEFT JOIN Role r ON e.RoleID = r.RoleID " +
                 "WHERE e.EmployeeID = ?";
 
-        try {Connection connection = DBContext.getConnection(); 
-            PreparedStatement ps = connection.prepareStatement(sql);
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, employeeID);
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                Employee employee = mapEmployee(rs);
-
-                rs.close();
-                ps.close();
-
-                return employee;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapEmployee(rs);
+                }
             }
-
-            rs.close();
-            ps.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -60,32 +51,17 @@ public class ProfileDao extends DBContext {
     }
 
     public boolean updateProfile(int employeeID, String fullName, String email, String phone, String avatarUrl) {
-        String sql;
-
-        if (avatarUrl == null || avatarUrl.trim().isEmpty()) {
-            sql =
-                    "UPDATE Employee " +
-                    "SET FullName = ?, Email = ?, Phone = ? " +
-                    "WHERE EmployeeID = ?";
-        } else {
-            sql =
-                    "UPDATE Employee " +
-                    "SET FullName = ?, Email = ?, Phone = ?, AvatarUrl = ? " +
-                    "WHERE EmployeeID = ?";
-        }
+        String sql =
+                "UPDATE Employee " +
+                "SET FullName = ?, Email = ?, Phone = ? " +
+                "WHERE EmployeeID = ?";
 
         try (Connection connection = DBContext.getConnection(); 
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, fullName);
             ps.setString(2, email);
             ps.setString(3, phone);
-
-            if (avatarUrl == null || avatarUrl.trim().isEmpty()) {
-                ps.setInt(4, employeeID);
-            } else {
-                ps.setString(4, avatarUrl);
-                ps.setInt(5, employeeID);
-            }
+            ps.setInt(4, employeeID);
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -102,25 +78,16 @@ public class ProfileDao extends DBContext {
                 "WHERE Email = ? " +
                 "AND EmployeeID <> ?";
 
-        try {Connection connection = DBContext.getConnection(); 
-            PreparedStatement ps = connection.prepareStatement(sql);
-
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, email);
             ps.setInt(2, excludeEmployeeID);
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                boolean exists = rs.getInt("Total") > 0;
-
-                rs.close();
-                ps.close();
-
-                return exists;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("Total") > 0;
+                }
             }
-
-            rs.close();
-            ps.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -134,23 +101,15 @@ public class ProfileDao extends DBContext {
                 "FROM Employee " +
                 "WHERE EmployeeID = ?";
 
-        try {Connection connection = DBContext.getConnection(); 
-            PreparedStatement ps = connection.prepareStatement(sql);
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, employeeID);
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                String passwordHash = rs.getString("PasswordHash");
-
-                rs.close();
-                ps.close();
-
-                return passwordHash;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("PasswordHash");
+                }
             }
-
-            rs.close();
-            ps.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -164,17 +123,12 @@ public class ProfileDao extends DBContext {
                 "SET PasswordHash = ? " +
                 "WHERE EmployeeID = ?";
 
-        try {Connection connection = DBContext.getConnection(); 
-            PreparedStatement ps = connection.prepareStatement(sql);
-
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, newPasswordHash);   
             ps.setInt(2, employeeID);
 
-            boolean success = ps.executeUpdate() > 0;
-
-            ps.close();
-
-            return success;
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -278,7 +232,6 @@ public class ProfileDao extends DBContext {
         employee.setEmail(rs.getString("Email"));
         employee.setPhone(rs.getString("Phone"));
         employee.setStatus(rs.getString("Status"));
-        employee.setAvatarUrl(rs.getString("AvatarUrl"));
         employee.setCreatedAt(rs.getTimestamp("CreatedAt"));
         employee.setBranchName(rs.getString("BranchName"));
         employee.setRoleNames(rs.getString("RoleNames"));
