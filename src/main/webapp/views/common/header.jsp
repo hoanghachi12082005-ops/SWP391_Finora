@@ -19,7 +19,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link href="${pageContext.request.contextPath}/assets/css/style.css" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/assets/css/theme.css" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/assets/css/components.css" rel="stylesheet">
 
     <c:if test="${param.additionalCSS != null}">
         <link href="${pageContext.request.contextPath}/assets/css/${param.additionalCSS}" rel="stylesheet">
