@@ -26,8 +26,16 @@ public class AuthService {
         boolean verify = PasswordUtil.verify(password, employee.getPasswordHash());
 
         if (!verify) {
-            throw new RuntimeException("Mật khẩu không chính xác");
+            int failedAttempts = employeeDAO.incrementFailedAttempts(employee.getEmployeeId());
+            int remaining = Employee.MAX_FAILED_LOGIN - failedAttempts;
+            if (remaining <= 0) {
+                throw new RuntimeException("Tài khoản của bạn đã bị khóa do đăng nhập sai quá 5 lần.");
+            } else {
+                throw new RuntimeException("Mật khẩu không chính xác. Bạn còn " + remaining + " lần nhập lại.");
+            }
         }
+
+        employeeDAO.resetFailedAttempts(employee.getEmployeeId());
 
         return employee;
     }

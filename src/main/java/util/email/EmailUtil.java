@@ -44,13 +44,13 @@ public class EmailUtil {
         });
 
         try {
-            Message message = new MimeMessage(session);
+            MimeMessage message = new MimeMessage(session);
             message.setFrom(new InternetAddress(fromEmail));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
-            message.setSubject("[Finora] Thông báo cấp tài khoản nhân viên mới");
+            message.setSubject("[Finora] Thông báo cấp lại mật khẩu cho tài khoản", "UTF-8");
 
             String content = "<h3>Xin chào " + employeeName + ",</h3>"
-                    + "<p>Tài khoản nội bộ của bạn trên hệ thống quản lý chuỗi cửa hàng Finora đã được khởi tạo thành công bởi Owner.</p>"
+                    + "<p>Tài khoản nội bộ của bạn trên hệ thống quản lý chuỗi cửa hàng Finora đã được khởi tạo thành công bởi Admin.</p>"
                     + "<p>Mật khẩu đăng nhập tạm thời của bạn là: <strong style='color:#93000b; font-size:16px;'>" + autoPassword + "</strong></p>"
                     + "<p>Vui lòng đăng nhập bằng Email/Số điện thoại cá nhân và thực hiện <strong>đổi mật khẩu ngay lập tức</strong> tại hệ thống để đảm bảo tính an toàn bảo mật.</p>"
                     + "<br><p>Trân trọng,<br>Ban quản trị Finora.</p>";

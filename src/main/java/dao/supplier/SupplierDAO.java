@@ -103,7 +103,7 @@ public class SupplierDAO {
         ? = ''
         OR Status = ?
     )
-    ORDER BY SupplierID DESC
+    ORDER BY SupplierID ASC
     OFFSET ? ROWS
     FETCH NEXT ? ROWS ONLY
     """;
@@ -187,6 +187,30 @@ public class SupplierDAO {
         }
 
         return null;
+    }
+
+    /**
+     * Kiểm tra nhà cung cấp tồn tại theo tên hoặc số điện thoại
+     */
+    public boolean existsByNameOrPhone(String name, String phone) {
+        String sql = """
+                SELECT COUNT(*)
+                FROM Supplier
+                WHERE LOWER(Name) = LOWER(?) OR Phone = ?
+                """;
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name.trim());
+            ps.setString(2, phone.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     /**

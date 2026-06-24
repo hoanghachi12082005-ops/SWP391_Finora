@@ -91,7 +91,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-4">
 
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="remember-me" name="remember-me">
+                            <input class="form-check-input" type="checkbox" id="remember-me" name="remember-me" ${rememberMe ? 'checked' : ''}>
 
                             <label class="form-check-label" for="remember-me">
                                 Ghi nhớ đăng nhập

@@ -576,7 +576,8 @@ public class UserManagementDao extends DBContext {
                 "    FullName = ?, " +
                 "    Email = ?, " +
                 "    Phone = ?, " +
-                "    Status = ? " +
+                "    Status = ?, " +
+                "    FailedLoginCount = CASE WHEN UPPER(?) = 'ACTIVE' THEN 0 ELSE FailedLoginCount END " +
                 "WHERE EmployeeID = ? " +
                 "AND NOT EXISTS (SELECT 1 FROM Role rr WHERE rr.RoleID = Employee.RoleID AND rr.Name IN ('Admin', 'Owner'))";
 
@@ -596,7 +597,8 @@ public class UserManagementDao extends DBContext {
                 ps.setString(4, employee.getEmail());
                 ps.setString(5, employee.getPhone());
                 ps.setString(6, employee.getStatus());
-                ps.setInt(7, employee.getEmployeeID());
+                ps.setString(7, employee.getStatus());
+                ps.setInt(8, employee.getEmployeeID());
 
                 int updated = ps.executeUpdate();
 
@@ -627,14 +629,16 @@ public class UserManagementDao extends DBContext {
     public boolean updateEmployeeStatus(int employeeId, String status) {
         String sql =
                 "UPDATE Employee " +
-                "SET Status = ? " +
+                "SET Status = ?, " +
+                "    FailedLoginCount = CASE WHEN UPPER(?) = 'ACTIVE' THEN 0 ELSE FailedLoginCount END " +
                 "WHERE EmployeeID = ? " +
                 "AND NOT EXISTS (SELECT 1 FROM Role rr WHERE rr.RoleID = Employee.RoleID AND rr.Name IN ('Admin', 'Owner'))";
 
         try (Connection connection = DBContext.getConnection(); 
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, status);
-            ps.setInt(2, employeeId);
+            ps.setString(2, status);
+            ps.setInt(3, employeeId);
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {

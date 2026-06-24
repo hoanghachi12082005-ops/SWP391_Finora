@@ -47,94 +47,123 @@
 
             <div class="forgot-card">
 
-                <div class="text-center mb-4">
+                <c:choose>
+                    <c:when test="${not empty successMessage}">
+                        <div class="text-center mb-4">
 
-                    <div class="forgot-card-icon">
-                        <span class="material-icons">
-                            lock_reset
-                        </span>
-                    </div>
-
-                    <h2 class="forgot-title">
-                        Quên mật khẩu
-                    </h2>
-
-                    <p class="forgot-subtitle">
-                        Nhập thông tin để nhận mật khẩu mới
-                    </p>
-
-                </div>
-
-                <c:if test="${not empty error}">
-                    <div class="alert alert-danger border-0 shadow-sm">
-
-                        <div class="d-flex align-items-center">
-
-                            <span class="material-icons me-2">
-                                error
-                            </span>
-
-                            ${error}
-
-                        </div>
-
-                    </div>
-                </c:if>
-
-                <form method="post"
-                      action="${pageContext.request.contextPath}/forgot-password">
-
-                    <input type="hidden" name="action" value="send-otp">
-
-                    <div class="mb-3">
-
-                        <label for="fullName" class="form-label">Họ và tên nhân viên</label>
-
-                        <div class="input-group custom-group">
-
-                            <span class="input-group-text">
+                            <div class="forgot-card-icon" style="background-color: rgba(25, 135, 84, 0.1); color: #198754;">
                                 <span class="material-icons">
-                                    person
+                                    mark_email_read
                                 </span>
-                            </span>
+                            </div>
 
-                            <input type="text" id="fullName" name="fullName" class="form-control" placeholder="Nhập họ và tên" required>
+                            <h2 class="forgot-title" style="color: #198754;">
+                                Gửi thành công!
+                            </h2>
+
+                            <p class="forgot-subtitle mt-3" style="font-size: 15px; line-height: 1.6;">
+                                ${successMessage}
+                            </p>
 
                         </div>
 
-                    </div>
+                        <div class="mt-4">
+                            <a href="${pageContext.request.contextPath}/login" class="btn btn-finora w-100 d-flex align-items-center justify-content-center">
+                                <span class="material-icons me-2">login</span> Đi đến Đăng nhập
+                            </a>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="text-center mb-4">
 
-                    <div class="mb-4">
-
-                        <label for="email" class="form-label">Email đã đăng ký</label>
-
-                        <div class="input-group custom-group">
-
-                            <span class="input-group-text">
+                            <div class="forgot-card-icon">
                                 <span class="material-icons">
-                                    mail
+                                    lock_reset
                                 </span>
-                            </span>
+                            </div>
 
-                            <input type="email" id="email" name="email" class="form-control" placeholder="example@gmail.com" required>
+                            <h2 class="forgot-title">
+                                Quên mật khẩu
+                            </h2>
+
+                            <p class="forgot-subtitle">
+                                Nhập thông tin để nhận mật khẩu mới
+                            </p>
 
                         </div>
 
-                    </div>
+                        <c:if test="${not empty error}">
+                            <div class="alert alert-danger border-0 shadow-sm">
 
-                    <button type="submit" class="btn btn-finora w-100">
-                        Cấp lại mật khẩu
-                    </button>
+                                <div class="d-flex align-items-center">
 
-                </form>
+                                    <span class="material-icons me-2">
+                                        error
+                                    </span>
 
-                <div class="text-center mt-4">
+                                    ${error}
 
-                    <a href="${pageContext.request.contextPath}/login" class="back-login">
-                        ← Quay lại đăng nhập
-                    </a>
+                                </div>
 
-                </div>
+                            </div>
+                        </c:if>
+
+                        <form method="post"
+                              action="${pageContext.request.contextPath}/forgot-password">
+
+                            <input type="hidden" name="action" value="send-otp">
+
+                            <div class="mb-3">
+
+                                <label for="fullName" class="form-label">Họ và tên nhân viên</label>
+
+                                <div class="input-group custom-group">
+
+                                    <span class="input-group-text">
+                                        <span class="material-icons">
+                                            person
+                                        </span>
+                                    </span>
+
+                                    <input type="text" id="fullName" name="fullName" class="form-control" placeholder="Nhập họ và tên" required>
+
+                                </div>
+
+                            </div>
+
+                            <div class="mb-4">
+
+                                <label for="email" class="form-label">Email đã đăng ký</label>
+
+                                <div class="input-group custom-group">
+
+                                    <span class="input-group-text">
+                                        <span class="material-icons">
+                                            mail
+                                        </span>
+                                    </span>
+
+                                    <input type="email" id="email" name="email" class="form-control" placeholder="example@gmail.com" required>
+
+                                </div>
+
+                            </div>
+
+                            <button type="submit" class="btn btn-finora w-100">
+                                Cấp lại mật khẩu
+                            </button>
+
+                        </form>
+
+                        <div class="text-center mt-4">
+
+                            <a href="${pageContext.request.contextPath}/login" class="back-login">
+                                ← Quay lại đăng nhập
+                            </a>
+
+                        </div>
+                    </c:otherwise>
+                </c:choose>
 
             </div>
 

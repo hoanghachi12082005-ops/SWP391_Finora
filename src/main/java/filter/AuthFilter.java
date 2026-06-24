@@ -45,6 +45,11 @@ public class AuthFilter implements Filter {
             return;
         }
 
+        // Ngăn chặn lưu cache trên trình duyệt cho các trang được bảo vệ
+        resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+        resp.setHeader("Pragma", "no-cache"); // HTTP 1.0.
+        resp.setDateHeader("Expires", 0); // Proxies.
+
         // 3. Phân quyền chi tiết dựa trên vai trò (Role Name) cấu hình trong Hệ thống FinoraRetail
         String role = employee.getRoleName().trim().toLowerCase();
 

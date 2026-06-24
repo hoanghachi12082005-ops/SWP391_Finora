@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Cookie;
 import model.Employee;
 import service.employee.AuthService;
 import util.email.EmailUtil;
@@ -34,6 +35,16 @@ public class AuthServlet extends HttpServlet {
         }
         switch (action) {
             case "/login":
+                Cookie[] cookies = request.getCookies();
+                if (cookies != null) {
+                    for (Cookie cookie : cookies) {
+                        if ("remembered_username".equals(cookie.getName())) {
+                            request.setAttribute("username", cookie.getValue());
+                            request.setAttribute("rememberMe", true);
+                            break;
+                        }
+                    }
+                }
                 request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
                 break;
             
@@ -88,6 +99,18 @@ public class AuthServlet extends HttpServlet {
         try {
             // Xác thực thông tin qua tầng xử lý mật khẩu băm AuthService
             Employee employee = authService.login(emailOrPhone, password);
+
+            // Ghi nhớ đăng nhập
+            String rememberMe = request.getParameter("remember-me");
+            Cookie rememberCookie = new Cookie("remembered_username", emailOrPhone);
+            if (rememberMe != null) {
+                rememberCookie.setMaxAge(30 * 24 * 60 * 60); // 30 ngày
+            } else {
+                rememberCookie.setMaxAge(0);
+            }
+            rememberCookie.setPath(request.getContextPath().isEmpty() ? "/" : request.getContextPath());
+            response.addCookie(rememberCookie);
+
             HttpSession session = request.getSession(true);
             session.setAttribute("currentUser", employee);
             System.out.println("Session ID Login = " + session.getId());
@@ -179,8 +202,8 @@ public class AuthServlet extends HttpServlet {
                 if (updated) {
                     boolean sent = EmailUtil.sendPasswordEmail(email.trim(), fullName.trim(), newPassword);
                     if (sent) {
-                        request.setAttribute("successMessage", "Mật khẩu mới đã được gửi thành công qua email của bạn!");
-                        request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
+                        request.setAttribute("successMessage", "Password đã được gửi về email của bạn, vui lòng check mail và đăng nhập lại.");
+                        request.getRequestDispatcher("/views/auth/forgot-password.jsp").forward(request, response);
                         return;
                     }
                     request.setAttribute("error", "Hệ thống đã cập nhật mật khẩu mới nhưng tiến trình gửi Email bị lỗi!");

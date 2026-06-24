@@ -29,8 +29,20 @@ public class SupplierService {
                 pageSize);
     }
 
+    public int countActiveSuppliers() {
+        return dao.countActiveSuppliers();
+    }
+
+    public int countInactiveSuppliers() {
+        return dao.countInactiveSuppliers();
+    }
+
     public Supplier getById(int id) {
         return dao.getById(id);
+    }
+
+    public boolean existsByNameOrPhone(String name, String phone) {
+        return dao.existsByNameOrPhone(name, phone);
     }
 
     public boolean insert(Supplier s) {
