@@ -3,7 +3,7 @@ package dao.product;
 import model.Product;
 import model.Category;
 import model.Unit;
-import util.DatabaseUtil;
+import util.database.DBContext;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -38,7 +38,7 @@ public class ProductDAO {
         if (unitID != null) sql.append(" AND p.UnitID = ?");
         sql.append(" ORDER BY p.ProductID ASC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
-        try (Connection conn = DatabaseUtil.getConnection();
+        try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             int idx = 1;
             if (keyword != null && !keyword.isBlank()) {
@@ -67,7 +67,7 @@ public class ProductDAO {
         if (categoryID != null) sql.append(" AND CategoryID = ?");
         if (unitID != null) sql.append(" AND UnitID = ?");
 
-        try (Connection conn = DatabaseUtil.getConnection();
+        try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             int idx = 1;
             if (keyword != null && !keyword.isBlank()) {
@@ -90,7 +90,7 @@ public class ProductDAO {
             "LEFT JOIN Category c ON p.CategoryID = c.CategoryID " +
             "LEFT JOIN Unit u ON p.UnitID = u.UnitID " +
             "WHERE p.ProductID = ?";
-        try (Connection conn = DatabaseUtil.getConnection();
+        try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -101,7 +101,7 @@ public class ProductDAO {
 
     public void insert(Product product) throws SQLException {
         String sql = "INSERT INTO Product (Name, Quantity, CategoryID, UnitID, SellingPrice, Status) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseUtil.getConnection();
+        try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, product.getName());
             stmt.setInt(2, product.getQuantity());
@@ -115,7 +115,7 @@ public class ProductDAO {
 
     public void update(Product product) throws SQLException {
         String sql = "UPDATE Product SET Name=?, Quantity=?, CategoryID=?, UnitID=?, SellingPrice=?, Status=?, UpdatedAt=GETDATE() WHERE ProductID=?";
-        try (Connection conn = DatabaseUtil.getConnection();
+        try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, product.getName());
             stmt.setInt(2, product.getQuantity());
@@ -129,9 +129,25 @@ public class ProductDAO {
     }
 
     public void delete(int id) throws SQLException {
-        try (Connection conn = DatabaseUtil.getConnection()) {
+        try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
             try {
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Inventory WHERE ProductID = ?")) {
+                    stmt.setInt(1, id);
+                    stmt.executeUpdate();
+                }
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM StockTransaction WHERE ProductID = ?")) {
+                    stmt.setInt(1, id);
+                    stmt.executeUpdate();
+                }
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM StockTransferDetail WHERE ProductID = ?")) {
+                    stmt.setInt(1, id);
+                    stmt.executeUpdate();
+                }
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM OrderDetail WHERE ProductID = ?")) {
+                    stmt.setInt(1, id);
+                    stmt.executeUpdate();
+                }
                 try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Product WHERE ProductID = ?")) {
                     stmt.setInt(1, id);
                     stmt.executeUpdate();
@@ -147,7 +163,7 @@ public class ProductDAO {
     public List<Category> findAllCategories() throws SQLException {
         List<Category> list = new ArrayList<>();
         String sql = "SELECT CategoryID, Name FROM Category ORDER BY CategoryID ASC";
-        try (Connection conn = DatabaseUtil.getConnection();
+        try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
@@ -160,7 +176,7 @@ public class ProductDAO {
     public List<Unit> findAllUnits() throws SQLException {
         List<Unit> list = new ArrayList<>();
         String sql = "SELECT UnitID, Name FROM Unit ORDER BY UnitID ASC";
-        try (Connection conn = DatabaseUtil.getConnection();
+        try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {

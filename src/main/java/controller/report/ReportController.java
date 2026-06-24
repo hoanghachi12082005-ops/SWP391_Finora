@@ -1,6 +1,6 @@
-package controller.report;
+package       controller.report;
 
-import controller.common.BaseController;
+import       controller.common.BaseController;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;

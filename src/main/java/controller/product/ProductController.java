@@ -64,9 +64,8 @@ public class ProductController extends BaseController {
             request.setAttribute("filterCategoryID", categoryID);
             request.setAttribute("filterUnitID", unitID);
             request.setAttribute("viewMode",    viewMode);
-            
 
-            forward(request, response, "products/index");
+            forward(request, response, "products/index.jsp");
         } catch (SQLException e) {
             throw new ServletException("Database error retrieving products", e);
         }
@@ -87,7 +86,15 @@ public class ProductController extends BaseController {
                 p.setProductID(Integer.parseInt(request.getParameter("productID")));
                 productDAO.update(p);
             } else if ("delete".equals(action)) {
-                productDAO.delete(Integer.parseInt(request.getParameter("id")));
+                try {
+                    productDAO.delete(Integer.parseInt(request.getParameter("id")));
+                    request.getSession().setAttribute("message", "Xóa sản phẩm thành công!");
+                    request.getSession().setAttribute("messageType", "success");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    request.getSession().setAttribute("message", "Không thể xóa sản phẩm này do đang có dữ liệu liên quan (giao dịch, đơn hàng...)!");
+                    request.getSession().setAttribute("messageType", "danger");
+                }
             }
             // Preserve search/filter params on redirect
             String keyword = request.getParameter("keyword");
@@ -95,12 +102,20 @@ public class ProductController extends BaseController {
             String categoryID = request.getParameter("filterCategoryID");
             String unitID = request.getParameter("filterUnitID");
             String view    = request.getParameter("view");
+            String page    = request.getParameter("page");
             StringBuilder redirect = new StringBuilder(request.getContextPath() + "/products?");
             if (keyword != null && !keyword.isBlank()) redirect.append("keyword=").append(keyword).append("&");
             if (status  != null && !status.isBlank())  redirect.append("status=").append(status).append("&");
             if (categoryID  != null && !categoryID.isBlank())  redirect.append("categoryID=").append(categoryID).append("&");
             if (unitID  != null && !unitID.isBlank())  redirect.append("unitID=").append(unitID).append("&");
-            if (view    != null && !view.isBlank())    redirect.append("view=").append(view);
+            if (view    != null && !view.isBlank())    redirect.append("view=").append(view).append("&");
+            if (page    != null && !page.isBlank())    redirect.append("page=").append(page);
+            
+            // Clean up trailing & if exists
+            if (redirect.charAt(redirect.length() - 1) == '&' || redirect.charAt(redirect.length() - 1) == '?') {
+                redirect.deleteCharAt(redirect.length() - 1);
+            }
+            
             response.sendRedirect(redirect.toString());
         } catch (IllegalArgumentException e) {
             request.setAttribute("errorMessage", e.getMessage());
@@ -111,30 +126,25 @@ public class ProductController extends BaseController {
     }
 
     private Product buildProductFromRequest(HttpServletRequest request) throws IllegalArgumentException {
-    Product p = new Product();
-    
-    p.setCategoryID(Integer.parseInt(request.getParameter("categoryID")));
-    p.setName(request.getParameter("name"));
-    
-    // Lấy số lượng từ request
-    int quantity = Integer.parseInt(request.getParameter("quantity"));
-    
-    // Kiểm tra nếu số lượng nhỏ hơn 0 thì ném lỗi
-    if (quantity < 0) {
-        throw new IllegalArgumentException("Số lượng sản phẩm không được nhỏ hơn 0!");
+        Product p = new Product();
+        p.setCategoryID(Integer.parseInt(request.getParameter("categoryID")));
+        p.setName(request.getParameter("name"));
+        
+        int quantity = Integer.parseInt(request.getParameter("quantity"));
+        if (quantity < 0) {
+            throw new IllegalArgumentException("Số lượng sản phẩm không được nhỏ hơn 0!");
+        }
+        p.setQuantity(quantity);
+        
+        p.setUnitID(Integer.parseInt(request.getParameter("unitID")));
+        
+        BigDecimal sellingPrice = new BigDecimal(request.getParameter("sellingPrice"));
+        if (sellingPrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Giá bán không được nhỏ hơn 0!");
+        }
+        p.setSellingPrice(sellingPrice);
+        
+        p.setStatus(request.getParameter("status"));
+        return p;
     }
-    p.setQuantity(quantity);
-    
-    p.setUnitID(Integer.parseInt(request.getParameter("unitID")));
-    
-    BigDecimal sellingPrice = new BigDecimal(request.getParameter("sellingPrice"));
-    if (sellingPrice.compareTo(BigDecimal.ZERO) < 0) {
-        throw new IllegalArgumentException("Giá bán không được nhỏ hơn 0!");
-    }
-    p.setSellingPrice(sellingPrice);
-    
-    p.setStatus(request.getParameter("status"));
-    
-    return p;
-}
 }

@@ -1,25 +1,91 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<% request.setAttribute("pageTitle", "Create Supplier"); %>
-<jsp:include page="/views/common/header.jsp" />
-<jsp:include page="/views/common/sidebar.jsp" />
-<main class="main">
-    <div class="card">
-        <h1>Create Supplier</h1>
-        <p>Đây là trang JSP mẫu cho chức năng <strong>Create Supplier</strong>.</p>
-        <% if (request.getAttribute("message") != null) { %>
-            <div class="message"><%= request.getAttribute("message") %></div>
-        <% } %>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+
+<jsp:include page="../common/header.jsp">
+    <jsp:param name="title" value="Thêm nhà cung cấp"/>
+</jsp:include>
+
+<div class="container py-4">
+
+    <div class="card shadow-sm">
+
+        <div class="card-header bg-danger text-white">
+            Thêm nhà cung cấp
+        </div>
+
+        <div class="card-body">
+
+            <form method="post" action="suppliers">
+
+                <input type="hidden"
+                       name="action"
+                       value="create">
+
+                <div class="mb-3">
+
+                    <label>Tên nhà cung cấp</label>
+
+                    <input type="text"
+                           name="name"
+                           class="form-control"
+                           required>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label>Số điện thoại</label>
+
+                    <input type="text"
+                           name="phone"
+                           class="form-control"
+                           required>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label>Địa chỉ</label>
+
+                    <textarea name="address"
+                              class="form-control"
+                              rows="3"></textarea>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label>Trạng thái</label>
+
+                    <select name="status"
+                            class="form-select">
+
+                        <option value="active">
+                            Active
+                        </option>
+
+                        <option value="inactive">
+                            Inactive
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <button class="btn btn-danger">
+                    Lưu
+                </button>
+
+                <a href="suppliers"
+                   class="btn btn-secondary">
+                    Quay lại
+                </a>
+
+            </form>
+
+        </div>
+
     </div>
 
-    <div class="card">
-        <form method="post">
-            <div class="form-row"><label>Name / Title</label><input name="name" placeholder="Nhập tên hoặc tiêu đề"></div>
-            <div class="form-row"><label>Status</label><select name="status"><option>ACTIVE</option><option>INACTIVE</option><option>PENDING</option></select></div>
-            <div class="form-row"><label>Description</label><textarea name="description" rows="4"></textarea></div>
-            <button class="btn" type="submit">Save</button>
-            <a class="btn secondary" href="javascript:history.back()">Back</a>
-        </form>
-    </div>
+</div>
 
-</main>
-<jsp:include page="/views/common/footer.jsp" />
+<jsp:include page="../common/footer.jsp"/>

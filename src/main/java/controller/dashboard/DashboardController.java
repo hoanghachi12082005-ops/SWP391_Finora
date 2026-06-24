@@ -1,6 +1,6 @@
-package controller.dashboard;
+package       controller.dashboard;
 
-import controller.common.BaseController;
+import       controller.common.BaseController;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;

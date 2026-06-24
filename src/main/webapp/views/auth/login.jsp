@@ -37,7 +37,7 @@
                         <span class="material-icons">store</span>
                     </div>
 
-                    <h2 class="brand-title">KiotRetail</h2>
+                    <h2 class="brand-title">FinoraRetail</h2>
 
                     <p class="text-muted">
                         Đăng nhập để truy cập hệ thống quản trị
@@ -110,9 +110,6 @@
 
                 </form>
 
-                <div class="text-center mt-4">
-                    <p>Chưa có tài khoản? <a href="${pageContext.request.contextPath}/register" class="register-link">Đăng ký</a></p>
-                </div>
 
             </div>
         </div>
