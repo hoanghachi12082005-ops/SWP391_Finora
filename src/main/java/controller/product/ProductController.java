@@ -102,6 +102,9 @@ public class ProductController extends BaseController {
             if (unitID  != null && !unitID.isBlank())  redirect.append("unitID=").append(unitID).append("&");
             if (view    != null && !view.isBlank())    redirect.append("view=").append(view);
             response.sendRedirect(redirect.toString());
+        } catch (IllegalArgumentException e) {
+            request.setAttribute("errorMessage", e.getMessage());
+            doGet(request, response);
         } catch (Exception e) {
             throw new ServletException("Error processing request", e);
         }
@@ -123,7 +126,13 @@ public class ProductController extends BaseController {
     p.setQuantity(quantity);
     
     p.setUnitID(Integer.parseInt(request.getParameter("unitID")));
-    p.setSellingPrice(new BigDecimal(request.getParameter("sellingPrice")));
+    
+    BigDecimal sellingPrice = new BigDecimal(request.getParameter("sellingPrice"));
+    if (sellingPrice.compareTo(BigDecimal.ZERO) < 0) {
+        throw new IllegalArgumentException("Giá bán không được nhỏ hơn 0!");
+    }
+    p.setSellingPrice(sellingPrice);
+    
     p.setStatus(request.getParameter("status"));
     
     return p;
