@@ -90,7 +90,6 @@ CREATE TABLE customer_point (
     cus_id          INT           NOT NULL UNIQUE,
     current_points  INT           DEFAULT 0,
     lifetime_points INT           DEFAULT 0,
-    level_name      NVARCHAR(50),
     updated_at      DATETIME      DEFAULT GETDATE(),
 
     CONSTRAINT FK_CustomerPoint_Customer
