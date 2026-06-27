@@ -76,7 +76,6 @@ CREATE TABLE customer (
     address     NVARCHAR(300),
     email       NVARCHAR(150),
     phone       NVARCHAR(20) UNIQUE,
-    cus_type    NVARCHAR(50),
     total_spent DECIMAL(18,2) DEFAULT 0,
     created_at  DATETIME      DEFAULT GETDATE(),
     updated_at  DATETIME      DEFAULT GETDATE()
