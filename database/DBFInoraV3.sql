@@ -77,6 +77,8 @@ CREATE TABLE customer (
     email       NVARCHAR(150),
     phone       NVARCHAR(20) UNIQUE,
     total_spent DECIMAL(18,2) DEFAULT 0,
+    status        NVARCHAR(20)  DEFAULT 'ACTIVE'
+                                CHECK (status IN ('ACTIVE','INACTIVE')),
     created_at  DATETIME      DEFAULT GETDATE(),
     updated_at  DATETIME      DEFAULT GETDATE()
 );
