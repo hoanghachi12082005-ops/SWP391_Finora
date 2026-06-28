@@ -1,32 +1,35 @@
 package model;
 
-public class StockTransferDetail {
-    private int stockTransferDetailId;
-    private int stockTransferId;
+public class InventoryTicketDetail {
+    private int detailId;
+    private int ticketId;
     private int productId;
     private int quantity;
-
+    private Integer actualQuantity; // Nullable, only for CHECK
+    private String actionType; // SEND or RECEIVE (used for EXCHANGE tickets)
+    
     // Display fields
     private String productName;
     private String productCodebar;
     private String unitName;
 
-    public StockTransferDetail() {}
-
-    public int getStockTransferDetailId() {
-        return stockTransferDetailId;
+    public InventoryTicketDetail() {
     }
 
-    public void setStockTransferDetailId(int stockTransferDetailId) {
-        this.stockTransferDetailId = stockTransferDetailId;
+    public int getDetailId() {
+        return detailId;
     }
 
-    public int getStockTransferId() {
-        return stockTransferId;
+    public void setDetailId(int detailId) {
+        this.detailId = detailId;
     }
 
-    public void setStockTransferId(int stockTransferId) {
-        this.stockTransferId = stockTransferId;
+    public int getTicketId() {
+        return ticketId;
+    }
+
+    public void setTicketId(int ticketId) {
+        this.ticketId = ticketId;
     }
 
     public int getProductId() {
@@ -43,6 +46,14 @@ public class StockTransferDetail {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public Integer getActualQuantity() {
+        return actualQuantity;
+    }
+
+    public void setActualQuantity(Integer actualQuantity) {
+        this.actualQuantity = actualQuantity;
     }
 
     public String getProductName() {
@@ -67,5 +78,13 @@ public class StockTransferDetail {
 
     public void setUnitName(String unitName) {
         this.unitName = unitName;
+    }
+
+    public String getActionType() {
+        return actionType;
+    }
+
+    public void setActionType(String actionType) {
+        this.actionType = actionType;
     }
 }

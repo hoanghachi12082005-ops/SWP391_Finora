@@ -1,36 +1,73 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <div class="dashboard-card">
-    <div class="card-header d-flex justify-content-between align-items-center mb-3">
-        <h5>Danh sách Tồn Kho</h5>
-        
-        <form action="" method="GET" class="d-flex gap-2">
-            <input type="hidden" name="tab" value="stock">
-            <c:if test="${not empty warehouses && sessionScope.currentUser.roleName == 'Admin'}">
-                <select name="warehouseId" class="form-select" onchange="this.form.submit()">
-                    <option value="">Tất cả kho</option>
-                    <c:forEach var="w" items="${warehouses}">
-                        <option value="${w.warehouseId}" ${selectedWarehouseId == w.warehouseId ? 'selected' : ''}>${w.warehouseName}</option>
-                    </c:forEach>
-                </select>
-            </c:if>
-            <select name="status" class="form-select" onchange="this.form.submit()">
-                <option value="">Tất cả trạng thái</option>
-                <option value="ACTIVE" ${statusFilter == 'ACTIVE' ? 'selected' : ''}>Bình thường</option>
-                <option value="LOW_STOCK" ${statusFilter == 'LOW_STOCK' ? 'selected' : ''}>Tồn thấp</option>
-                <option value="OUT_OF_STOCK" ${statusFilter == 'OUT_OF_STOCK' ? 'selected' : ''}>Hết hàng</option>
-            </select>
-            <select name="sort" class="form-select" onchange="this.form.submit()">
-                <option value="qty_asc" ${sortParam == 'qty_asc' ? 'selected' : ''}>Tồn kho: Tăng dần</option>
-                <option value="qty_desc" ${sortParam == 'qty_desc' ? 'selected' : ''}>Tồn kho: Giảm dần</option>
-                <option value="name_asc" ${sortParam == 'name_asc' ? 'selected' : ''}>Tên A-Z</option>
-            </select>
-            <input type="text" name="keyword" class="form-control" placeholder="Tìm theo tên/mã..." value="${keyword}">
-            <button type="submit" class="btn btn-primary">Tìm</button>
-        </form>
-    </div>
+    <c:choose>
+        <%-- ==================== CHẾ ĐỘ DANH SÁCH KHO ==================== --%>
+        <c:when test="${empty selectedWarehouseId}">
+            <div class="card-header border-bottom-0 pb-0 mb-3">
+                <h5 class="mb-3">Danh sách Kho Hàng</h5>
+                <c:if test="${fn:length(warehouses) > 1 || sessionScope.currentUser.roleName == 'Admin' || sessionScope.currentUser.roleName == 'Owner'}">
+                    <div class="warehouse-cards w-100 mb-4">
+                        <c:forEach var="w" items="${warehouses}">
+                            <div class="warehouse-card" onclick="selectWarehouse('${w.warehouseId}')">
+                                <span class="material-icons warehouse-card-icon">storefront</span>
+                                <div class="warehouse-card-title">${w.warehouseName}</div>
+                                <div class="warehouse-card-subtitle">Chi nhánh ${w.branchId}</div>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </c:if>
+            </div> <!-- end card-header -->
+            
+            <!-- Hidden form just for JavaScript to submit when a card is clicked -->
+            <form action="" method="GET" id="filterForm">
+                <input type="hidden" name="tab" value="stock">
+                <input type="hidden" name="warehouseId" id="warehouseIdInput" value="">
+            </form>
+        </c:when>
+
+        <%-- ==================== CHẾ ĐỘ CHI TIẾT TỒN KHO ==================== --%>
+        <c:otherwise>
+            <div class="px-4 pt-3 pb-3">
+                <div class="d-flex justify-content-between mb-3">
+                    <form action="" method="GET" class="inventory-filter-bar flex-grow-1" id="filterForm">
+                        <input type="hidden" name="tab" value="stock">
+                        <input type="hidden" name="warehouseId" id="warehouseIdInput" value="${selectedWarehouseId}">
+                        
+                        <div class="filter-group">
+                            <span class="material-icons filter-icon">filter_list</span>
+                            
+                            <select name="status" class="premium-select" onchange="this.form.submit()">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="ACTIVE" ${statusFilter == 'ACTIVE' ? 'selected' : ''}>Bình thường</option>
+                                <option value="LOW_STOCK" ${statusFilter == 'LOW_STOCK' ? 'selected' : ''}>Tồn thấp</option>
+                                <option value="OUT_OF_STOCK" ${statusFilter == 'OUT_OF_STOCK' ? 'selected' : ''}>Hết hàng</option>
+                            </select>
+                            
+                            <select name="sort" class="premium-select" onchange="this.form.submit()">
+                                <option value="qty_asc" ${sortParam == 'qty_asc' ? 'selected' : ''}>Sắp xếp: Tồn kho tăng dần</option>
+                                <option value="qty_desc" ${sortParam == 'qty_desc' ? 'selected' : ''}>Sắp xếp: Tồn kho giảm dần</option>
+                                <option value="name_asc" ${sortParam == 'name_asc' ? 'selected' : ''}>Sắp xếp: Tên A-Z</option>
+                            </select>
+                        </div>
+                        
+                        <div class="search-group">
+                            <span class="material-icons search-icon">search</span>
+                            <input type="text" name="keyword" class="premium-input" placeholder="Tìm tên/mã SP..." value="${keyword}">
+                            <button type="submit" class="premium-btn">Tìm kiếm</button>
+                        </div>
+                    </form>
+
+                    <div class="ms-3 action-buttons shrink-0 d-flex align-items-center">
+                        <button type="button" class="btn premium-btn" style="background: #10b981; border-color: #10b981; display: flex; align-items: center; gap: 4px;" onclick="Swal.fire({icon: 'info', title: 'Đang phát triển', text: 'Tính năng lập phiếu nhập kho đang được phát triển!'})">
+                            <span class="material-icons" style="font-size: 18px;">add_box</span>
+                            Nhập kho
+                        </button>
+                    </div>
+                </div>
 
     <div class="premium-table-container">
         <table class="premium-table table-hover">
@@ -104,16 +141,26 @@
         </table>
     </div>
 
-    <!-- Pagination -->
-    <c:if test="${totalPages > 1}">
-        <div class="d-flex justify-content-end mt-3">
-            <ul class="pagination">
-                <c:forEach begin="1" end="${totalPages}" var="i">
-                    <li class="page-item ${currentPage == i ? 'active' : ''}">
-                        <a class="page-link" href="?tab=stock&page=${i}&keyword=${keyword}&status=${statusFilter}&sort=${sortParam}&warehouseId=${selectedWarehouseId}">${i}</a>
-                    </li>
-                </c:forEach>
-            </ul>
-        </div>
-    </c:if>
+        <!-- Pagination -->
+        <c:if test="${totalPages > 1}">
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <c:forEach begin="1" end="${totalPages}" var="p">
+                        <li class="page-item ${p == currentPage ? 'active' : ''}">
+                            <a class="page-link" href="?tab=stock&page=${p}&warehouseId=${selectedWarehouseId}&status=${statusFilter}&sort=${sortParam}&keyword=${keyword}">${p}</a>
+                        </li>
+                    </c:forEach>
+                </ul>
+            </nav>
+        </c:if>
+    </div>
+            </c:otherwise>
+        </c:choose>
 </div>
+
+<script>
+function selectWarehouse(id) {
+    document.getElementById('warehouseIdInput').value = id;
+    document.getElementById('warehouseIdInput').form.submit();
+}
+</script>

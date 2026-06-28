@@ -9,7 +9,7 @@
             <!-- Nút giả lập tạo phiếu để test UI -->
             <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
                 <input type="hidden" name="action" value="createCheck">
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-danger">
                     <span class="material-icons" style="font-size:16px; vertical-align:text-bottom;">add</span>
                     Tạo phiếu kiểm
                 </button>
@@ -39,9 +39,9 @@
                     <c:otherwise>
                         <c:forEach var="c" items="${checks}">
                             <tr>
-                                <td><strong>${c.checkCode}</strong></td>
-                                <td>${c.warehouseName}</td>
-                                <td>${c.checkDate}</td>
+                                <td><strong>${c.ticketCode}</strong></td>
+                                <td>${c.fromWarehouseName}</td>
+                                <td>${c.createdAt}</td>
                                 <td>${c.createdByName}</td>
                                 <td>
                                     <c:choose>
@@ -60,16 +60,14 @@
                                     </c:choose>
                                 </td>
                                 <td>
-                                    <span style="color: ${c.totalDifference < 0 ? 'red' : (c.totalDifference > 0 ? 'green' : 'black')}; font-weight:bold;">
-                                        ${c.totalDifference > 0 ? '+' : ''}${c.totalDifference}
-                                    </span>
+                                    <span>-</span>
                                 </td>
-                                <td>${c.approvedByName != null ? c.approvedByName : '-'}</td>
+                                <td>-</td>
                                 <td>
                                     <c:if test="${c.status == 'PENDING' && (roleName == 'StoreManager' || roleName == 'Admin' || roleName == 'Owner')}">
                                         <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
                                             <input type="hidden" name="action" value="approveCheck">
-                                            <input type="hidden" name="checkId" value="${c.stockCheckId}">
+                                            <input type="hidden" name="checkId" value="${c.ticketId}">
                                             <button type="submit" class="btn btn-sm btn-success">Duyệt Phiếu</button>
                                         </form>
                                     </c:if>

@@ -52,4 +52,26 @@ public class WarehouseDAO {
         }
         return w;
     }
+
+    public boolean createWarehouse(Warehouse w) throws SQLException {
+        String sql = "INSERT INTO warehouse (warehouse_name, branch_id, address, status) VALUES (?, ?, ?, 'ACTIVE')";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, w.getWarehouseName());
+            stmt.setInt(2, w.getBranchId());
+            stmt.setString(3, w.getAddress());
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public boolean updateWarehouse(Warehouse w) throws SQLException {
+        String sql = "UPDATE warehouse SET warehouse_name = ?, address = ? WHERE warehouse_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, w.getWarehouseName());
+            stmt.setString(2, w.getAddress());
+            stmt.setInt(3, w.getWarehouseId());
+            return stmt.executeUpdate() > 0;
+        }
+    }
 }

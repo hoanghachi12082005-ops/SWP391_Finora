@@ -25,7 +25,7 @@
                 <option value="">Toàn thời gian</option>
                 <option value="today" ${dateFilter == 'today' ? 'selected' : ''}>Hôm nay</option>
             </select>
-            <button type="submit" class="btn btn-primary">Lọc</button>
+            <button type="submit" class="btn btn-danger">Lọc</button>
         </form>
     </div>
 
@@ -58,7 +58,12 @@
                                         <strong>${tx.productName}</strong><br>
                                         <small class="text-muted">${tx.productCodebar}</small>
                                     </td>
-                                    <td>${tx.warehouseName}</td>
+                                    <td>
+                                        <span style="font-weight: 600; color: #374151; display: flex; align-items: center; gap: 4px;">
+                                            <span class="material-icons" style="font-size: 16px; color: #6b7280;">storefront</span>
+                                            ${tx.warehouseName}
+                                        </span>
+                                    </td>
                                     <td>
                                         <c:if test="${tx.transactionType == 'IN'}">
                                             <span class="badge bg-success">NHẬP</span>

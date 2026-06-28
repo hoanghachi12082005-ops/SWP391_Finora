@@ -31,10 +31,10 @@
             </a>
         </c:if>
 
-        <!-- Inventory Dashboard (WarehouseStaff) -->
-        <c:if test="${roleName == 'WarehouseStaff'}">
-            <a href="${pageContext.request.contextPath}/inventory/dashboard" 
-               class="sidebar-menu-item ${originalUri.contains('/inventory/') ? 'active' : ''}">
+        <!-- Inventory Dashboard -->
+        <c:if test="${roleName == 'WarehouseStaff' || roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+            <a href="${pageContext.request.contextPath}/inventory" 
+               class="sidebar-menu-item ${originalUri.contains('/inventory') ? 'active' : ''}">
                 <span class="material-icons">inventory_2</span>
                 <span>Kho hàng</span>
             </a>

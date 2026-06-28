@@ -473,12 +473,21 @@
     }
 
     function checkout() {
-        if (cart.length === 0) {
-            alert('Giỏ hàng trống! Vui lòng chọn món ăn/nước uống.');
+        if (Object.keys(cart).length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Giỏ hàng trống',
+                text: 'Giỏ hàng trống! Vui lòng chọn món ăn/nước uống.'
+            });
             return;
         }
-        alert('Đặt hàng & Thanh toán thành công!\nHóa đơn đã được in ra.');
-        clearCart();
+        Swal.fire({
+            icon: 'success',
+            title: 'Thành công',
+            text: 'Đặt hàng & Thanh toán thành công!\nHóa đơn đã được in ra.'
+        }).then(() => {
+            window.location.href = '${pageContext.request.contextPath}/orders';
+        });
     }
 </script>
 

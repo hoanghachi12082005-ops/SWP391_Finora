@@ -11,23 +11,34 @@ import java.util.List;
 
 public class StockTransactionDAO {
 
-    public List<StockTransaction> findAll(int warehouseId, int offset, int limit, String typeFilter, String dateFilter) throws SQLException {
+    public List<StockTransaction> findAll(int warehouseId, List<Integer> allowedWarehouseIds, int offset, int limit, String typeFilter, String dateFilter) throws SQLException {
         List<StockTransaction> transactions = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
             "SELECT st.*, " +
-            "p.product_name, p.product_codebar, " +
-            "e.fullName as created_by_name, " +
+            "p.Name as product_name, '' as product_codebar, " +
+            "e.FullName as created_by_name, " +
             "w.warehouse_name " +
             "FROM stock_transaction st " +
-            "JOIN [product] p ON st.product_id = p.product_id " +
+            "JOIN Product p ON st.product_id = p.ProductID " +
             "JOIN warehouse w ON st.warehouse_id = w.warehouse_id " +
-            "LEFT JOIN Employee e ON st.created_by = e.emp_id " +
+            "LEFT JOIN Employee e ON st.created_by = e.EmployeeID " +
             "WHERE 1=1"
         );
 
         if (warehouseId > 0) {
             sql.append(" AND st.warehouse_id = ?");
+        } else if (allowedWarehouseIds != null && !allowedWarehouseIds.isEmpty()) {
+            sql.append(" AND st.warehouse_id IN (");
+            for (int i = 0; i < allowedWarehouseIds.size(); i++) {
+                sql.append(allowedWarehouseIds.get(i));
+                if (i < allowedWarehouseIds.size() - 1) sql.append(",");
+            }
+            sql.append(")");
+        } else {
+            // No access to any warehouse, return empty immediately
+            return transactions;
         }
+
         if (typeFilter != null && !typeFilter.trim().isEmpty()) {
             sql.append(" AND st.transaction_type = ?");
         }

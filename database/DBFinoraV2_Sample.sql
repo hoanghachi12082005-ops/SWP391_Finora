@@ -491,7 +491,7 @@ GO
 -- Employee sample
 -- PasswordHash below is SHA-256 of plain password: 123456
 -- If your PasswordUtil uses a different algorithm, update these values.
-DECLARE @DefaultPasswordHash NVARCHAR(255) = N'8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
+DECLARE @DefaultPasswordHash NVARCHAR(255) = N'$2a$12$OuN7Y78ehTHWSLERPgJKge/inBQZmPxLatGH1mc9./cAKDXlLMcXm';
 
 DECLARE @AdminRoleID INT = (SELECT RoleID FROM Role WHERE Name = N'Admin');
 DECLARE @OwnerRoleID INT = (SELECT RoleID FROM Role WHERE Name = N'Owner');

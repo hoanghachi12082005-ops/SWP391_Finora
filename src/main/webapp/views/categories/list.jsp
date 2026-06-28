@@ -62,11 +62,11 @@
                             </div>
                         </div>
                         
-<!--                         Extra teacher checks - hidden usually but ported for functionality 
+
                         <div class="row mt-3 border-top pt-3">
                             <div class="col-md-4 d-flex align-items-center gap-2">
-                                <label class="fw-bold mb-0 text-nowrap">Hiển thị:</label>
-                                <input type="number" class="form-control form-control-sm" name="limit" value="${currentLimit}" style="width: 80px;" />
+                                <label for="limitInput" class="fw-bold mb-0 text-nowrap">Hiển thị:</label>
+                                <input type="text" inputmode="numeric" pattern="[0-9]*" id="limitInput" name="limit" value="${currentLimit}" class="form-control form-control-sm" style="width: 80px;" />
                                 <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">Áp dụng</button>
                             </div>
                             <div class="col-md-8 d-flex justify-content-end gap-2">
@@ -74,7 +74,7 @@
                                 <button type="submit" class="btn btn-sm btn-outline-info" name="percentAction" value="middle">30% Giữa</button>
                                 <button type="submit" class="btn btn-sm btn-outline-info" name="percentAction" value="last">30% Cuối</button>
                             </div>
-                        </div>-->
+                        </div>
                     </form>
                 </div>
             </div>

@@ -140,7 +140,7 @@ public class ProductDAO {
                     stmt.setInt(1, id);
                     stmt.executeUpdate();
                 }
-                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM StockTransferDetail WHERE ProductID = ?")) {
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM inventory_ticket_detail WHERE product_id = ?")) {
                     stmt.setInt(1, id);
                     stmt.executeUpdate();
                 }

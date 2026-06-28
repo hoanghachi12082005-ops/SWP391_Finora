@@ -79,7 +79,7 @@ public class CategoryController extends BaseController {
     private void listCategories(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String keyword = request.getParameter("keyword");
         String status = request.getParameter("status");
-        String parentName = request.getParameter("parentName");
+//        String parentName = request.getParameter("parentName");
         
         int page = parseOrDefault(request.getParameter("page"), 1);
         int limit = parseOrDefault(request.getParameter("limit"), 10);
@@ -124,6 +124,11 @@ public class CategoryController extends BaseController {
         } else {
             paginatedList = new ArrayList<>();
         }
+//        paginatedList.
+            List<Category> paginatedList1 = new ArrayList<>(); 
+            for (int i = paginatedList.size() - 1; i >= 0; i--) { 
+                paginatedList1.add(paginatedList.get(i));
+            }
 
         int totalRootCategories = 0;
         int totalLinkedProducts = 0;
@@ -132,7 +137,7 @@ public class CategoryController extends BaseController {
             totalLinkedProducts += c.getProductCount();
         }
 
-        request.setAttribute("categories", paginatedList);
+        request.setAttribute("categories", paginatedList1);
         request.setAttribute("totalItems", totalItems);
         request.setAttribute("totalRootCategories", totalRootCategories);
         request.setAttribute("totalLinkedProducts", totalLinkedProducts);
