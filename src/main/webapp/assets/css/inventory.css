@@ -1,0 +1,76 @@
+/* Custom styles for Inventory Module */
+
+/* Tab Navigation */
+.tab-nav {
+    display: flex;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    border: none;
+    background: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.tab-btn:hover {
+    color: var(--primary-color);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+/* Gradient rows for stock warning */
+.premium-table tbody tr.stock-low-0 {
+    background-color: #fecaca !important;
+    color: #991b1b !important;
+}
+
+.premium-table tbody tr.stock-low-1-5 {
+    background-color: #fee2e2 !important;
+    color: #dc2626 !important;
+}
+
+.premium-table tbody tr.stock-low-6-10 {
+    background-color: #fef2f2 !important;
+    color: #ef4444 !important;
+}
+
+/* Badges override if needed */
+.badge-hout {
+    background-color: #991b1b !important;
+    color: white !important;
+}
+
+.badge-saphet {
+    background-color: #f59e0b !important;
+    color: white !important;
+}
+
+.badge-conhang {
+    background-color: #10b981 !important;
+    color: white !important;
+}
+
+/* Fix product text in colored rows */
+.stock-low-0 .product-details h6,
+.stock-low-1-5 .product-details h6,
+.stock-low-6-10 .product-details h6 {
+    color: inherit !important;
+}
+
+.stock-low-0 td,
+.stock-low-1-5 td,
+.stock-low-6-10 td {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
