@@ -1,5 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <jsp:include page="/views/common/header.jsp">
     <jsp:param name="title" value="Tổng quan quản trị"/>
 </jsp:include>
@@ -155,48 +157,57 @@
                 <div class="dashboard-card">
                     <div class="dashboard-card-title">
                         <h5>Hoạt động gần đây</h5>
-                        <a href="#" style="font-size: 12px; font-weight: 600;">Xem tất cả</a>
+                        <a href="${pageContext.request.contextPath}/activity-log" style="font-size: 12px; font-weight: 600;">Xem tất cả</a>
                     </div>
                     <div class="activity-feed">
-                        <div class="activity-item">
-                            <div class="activity-icon blue">
-                                <span class="material-icons" style="font-size: 16px;">receipt</span>
-                            </div>
-                            <div class="activity-details">
-                                <p>Đơn hàng <strong>#INV-001</strong> đã thanh toán</p>
-                                <small>Vài phút trước - CN Q.1</small>
-                            </div>
-                        </div>
-
-                        <div class="activity-item">
-                            <div class="activity-icon red">
-                                <span class="material-icons" style="font-size: 16px;">warning</span>
-                            </div>
-                            <div class="activity-details">
-                                <p>Cảnh báo tồn kho: sản phẩm <strong>"Cà phê hạt Moka"</strong> còn dưới 5kg</p>
-                                <small>1 giờ trước - CN Q.1</small>
-                            </div>
-                        </div>
-
-                        <div class="activity-item">
-                            <div class="activity-icon green">
-                                <span class="material-icons" style="font-size: 16px;">check_circle</span>
-                            </div>
-                            <div class="activity-details">
-                                <p>Phiếu nhập hàng <strong>#PO-089</strong> được duyệt bởi Quản lý</p>
-                                <small>2 giờ trước - Hệ thống</small>
-                            </div>
-                        </div>
-
-                        <div class="activity-item">
-                            <div class="activity-icon blue">
-                                <span class="material-icons" style="font-size: 16px;">receipt</span>
-                            </div>
-                            <div class="activity-details">
-                                <p>Đơn hàng <strong>#INV-002</strong> đã thanh toán</p>
-                                <small>3 giờ trước - CN Q.7</small>
-                            </div>
-                        </div>
+                        <c:choose>
+                            <c:when test="${empty recentActivities}">
+                                <div class="text-center text-muted py-3" style="font-size: 13px;">Chưa có hoạt động nào.</div>
+                            </c:when>
+                            <c:otherwise>
+                                <c:forEach var="act" items="${recentActivities}">
+                                    <c:set var="upperAction" value="${fn:toUpperCase(act.actionName)}" />
+                                    <c:choose>
+                                        <c:when test="${fn:contains(upperAction, 'INSERT') || fn:contains(upperAction, 'CREATE') || fn:contains(upperAction, 'ADD')}">
+                                            <c:set var="iconColor" value="green" />
+                                            <c:set var="iconName" value="check_circle" />
+                                        </c:when>
+                                        <c:when test="${fn:contains(upperAction, 'DELETE') || fn:contains(upperAction, 'REMOVE')}">
+                                            <c:set var="iconColor" value="red" />
+                                            <c:set var="iconName" value="warning" />
+                                        </c:when>
+                                        <c:when test="${fn:contains(upperAction, 'UPDATE') || fn:contains(upperAction, 'EDIT')}">
+                                            <c:set var="iconColor" value="blue" />
+                                            <c:set var="iconName" value="edit" />
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:set var="iconColor" value="blue" />
+                                            <c:set var="iconName" value="receipt" />
+                                        </c:otherwise>
+                                    </c:choose>
+                                    <div class="activity-item">
+                                        <div class="activity-icon ${iconColor}">
+                                            <span class="material-icons" style="font-size: 16px;">${iconName}</span>
+                                        </div>
+                                        <div class="activity-details">
+                                            <p>
+                                                <strong>${act.actionName}</strong>
+                                                <c:if test="${not empty act.tableName}"> trên <em>${act.tableName}</em></c:if>
+                                                <c:if test="${not empty act.recordId}"> (#${act.recordId})</c:if>
+                                            </p>
+                                            <small>
+                                                <c:if test="${not empty act.createdAtFormatted}">${act.createdAtFormatted} - </c:if>
+                                                <c:choose>
+                                                    <c:when test="${not empty act.empName}">${act.empName}</c:when>
+                                                    <c:when test="${act.empId > 0}">NV #${act.empId}</c:when>
+                                                    <c:otherwise>Hệ thống</c:otherwise>
+                                                </c:choose>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </c:forEach>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
                 </div>
             </div>
