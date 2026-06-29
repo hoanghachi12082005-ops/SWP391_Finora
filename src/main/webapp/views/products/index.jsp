@@ -250,8 +250,8 @@
             </div>
             <div class="mb-3">
                 <label class="form-label">Ảnh sản phẩm</label>
-                <input type="file" id="modal-image" name="imageFile" class="form-control" accept="image/*" onchange="previewProductImage(event)">
-                <div class="form-text">Định dạng ảnh thông thường (JPG/PNG/WEBP...), tối đa 3MB. Có thể bỏ trống khi tạo mới.</div>
+                <input type="file" id="modal-image" name="imageFile" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,image/*" onchange="previewProductImage(event)">
+                <div class="form-text">Chỉ chấp nhận file ảnh: JPG, JPEG, PNG, WEBP, GIF, BMP. Tối đa 3MB. Có thể bỏ trống khi tạo mới.</div>
                 <div class="mt-2">
                     <img id="modal-image-preview" src="" alt="preview" style="display:none;max-width:160px;max-height:160px;object-fit:cover;border-radius:8px;border:1px solid #eee;">
                 </div>
@@ -290,6 +290,27 @@
             bsModal = new bootstrap.Modal(document.getElementById('productModal'));
         } else {
             console.warn("Bootstrap JS is not loaded!");
+        }
+        // Chặn submit nếu file không phải ảnh hợp lệ
+        const productForm = document.getElementById('product-form');
+        if (productForm) {
+            productForm.addEventListener('submit', function(e) {
+                const fileInput = document.getElementById('modal-image');
+                const file = fileInput && fileInput.files && fileInput.files[0];
+                if (!file) return; // không có ảnh thì cho qua
+                if (!isValidImageFile(file)) {
+                    e.preventDefault();
+                    alert('File tải lên không phải ảnh hợp lệ. Chỉ chấp nhận: ' + ALLOWED_IMAGE_EXT.join(', ') + '.');
+                    fileInput.value = '';
+                    return false;
+                }
+                if (file.size > 3 * 1024 * 1024) {
+                    e.preventDefault();
+                    alert('Ảnh vượt quá 3MB. Vui lòng chọn ảnh khác.');
+                    fileInput.value = '';
+                    return false;
+                }
+            });
         }
     });
 
@@ -340,6 +361,25 @@
         if(bsModal) bsModal.show();
     }
 
+    // Các đuôi ảnh hợp lệ ở client
+    const ALLOWED_IMAGE_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'];
+
+    function getFileExt(filename) {
+        if (!filename) return '';
+        const dot = filename.lastIndexOf('.');
+        if (dot < 0 || dot === filename.length - 1) return '';
+        return filename.substring(dot + 1).toLowerCase();
+    }
+
+    function isValidImageFile(file) {
+        if (!file) return false;
+        const ext = getFileExt(file.name);
+        if (ALLOWED_IMAGE_EXT.indexOf(ext) === -1) return false;
+        // kiểm tra thêm MIME type nếu có
+        if (file.type && file.type.indexOf('image/') !== 0) return false;
+        return true;
+    }
+
     function previewProductImage(event) {
         const file = event.target.files && event.target.files[0];
         const preview = document.getElementById('modal-image-preview');
@@ -348,7 +388,15 @@
             preview.style.display = 'none';
             return;
         }
-        // Chặn sớm phía client nếu vượt 3MB
+        // 1) Kiểm tra đuôi file phải là ảnh
+        if (!isValidImageFile(file)) {
+            alert('File tải lên không phải ảnh hợp lệ. Chỉ chấp nhận: ' + ALLOWED_IMAGE_EXT.join(', ') + '.');
+            event.target.value = '';
+            preview.src = '';
+            preview.style.display = 'none';
+            return;
+        }
+        // 2) Chặn sớm phía client nếu vượt 3MB
         if (file.size > 3 * 1024 * 1024) {
             alert('Ảnh vượt quá 3MB. Vui lòng chọn ảnh khác.');
             event.target.value = '';
