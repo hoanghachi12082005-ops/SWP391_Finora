@@ -11,8 +11,6 @@
     String filterStatus      = (String) request.getAttribute("filterStatus");
     Integer filterCategoryID = (Integer) request.getAttribute("filterCategoryID");
     Integer filterUnitID     = (Integer) request.getAttribute("filterUnitID");
-    String viewMode          = (String) request.getAttribute("viewMode");
-    if (viewMode == null) viewMode = "table";
     NumberFormat vndFormat   = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 %>
 <jsp:include page="../common/header.jsp">
@@ -22,7 +20,7 @@
     <jsp:include page="../common/sidebar.jsp"/>
     <main class="main-content">
         <div class="container-fluid py-4">
-            
+
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 class="fw-bold">Quản lý Sản phẩm</h2>
@@ -39,7 +37,6 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <form id="filterForm" method="get" action="<%= ctx %>/products">
-                        <input type="hidden" name="view" id="viewInput" value="<%= viewMode %>">
                         <input type="hidden" name="status" id="statusInput" value="<%= filterStatus != null ? filterStatus : "" %>">
                         <input type="hidden" name="categoryID" id="categoryInput" value="<%= filterCategoryID != null ? filterCategoryID : "" %>">
                         <input type="hidden" name="unitID" id="unitInput" value="<%= filterUnitID != null ? filterUnitID : "" %>">
@@ -78,7 +75,7 @@
                             </div>
                             <% if ((keyword != null && !keyword.isBlank()) || (filterStatus != null && !filterStatus.isBlank()) || filterCategoryID != null || filterUnitID != null) { %>
                             <div style="width: 100px;">
-                                <a href="<%= ctx %>/products?view=<%= viewMode %>" class="btn btn-outline-secondary w-100">Xóa lọc</a>
+                                <a href="<%= ctx %>/products" class="btn btn-outline-secondary w-100">Xóa lọc</a>
                             </div>
                             <% } %>
                         </div>
@@ -93,7 +90,6 @@
                                 <th>Tên sản phẩm</th>
                                 <th>Danh mục</th>
                                 <th>Đơn vị</th>
-                                <th>Số lượng</th>
                                 <th>Giá bán</th>
                                 <th>Trạng thái</th>
                                 <th>Thao tác</th>
@@ -105,7 +101,7 @@
         if (empty) {
 %>
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">Không tìm thấy sản phẩm nào.</td>
+                                <td colspan="7" class="text-center text-muted py-4">Không tìm thấy sản phẩm nào.</td>
                             </tr>
 <%
         } else {
@@ -116,7 +112,6 @@
                                 <td><strong><%= p.getName() != null ? p.getName() : "" %></strong></td>
                                 <td><%= p.getCategoryName() != null ? p.getCategoryName() : ("#" + p.getCategoryID()) %></td>
                                 <td><%= p.getUnitName() != null ? p.getUnitName() : ("#" + p.getUnitID()) %></td>
-                                <td><%= p.getQuantity() %></td>
                                 <td><strong class="text-danger"><%= p.getSellingPrice() != null ? vndFormat.format(p.getSellingPrice()) : "0 ₫" %></strong></td>
                                 <td>
                                     <% if ("Active".equalsIgnoreCase(p.getStatus())) { %>
@@ -126,11 +121,10 @@
                                     <% } %>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-warning" onclick="openProductModal('edit', 
+                                    <button class="btn btn-sm btn-warning" onclick="openProductModal('edit',
                                         '<%= p.getProductID() %>',
                                         '<%= p.getCategoryID() %>',
                                         '<%= (p.getName() != null ? p.getName() : "").replace("'", "\\'") %>',
-                                        '<%= p.getQuantity() %>',
                                         '<%= p.getUnitID() %>',
                                         '<%= p.getSellingPrice() != null ? p.getSellingPrice().toPlainString() : "0" %>',
                                         '<%= p.getStatus() != null ? p.getStatus() : "Active" %>'
@@ -152,22 +146,22 @@
                             Trang <strong><%= currentPage %></strong> / <strong><%= totalPages %></strong>
                         </div>
                         <ul class="pagination mb-0">
-<%      String baseUrl = ctx + "/products?view=" + viewMode
-                + (keyword != null && !keyword.isBlank() ? "&keyword=" + keyword : "")
-                + (filterStatus != null && !filterStatus.isBlank() ? "&status=" + filterStatus : "")
-                + (filterCategoryID != null ? "&categoryID=" + filterCategoryID : "")
-                + (filterUnitID != null ? "&unitID=" + filterUnitID : "");
+<%      String baseUrl = ctx + "/products?"
+                + (keyword != null && !keyword.isBlank() ? "keyword=" + keyword + "&" : "")
+                + (filterStatus != null && !filterStatus.isBlank() ? "status=" + filterStatus + "&" : "")
+                + (filterCategoryID != null ? "categoryID=" + filterCategoryID + "&" : "")
+                + (filterUnitID != null ? "unitID=" + filterUnitID + "&" : "");
 %>
                             <li class="page-item <%= currentPage <= 1 ? "disabled" : "" %>">
-                                <a class="page-link" href="<%= baseUrl %>&page=<%= currentPage - 1 %>">Trước</a>
+                                <a class="page-link" href="<%= baseUrl %>page=<%= currentPage - 1 %>">Trước</a>
                             </li>
 <%      for (int i = 1; i <= totalPages; i++) { %>
                             <li class="page-item <%= i == currentPage ? "active" : "" %>">
-                                <a class="page-link" href="<%= baseUrl %>&page=<%= i %>"><%= i %></a>
+                                <a class="page-link" href="<%= baseUrl %>page=<%= i %>"><%= i %></a>
                             </li>
 <%      } %>
                             <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
-                                <a class="page-link" href="<%= baseUrl %>&page=<%= currentPage + 1 %>">Tiếp</a>
+                                <a class="page-link" href="<%= baseUrl %>page=<%= currentPage + 1 %>">Tiếp</a>
                             </li>
                         </ul>
                     </div>
@@ -189,7 +183,6 @@
       <div class="modal-body">
         <form action="<%= ctx %>/products" method="post" id="product-form">
             <input type="hidden" name="action" id="modal-action" value="add">
-            <input type="hidden" name="view" value="<%= viewMode %>">
             <input type="hidden" name="productID" id="modal-id">
             <input type="hidden" name="keyword" value="<%= keyword != null ? keyword : "" %>">
             <input type="hidden" name="filterStatus" value="<%= filterStatus != null ? filterStatus : "" %>">
@@ -220,15 +213,9 @@
                        } %>
                 </select>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Số lượng</label>
-                    <input type="number" id="modal-quantity" name="quantity" class="form-control" required value="0" min="0">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Giá bán (VNĐ)</label>
-                    <input type="number" id="modal-sellingPrice" name="sellingPrice" class="form-control" min="0" required placeholder="0">
-                </div>
+            <div class="mb-3">
+                <label class="form-label">Giá bán (VNĐ)</label>
+                <input type="number" id="modal-sellingPrice" name="sellingPrice" class="form-control" min="0" required placeholder="0">
             </div>
             <div class="mb-3">
                 <label class="form-label">Trạng thái</label>
@@ -251,7 +238,6 @@
     <input type="hidden" name="action" value="delete">
     <input type="hidden" name="id" id="delete-id">
     <input type="hidden" name="page" value="<%= currentPage %>">
-    <input type="hidden" name="view" value="<%= viewMode %>">
     <input type="hidden" name="keyword" value="<%= keyword != null ? keyword : "" %>">
     <input type="hidden" name="filterStatus" value="<%= filterStatus != null ? filterStatus : "" %>">
     <input type="hidden" name="filterCategoryID" value="<%= filterCategoryID != null ? filterCategoryID : "" %>">
@@ -275,7 +261,7 @@
         }
     });
 
-    function openProductModal(action, id, catId, name, quantity, unitId, sellingPrice, status) {
+    function openProductModal(action, id, catId, name, unitId, sellingPrice, status) {
         document.getElementById('modal-action').value = action;
         if (action === 'edit') {
             document.getElementById('modal-title').innerText = 'Chỉnh sửa sản phẩm';
@@ -284,9 +270,8 @@
             document.getElementById('modal-cat').value = catId;
             document.getElementById('modal-name').value = name;
             document.getElementById('modal-unit').value = unitId;
-            document.getElementById('modal-quantity').value = quantity;
             document.getElementById('modal-sellingPrice').value = sellingPrice;
-            
+
             let normStatus = "Active";
             if (status) {
                 let s = status.trim().toUpperCase();
@@ -302,15 +287,14 @@
             document.getElementById('product-form').reset();
             document.getElementById('modal-cat').value = '1';
             document.getElementById('modal-unit').value = '1';
-            document.getElementById('modal-quantity').value = '0';
             document.getElementById('modal-sellingPrice').value = '0';
             document.getElementById('modal-status').value = 'Active';
         }
         if(bsModal) bsModal.show();
     }
 
-    function closeProductModal() { 
-        if(bsModal) bsModal.hide(); 
+    function closeProductModal() {
+        if(bsModal) bsModal.hide();
     }
 
     document.getElementById('unifiedFilter').addEventListener('change', function() {
@@ -318,7 +302,7 @@
         document.getElementById('statusInput').value = '';
         document.getElementById('categoryInput').value = '';
         document.getElementById('unitInput').value = '';
-        
+
         if (selectedValue === '') {
             document.getElementById('filterForm').submit();
         } else if (selectedValue.startsWith('cat_')) {

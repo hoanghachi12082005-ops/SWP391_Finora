@@ -25,7 +25,7 @@ public class ProductDAO {
     public List<Product> findAll(int offset, int limit, String keyword, String status, Integer categoryID, Integer unitID) throws SQLException {
         List<Product> items = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-            "SELECT p.product_id AS ProductID, p.product_name AS Name, p.Quantity AS Quantity, " +
+            "SELECT p.product_id AS ProductID, p.product_name AS Name, " +
             "p.category_id AS CategoryID, c.category_name AS CategoryName, " +
             "p.unit_id AS UnitID, u.unit_name AS UnitName, " +
             "p.selling_price AS SellingPrice, p.Status AS Status, " +
@@ -87,7 +87,7 @@ public class ProductDAO {
 
     public Product findById(int id) throws SQLException {
         String sql =
-            "SELECT p.product_id AS ProductID, p.product_name AS Name, p.Quantity AS Quantity, " +
+            "SELECT p.product_id AS ProductID, p.product_name AS Name, " +
             "p.category_id AS CategoryID, c.category_name AS CategoryName, " +
             "p.unit_id AS UnitID, u.unit_name AS UnitName, " +
             "p.selling_price AS SellingPrice, p.Status AS Status, " +
@@ -106,30 +106,28 @@ public class ProductDAO {
     }
 
     public void insert(Product product) throws SQLException {
-        String sql = "INSERT INTO [product] (product_name, Quantity, category_id, unit_id, selling_price, Status) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO [product] (product_name, category_id, unit_id, selling_price, Status) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, product.getName());
-            stmt.setInt(2, product.getQuantity());
-            stmt.setInt(3, product.getCategoryID());
-            stmt.setInt(4, product.getUnitID());
-            stmt.setBigDecimal(5, product.getSellingPrice());
-            stmt.setString(6, product.getStatus());
+            stmt.setInt(2, product.getCategoryID());
+            stmt.setInt(3, product.getUnitID());
+            stmt.setBigDecimal(4, product.getSellingPrice());
+            stmt.setString(5, product.getStatus());
             stmt.executeUpdate();
         }
     }
 
     public void update(Product product) throws SQLException {
-        String sql = "UPDATE [product] SET product_name=?, Quantity=?, category_id=?, unit_id=?, selling_price=?, Status=?, update_at=GETDATE() WHERE product_id=?";
+        String sql = "UPDATE [product] SET product_name=?, category_id=?, unit_id=?, selling_price=?, Status=?, update_at=GETDATE() WHERE product_id=?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, product.getName());
-            stmt.setInt(2, product.getQuantity());
-            stmt.setInt(3, product.getCategoryID());
-            stmt.setInt(4, product.getUnitID());
-            stmt.setBigDecimal(5, product.getSellingPrice());
-            stmt.setString(6, product.getStatus());
-            stmt.setInt(7, product.getProductID());
+            stmt.setInt(2, product.getCategoryID());
+            stmt.setInt(3, product.getUnitID());
+            stmt.setBigDecimal(4, product.getSellingPrice());
+            stmt.setString(5, product.getStatus());
+            stmt.setInt(6, product.getProductID());
             stmt.executeUpdate();
         }
     }
@@ -196,7 +194,6 @@ public class ProductDAO {
         Product item = new Product();
         item.setProductID(rs.getInt("ProductID"));
         item.setName(rs.getString("Name"));
-        item.setQuantity(rs.getInt("Quantity"));
         item.setCategoryID(rs.getInt("CategoryID"));
         item.setCategoryName(rs.getString("CategoryName"));
         item.setUnitID(rs.getInt("UnitID"));

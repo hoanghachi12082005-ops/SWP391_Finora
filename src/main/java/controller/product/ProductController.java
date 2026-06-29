@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 
-
 @WebServlet(name = "ProductController", urlPatterns = {"/products"})
 public class ProductController extends BaseController {
     private ProductDAO productDAO;
@@ -30,8 +29,6 @@ public class ProductController extends BaseController {
         String status   = request.getParameter("status");
         String categoryParam = request.getParameter("categoryID");
         String unitParam = request.getParameter("unitID");
-        String viewMode = request.getParameter("view");
-        if (viewMode == null) viewMode = "table";
 
         Integer categoryID = null;
         Integer unitID = null;
@@ -63,7 +60,6 @@ public class ProductController extends BaseController {
             request.setAttribute("filterStatus",status != null ? status : "");
             request.setAttribute("filterCategoryID", categoryID);
             request.setAttribute("filterUnitID", unitID);
-            request.setAttribute("viewMode",    viewMode);
 
             forward(request, response, "products/index.jsp");
         } catch (SQLException e) {
@@ -101,21 +97,19 @@ public class ProductController extends BaseController {
             String status  = request.getParameter("filterStatus");
             String categoryID = request.getParameter("filterCategoryID");
             String unitID = request.getParameter("filterUnitID");
-            String view    = request.getParameter("view");
             String page    = request.getParameter("page");
             StringBuilder redirect = new StringBuilder(request.getContextPath() + "/products?");
             if (keyword != null && !keyword.isBlank()) redirect.append("keyword=").append(keyword).append("&");
             if (status  != null && !status.isBlank())  redirect.append("status=").append(status).append("&");
             if (categoryID  != null && !categoryID.isBlank())  redirect.append("categoryID=").append(categoryID).append("&");
             if (unitID  != null && !unitID.isBlank())  redirect.append("unitID=").append(unitID).append("&");
-            if (view    != null && !view.isBlank())    redirect.append("view=").append(view).append("&");
             if (page    != null && !page.isBlank())    redirect.append("page=").append(page);
-            
+
             // Clean up trailing & if exists
             if (redirect.charAt(redirect.length() - 1) == '&' || redirect.charAt(redirect.length() - 1) == '?') {
                 redirect.deleteCharAt(redirect.length() - 1);
             }
-            
+
             response.sendRedirect(redirect.toString());
         } catch (Exception e) {
             throw new ServletException("Error processing request", e);
@@ -126,7 +120,6 @@ public class ProductController extends BaseController {
         Product p = new Product();
         p.setCategoryID(Integer.parseInt(request.getParameter("categoryID")));
         p.setName(request.getParameter("name"));
-        p.setQuantity(Integer.parseInt(request.getParameter("quantity")));
         p.setUnitID(Integer.parseInt(request.getParameter("unitID")));
         p.setSellingPrice(new BigDecimal(request.getParameter("sellingPrice")));
         p.setStatus(request.getParameter("status"));
