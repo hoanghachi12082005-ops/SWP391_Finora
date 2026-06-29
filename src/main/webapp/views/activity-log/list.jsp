@@ -22,30 +22,25 @@
         <jsp:include page="../common/topbar.jsp"/>
         <div class="container-fluid py-4">
 
-<%-- Flash message --%>
-<%
-    String flashMsg  = (String) session.getAttribute("message");
-    String flashType = (String) session.getAttribute("messageType");
-    if (flashMsg != null) {
-        session.removeAttribute("message");
-        session.removeAttribute("messageType");
-%>
-            <div class="alert alert-<%= flashType != null ? flashType : "info" %> alert-dismissible fade show" role="alert">
-                <%= flashMsg %>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-<%  } %>
-
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 class="fw-bold mb-1">Activity Center</h2>
-                    <small class="text-muted">Nhật ký hoạt động toàn hệ thống (tổng: <strong><%= totalCount != null ? totalCount : 0 %></strong> bản ghi)</small>
+                    <small class="text-muted">
+                        Nhật ký hoạt động hệ thống (chỉ đọc) - Tổng:
+                        <strong><%= totalCount != null ? totalCount : 0 %></strong> bản ghi
+                    </small>
                 </div>
+                <span class="badge bg-secondary d-flex align-items-center gap-1" style="padding: 8px 12px;">
+                    <span class="material-icons" style="font-size:16px;">lock</span>
+                    Read-only - Chỉ Owner
+                </span>
+            </div>
+
+            <div class="alert alert-info d-flex align-items-center" role="alert">
+                <span class="material-icons me-2">info</span>
                 <div>
-                    <button class="btn btn-danger" onclick="openLogModal('add')">
-                        <span class="material-icons" style="vertical-align:middle;font-size:18px;">add</span>
-                        Thêm hoạt động
-                    </button>
+                    Đây là <strong>audit log</strong> bất biến. Mọi hành động trong hệ thống được tự động ghi lại
+                    và <strong>không thể chỉnh sửa hay xóa</strong> từ giao diện để bảo toàn dấu vết kiểm toán.
                 </div>
             </div>
 
@@ -99,7 +94,7 @@
                                     <th>Bảng</th>
                                     <th>Record ID</th>
                                     <th>Dữ liệu mới</th>
-                                    <th class="text-end">Thao tác</th>
+                                    <th class="text-end">Chi tiết</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -116,7 +111,7 @@
                 String newDataDisplay = log.getNewData() != null
                         ? (log.getNewData().length() > 60 ? log.getNewData().substring(0, 60) + "..." : log.getNewData())
                         : "";
-                String empName = log.getEmpName() != null ? log.getEmpName() : (log.getEmpId() > 0 ? "#" + log.getEmpId() : "(Hệ thống)");
+                String empName = log.getActorLabel();
                 String actionBadge;
                 if (log.getActionName() != null) {
                     String a = log.getActionName().toUpperCase();
@@ -125,10 +120,11 @@
                     else if (a.contains("DELETE") || a.contains("REMOVE")) actionBadge = "bg-danger";
                     else actionBadge = "bg-secondary";
                 } else actionBadge = "bg-secondary";
-                String safeOld = log.getOldData() != null ? log.getOldData().replace("\"", "&quot;").replace("\n", " ") : "";
-                String safeNew = log.getNewData() != null ? log.getNewData().replace("\"", "&quot;").replace("\n", " ") : "";
+                String safeOld = log.getOldData() != null ? log.getOldData().replace("\"", "&quot;").replace("\n", " ").replace("\r", " ") : "";
+                String safeNew = log.getNewData() != null ? log.getNewData().replace("\"", "&quot;").replace("\n", " ").replace("\r", " ") : "";
                 String safeAction = log.getActionName() != null ? log.getActionName().replace("\"", "&quot;") : "";
                 String safeTable = log.getTableName() != null ? log.getTableName().replace("\"", "&quot;") : "";
+                String safeEmp = empName.replace("\"", "&quot;");
 %>
                                 <tr>
                                     <td>#<%= log.getId() %></td>
@@ -140,14 +136,9 @@
                                     <td><small class="text-muted"><%= newDataDisplay %></small></td>
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-primary"
-                                                onclick="viewLog('<%= log.getId() %>','<%= createdAt %>','<%= empName.replace("'", "\\'") %>','<%= safeAction.replace("'", "\\'") %>','<%= safeTable.replace("'", "\\'") %>','<%= log.getRecordId() != null ? log.getRecordId() : "" %>','<%= safeOld.replace("'", "\\'") %>','<%= safeNew.replace("'", "\\'") %>')">
+                                                onclick="viewLog('<%= log.getId() %>','<%= createdAt %>','<%= safeEmp.replace("'", "\\'") %>','<%= safeAction.replace("'", "\\'") %>','<%= safeTable.replace("'", "\\'") %>','<%= log.getRecordId() != null ? log.getRecordId() : "" %>','<%= safeOld.replace("'", "\\'") %>','<%= safeNew.replace("'", "\\'") %>')">
                                             Xem
                                         </button>
-                                        <button class="btn btn-sm btn-warning"
-                                                onclick="openLogModal('edit','<%= log.getId() %>','<%= log.getEmpId() %>','<%= safeAction.replace("'", "\\'") %>','<%= safeTable.replace("'", "\\'") %>','<%= log.getRecordId() != null ? log.getRecordId() : "" %>','<%= safeOld.replace("'", "\\'") %>','<%= safeNew.replace("'", "\\'") %>')">
-                                            Sửa
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteLog('<%= log.getId() %>')">Xóa</button>
                                     </td>
                                 </tr>
 <%
@@ -188,55 +179,7 @@
     </main>
 </div>
 
-<!-- Add/Edit Modal -->
-<div class="modal fade" id="logModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form method="post" action="<%= ctx %>/activity-log">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logModalTitle">Thêm hoạt động</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="action" id="logAction" value="add">
-                    <input type="hidden" name="id" id="logId">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Nhân viên (emp_id)</label>
-                            <input type="number" min="0" class="form-control" name="empId" id="logEmpId" placeholder="VD: 1">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Hành động <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="actionName" id="logActionName" required placeholder="INSERT / UPDATE / DELETE / LOGIN ...">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Bảng dữ liệu</label>
-                            <input type="text" class="form-control" name="tableName" id="logTableName" placeholder="product, order, ...">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Record ID</label>
-                            <input type="number" min="0" class="form-control" name="recordId" id="logRecordId">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Dữ liệu cũ (old_data)</label>
-                            <textarea class="form-control" rows="3" name="oldData" id="logOldData" placeholder="JSON hoặc mô tả..."></textarea>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Dữ liệu mới (new_data)</label>
-                            <textarea class="form-control" rows="3" name="newData" id="logNewData" placeholder="JSON hoặc mô tả..."></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-danger">Lưu</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- View Modal -->
+<!-- View Modal (chỉ đọc) -->
 <div class="modal fade" id="viewModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -257,30 +200,14 @@
                     <dd class="col-sm-9"><pre class="bg-light p-2 rounded small mb-0" id="vNew"></pre></dd>
                 </dl>
             </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Delete hidden form -->
-<form id="deleteForm" method="post" action="<%= ctx %>/activity-log" style="display:none;">
-    <input type="hidden" name="action" value="delete">
-    <input type="hidden" name="id" id="deleteId">
-</form>
-
 <script>
-function openLogModal(mode, id, empId, actionName, tableName, recordId, oldData, newData) {
-    document.getElementById('logAction').value = mode;
-    document.getElementById('logModalTitle').innerText = (mode === 'edit') ? 'Cập nhật hoạt động' : 'Thêm hoạt động';
-    document.getElementById('logId').value = id || '';
-    document.getElementById('logEmpId').value = empId || '';
-    document.getElementById('logActionName').value = actionName || '';
-    document.getElementById('logTableName').value = tableName || '';
-    document.getElementById('logRecordId').value = recordId || '';
-    document.getElementById('logOldData').value = oldData || '';
-    document.getElementById('logNewData').value = newData || '';
-    new bootstrap.Modal(document.getElementById('logModal')).show();
-}
-
 function viewLog(id, time, emp, actionName, tableName, recordId, oldData, newData) {
     document.getElementById('vId').innerText = '#' + id;
     document.getElementById('vTime').innerText = time;
@@ -291,13 +218,6 @@ function viewLog(id, time, emp, actionName, tableName, recordId, oldData, newDat
     document.getElementById('vOld').innerText = oldData || '(trống)';
     document.getElementById('vNew').innerText = newData || '(trống)';
     new bootstrap.Modal(document.getElementById('viewModal')).show();
-}
-
-function deleteLog(id) {
-    if (confirm('Bạn chắc chắn muốn xóa hoạt động #' + id + ' khỏi nhật ký?')) {
-        document.getElementById('deleteId').value = id;
-        document.getElementById('deleteForm').submit();
-    }
 }
 </script>
 
