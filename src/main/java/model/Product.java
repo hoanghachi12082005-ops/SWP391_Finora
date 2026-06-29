@@ -18,6 +18,9 @@ public class Product {
     private String categoryName;
     private String unitName;
 
+    // Transient: URL đến ảnh sản phẩm (không lưu trong DB, đọc từ /asset/product/)
+    private String imageUrl;
+
     public Product() {
     }
 
@@ -61,6 +64,9 @@ public class Product {
 
     public String getUnitName() { return unitName; }
     public void setUnitName(String unitName) { this.unitName = unitName; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     @Override
     public String toString() {

@@ -105,17 +105,25 @@ public class ProductDAO {
         }
     }
 
-    public void insert(Product product) throws SQLException {
+    public int insert(Product product) throws SQLException {
         String sql = "INSERT INTO [product] (product_name, category_id, unit_id, selling_price, Status) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, product.getName());
             stmt.setInt(2, product.getCategoryID());
             stmt.setInt(3, product.getUnitID());
             stmt.setBigDecimal(4, product.getSellingPrice());
             stmt.setString(5, product.getStatus());
             stmt.executeUpdate();
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    int newId = keys.getInt(1);
+                    product.setProductID(newId);
+                    return newId;
+                }
+            }
         }
+        return -1;
     }
 
     public void update(Product product) throws SQLException {

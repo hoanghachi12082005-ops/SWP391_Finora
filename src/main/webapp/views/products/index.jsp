@@ -21,6 +21,20 @@
     <main class="main-content">
         <div class="container-fluid py-4">
 
+<%-- Flash message từ session --%>
+<%
+    String flashMsg  = (String) session.getAttribute("message");
+    String flashType = (String) session.getAttribute("messageType");
+    if (flashMsg != null) {
+        session.removeAttribute("message");
+        session.removeAttribute("messageType");
+%>
+            <div class="alert alert-<%= flashType != null ? flashType : "info" %> alert-dismissible fade show" role="alert">
+                <%= flashMsg %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+<%  } %>
+
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 class="fw-bold">Quản lý Sản phẩm</h2>
@@ -87,6 +101,7 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
+                                <th>Ảnh</th>
                                 <th>Tên sản phẩm</th>
                                 <th>Danh mục</th>
                                 <th>Đơn vị</th>
@@ -101,14 +116,22 @@
         if (empty) {
 %>
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">Không tìm thấy sản phẩm nào.</td>
+                                <td colspan="8" class="text-center text-muted py-4">Không tìm thấy sản phẩm nào.</td>
                             </tr>
 <%
         } else {
             for (Product p : products) {
+                String imgUrl = p.getImageUrl();
 %>
                             <tr>
                                 <td>#<%= p.getProductID() %></td>
+                                <td>
+                                    <% if (imgUrl != null && !imgUrl.isBlank()) { %>
+                                        <img src="<%= imgUrl %>" alt="product" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #eee;">
+                                    <% } else { %>
+                                        <span class="text-muted" style="font-size:12px;">No image</span>
+                                    <% } %>
+                                </td>
                                 <td><strong><%= p.getName() != null ? p.getName() : "" %></strong></td>
                                 <td><%= p.getCategoryName() != null ? p.getCategoryName() : ("#" + p.getCategoryID()) %></td>
                                 <td><%= p.getUnitName() != null ? p.getUnitName() : ("#" + p.getUnitID()) %></td>
@@ -127,7 +150,8 @@
                                         '<%= (p.getName() != null ? p.getName() : "").replace("'", "\\'") %>',
                                         '<%= p.getUnitID() %>',
                                         '<%= p.getSellingPrice() != null ? p.getSellingPrice().toPlainString() : "0" %>',
-                                        '<%= p.getStatus() != null ? p.getStatus() : "Active" %>'
+                                        '<%= p.getStatus() != null ? p.getStatus() : "Active" %>',
+                                        '<%= imgUrl != null ? imgUrl : "" %>'
                                     )">Sửa</button>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="deleteProduct('<%= p.getProductID() %>')">Xóa</button>
                                 </td>
@@ -181,7 +205,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="closeProductModal()"></button>
       </div>
       <div class="modal-body">
-        <form action="<%= ctx %>/products" method="post" id="product-form">
+        <form action="<%= ctx %>/products" method="post" id="product-form" enctype="multipart/form-data">
             <input type="hidden" name="action" id="modal-action" value="add">
             <input type="hidden" name="productID" id="modal-id">
             <input type="hidden" name="keyword" value="<%= keyword != null ? keyword : "" %>">
@@ -224,6 +248,14 @@
                     <option value="Inactive">Inactive</option>
                 </select>
             </div>
+            <div class="mb-3">
+                <label class="form-label">Ảnh sản phẩm</label>
+                <input type="file" id="modal-image" name="imageFile" class="form-control" accept="image/*" onchange="previewProductImage(event)">
+                <div class="form-text">Định dạng ảnh thông thường (JPG/PNG/WEBP...), tối đa 3MB. Có thể bỏ trống khi tạo mới.</div>
+                <div class="mt-2">
+                    <img id="modal-image-preview" src="" alt="preview" style="display:none;max-width:160px;max-height:160px;object-fit:cover;border-radius:8px;border:1px solid #eee;">
+                </div>
+            </div>
             <div class="d-flex justify-content-end">
                 <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal" onclick="closeProductModal()">Huỷ</button>
                 <button type="submit" class="btn btn-danger" id="modal-submit">Lưu sản phẩm</button>
@@ -261,8 +293,11 @@
         }
     });
 
-    function openProductModal(action, id, catId, name, unitId, sellingPrice, status) {
+    function openProductModal(action, id, catId, name, unitId, sellingPrice, status, imageUrl) {
         document.getElementById('modal-action').value = action;
+        const fileInput = document.getElementById('modal-image');
+        const preview = document.getElementById('modal-image-preview');
+        if (fileInput) fileInput.value = '';
         if (action === 'edit') {
             document.getElementById('modal-title').innerText = 'Chỉnh sửa sản phẩm';
             document.getElementById('modal-submit').innerText = 'Cập nhật';
@@ -280,6 +315,14 @@
                 }
             }
             document.getElementById('modal-status').value = normStatus;
+
+            if (imageUrl && imageUrl.length > 0) {
+                preview.src = imageUrl;
+                preview.style.display = 'inline-block';
+            } else {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
         } else {
             document.getElementById('modal-title').innerText = 'Thêm sản phẩm mới';
             document.getElementById('modal-submit').innerText = 'Lưu sản phẩm';
@@ -289,8 +332,36 @@
             document.getElementById('modal-unit').value = '1';
             document.getElementById('modal-sellingPrice').value = '0';
             document.getElementById('modal-status').value = 'Active';
+            if (preview) {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
         }
         if(bsModal) bsModal.show();
+    }
+
+    function previewProductImage(event) {
+        const file = event.target.files && event.target.files[0];
+        const preview = document.getElementById('modal-image-preview');
+        if (!file) {
+            preview.src = '';
+            preview.style.display = 'none';
+            return;
+        }
+        // Chặn sớm phía client nếu vượt 3MB
+        if (file.size > 3 * 1024 * 1024) {
+            alert('Ảnh vượt quá 3MB. Vui lòng chọn ảnh khác.');
+            event.target.value = '';
+            preview.src = '';
+            preview.style.display = 'none';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'inline-block';
+        };
+        reader.readAsDataURL(file);
     }
 
     function closeProductModal() {
