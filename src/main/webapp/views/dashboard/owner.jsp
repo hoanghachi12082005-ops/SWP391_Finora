@@ -1,7 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <jsp:include page="/views/common/header.jsp">
     <jsp:param name="title" value="Tổng quan quản trị"/>
 </jsp:include>
@@ -166,42 +164,19 @@
                             </c:when>
                             <c:otherwise>
                                 <c:forEach var="act" items="${recentActivities}">
-                                    <c:set var="upperAction" value="${fn:toUpperCase(act.actionName)}" />
-                                    <c:choose>
-                                        <c:when test="${fn:contains(upperAction, 'INSERT') || fn:contains(upperAction, 'CREATE') || fn:contains(upperAction, 'ADD')}">
-                                            <c:set var="iconColor" value="green" />
-                                            <c:set var="iconName" value="check_circle" />
-                                        </c:when>
-                                        <c:when test="${fn:contains(upperAction, 'DELETE') || fn:contains(upperAction, 'REMOVE')}">
-                                            <c:set var="iconColor" value="red" />
-                                            <c:set var="iconName" value="warning" />
-                                        </c:when>
-                                        <c:when test="${fn:contains(upperAction, 'UPDATE') || fn:contains(upperAction, 'EDIT')}">
-                                            <c:set var="iconColor" value="blue" />
-                                            <c:set var="iconName" value="edit" />
-                                        </c:when>
-                                        <c:otherwise>
-                                            <c:set var="iconColor" value="blue" />
-                                            <c:set var="iconName" value="receipt" />
-                                        </c:otherwise>
-                                    </c:choose>
                                     <div class="activity-item">
-                                        <div class="activity-icon ${iconColor}">
-                                            <span class="material-icons" style="font-size: 16px;">${iconName}</span>
+                                        <div class="activity-icon ${act.iconColor}">
+                                            <span class="material-icons" style="font-size: 16px;">${act.iconName}</span>
                                         </div>
                                         <div class="activity-details">
                                             <p>
-                                                <strong>${act.actionName}</strong>
+                                                <strong>${act.actionName != null ? act.actionName : 'Hoạt động'}</strong>
                                                 <c:if test="${not empty act.tableName}"> trên <em>${act.tableName}</em></c:if>
                                                 <c:if test="${not empty act.recordId}"> (#${act.recordId})</c:if>
                                             </p>
                                             <small>
                                                 <c:if test="${not empty act.createdAtFormatted}">${act.createdAtFormatted} - </c:if>
-                                                <c:choose>
-                                                    <c:when test="${not empty act.empName}">${act.empName}</c:when>
-                                                    <c:when test="${act.empId > 0}">NV #${act.empId}</c:when>
-                                                    <c:otherwise>Hệ thống</c:otherwise>
-                                                </c:choose>
+                                                ${act.actorLabel}
                                             </small>
                                         </div>
                                     </div>

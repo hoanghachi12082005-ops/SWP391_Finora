@@ -47,4 +47,37 @@ public class ActivityLog {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    /** Giá trị hiển thị thân thiện dùng cho JSP/EL. */
+    public String getCreatedAtFormatted() {
+        if (createdAt == null) return "";
+        return createdAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
+
+    /** Màu icon hiển thị trong activity feed (blue/green/red/orange). */
+    public String getIconColor() {
+        if (actionName == null) return "blue";
+        String a = actionName.toUpperCase();
+        if (a.contains("DELETE") || a.contains("REMOVE")) return "red";
+        if (a.contains("INSERT") || a.contains("CREATE") || a.contains("ADD")) return "green";
+        if (a.contains("UPDATE") || a.contains("EDIT")) return "orange";
+        return "blue";
+    }
+
+    /** Tên material-icons hiển thị cho activity feed. */
+    public String getIconName() {
+        if (actionName == null) return "receipt";
+        String a = actionName.toUpperCase();
+        if (a.contains("DELETE") || a.contains("REMOVE")) return "warning";
+        if (a.contains("INSERT") || a.contains("CREATE") || a.contains("ADD")) return "check_circle";
+        if (a.contains("UPDATE") || a.contains("EDIT")) return "edit";
+        return "receipt";
+    }
+
+    /** Tên người thực hiện hoặc fallback 'Hệ thống'. */
+    public String getActorLabel() {
+        if (empName != null && !empName.isBlank()) return empName;
+        if (empId > 0) return "NV #" + empId;
+        return "Hệ thống";
+    }
 }
