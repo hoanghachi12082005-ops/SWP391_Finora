@@ -7,25 +7,25 @@ import java.sql.*;
 public class EmployeeDAO {
 
     public Employee findByEmailOrPhone(String username) {
-        String sql = "SELECT e.*, r.Name AS RoleName, b.Name AS BranchName "
+        String sql = "SELECT e.*, r.role_name AS RoleName, b.branch_name AS BranchName "
                 + "FROM Employee e "
-                + "JOIN Role r ON e.RoleID = r.RoleID "
-                + "LEFT JOIN Branch b ON e.BranchID = b.BranchID "
-                + "WHERE e.Email = ? OR e.Phone = ?";
+                + "JOIN [Role] r ON e.role_id = r.role_id "
+                + "LEFT JOIN Branch b ON e.branch_id = b.branch_id "
+                + "WHERE e.email = ? OR e.phone = ?";
         try (Connection connection = DBContext.getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, username);
             ps.setString(2, username);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 Employee employee = new Employee();
-                employee.setEmployeeId(rs.getInt("EmployeeID"));
-                employee.setRoleId(rs.getInt("RoleID"));
-                employee.setBranchId(rs.getObject("BranchID") != null ? rs.getInt("BranchID") : null);
-                employee.setFullName(rs.getString("FullName"));
-                employee.setEmail(rs.getString("Email"));
-                employee.setPhone(rs.getString("Phone"));
-                employee.setPasswordHash(rs.getString("PasswordHash") != null ? rs.getString("PasswordHash").trim() : null);
-                employee.setStatus(rs.getString("Status"));
+                employee.setEmployeeId(rs.getInt("emp_id"));
+                employee.setRoleId(rs.getInt("role_id"));
+                employee.setBranchId(rs.getObject("branch_id") != null ? rs.getInt("branch_id") : null);
+                employee.setFullName(rs.getString("fullName"));
+                employee.setEmail(rs.getString("email"));
+                employee.setPhone(rs.getString("phone"));
+                employee.setPasswordHash(rs.getString("passwordHash") != null ? rs.getString("passwordHash").trim() : null);
+                employee.setStatus(rs.getString("status"));
                 employee.setRoleName(rs.getString("RoleName"));
                 employee.setBranchName(rs.getString("BranchName"));
                 return employee;

@@ -76,8 +76,9 @@ CREATE TABLE customer (
     address     NVARCHAR(300),
     email       NVARCHAR(150),
     phone       NVARCHAR(20) UNIQUE,
-    cus_type    NVARCHAR(50),
     total_spent DECIMAL(18,2) DEFAULT 0,
+    status        NVARCHAR(20)  DEFAULT 'ACTIVE'
+                                CHECK (status IN ('ACTIVE','INACTIVE')),
     created_at  DATETIME      DEFAULT GETDATE(),
     updated_at  DATETIME      DEFAULT GETDATE()
 );
@@ -91,7 +92,6 @@ CREATE TABLE customer_point (
     cus_id          INT           NOT NULL UNIQUE,
     current_points  INT           DEFAULT 0,
     lifetime_points INT           DEFAULT 0,
-    level_name      NVARCHAR(50),
     updated_at      DATETIME      DEFAULT GETDATE(),
 
     CONSTRAINT FK_CustomerPoint_Customer

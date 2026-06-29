@@ -1,10 +1,6 @@
 target/
-out/
-build/
 *.class
 *.war
-*.ear
 .idea/
 .vscode/
 nbproject/private/
-.smarttomcat/

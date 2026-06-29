@@ -1,4 +1,4 @@
-package util.inventory;
+package com.storemanagement.util.inventory;
 
 public final class InventoryUtil {
     private InventoryUtil() {}

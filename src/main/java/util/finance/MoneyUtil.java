@@ -1,4 +1,4 @@
-package util.finance;
+package com.storemanagement.util.finance;
 
 import java.text.NumberFormat;
 import java.util.Locale;

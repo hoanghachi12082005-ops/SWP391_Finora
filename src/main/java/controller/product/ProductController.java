@@ -78,35 +78,24 @@ public class ProductController extends BaseController {
         try {
             String action = request.getParameter("action");
             if (action == null) action = "";
-            
-            try {
-                if ("add".equals(action)) {
-                    Product p = buildProductFromRequest(request);
-                    productDAO.insert(p);
-                    request.getSession().setAttribute("message", "Thêm sản phẩm thành công!");
+            if ("add".equals(action)) {
+                Product p = buildProductFromRequest(request);
+                productDAO.insert(p);
+            } else if ("edit".equals(action)) {
+                Product p = buildProductFromRequest(request);
+                p.setProductID(Integer.parseInt(request.getParameter("productID")));
+                productDAO.update(p);
+            } else if ("delete".equals(action)) {
+                try {
+                    productDAO.delete(Integer.parseInt(request.getParameter("id")));
+                    request.getSession().setAttribute("message", "Xóa sản phẩm thành công!");
                     request.getSession().setAttribute("messageType", "success");
-                } else if ("edit".equals(action)) {
-                    Product p = buildProductFromRequest(request);
-                    p.setProductID(Integer.parseInt(request.getParameter("productID")));
-                    productDAO.update(p);
-                    request.getSession().setAttribute("message", "Cập nhật sản phẩm thành công!");
-                    request.getSession().setAttribute("messageType", "success");
-                } else if ("delete".equals(action)) {
-                    try {
-                        productDAO.delete(Integer.parseInt(request.getParameter("id")));
-                        request.getSession().setAttribute("message", "Xóa sản phẩm thành công!");
-                        request.getSession().setAttribute("messageType", "success");
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        request.getSession().setAttribute("message", "Không thể xóa sản phẩm này do đang có dữ liệu liên quan (giao dịch, đơn hàng...)!");
-                        request.getSession().setAttribute("messageType", "danger");
-                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    request.getSession().setAttribute("message", "Không thể xóa sản phẩm này do đang có dữ liệu liên quan (giao dịch, đơn hàng...)!");
+                    request.getSession().setAttribute("messageType", "danger");
                 }
-            } catch (IllegalArgumentException e) {
-                request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
-                request.getSession().setAttribute("messageType", "danger");
             }
-            
             // Preserve search/filter params on redirect
             String keyword = request.getParameter("keyword");
             String status  = request.getParameter("filterStatus");
@@ -133,25 +122,13 @@ public class ProductController extends BaseController {
         }
     }
 
-    private Product buildProductFromRequest(HttpServletRequest request) throws IllegalArgumentException {
+    private Product buildProductFromRequest(HttpServletRequest request) {
         Product p = new Product();
         p.setCategoryID(Integer.parseInt(request.getParameter("categoryID")));
         p.setName(request.getParameter("name"));
-        
-        int quantity = Integer.parseInt(request.getParameter("quantity"));
-        if (quantity < 0) {
-            throw new IllegalArgumentException("Số lượng sản phẩm không được nhỏ hơn 0!");
-        }
-        p.setQuantity(quantity);
-        
+        p.setQuantity(Integer.parseInt(request.getParameter("quantity")));
         p.setUnitID(Integer.parseInt(request.getParameter("unitID")));
-        
-        BigDecimal sellingPrice = new BigDecimal(request.getParameter("sellingPrice"));
-        if (sellingPrice.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Giá bán không được nhỏ hơn 0!");
-        }
-        p.setSellingPrice(sellingPrice);
-        
+        p.setSellingPrice(new BigDecimal(request.getParameter("sellingPrice")));
         p.setStatus(request.getParameter("status"));
         return p;
     }
