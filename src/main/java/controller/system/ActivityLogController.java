@@ -13,15 +13,18 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Activity Center - Audit Log (immutable).
- * - Chỉ READ ONLY: GET /activity-log để xem nhật ký hệ thống.
- * - Phân quyền: CHỈ role "Owner" mới được truy cập.
- *   - Chưa đăng nhập → redirect /login.
- *   - Đã đăng nhập nhưng không phải Owner → HTTP 403.
- * - KHÔNG cho phép thêm/sửa/xóa: doPost trả về 405 Method Not Allowed.
+ * Activity Center - Audit Log (immutable, read-only).
+ * - Chỉ GET; doPost trả 405.
+ * - Chỉ Owner mới được truy cập; chưa login → /login; không phải Owner → 403.
+ *
+ * Trả về cho JSP các bộ filter dạng "value → nhãn nghiệp vụ" để Owner đọc dễ:
+ *   - entityOptions   : value = table_name kỹ thuật, label = "Đơn hàng", "Sản phẩm"...
+ *   - actionOptions   : value = action_name kỹ thuật, label = "Tạo mới", "Cập nhật"...
  */
 @WebServlet(name = "ActivityLogController", urlPatterns = {"/activity-log"})
 public class ActivityLogController extends BaseController {
@@ -58,9 +61,11 @@ public class ActivityLogController extends BaseController {
             List<ActivityLog> logs = dao.findAll(
                     (page - 1) * ITEMS_PER_PAGE, ITEMS_PER_PAGE, keyword, tableName, actionName);
 
+            // Bộ filter dạng "giá trị kỹ thuật" → "nhãn nghiệp vụ" để JSP render dropdown.
+            request.setAttribute("entityOptions", buildEntityOptions(dao.findDistinctTables()));
+            request.setAttribute("actionOptions", buildActionOptions(dao.findDistinctActions()));
+
             request.setAttribute("logs", logs);
-            request.setAttribute("tables", dao.findDistinctTables());
-            request.setAttribute("actions", dao.findDistinctActions());
             request.setAttribute("currentPage", page);
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("totalCount", totalCount);
@@ -74,10 +79,6 @@ public class ActivityLogController extends BaseController {
         }
     }
 
-    /**
-     * Audit log không cho phép ghi đè/xóa từ UI.
-     * Mọi POST đều bị từ chối với 405.
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -85,10 +86,6 @@ public class ActivityLogController extends BaseController {
                 "Activity log là dữ liệu chỉ đọc. Không thể thêm/sửa/xóa từ giao diện.");
     }
 
-    /**
-     * Kiểm tra session + role.
-     * @return true nếu được phép tiếp tục, false nếu đã gửi response (redirect/403).
-     */
     private boolean ensureOwner(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession(false);
@@ -105,5 +102,29 @@ public class ActivityLogController extends BaseController {
             return false;
         }
         return true;
+    }
+
+    /** Sinh map { table_name → "Đối tượng nghiệp vụ" } để render dropdown. */
+    private Map<String, String> buildEntityOptions(List<String> tables) {
+        Map<String, String> options = new LinkedHashMap<>();
+        if (tables == null) return options;
+        for (String t : tables) {
+            ActivityLog tmp = new ActivityLog();
+            tmp.setTableName(t);
+            options.put(t, tmp.getEntityLabel());
+        }
+        return options;
+    }
+
+    /** Sinh map { action_name → "Loại thao tác" } để render dropdown. */
+    private Map<String, String> buildActionOptions(List<String> actions) {
+        Map<String, String> options = new LinkedHashMap<>();
+        if (actions == null) return options;
+        for (String a : actions) {
+            ActivityLog tmp = new ActivityLog();
+            tmp.setActionName(a);
+            options.put(a, tmp.getActionLabel());
+        }
+        return options;
     }
 }
