@@ -3,11 +3,13 @@ package       controller.dashboard;
 import       controller.common.BaseController;
 import dao.system.ActivityLogDAO;
 import model.ActivityLog;
+import model.Employee;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -26,12 +28,18 @@ public class DashboardController extends BaseController {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Load 5 hoạt động gần đây cho card "Hoạt động gần đây" trên các dashboard
-        try {
-            List<ActivityLog> recentActivities = activityLogDAO.findRecent(5);
-            request.setAttribute("recentActivities", recentActivities);
-        } catch (SQLException ex) {
-            ex.printStackTrace();
+
+        // Card "Hoạt động gần đây" chỉ load dữ liệu khi user là Owner.
+        // Vai trò khác sẽ không thấy card này (xem owner.jsp).
+        if (isOwner(request)) {
+            try {
+                List<ActivityLog> recentActivities = activityLogDAO.findRecent(5);
+                request.setAttribute("recentActivities", recentActivities);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                request.setAttribute("recentActivities", Collections.emptyList());
+            }
+        } else {
             request.setAttribute("recentActivities", Collections.emptyList());
         }
 
@@ -49,5 +57,13 @@ public class DashboardController extends BaseController {
             throws ServletException, IOException {
         request.setAttribute("message", "Đã nhận dữ liệu. Hãy kết nối Service/DAO để xử lý thật.");
         doGet(request, response);
+    }
+
+    private boolean isOwner(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        Object user = (session == null) ? null : session.getAttribute("currentUser");
+        if (!(user instanceof Employee)) return false;
+        String role = ((Employee) user).getRoleName();
+        return role != null && "Owner".equalsIgnoreCase(role.trim());
     }
 }
