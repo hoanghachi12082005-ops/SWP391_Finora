@@ -172,9 +172,8 @@
                                         </div>
                                         <div class="activity-details">
                                             <p>
-                                                <strong>${act.actionName != null ? act.actionName : 'Hoạt động'}</strong>
-                                                <c:if test="${not empty act.tableName}"> trên <em>${act.tableName}</em></c:if>
-                                                <c:if test="${not empty act.recordId}"> (#${act.recordId})</c:if>
+                                                ${act.description}
+                                                <c:if test="${not empty act.entityCode}"> &middot; <strong>${act.entityCode}</strong></c:if>
                                             </p>
                                             <small>
                                                 <c:if test="${not empty act.createdAtFormatted}">${act.createdAtFormatted} - </c:if>
