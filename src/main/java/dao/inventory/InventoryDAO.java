@@ -211,7 +211,7 @@ public class InventoryDAO {
         if (keyword == null || keyword.trim().isEmpty()) {
             sql.append("AND COALESCE(i1.quantity_in_stock, 0) <= 10 AND i2.quantity_in_stock > 0 ");
         } else {
-            sql.append("AND p.Name LIKE ? ");
+            sql.append("AND (p.Name LIKE ? OR w.warehouse_name LIKE ?) ");
         }
 
         sql.append("ORDER BY p.Name ASC, w.warehouse_name ASC");
@@ -223,6 +223,7 @@ public class InventoryDAO {
             stmt.setInt(2, myWarehouseId);
             if (keyword != null && !keyword.trim().isEmpty()) {
                 stmt.setString(3, "%" + keyword + "%");
+                stmt.setString(4, "%" + keyword + "%");
             }
             
             try (ResultSet rs = stmt.executeQuery()) {

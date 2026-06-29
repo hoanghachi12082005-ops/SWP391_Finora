@@ -54,7 +54,13 @@
                                                 <span class="badge bg-info text-dark">ĐANG CHUYỂN</span>
                                             </c:when>
                                             <c:when test="${tx.status == 'COMPLETED'}">
-                                                <span class="badge bg-success">ĐÃ DUYỆT</span>
+                                                <span class="badge bg-success">HOÀN TẤT</span>
+                                            </c:when>
+                                            <c:when test="${tx.status == 'COMPLETED_WITH_ERROR'}">
+                                                <span class="badge bg-warning text-dark">HOÀN TẤT (CÓ LỖI)</span>
+                                            </c:when>
+                                            <c:when test="${tx.status == 'REJECTED' || tx.status == 'CANCELLED'}">
+                                                <span class="badge bg-danger">ĐÃ HỦY</span>
                                             </c:when>
                                             <c:otherwise>
                                                 <span class="badge bg-secondary">${tx.status}</span>
@@ -64,13 +70,31 @@
                                     <td>
                                         <div class="d-flex gap-2">
                                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewTicketDetails(${tx.ticketId})">Xem</button>
-                                            <c:if test="${tx.status == 'PENDING' && (roleName == 'WarehouseStaff' || roleName == 'Admin' || roleName == 'Owner') && (empty selectedWarehouseId || selectedWarehouseId == tx.toWarehouseId)}">
+                                            
+                                            <!-- PENDING: Duyệt phiếu -->
+                                            <c:if test="${tx.status == 'PENDING' && (roleName == 'WarehouseStaff' || roleName == 'Admin' || roleName == 'Owner') && (empty selectedWarehouseId || selectedWarehouseId == tx.fromWarehouseId)}">
                                                 <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
                                                     <input type="hidden" name="action" value="confirmExport">
                                                     <input type="hidden" name="transferId" value="${tx.ticketId}">
                                                     <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
                                                     <button type="submit" class="btn btn-sm btn-outline-warning">Duyệt Phiếu</button>
                                                 </form>
+                                            </c:if>
+                                            
+                                            <!-- IN_TRANSIT: Xác nhận Xuất (Kho Gửi) -->
+                                            <c:if test="${tx.status == 'IN_TRANSIT' && !tx.exportedBySender && (empty selectedWarehouseId || selectedWarehouseId == tx.fromWarehouseId)}">
+                                                <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+                                                    <input type="hidden" name="action" value="confirmDispatch">
+                                                    <input type="hidden" name="transferId" value="${tx.ticketId}">
+                                                    <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
+                                                    <button type="submit" class="btn btn-sm btn-outline-info">Xác nhận Xuất</button>
+                                                </form>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="openRejectModal(${tx.ticketId})">Từ chối</button>
+                                            </c:if>
+
+                                            <!-- IN_TRANSIT: Xác nhận Nhập (Kho Nhận) -->
+                                            <c:if test="${tx.status == 'IN_TRANSIT' && !tx.importedByReceiver && (empty selectedWarehouseId || selectedWarehouseId == tx.toWarehouseId)}">
+                                                <button type="button" class="btn btn-sm btn-outline-success" onclick="openReceiptModal(${tx.ticketId})">Kiểm đếm Nhập</button>
                                             </c:if>
                                         </div>
                                     </td>
@@ -83,37 +107,3 @@
     </div>
 </div>
 
-<!-- Modal for Ticket Details -->
-<div class="modal fade" id="ticketDetailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content" id="ticketDetailsModalContent">
-            <!-- Content loaded via AJAX -->
-            <div class="modal-body text-center py-5">
-                <div class="spinner-border text-primary" role="status"></div>
-                <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    function viewTicketDetails(ticketId) {
-        // Show loading state
-        const modalContent = document.getElementById('ticketDetailsModalContent');
-        modalContent.innerHTML = '<div class="modal-body text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Đang tải dữ liệu...</p></div>';
-        
-        // Show modal
-        const myModal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
-        myModal.show();
-        
-        // Fetch data
-        fetch('${pageContext.request.contextPath}/inventory?action=viewTicket&ticketId=' + ticketId)
-            .then(response => response.text())
-            .then(html => {
-                modalContent.innerHTML = html;
-            })
-            .catch(err => {
-                modalContent.innerHTML = '<div class="modal-body py-5 text-center text-danger"><i class="ph ph-warning-circle fs-1 mb-2"></i><p>Lỗi khi tải dữ liệu phiếu.</p></div>';
-            });
-    }
-</script>

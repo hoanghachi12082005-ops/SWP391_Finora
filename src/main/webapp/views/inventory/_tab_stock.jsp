@@ -144,13 +144,11 @@
         <!-- Pagination -->
         <c:if test="${totalPages > 1}">
             <nav aria-label="Page navigation" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    <c:forEach begin="1" end="${totalPages}" var="p">
-                        <li class="page-item ${p == currentPage ? 'active' : ''}">
-                            <a class="page-link" href="?tab=stock&page=${p}&warehouseId=${selectedWarehouseId}&status=${statusFilter}&sort=${sortParam}&keyword=${keyword}">${p}</a>
-                        </li>
-                    </c:forEach>
-                </ul>
+                <jsp:include page="/views/common/pagination.jsp">
+                    <jsp:param name="currentPage" value="${currentPage}"/>
+                    <jsp:param name="totalPages" value="${totalPages}"/>
+                    <jsp:param name="url" value="?tab=stock&warehouseId=${selectedWarehouseId}&status=${statusFilter}&sort=${sortParam}&keyword=${keyword}&page="/>
+                </jsp:include>
             </nav>
         </c:if>
     </div>

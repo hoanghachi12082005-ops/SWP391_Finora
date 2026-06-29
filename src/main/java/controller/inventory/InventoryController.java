@@ -32,7 +32,27 @@ public class InventoryController extends BaseController {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        HttpSession session = request.getSession(false);
+        HttpSession session = request.getSession();
+        
+        // Flash messages
+        String msg = (String) session.getAttribute("message");
+        if (msg != null) {
+            request.setAttribute("message", msg);
+            session.removeAttribute("message");
+        }
+        
+        String errorMsg = (String) session.getAttribute("error");
+        if (errorMsg != null) {
+            request.setAttribute("error", errorMsg);
+            session.removeAttribute("error");
+        }
+        
+        String successMsg = (String) session.getAttribute("successMessage");
+        if (successMsg != null) {
+            request.setAttribute("successMessage", successMsg);
+            session.removeAttribute("successMessage");
+        }
+
         if (session == null || session.getAttribute("currentUser") == null) {
             redirect(response, request.getContextPath() + "/login");
             return;
@@ -78,12 +98,26 @@ public class InventoryController extends BaseController {
             if ("searchProductsApi".equals(action)) {
                 handleSearchProductsApi(request, response, selectedWarehouseId);
                 return;
+            } else if ("viewReceiptForm".equals(action)) {
+                int ticketId = Integer.parseInt(request.getParameter("ticketId"));
+                model.InventoryTicket ticket = ticketDAO.findById(ticketId);
+                List<model.InventoryTicketDetail> details = ticketDAO.getTicketDetails(ticketId);
+                request.setAttribute("ticket", ticket);
+                request.setAttribute("ticketDetails", details);
+                request.getRequestDispatcher("/views/inventory/_modal_receipt_form.jsp").forward(request, response);
+                return;
             } else if ("viewTicket".equals(action)) {
                 int ticketId = Integer.parseInt(request.getParameter("ticketId"));
                 model.InventoryTicket ticket = ticketDAO.findById(ticketId);
                 List<model.InventoryTicketDetail> details = ticketDAO.getTicketDetails(ticketId);
                 request.setAttribute("ticket", ticket);
                 request.setAttribute("ticketDetails", details);
+                
+                if (ticket != null && ("COMPLETED".equals(ticket.getStatus()) || "REJECTED".equals(ticket.getStatus()))) {
+                    List<model.StockTransaction> txs = transactionDAO.findByReference("TRANSFER", ticketId);
+                    request.setAttribute("transactions", txs);
+                }
+                
                 request.getRequestDispatcher("/views/inventory/_modal_ticket_details.jsp").forward(request, response);
                 return;
             } else if ("printTicket".equals(action)) {
@@ -126,6 +160,9 @@ public class InventoryController extends BaseController {
                     break;
                 case "history":
                     handleHistoryTab(request, selectedWarehouseId, allowedWarehouseIds);
+                    break;
+                case "discrepancy":
+                    handleDiscrepancyTab(request, selectedWarehouseId, role);
                     break;
                 case "createTransfer":
                     // No extra data fetching needed for createTransfer view itself
@@ -182,9 +219,9 @@ public class InventoryController extends BaseController {
     private void handleTransferTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
         List<InventoryTicket> transfers;
         if ((role.equals("Admin") || role.equals("Owner")) && warehouseId == null) {
-            transfers = ticketDAO.findAllByType("TRANSFER", null);
+            transfers = ticketDAO.findAllByTypeAndStatus("TRANSFER", null, "PENDING_IN_TRANSIT");
         } else {
-            transfers = ticketDAO.findAllByType("TRANSFER", warehouseId != null ? warehouseId : 0);
+            transfers = ticketDAO.findAllByTypeAndStatus("TRANSFER", warehouseId != null ? warehouseId : 0, "PENDING_IN_TRANSIT");
         }
         request.setAttribute("transfers", transfers);
     }
@@ -200,20 +237,19 @@ public class InventoryController extends BaseController {
     }
 
     private void handleHistoryTab(HttpServletRequest request, Integer warehouseId, List<Integer> allowedWarehouseIds) throws Exception {
-        String typeFilter = request.getParameter("typeFilter");
-        String dateFilter = request.getParameter("dateFilter");
+        // Fetch COMPLETED/REJECTED tickets for history tab
+        List<InventoryTicket> historyTickets = ticketDAO.findAllByTypeAndStatus("TRANSFER", warehouseId != null ? warehouseId : 0, "COMPLETED_REJECTED");
+        request.setAttribute("history", historyTickets);
+    }
 
-        int page = 1;
-        int limit = 50;
-        if (request.getParameter("page") != null) {
-            page = Integer.parseInt(request.getParameter("page"));
+    private void handleDiscrepancyTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
+        List<InventoryTicket> discrepancies;
+        if ((role.equals("Admin") || role.equals("Owner")) && warehouseId == null) {
+            discrepancies = ticketDAO.findAllByTypeAndStatus("DISCREPANCY", null, null);
+        } else {
+            discrepancies = ticketDAO.findAllByTypeAndStatus("DISCREPANCY", warehouseId != null ? warehouseId : 0, null);
         }
-        int offset = (page - 1) * limit;
-
-        List<StockTransaction> history = transactionDAO.findAll(warehouseId != null ? warehouseId : 0, allowedWarehouseIds, offset, limit, typeFilter, dateFilter);
-        request.setAttribute("history", history);
-        request.setAttribute("typeFilter", typeFilter);
-        request.setAttribute("dateFilter", dateFilter);
+        request.setAttribute("discrepancies", discrepancies);
     }
 
     @Override
@@ -300,11 +336,48 @@ public class InventoryController extends BaseController {
                     int transferId = Integer.parseInt(request.getParameter("transferId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     ticketDAO.approveTransferTicket(transferId, currentUser.getEmployeeId());
-                    request.getSession().setAttribute("message", "Đã duyệt phiếu chuyển kho thành công.");
+                    request.getSession().setAttribute("message", "Đã duyệt phiếu. Hàng đang trong trạng thái trung chuyển.");
                     redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + request.getParameter("warehouseId"));
                     break;
                 }
-                case "confirmReceive":
+                case "confirmDispatch": {
+                    int transferId = Integer.parseInt(request.getParameter("transferId"));
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    ticketDAO.confirmDispatch(transferId, currentUser.getEmployeeId());
+                    request.getSession().setAttribute("message", "Đã xác nhận xuất kho thành công.");
+                    redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + request.getParameter("warehouseId"));
+                    break;
+                }
+                case "rejectDispatch": {
+                    int transferId = Integer.parseInt(request.getParameter("transferId"));
+                    String note = request.getParameter("note");
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    ticketDAO.rejectDispatch(transferId, currentUser.getEmployeeId(), note);
+                    request.getSession().setAttribute("message", "Đã từ chối phiếu xuất kho thành công.");
+                    redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + request.getParameter("warehouseId"));
+                    break;
+                }
+                case "confirmReceiveWithDiscrepancy": {
+                    int transferId = Integer.parseInt(request.getParameter("transferId"));
+                    int currentWarehouseId = Integer.parseInt(request.getParameter("warehouseId"));
+                    String note = request.getParameter("note");
+                    
+                    String[] productIds = request.getParameterValues("productId[]");
+                    String[] actualQtys = request.getParameterValues("actualQty[]");
+                    java.util.Map<Integer, Integer> actualQtyMap = new java.util.HashMap<>();
+                    
+                    if (productIds != null && actualQtys != null) {
+                        for (int i = 0; i < productIds.length; i++) {
+                            actualQtyMap.put(Integer.parseInt(productIds[i]), Integer.parseInt(actualQtys[i]));
+                        }
+                    }
+                    
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    ticketDAO.confirmReceiptWithDiscrepancy(transferId, currentUser.getEmployeeId(), note, actualQtyMap, currentWarehouseId);
+                    request.getSession().setAttribute("message", "Đã ghi nhận kiểm đếm nhập kho thành công.");
+                    redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + request.getParameter("warehouseId"));
+                    break;
+                }
                 case "createCheck":
                 case "approveCheck":
                     request.getSession().setAttribute("message", "Tính năng đang bảo trì cấu trúc database.");

@@ -337,65 +337,11 @@
                                value="${fn:replace(baseUrl, pageContext.request.contextPath, '')}"/>
 
                         <c:if test="${totalPages > 1}">
-                            <div class="pagination">
-
-                                <c:url var="prevUrl" value="${paginationBaseUrl}">
-                                    <c:param name="page" value="${currentPage - 1}"/>
-                                    <c:param name="keyword" value="${keyword}"/>
-                                    <c:param name="branchId" value="${branchFilter == -1 ? '' : branchFilter}"/>
-                                    <c:param name="roleId" value="${roleFilter == -1 ? '' : roleFilter}"/>
-                                    <c:param name="status" value="${statusFilter}"/>
-                                    <c:param name="pageSize" value="${pageSizeOption}"/>
-                                </c:url>
-
-                                <c:choose>
-                                    <c:when test="${currentPage > 1}">
-                                        <a class="page-btn" href="${prevUrl}">Previous</a>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <span class="page-btn disabled">Previous</span>
-                                    </c:otherwise>
-                                </c:choose>
-
-                                <c:forEach begin="1" end="${totalPages}" var="i">
-                                    <c:url var="pageUrl" value="${paginationBaseUrl}">
-                                        <c:param name="page" value="${i}"/>
-                                        <c:param name="keyword" value="${keyword}"/>
-                                        <c:param name="branchId" value="${branchFilter == -1 ? '' : branchFilter}"/>
-                                        <c:param name="roleId" value="${roleFilter == -1 ? '' : roleFilter}"/>
-                                        <c:param name="status" value="${statusFilter}"/>
-                                        <c:param name="pageSize" value="${pageSizeOption}"/>
-                                    </c:url>
-
-                                    <c:choose>
-                                        <c:when test="${i == currentPage}">
-                                            <span class="page-btn active">${i}</span>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <a class="page-btn" href="${pageUrl}">${i}</a>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </c:forEach>
-
-                                <c:url var="nextUrl" value="${paginationBaseUrl}">
-                                    <c:param name="page" value="${currentPage + 1}"/>
-                                    <c:param name="keyword" value="${keyword}"/>
-                                    <c:param name="branchId" value="${branchFilter == -1 ? '' : branchFilter}"/>
-                                    <c:param name="roleId" value="${roleFilter == -1 ? '' : roleFilter}"/>
-                                    <c:param name="status" value="${statusFilter}"/>
-                                    <c:param name="pageSize" value="${pageSizeOption}"/>
-                                </c:url>
-
-                                <c:choose>
-                                    <c:when test="${currentPage < totalPages}">
-                                        <a class="page-btn" href="${nextUrl}">Next</a>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <span class="page-btn disabled">Next</span>
-                                    </c:otherwise>
-                                </c:choose>
-
-                            </div>
+                            <jsp:include page="/views/common/pagination.jsp">
+                                <jsp:param name="currentPage" value="${currentPage}"/>
+                                <jsp:param name="totalPages" value="${totalPages}"/>
+                                <jsp:param name="url" value="${baseUrl}?keyword=${keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}&roleId=${roleFilter == -1 ? '' : roleFilter}&status=${statusFilter}&pageSize=${pageSizeOption}&page="/>
+                            </jsp:include>
                         </c:if>
                     </div>
                 </section>

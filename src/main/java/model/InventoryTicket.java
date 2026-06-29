@@ -13,10 +13,14 @@ public class InventoryTicket {
     private int createdBy;
     private LocalDateTime createdAt;
     
-    // Display fields
+    // Virtual fields
     private String fromWarehouseName;
     private String toWarehouseName;
     private String createdByName;
+    
+    // New fields for Transit Workflow
+    private boolean isExportedBySender;
+    private boolean isImportedByReceiver;
 
     public InventoryTicket() {
     }
@@ -115,5 +119,21 @@ public class InventoryTicket {
 
     public void setCreatedByName(String createdByName) {
         this.createdByName = createdByName;
+    }
+
+    public boolean isExportedBySender() {
+        return isExportedBySender;
+    }
+
+    public void setExportedBySender(boolean exportedBySender) {
+        isExportedBySender = exportedBySender;
+    }
+
+    public boolean isImportedByReceiver() {
+        return isImportedByReceiver;
+    }
+
+    public void setImportedByReceiver(boolean importedByReceiver) {
+        isImportedByReceiver = importedByReceiver;
     }
 }

@@ -38,6 +38,45 @@ public class InventoryTicketDAO {
         return tickets;
     }
 
+    public List<InventoryTicket> findAllByTypeAndStatus(String ticketType, Integer warehouseId, String status) throws SQLException {
+        List<InventoryTicket> tickets = new ArrayList<>();
+        String sql = "SELECT t.*, " +
+                     "fw.warehouse_name as from_warehouse_name, " +
+                     "tw.warehouse_name as to_warehouse_name, " +
+                     "e.fullName as created_by_name " +
+                     "FROM inventory_ticket t " +
+                     "LEFT JOIN warehouse fw ON t.from_warehouse_id = fw.warehouse_id " +
+                     "LEFT JOIN warehouse tw ON t.to_warehouse_id = tw.warehouse_id " +
+                     "LEFT JOIN Employee e ON t.created_by = e.EmployeeID " +
+                     "WHERE t.ticket_type = ? ";
+        
+        if (status != null && !status.isEmpty()) {
+            if ("COMPLETED_REJECTED".equals(status)) {
+                sql += " AND t.status IN ('COMPLETED', 'REJECTED', 'COMPLETED_WITH_ERROR', 'CANCELLED') ";
+            } else if ("PENDING_IN_TRANSIT".equals(status)) {
+                sql += " AND t.status IN ('PENDING', 'IN_TRANSIT') ";
+            } else {
+                sql += " AND t.status = '" + status + "' ";
+            }
+        }
+        
+        if (warehouseId != null && warehouseId > 0) {
+            sql += " AND (t.from_warehouse_id = " + warehouseId + " OR t.to_warehouse_id = " + warehouseId + ") ";
+        }
+        sql += " ORDER BY t.created_at DESC";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, ticketType);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    tickets.add(extractTicket(rs));
+                }
+            }
+        }
+        return tickets;
+    }
+
     public int getPendingCount(String ticketType, Integer warehouseId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM inventory_ticket WHERE status = 'PENDING'";
         if (ticketType != null) {
@@ -72,6 +111,8 @@ public class InventoryTicketDAO {
         t.setFromWarehouseName(rs.getString("from_warehouse_name"));
         t.setToWarehouseName(rs.getString("to_warehouse_name"));
         t.setCreatedByName(rs.getString("created_by_name"));
+        t.setExportedBySender(rs.getBoolean("is_exported_by_sender"));
+        t.setImportedByReceiver(rs.getBoolean("is_imported_by_receiver"));
         return t;
     }
 
@@ -174,31 +215,44 @@ public class InventoryTicketDAO {
         }
         List<InventoryTicketDetail> details = getTicketDetails(ticketId);
         
-        String updateTicketSql = "UPDATE inventory_ticket SET status = 'COMPLETED' WHERE ticket_id = ?";
-        String getInventorySql = "SELECT quantity_in_stock FROM inventory WHERE warehouse_id = ? AND product_id = ?";
-        String updateInventorySql = "UPDATE inventory SET quantity_in_stock = quantity_in_stock + ? WHERE warehouse_id = ? AND product_id = ?";
-        String insertInventorySql = "INSERT INTO inventory (warehouse_id, product_id, quantity_in_stock, min_stock_level, max_stock_level) VALUES (?, ?, ?, 0, 999999)";
-        String insertTxSql = "INSERT INTO stock_transaction (warehouse_id, product_id, reference_type, reference_id, transaction_type, quantity, before_quantity, after_quantity, note, created_by) VALUES (?, ?, 'TRANSFER', ?, ?, ?, ?, ?, 'Duyệt phiếu Đ/C', ?)";
+        String updateTicketSql = "UPDATE inventory_ticket SET status = 'IN_TRANSIT' WHERE ticket_id = ?";
         
+        try (Connection conn = DBContext.getConnection()) {
+            try (PreparedStatement stmt = conn.prepareStatement(updateTicketSql)) {
+                stmt.setInt(1, ticketId);
+                stmt.executeUpdate();
+            }
+        }
+    }
+
+    public void confirmDispatch(int ticketId, int userId) throws SQLException {
+        InventoryTicket ticket = findById(ticketId);
+        if (ticket == null || !ticket.getStatus().equals("IN_TRANSIT") || ticket.isExportedBySender()) {
+            throw new SQLException("Phiếu không hợp lệ hoặc đã xuất kho.");
+        }
+        
+        List<InventoryTicketDetail> details = getTicketDetails(ticketId);
+        String getInventorySql = "SELECT quantity_in_stock FROM inventory WHERE warehouse_id = ? AND product_id = ?";
+        String updateInventorySql = "UPDATE inventory SET quantity_in_stock = quantity_in_stock - ? WHERE warehouse_id = ? AND product_id = ?";
+        String insertTxSql = "INSERT INTO stock_transaction (warehouse_id, product_id, reference_type, reference_id, transaction_type, quantity, before_quantity, after_quantity, note, created_by) VALUES (?, ?, 'TRANSFER', ?, 'EXPORT', ?, ?, ?, 'Xác nhận xuất kho (Trung chuyển)', ?)";
+        String updateTicketSql = "UPDATE inventory_ticket SET is_exported_by_sender = 1 ";
+        
+        // If receiver already confirmed, complete it
+        boolean completeIt = ticket.isImportedByReceiver();
+        if (completeIt) {
+            updateTicketSql += ", status = 'COMPLETED' ";
+        }
+        updateTicketSql += "WHERE ticket_id = ?";
+
         try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                // update ticket status
-                try (PreparedStatement stmt = conn.prepareStatement(updateTicketSql)) {
-                    stmt.setInt(1, ticketId);
-                    stmt.executeUpdate();
-                }
-                
                 for (InventoryTicketDetail d : details) {
                     int qty = d.getQuantity();
                     String action = d.getActionType();
-                    int fromW = ticket.getFromWarehouseId(); // Creator
-                    int toW = ticket.getToWarehouseId(); // Partner
+                    // Identify the sending warehouse for this specific detail
+                    int sendingWId = "SEND".equals(action) ? ticket.getFromWarehouseId() : ticket.getToWarehouseId();
                     
-                    int sendingWId = "SEND".equals(action) ? fromW : toW;
-                    int receivingWId = "SEND".equals(action) ? toW : fromW;
-                    
-                    // --- Process Sending Warehouse ---
                     int beforeSend = 0;
                     try (PreparedStatement s = conn.prepareStatement(getInventorySql)) {
                         s.setInt(1, sendingWId);
@@ -211,7 +265,7 @@ public class InventoryTicketDAO {
                         throw new SQLException("Tồn kho không đủ cho sản phẩm " + d.getProductName() + " (cần " + qty + ", còn " + beforeSend + ").");
                     }
                     try (PreparedStatement s = conn.prepareStatement(updateInventorySql)) {
-                        s.setInt(1, -qty);
+                        s.setInt(1, qty);
                         s.setInt(2, sendingWId);
                         s.setInt(3, d.getProductId());
                         s.executeUpdate();
@@ -220,59 +274,179 @@ public class InventoryTicketDAO {
                         s.setInt(1, sendingWId);
                         s.setInt(2, d.getProductId());
                         s.setInt(3, ticketId);
-                        s.setString(4, "EXPORT");
-                        s.setInt(5, qty);
-                        s.setInt(6, beforeSend);
-                        s.setInt(7, beforeSend - qty);
-                        s.setInt(8, approvedByUserId);
-                        s.executeUpdate();
-                    }
-                    
-                    // --- Process Receiving Warehouse ---
-                    int beforeReceive = 0;
-                    boolean existsReceive = false;
-                    try (PreparedStatement s = conn.prepareStatement(getInventorySql)) {
-                        s.setInt(1, receivingWId);
-                        s.setInt(2, d.getProductId());
-                        try (ResultSet r = s.executeQuery()) {
-                            if (r.next()) {
-                                beforeReceive = r.getInt(1);
-                                existsReceive = true;
-                            }
-                        }
-                    }
-                    if (existsReceive) {
-                        try (PreparedStatement s = conn.prepareStatement(updateInventorySql)) {
-                            s.setInt(1, qty);
-                            s.setInt(2, receivingWId);
-                            s.setInt(3, d.getProductId());
-                            s.executeUpdate();
-                        }
-                    } else {
-                        try (PreparedStatement s = conn.prepareStatement(insertInventorySql)) {
-                            s.setInt(1, receivingWId);
-                            s.setInt(2, d.getProductId());
-                            s.setInt(3, qty);
-                            s.executeUpdate();
-                        }
-                    }
-                    try (PreparedStatement s = conn.prepareStatement(insertTxSql)) {
-                        s.setInt(1, receivingWId);
-                        s.setInt(2, d.getProductId());
-                        s.setInt(3, ticketId);
-                        s.setString(4, "IMPORT");
-                        s.setInt(5, qty);
-                        s.setInt(6, beforeReceive);
-                        s.setInt(7, beforeReceive + qty);
-                        s.setInt(8, approvedByUserId);
+                        s.setInt(4, qty);
+                        s.setInt(5, beforeSend);
+                        s.setInt(6, beforeSend - qty);
+                        s.setInt(7, userId);
                         s.executeUpdate();
                     }
                 }
+                
+                try (PreparedStatement s = conn.prepareStatement(updateTicketSql)) {
+                    s.setInt(1, ticketId);
+                    s.executeUpdate();
+                }
+                
                 conn.commit();
             } catch (SQLException e) {
                 conn.rollback();
                 throw e;
             }
+        }
+    }
+
+    public void rejectDispatch(int ticketId, int userId, String note) throws SQLException {
+        InventoryTicket ticket = findById(ticketId);
+        if (ticket == null || !ticket.getStatus().equals("IN_TRANSIT") || ticket.isExportedBySender()) {
+            throw new SQLException("Phiếu không hợp lệ hoặc đã xuất kho.");
+        }
+        String updateSql = "UPDATE inventory_ticket SET status = 'REJECTED', note = ? WHERE ticket_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+            stmt.setString(1, "Từ chối xuất kho: " + (note != null ? note : ""));
+            stmt.setInt(2, ticketId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public void confirmReceiptWithDiscrepancy(int ticketId, int userId, String note, java.util.Map<Integer, Integer> actualQtys, int currentWarehouseId) throws SQLException {
+        InventoryTicket ticket = findById(ticketId);
+        if (ticket == null || !ticket.getStatus().equals("IN_TRANSIT") || ticket.isImportedByReceiver()) {
+            throw new SQLException("Phiếu không hợp lệ hoặc đã nhập kho.");
+        }
+        
+        List<InventoryTicketDetail> details = getTicketDetails(ticketId);
+        String getInventorySql = "SELECT quantity_in_stock FROM inventory WHERE warehouse_id = ? AND product_id = ?";
+        String updateInventorySql = "UPDATE inventory SET quantity_in_stock = quantity_in_stock + ? WHERE warehouse_id = ? AND product_id = ?";
+        String insertInventorySql = "INSERT INTO inventory (warehouse_id, product_id, quantity_in_stock, min_stock_level, max_stock_level) VALUES (?, ?, ?, 0, 999999)";
+        String insertTxSql = "INSERT INTO stock_transaction (warehouse_id, product_id, reference_type, reference_id, transaction_type, quantity, before_quantity, after_quantity, note, created_by) VALUES (?, ?, 'TRANSFER', ?, 'IMPORT', ?, ?, ?, ?, ?)";
+        String updateTicketSql = "UPDATE inventory_ticket SET is_imported_by_receiver = 1, note = CONCAT(IFNULL(note, ''), ?) ";
+        
+        boolean hasDiscrepancy = false;
+        List<InventoryTicketDetail> discrepancyDetails = new java.util.ArrayList<>();
+
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                for (InventoryTicketDetail d : details) {
+                    int receivingWId = "SEND".equals(d.getActionType()) ? ticket.getToWarehouseId() : ticket.getFromWarehouseId();
+                    if (receivingWId != currentWarehouseId) continue; // Only process items meant for this receiver
+                    
+                    int expectedQty = d.getQuantity();
+                    int actualQty = actualQtys.getOrDefault(d.getProductId(), expectedQty);
+                    
+                    if (actualQty != expectedQty) {
+                        hasDiscrepancy = true;
+                        InventoryTicketDetail disc = new InventoryTicketDetail();
+                        disc.setProductId(d.getProductId());
+                        disc.setQuantity(actualQty - expectedQty); // Negative means loss, positive means extra
+                        disc.setActionType("DISCREPANCY");
+                        discrepancyDetails.add(disc);
+                    }
+                    
+                    if (actualQty > 0) {
+                        int beforeReceive = 0;
+                        boolean existsReceive = false;
+                        try (PreparedStatement s = conn.prepareStatement(getInventorySql)) {
+                            s.setInt(1, receivingWId);
+                            s.setInt(2, d.getProductId());
+                            try (ResultSet r = s.executeQuery()) {
+                                if (r.next()) {
+                                    beforeReceive = r.getInt(1);
+                                    existsReceive = true;
+                                }
+                            }
+                        }
+                        if (existsReceive) {
+                            try (PreparedStatement s = conn.prepareStatement(updateInventorySql)) {
+                                s.setInt(1, actualQty);
+                                s.setInt(2, receivingWId);
+                                s.setInt(3, d.getProductId());
+                                s.executeUpdate();
+                            }
+                        } else {
+                            try (PreparedStatement s = conn.prepareStatement(insertInventorySql)) {
+                                s.setInt(1, receivingWId);
+                                s.setInt(2, d.getProductId());
+                                s.setInt(3, actualQty);
+                                s.executeUpdate();
+                            }
+                        }
+                        try (PreparedStatement s = conn.prepareStatement(insertTxSql)) {
+                            s.setInt(1, receivingWId);
+                            s.setInt(2, d.getProductId());
+                            s.setInt(3, ticketId);
+                            s.setInt(4, actualQty);
+                            s.setInt(5, beforeReceive);
+                            s.setInt(6, beforeReceive + actualQty);
+                            s.setString(7, "Xác nhận nhập kho" + (actualQty != expectedQty ? " (Có chênh lệch)" : ""));
+                            s.setInt(8, userId);
+                            s.executeUpdate();
+                        }
+                    }
+                }
+                
+                // If sender already confirmed, complete it
+                boolean completeIt = ticket.isExportedBySender();
+                if (completeIt) {
+                    updateTicketSql += ", status = '" + (hasDiscrepancy ? "COMPLETED_WITH_ERROR" : "COMPLETED") + "' ";
+                }
+                updateTicketSql += "WHERE ticket_id = ?";
+                
+                try (PreparedStatement s = conn.prepareStatement(updateTicketSql)) {
+                    s.setString(1, note != null ? "\nKho nhận: " + note : "");
+                    s.setInt(2, ticketId);
+                    s.executeUpdate();
+                }
+                
+                // Create Discrepancy Ticket if needed
+                if (hasDiscrepancy) {
+                    InventoryTicket discTicket = new InventoryTicket();
+                    discTicket.setTicketCode("ERR-" + System.currentTimeMillis());
+                    discTicket.setTicketType("DISCREPANCY");
+                    discTicket.setFromWarehouseId(currentWarehouseId); // The warehouse that found the issue
+                    discTicket.setToWarehouseId(ticketId); // Store reference to original ticket in toWarehouseId (hacky but works)
+                    discTicket.setStatus("PENDING");
+                    discTicket.setCreatedBy(userId);
+                    discTicket.setNote("Lệch từ phiếu chuyển: " + ticket.getTicketCode());
+                    createExchangeTicket(conn, discTicket, discrepancyDetails); // Reuse existing, need a transactional version
+                }
+                
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
+
+    private void createExchangeTicket(Connection conn, InventoryTicket ticket, List<InventoryTicketDetail> details) throws SQLException {
+        String sql = "INSERT INTO inventory_ticket (ticket_code, ticket_type, from_warehouse_id, to_warehouse_id, status, created_by, note) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        int newTicketId = 0;
+        try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, ticket.getTicketCode());
+            stmt.setString(2, ticket.getTicketType());
+            stmt.setInt(3, ticket.getFromWarehouseId());
+            stmt.setInt(4, ticket.getToWarehouseId());
+            stmt.setString(5, ticket.getStatus());
+            stmt.setInt(6, ticket.getCreatedBy());
+            stmt.setString(7, ticket.getNote());
+            stmt.executeUpdate();
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) newTicketId = rs.getInt(1);
+            }
+        }
+        
+        String dSql = "INSERT INTO inventory_ticket_detail (ticket_id, product_id, quantity, action_type) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement dStmt = conn.prepareStatement(dSql)) {
+            for (InventoryTicketDetail d : details) {
+                dStmt.setInt(1, newTicketId);
+                dStmt.setInt(2, d.getProductId());
+                dStmt.setInt(3, d.getQuantity());
+                dStmt.setString(4, d.getActionType());
+                dStmt.addBatch();
+            }
+            dStmt.executeBatch();
         }
     }
 }

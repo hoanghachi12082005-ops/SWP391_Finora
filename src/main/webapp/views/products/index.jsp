@@ -151,25 +151,18 @@
                         <div class="text-muted small">
                             Trang <strong><%= currentPage %></strong> / <strong><%= totalPages %></strong>
                         </div>
-                        <ul class="pagination mb-0">
 <%      String baseUrl = ctx + "/products?view=" + viewMode
                 + (keyword != null && !keyword.isBlank() ? "&keyword=" + keyword : "")
                 + (filterStatus != null && !filterStatus.isBlank() ? "&status=" + filterStatus : "")
                 + (filterCategoryID != null ? "&categoryID=" + filterCategoryID : "")
-                + (filterUnitID != null ? "&unitID=" + filterUnitID : "");
+                + (filterUnitID != null ? "&unitID=" + filterUnitID : "")
+                + "&page=";
 %>
-                            <li class="page-item <%= currentPage <= 1 ? "disabled" : "" %>">
-                                <a class="page-link" href="<%= baseUrl %>&page=<%= currentPage - 1 %>">Trước</a>
-                            </li>
-<%      for (int i = 1; i <= totalPages; i++) { %>
-                            <li class="page-item <%= i == currentPage ? "active" : "" %>">
-                                <a class="page-link" href="<%= baseUrl %>&page=<%= i %>"><%= i %></a>
-                            </li>
-<%      } %>
-                            <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
-                                <a class="page-link" href="<%= baseUrl %>&page=<%= currentPage + 1 %>">Tiếp</a>
-                            </li>
-                        </ul>
+                        <jsp:include page="../common/pagination.jsp">
+                            <jsp:param name="currentPage" value="<%= currentPage %>"/>
+                            <jsp:param name="totalPages" value="<%= totalPages %>"/>
+                            <jsp:param name="url" value="<%= baseUrl %>"/>
+                        </jsp:include>
                     </div>
 <%  } %>
                 </div>

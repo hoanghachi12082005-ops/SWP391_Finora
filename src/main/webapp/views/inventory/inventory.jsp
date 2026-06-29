@@ -139,6 +139,7 @@
                         <a href="?tab=transfer&warehouseId=${selectedWarehouseId}" class="tab-btn ${activeTab == 'transfer' || activeTab == 'createTransfer' ? 'active' : ''}">Chuyển kho</a>
                         <a href="?tab=check&warehouseId=${selectedWarehouseId}" class="tab-btn ${activeTab == 'check' ? 'active' : ''}">Kiểm kho</a>
                         <a href="?tab=history&warehouseId=${selectedWarehouseId}" class="tab-btn ${activeTab == 'history' ? 'active' : ''}">Lịch sử xuất nhập kho</a>
+                        <a href="?tab=discrepancy&warehouseId=${selectedWarehouseId}" class="tab-btn ${activeTab == 'discrepancy' ? 'active' : ''}">Hao hụt Trung chuyển</a>
                     </div>
 
                     <!-- Tab Content -->
@@ -158,6 +159,9 @@
                             </c:when>
                             <c:when test="${activeTab == 'history'}">
                                 <jsp:include page="_tab_history.jsp" />
+                            </c:when>
+                            <c:when test="${activeTab == 'discrepancy'}">
+                                <jsp:include page="_tab_discrepancy.jsp" />
                             </c:when>
                         </c:choose>
                     </div>
@@ -200,5 +204,100 @@
         </div>
     </div>
 </div>
+
+<!-- Modal for Ticket Details -->
+<div class="modal fade" id="ticketDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="ticketDetailsModalContent">
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Reject Dispatch -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <form action="${pageContext.request.contextPath}/inventory" method="POST">
+                <input type="hidden" name="action" value="rejectDispatch">
+                <input type="hidden" name="transferId" id="rejectTransferId">
+                <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
+                
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-danger">Từ chối Xuất Kho</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted small">Lý do từ chối <span class="text-danger">*</span></label>
+                        <textarea name="note" class="form-control" rows="3" required placeholder="Nhập lý do không xuất hàng (VD: hàng hỏng, đếm thiếu...)" style="border-radius: 8px;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 500;">Hủy</button>
+                    <button type="submit" class="btn btn-danger" style="border-radius: 8px; font-weight: 500;">Xác nhận Từ chối</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Receipt with Discrepancy -->
+<div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="receiptModalContent">
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 text-muted">Đang tải dữ liệu phiếu...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function viewTicketDetails(ticketId) {
+        const modalContent = document.getElementById('ticketDetailsModalContent');
+        modalContent.innerHTML = '<div class="modal-body text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Đang tải dữ liệu...</p></div>';
+        
+        const myModal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
+        myModal.show();
+        
+        fetch('${pageContext.request.contextPath}/inventory?action=viewTicket&ticketId=' + ticketId)
+            .then(response => response.text())
+            .then(html => {
+                modalContent.innerHTML = html;
+            })
+            .catch(err => {
+                modalContent.innerHTML = '<div class="modal-body py-5 text-center text-danger"><i class="ph ph-warning-circle fs-1 mb-2"></i><p>Lỗi khi tải dữ liệu phiếu.</p></div>';
+            });
+    }
+
+    function openRejectModal(ticketId) {
+        document.getElementById('rejectTransferId').value = ticketId;
+        const myModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+        myModal.show();
+    }
+
+    function openReceiptModal(ticketId) {
+        const modalContent = document.getElementById('receiptModalContent');
+        modalContent.innerHTML = '<div class="modal-body text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Đang tải dữ liệu...</p></div>';
+        
+        const myModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+        myModal.show();
+        
+        // Fetch the receipt form view
+        fetch('${pageContext.request.contextPath}/inventory?action=viewReceiptForm&ticketId=' + ticketId + '&warehouseId=${selectedWarehouseId}')
+            .then(response => response.text())
+            .then(html => {
+                modalContent.innerHTML = html;
+            })
+            .catch(err => {
+                modalContent.innerHTML = '<div class="modal-body py-5 text-center text-danger"><i class="ph ph-warning-circle fs-1 mb-2"></i><p>Lỗi khi tải dữ liệu phiếu.</p></div>';
+            });
+    }
+</script>
 
 <jsp:include page="/views/common/footer.jsp" />

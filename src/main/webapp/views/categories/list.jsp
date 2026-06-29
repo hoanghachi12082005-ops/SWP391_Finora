@@ -171,25 +171,11 @@
                     <div class="text-muted small">
                         Hiển thị <strong>${fn:length(categories)}</strong> / <strong>${totalItems}</strong> danh mục
                     </div>
-                    <ul class="pagination mb-0">
-                        <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                            <a class="page-link" href="${pageContext.request.contextPath}/category?page=${currentPage - 1}&keyword=${keyword}&status=${selectedStatus}&parentName=${parentNameFilter}">
-                                Trước
-                            </a>
-                        </li>
-                        <c:forEach var="pageIndex" begin="1" end="${totalPages}">
-                            <li class="page-item ${currentPage == pageIndex ? 'active' : ''}">
-                                <a class="page-link" href="${pageContext.request.contextPath}/category?page=${pageIndex}&keyword=${keyword}&status=${selectedStatus}&parentName=${parentNameFilter}">
-                                    ${pageIndex}
-                                </a>
-                            </li>
-                        </c:forEach>
-                        <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                            <a class="page-link" href="${pageContext.request.contextPath}/category?page=${currentPage + 1}&keyword=${keyword}&status=${selectedStatus}&parentName=${parentNameFilter}">
-                                Tiếp
-                            </a>
-                        </li>
-                    </ul>
+                    <jsp:include page="/views/common/pagination.jsp">
+                        <jsp:param name="currentPage" value="${currentPage}"/>
+                        <jsp:param name="totalPages" value="${totalPages}"/>
+                        <jsp:param name="url" value="${pageContext.request.contextPath}/category?keyword=${keyword}&status=${selectedStatus}&parentName=${parentNameFilter}&page="/>
+                    </jsp:include>
                 </div>
             </c:if>
 

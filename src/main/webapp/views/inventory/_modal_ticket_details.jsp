@@ -6,41 +6,62 @@
     <h5 class="modal-title fw-bold">Chi tiết phiếu: ${ticket.ticketCode}</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
-<div class="modal-body pb-0">
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <p class="mb-1 text-muted small">Người tạo</p>
-            <p class="fw-medium">${ticket.createdByName}</p>
+<div class="modal-body">
+    <div class="row mb-4">
+        <div class="col-6 mb-3">
+            <div class="text-muted small mb-1">Người tạo</div>
+            <div class="fw-bold">${ticket.createdByName}</div>
         </div>
-        <div class="col-md-6 text-md-end">
-            <p class="mb-1 text-muted small">Thời gian</p>
-            <p class="fw-medium">
+        <div class="col-6 mb-3 text-end">
+            <div class="text-muted small mb-1">Thời gian</div>
+            <div class="fw-bold">
                 <fmt:parseDate value="${ticket.createdAt}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedDateTime" type="both" />
                 <fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${parsedDateTime}" />
-            </p>
+            </div>
         </div>
-        <div class="col-md-6">
-            <p class="mb-1 text-muted small">Kho Đề Xuất</p>
-            <p class="fw-medium text-primary">${ticket.fromWarehouseName}</p>
+        <div class="col-6">
+            <div class="text-muted small mb-1">Kho Đề Xuất</div>
+            <div class="fw-bold">${ticket.fromWarehouseName}</div>
         </div>
-        <div class="col-md-6 text-md-end">
-            <p class="mb-1 text-muted small">Kho Xử Lý</p>
-            <p class="fw-medium text-success">${ticket.toWarehouseName}</p>
+        <div class="col-6 text-end">
+            <div class="text-muted small mb-1">Kho Xử Lý</div>
+            <div class="fw-bold">${ticket.toWarehouseName}</div>
         </div>
     </div>
     
     <h6 class="fw-bold mb-3">Danh sách sản phẩm</h6>
     <div class="table-responsive">
-        <table class="table table-bordered table-sm text-center align-middle">
+        <table class="table table-bordered table-sm text-center align-middle mb-0">
             <thead class="table-light">
                 <tr>
                     <th class="text-start">Sản phẩm</th>
-                    <th width="120px">Loại GD</th>
-                    <th width="100px">Số lượng</th>
+                    <th style="width: 100px;">Loại GD</th>
+                    <c:if test="${not empty transactions}">
+                        <th style="width: 80px;">Trước</th>
+                    </c:if>
+                    <th style="width: 90px;">Số lượng</th>
+                    <c:if test="${not empty transactions}">
+                        <th style="width: 80px;">Sau</th>
+                    </c:if>
                 </tr>
             </thead>
             <tbody>
                 <c:forEach var="d" items="${ticketDetails}">
+                    <c:set var="myTx" value="${null}"/>
+                    <c:if test="${not empty transactions}">
+                        <c:forEach var="tx" items="${transactions}">
+                            <c:if test="${tx.productId == d.productId && (empty selectedWarehouseId || tx.warehouseId == selectedWarehouseId)}">
+                                <c:set var="myTx" value="${tx}"/>
+                            </c:if>
+                        </c:forEach>
+                        <c:if test="${empty myTx}">
+                            <c:forEach var="tx" items="${transactions}">
+                                <c:if test="${tx.productId == d.productId}">
+                                    <c:set var="myTx" value="${tx}"/>
+                                </c:if>
+                            </c:forEach>
+                        </c:if>
+                    </c:if>
                     <tr>
                         <td class="text-start fw-medium">${d.productName}</td>
                         <td>
@@ -53,16 +74,24 @@
                                 </c:otherwise>
                             </c:choose>
                         </td>
-                        <td class="fw-bold fs-5">${d.quantity}</td>
+                        <c:if test="${not empty transactions}">
+                            <td class="text-muted">${myTx != null ? myTx.beforeQuantity : '-'}</td>
+                        </c:if>
+                        <td class="fw-bold fs-6">
+                            ${d.quantity}
+                        </td>
+                        <c:if test="${not empty transactions}">
+                            <td class="fw-bold">${myTx != null ? myTx.afterQuantity : '-'}</td>
+                        </c:if>
                     </tr>
                 </c:forEach>
             </tbody>
         </table>
     </div>
 </div>
-<div class="modal-footer border-top-0 pt-0">
-    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Đóng</button>
-    <a href="${pageContext.request.contextPath}/inventory?action=printTicket&ticketId=${ticket.ticketId}" target="_blank" class="btn btn-primary d-flex align-items-center gap-2">
-        <i class="ph ph-printer"></i> In Phiếu
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+    <a href="${pageContext.request.contextPath}/inventory?action=printTicket&ticketId=${ticket.ticketId}" target="_blank" class="btn btn-primary">
+        In Phiếu
     </a>
 </div>

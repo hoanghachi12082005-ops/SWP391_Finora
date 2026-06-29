@@ -40,47 +40,56 @@
                         <thead>
                             <tr>
                                 <th>Thời Gian</th>
-                                <th>Sản Phẩm</th>
-                                <th>Kho</th>
-                                <th>Loại</th>
-                                <th>Nguồn</th>
-                                <th>Trước</th>
-                                <th>Thay Đổi</th>
-                                <th>Sau</th>
+                                <th>Mã Phiếu</th>
+                                <th>Kho Gửi</th>
+                                <th>Kho Xử Lý</th>
+                                <th>Trạng Thái</th>
                                 <th>Người Thực Hiện</th>
+                                <th>Thao Tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach var="tx" items="${history}">
                                 <tr>
-                                    <td>${tx.createdAt}</td>
                                     <td>
-                                        <strong>${tx.productName}</strong><br>
-                                        <small class="text-muted">${tx.productCodebar}</small>
+                                        <fmt:parseDate value="${tx.createdAt}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedDateTime" type="both" />
+                                        <fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${parsedDateTime}" />
                                     </td>
                                     <td>
-                                        <span style="font-weight: 600; color: #374151; display: flex; align-items: center; gap: 4px;">
-                                            <span class="material-icons" style="font-size: 16px; color: #6b7280;">storefront</span>
-                                            ${tx.warehouseName}
+                                        <strong>${tx.ticketCode}</strong>
+                                    </td>
+                                    <td>
+                                        <span style="font-weight: 500; color: #374151;">
+                                            <span class="material-icons" style="font-size: 16px; color: #6b7280; vertical-align: bottom;">storefront</span>
+                                            ${tx.fromWarehouseName}
                                         </span>
                                     </td>
                                     <td>
-                                        <c:if test="${tx.transactionType == 'IN'}">
-                                            <span class="badge bg-success">NHẬP</span>
-                                        </c:if>
-                                        <c:if test="${tx.transactionType == 'OUT'}">
-                                            <span class="badge bg-danger">XUẤT</span>
-                                        </c:if>
-                                    </td>
-                                    <td>${tx.referenceType} <c:if test="${not empty tx.referenceId}">#${tx.referenceId}</c:if></td>
-                                    <td>${tx.beforeQuantity}</td>
-                                    <td>
-                                        <span style="font-weight:bold; color: ${tx.transactionType == 'IN' ? 'green' : 'red'};">
-                                            ${tx.transactionType == 'IN' ? '+' : '-'}${tx.quantity}
+                                        <span style="font-weight: 500; color: #374151;">
+                                            <span class="material-icons" style="font-size: 16px; color: #6b7280; vertical-align: bottom;">storefront</span>
+                                            ${tx.toWarehouseName}
                                         </span>
                                     </td>
-                                    <td>${tx.afterQuantity}</td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${tx.status == 'COMPLETED'}">
+                                                <span class="badge bg-success">HOÀN TẤT</span>
+                                            </c:when>
+                                            <c:when test="${tx.status == 'COMPLETED_WITH_ERROR'}">
+                                                <span class="badge bg-warning text-dark">HOÀN TẤT (CÓ LỖI)</span>
+                                            </c:when>
+                                            <c:when test="${tx.status == 'REJECTED' || tx.status == 'CANCELLED'}">
+                                                <span class="badge bg-danger">ĐÃ HỦY</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span class="badge bg-secondary">${tx.status}</span>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
                                     <td>${tx.createdByName}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewTicketDetails(${tx.ticketId})">Xem</button>
+                                    </td>
                                 </tr>
                             </c:forEach>
                         </tbody>

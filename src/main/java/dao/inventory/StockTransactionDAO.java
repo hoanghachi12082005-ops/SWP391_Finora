@@ -66,6 +66,28 @@ public class StockTransactionDAO {
         }
         return transactions;
     }
+    public List<StockTransaction> findByReference(String referenceType, int referenceId) throws SQLException {
+        List<StockTransaction> transactions = new ArrayList<>();
+        String sql = "SELECT st.*, p.Name as product_name, '' as product_codebar, " +
+                     "e.FullName as created_by_name, w.warehouse_name " +
+                     "FROM stock_transaction st " +
+                     "JOIN Product p ON st.product_id = p.ProductID " +
+                     "JOIN warehouse w ON st.warehouse_id = w.warehouse_id " +
+                     "LEFT JOIN Employee e ON st.created_by = e.EmployeeID " +
+                     "WHERE st.reference_type = ? AND st.reference_id = ?";
+                     
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, referenceType);
+            stmt.setInt(2, referenceId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    transactions.add(extractTransaction(rs));
+                }
+            }
+        }
+        return transactions;
+    }
 
     public void insert(StockTransaction tx) throws SQLException {
         String sql = "INSERT INTO stock_transaction (warehouse_id, product_id, reference_type, reference_id, transaction_type, quantity, before_quantity, after_quantity, note, created_by) " +
