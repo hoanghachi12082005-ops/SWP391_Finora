@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 public class Product {
     private int productID;
     private String name;
-    private int quantity;
     private int categoryID;
     private int unitID;
     private BigDecimal sellingPrice;
@@ -19,13 +18,15 @@ public class Product {
     private String categoryName;
     private String unitName;
 
+    // Transient: URL đến ảnh sản phẩm (không lưu trong DB, đọc từ /asset/product/)
+    private String imageUrl;
+
     public Product() {
     }
 
-    public Product(int productID, String name, int quantity, int categoryID, int unitID, BigDecimal sellingPrice, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Product(int productID, String name, int categoryID, int unitID, BigDecimal sellingPrice, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.productID = productID;
         this.name = name;
-        this.quantity = quantity;
         this.categoryID = categoryID;
         this.unitID = unitID;
         this.sellingPrice = sellingPrice;
@@ -39,9 +40,6 @@ public class Product {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-
-    public int getQuantity() { return quantity; }
-    public void setQuantity(int quantity) { this.quantity = quantity; }
 
     public int getCategoryID() { return categoryID; }
     public void setCategoryID(int categoryID) { this.categoryID = categoryID; }
@@ -67,12 +65,14 @@ public class Product {
     public String getUnitName() { return unitName; }
     public void setUnitName(String unitName) { this.unitName = unitName; }
 
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
     @Override
     public String toString() {
         return "Product{" +
                 "productID=" + productID +
                 ", name='" + name + '\'' +
-                ", quantity=" + quantity +
                 ", sellingPrice=" + sellingPrice +
                 '}';
     }

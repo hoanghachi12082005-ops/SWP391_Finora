@@ -155,48 +155,34 @@
                 <div class="dashboard-card">
                     <div class="dashboard-card-title">
                         <h5>Hoạt động gần đây</h5>
-                        <a href="#" style="font-size: 12px; font-weight: 600;">Xem tất cả</a>
+                        <a href="${pageContext.request.contextPath}/activity-log" style="font-size: 12px; font-weight: 600;">Xem tất cả</a>
                     </div>
                     <div class="activity-feed">
-                        <div class="activity-item">
-                            <div class="activity-icon blue">
-                                <span class="material-icons" style="font-size: 16px;">receipt</span>
-                            </div>
-                            <div class="activity-details">
-                                <p>Đơn hàng <strong>#INV-001</strong> đã thanh toán</p>
-                                <small>Vài phút trước - CN Q.1</small>
-                            </div>
-                        </div>
-
-                        <div class="activity-item">
-                            <div class="activity-icon red">
-                                <span class="material-icons" style="font-size: 16px;">warning</span>
-                            </div>
-                            <div class="activity-details">
-                                <p>Cảnh báo tồn kho: sản phẩm <strong>"Cà phê hạt Moka"</strong> còn dưới 5kg</p>
-                                <small>1 giờ trước - CN Q.1</small>
-                            </div>
-                        </div>
-
-                        <div class="activity-item">
-                            <div class="activity-icon green">
-                                <span class="material-icons" style="font-size: 16px;">check_circle</span>
-                            </div>
-                            <div class="activity-details">
-                                <p>Phiếu nhập hàng <strong>#PO-089</strong> được duyệt bởi Quản lý</p>
-                                <small>2 giờ trước - Hệ thống</small>
-                            </div>
-                        </div>
-
-                        <div class="activity-item">
-                            <div class="activity-icon blue">
-                                <span class="material-icons" style="font-size: 16px;">receipt</span>
-                            </div>
-                            <div class="activity-details">
-                                <p>Đơn hàng <strong>#INV-002</strong> đã thanh toán</p>
-                                <small>3 giờ trước - CN Q.7</small>
-                            </div>
-                        </div>
+                        <c:choose>
+                            <c:when test="${empty recentActivities}">
+                                <div class="text-center text-muted py-3" style="font-size: 13px;">Chưa có hoạt động nào.</div>
+                            </c:when>
+                            <c:otherwise>
+                                <c:forEach var="act" items="${recentActivities}">
+                                    <div class="activity-item">
+                                        <div class="activity-icon ${act.iconColor}">
+                                            <span class="material-icons" style="font-size: 16px;">${act.iconName}</span>
+                                        </div>
+                                        <div class="activity-details">
+                                            <p>
+                                                <strong>${act.actionName != null ? act.actionName : 'Hoạt động'}</strong>
+                                                <c:if test="${not empty act.tableName}"> trên <em>${act.tableName}</em></c:if>
+                                                <c:if test="${not empty act.recordId}"> (#${act.recordId})</c:if>
+                                            </p>
+                                            <small>
+                                                <c:if test="${not empty act.createdAtFormatted}">${act.createdAtFormatted} - </c:if>
+                                                ${act.actorLabel}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </c:forEach>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
                 </div>
             </div>

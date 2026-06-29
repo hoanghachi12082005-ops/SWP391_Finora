@@ -8,17 +8,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet(name = "SystemController", urlPatterns = {"/activity-log", "/notifications", "/configuration/business"})
+@WebServlet(name = "SystemController", urlPatterns = {"/notifications", "/configuration/business"})
 public class SystemController extends BaseController {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String path = request.getServletPath();
         switch (path) {
-        case "/activity-log": forward(request, response, "activity-log/list"); break;
         case "/notifications": forward(request, response, "notifications/list"); break;
         case "/configuration/business": forward(request, response, "configuration/business"); break;
-            default: forward(request, response, "activity-log/list"); break;
+            default: forward(request, response, "notifications/list"); break;
         }
     }
 
