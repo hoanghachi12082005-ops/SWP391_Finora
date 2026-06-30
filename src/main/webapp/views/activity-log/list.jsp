@@ -1,20 +1,20 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="model.ActivityLog, java.util.List, java.time.format.DateTimeFormatter" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page import="model.ActivityLog, java.util.List, java.util.Map" %>
 <%
     List<ActivityLog> logs = (List<ActivityLog>) request.getAttribute("logs");
-    List<String> tables    = (List<String>) request.getAttribute("tables");
-    List<String> actions   = (List<String>) request.getAttribute("actions");
-    int currentPage        = (Integer) request.getAttribute("currentPage");
-    int totalPages         = (Integer) request.getAttribute("totalPages");
-    Integer totalCount     = (Integer) request.getAttribute("totalCount");
-    String keyword         = (String) request.getAttribute("keyword");
-    String filterTable     = (String) request.getAttribute("filterTable");
-    String filterAction    = (String) request.getAttribute("filterAction");
-    String ctx             = request.getContextPath();
-    DateTimeFormatter df   = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+    Map<String,String> entityOptions = (Map<String,String>) request.getAttribute("entityOptions");
+    Map<String,String> actionOptions = (Map<String,String>) request.getAttribute("actionOptions");
+    int currentPage    = (Integer) request.getAttribute("currentPage");
+    int totalPages     = (Integer) request.getAttribute("totalPages");
+    Integer totalCount = (Integer) request.getAttribute("totalCount");
+    String keyword     = (String) request.getAttribute("keyword");
+    String filterTable = (String) request.getAttribute("filterTable");
+    String filterAction= (String) request.getAttribute("filterAction");
+    String ctx         = request.getContextPath();
 %>
 <jsp:include page="../common/header.jsp">
-    <jsp:param name="title" value="Activity Center"/>
+    <jsp:param name="title" value="Trung tâm hoạt động"/>
 </jsp:include>
 <div class="app-container">
     <jsp:include page="../common/sidebar.jsp"/>
@@ -22,59 +22,64 @@
         <jsp:include page="../common/topbar.jsp"/>
         <div class="container-fluid py-4">
 
-<%-- Flash message --%>
-<%
-    String flashMsg  = (String) session.getAttribute("message");
-    String flashType = (String) session.getAttribute("messageType");
-    if (flashMsg != null) {
-        session.removeAttribute("message");
-        session.removeAttribute("messageType");
-%>
-            <div class="alert alert-<%= flashType != null ? flashType : "info" %> alert-dismissible fade show" role="alert">
-                <%= flashMsg %>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-<%  } %>
-
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2 class="fw-bold mb-1">Activity Center</h2>
-                    <small class="text-muted">Nhật ký hoạt động toàn hệ thống (tổng: <strong><%= totalCount != null ? totalCount : 0 %></strong> bản ghi)</small>
+                    <h2 class="fw-bold mb-1">Trung tâm hoạt động</h2>
+                    <small class="text-muted">
+                        Theo dõi toàn bộ thao tác bán hàng &amp; quản trị trên hệ thống &middot;
+                        Tổng <strong><%= totalCount != null ? totalCount : 0 %></strong> hoạt động
+                    </small>
                 </div>
+                <span class="badge bg-secondary d-flex align-items-center gap-1" style="padding: 8px 12px;">
+                    <span class="material-icons" style="font-size:16px;">lock</span>
+                    Chỉ xem &middot; Quyền Chủ chuỗi
+                </span>
+            </div>
+
+            <div class="alert alert-info d-flex align-items-start" role="alert">
+                <span class="material-icons me-2">info</span>
                 <div>
-                    <button class="btn btn-danger" onclick="openLogModal('add')">
-                        <span class="material-icons" style="vertical-align:middle;font-size:18px;">add</span>
-                        Thêm hoạt động
-                    </button>
+                    Mọi thao tác bán hàng, nhập xuất, chỉnh sửa của nhân viên đều được tự động ghi lại tại đây.
+                    Nhật ký này <strong>không thể chỉnh sửa hoặc xóa</strong> để bảo toàn dấu vết kiểm toán nội bộ.
                 </div>
             </div>
 
-            <!-- Filter -->
+            <!-- Bộ lọc nghiệp vụ -->
             <div class="card shadow-sm border-0 mb-3">
                 <div class="card-body">
                     <form method="get" action="<%= ctx %>/activity-log" class="row g-2 align-items-end">
                         <div class="col-md-5">
-                            <label class="form-label small text-muted mb-1">Từ khóa</label>
+                            <label class="form-label small text-muted mb-1">Tìm kiếm</label>
                             <input type="text" name="keyword" class="form-control"
-                                   placeholder="Tìm theo hành động, bảng, nhân viên, dữ liệu mới..."
+                                   placeholder="Tìm theo tên nhân viên, đối tượng, nội dung..."
                                    value="<%= keyword != null ? keyword : "" %>">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label small text-muted mb-1">Bảng dữ liệu</label>
+                            <label class="form-label small text-muted mb-1">Đối tượng</label>
                             <select name="tableName" class="form-select">
-                                <option value="">Tất cả</option>
-                                <% if (tables != null) for (String t : tables) { %>
-                                    <option value="<%= t %>" <%= t.equals(filterTable) ? "selected" : "" %>><%= t %></option>
-                                <% } %>
+                                <option value="">Tất cả đối tượng</option>
+<%                              if (entityOptions != null) {
+                                    for (Map.Entry<String,String> e : entityOptions.entrySet()) {
+                                        boolean sel = e.getKey().equals(filterTable);
+%>
+                                    <option value="<%= e.getKey() %>" <%= sel ? "selected" : "" %>><%= e.getValue() %></option>
+<%                                  }
+                                }
+%>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label small text-muted mb-1">Hành động</label>
+                            <label class="form-label small text-muted mb-1">Thao tác</label>
                             <select name="actionName" class="form-select">
-                                <option value="">Tất cả</option>
-                                <% if (actions != null) for (String a : actions) { %>
-                                    <option value="<%= a %>" <%= a.equals(filterAction) ? "selected" : "" %>><%= a %></option>
-                                <% } %>
+                                <option value="">Tất cả thao tác</option>
+<%                              if (actionOptions != null) {
+                                    for (Map.Entry<String,String> e : actionOptions.entrySet()) {
+                                        boolean sel = e.getKey().equals(filterAction);
+%>
+                                    <option value="<%= e.getKey() %>" <%= sel ? "selected" : "" %>><%= e.getValue() %></option>
+<%                                  }
+                                }
+%>
                             </select>
                         </div>
                         <div class="col-md-2 d-flex gap-2">
@@ -85,21 +90,19 @@
                 </div>
             </div>
 
-            <!-- Table -->
+            <!-- Bảng hoạt động -->
             <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table align-middle table-hover">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Thời gian</th>
-                                    <th>Nhân viên</th>
-                                    <th>Hành động</th>
-                                    <th>Bảng</th>
-                                    <th>Record ID</th>
-                                    <th>Dữ liệu mới</th>
-                                    <th class="text-end">Thao tác</th>
+                                    <th style="width: 160px;">Thời gian</th>
+                                    <th>Nhân viên thực hiện</th>
+                                    <th>Hoạt động</th>
+                                    <th>Đối tượng</th>
+                                    <th>Mã</th>
+                                    <th class="text-end">Chi tiết</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -107,47 +110,53 @@
         if (logs == null || logs.isEmpty()) {
 %>
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">Chưa có hoạt động nào.</td>
+                                    <td colspan="6" class="text-center text-muted py-4">Chưa có hoạt động nào.</td>
                                 </tr>
 <%
         } else {
             for (ActivityLog log : logs) {
-                String createdAt = log.getCreatedAt() != null ? df.format(log.getCreatedAt()) : "";
-                String newDataDisplay = log.getNewData() != null
-                        ? (log.getNewData().length() > 60 ? log.getNewData().substring(0, 60) + "..." : log.getNewData())
-                        : "";
-                String empName = log.getEmpName() != null ? log.getEmpName() : (log.getEmpId() > 0 ? "#" + log.getEmpId() : "(Hệ thống)");
-                String actionBadge;
-                if (log.getActionName() != null) {
-                    String a = log.getActionName().toUpperCase();
-                    if (a.contains("INSERT") || a.contains("CREATE") || a.contains("ADD")) actionBadge = "bg-success";
-                    else if (a.contains("UPDATE") || a.contains("EDIT")) actionBadge = "bg-warning text-dark";
-                    else if (a.contains("DELETE") || a.contains("REMOVE")) actionBadge = "bg-danger";
-                    else actionBadge = "bg-secondary";
-                } else actionBadge = "bg-secondary";
-                String safeOld = log.getOldData() != null ? log.getOldData().replace("\"", "&quot;").replace("\n", " ") : "";
-                String safeNew = log.getNewData() != null ? log.getNewData().replace("\"", "&quot;").replace("\n", " ") : "";
-                String safeAction = log.getActionName() != null ? log.getActionName().replace("\"", "&quot;") : "";
-                String safeTable = log.getTableName() != null ? log.getTableName().replace("\"", "&quot;") : "";
+                String when      = log.getCreatedAtFormatted();
+                String actor     = log.getActorLabel();
+                String actLabel  = log.getActionLabel();
+                String entity    = log.getEntityLabel();
+                String code      = log.getEntityCode();
+                String desc      = log.getDescription();
+                String iconColor = log.getIconColor();
+                String iconName  = log.getIconName();
+                String badge;
+                switch (iconColor) {
+                    case "green":  badge = "bg-success"; break;
+                    case "orange": badge = "bg-warning text-dark"; break;
+                    case "red":    badge = "bg-danger"; break;
+                    default:       badge = "bg-primary"; break;
+                }
+                String safeDesc   = desc != null ? desc.replace("'", "\\'") : "";
+                String safeActor  = actor != null ? actor.replace("'", "\\'") : "";
+                String safeAction = actLabel != null ? actLabel.replace("'", "\\'") : "";
+                String safeEntity = entity != null ? entity.replace("'", "\\'") : "";
+                String safeCode   = code != null ? code.replace("'", "\\'") : "";
+                String safeOld    = log.getOldData() != null ? log.getOldData().replace("'", "\\'").replace("\n"," ").replace("\r"," ") : "";
+                String safeNew    = log.getNewData() != null ? log.getNewData().replace("'", "\\'").replace("\n"," ").replace("\r"," ") : "";
 %>
                                 <tr>
-                                    <td>#<%= log.getId() %></td>
-                                    <td><small><%= createdAt %></small></td>
-                                    <td><%= empName %></td>
-                                    <td><span class="badge <%= actionBadge %>"><%= log.getActionName() != null ? log.getActionName() : "" %></span></td>
-                                    <td><code><%= log.getTableName() != null ? log.getTableName() : "" %></code></td>
-                                    <td><%= log.getRecordId() != null ? log.getRecordId() : "" %></td>
-                                    <td><small class="text-muted"><%= newDataDisplay %></small></td>
+                                    <td><small class="text-muted"><%= when %></small></td>
+                                    <td><strong><%= actor %></strong></td>
+                                    <td>
+                                        <span class="d-inline-flex align-items-center gap-2">
+                                            <span class="badge <%= badge %> d-inline-flex align-items-center gap-1">
+                                                <span class="material-icons" style="font-size:14px;"><%= iconName %></span>
+                                                <%= actLabel %>
+                                            </span>
+                                            <span><%= desc %></span>
+                                        </span>
+                                    </td>
+                                    <td><%= entity %></td>
+                                    <td><code><%= (code != null && !code.isEmpty()) ? code : "—" %></code></td>
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-primary"
-                                                onclick="viewLog('<%= log.getId() %>','<%= createdAt %>','<%= empName.replace("'", "\\'") %>','<%= safeAction.replace("'", "\\'") %>','<%= safeTable.replace("'", "\\'") %>','<%= log.getRecordId() != null ? log.getRecordId() : "" %>','<%= safeOld.replace("'", "\\'") %>','<%= safeNew.replace("'", "\\'") %>')">
+                                                onclick="viewLog('<%= when %>','<%= safeActor %>','<%= safeAction %>','<%= safeEntity %>','<%= safeCode %>','<%= safeDesc %>','<%= safeOld %>','<%= safeNew %>')">
                                             Xem
                                         </button>
-                                        <button class="btn btn-sm btn-warning"
-                                                onclick="openLogModal('edit','<%= log.getId() %>','<%= log.getEmpId() %>','<%= safeAction.replace("'", "\\'") %>','<%= safeTable.replace("'", "\\'") %>','<%= log.getRecordId() != null ? log.getRecordId() : "" %>','<%= safeOld.replace("'", "\\'") %>','<%= safeNew.replace("'", "\\'") %>')">
-                                            Sửa
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteLog('<%= log.getId() %>')">Xóa</button>
                                     </td>
                                 </tr>
 <%
@@ -188,116 +197,50 @@
     </main>
 </div>
 
-<!-- Add/Edit Modal -->
-<div class="modal fade" id="logModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form method="post" action="<%= ctx %>/activity-log">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logModalTitle">Thêm hoạt động</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="action" id="logAction" value="add">
-                    <input type="hidden" name="id" id="logId">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Nhân viên (emp_id)</label>
-                            <input type="number" min="0" class="form-control" name="empId" id="logEmpId" placeholder="VD: 1">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Hành động <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="actionName" id="logActionName" required placeholder="INSERT / UPDATE / DELETE / LOGIN ...">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Bảng dữ liệu</label>
-                            <input type="text" class="form-control" name="tableName" id="logTableName" placeholder="product, order, ...">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Record ID</label>
-                            <input type="number" min="0" class="form-control" name="recordId" id="logRecordId">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Dữ liệu cũ (old_data)</label>
-                            <textarea class="form-control" rows="3" name="oldData" id="logOldData" placeholder="JSON hoặc mô tả..."></textarea>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Dữ liệu mới (new_data)</label>
-                            <textarea class="form-control" rows="3" name="newData" id="logNewData" placeholder="JSON hoặc mô tả..."></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-danger">Lưu</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- View Modal -->
+<!-- Modal chi tiết hoạt động (chỉ đọc) -->
 <div class="modal fade" id="viewModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Chi tiết hoạt động <span id="vId"></span></h5>
+                <h5 class="modal-title">Chi tiết hoạt động</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <p class="mb-3" id="vSummary" style="font-size: 15px;"></p>
                 <dl class="row mb-0">
                     <dt class="col-sm-3">Thời gian</dt><dd class="col-sm-9" id="vTime"></dd>
-                    <dt class="col-sm-3">Nhân viên</dt><dd class="col-sm-9" id="vEmp"></dd>
-                    <dt class="col-sm-3">Hành động</dt><dd class="col-sm-9" id="vAction"></dd>
-                    <dt class="col-sm-3">Bảng</dt><dd class="col-sm-9" id="vTable"></dd>
-                    <dt class="col-sm-3">Record ID</dt><dd class="col-sm-9" id="vRecord"></dd>
-                    <dt class="col-sm-3">Dữ liệu cũ</dt>
-                    <dd class="col-sm-9"><pre class="bg-light p-2 rounded small mb-0" id="vOld"></pre></dd>
-                    <dt class="col-sm-3">Dữ liệu mới</dt>
-                    <dd class="col-sm-9"><pre class="bg-light p-2 rounded small mb-0" id="vNew"></pre></dd>
+                    <dt class="col-sm-3">Nhân viên</dt><dd class="col-sm-9" id="vActor"></dd>
+                    <dt class="col-sm-3">Thao tác</dt><dd class="col-sm-9" id="vAction"></dd>
+                    <dt class="col-sm-3">Đối tượng</dt><dd class="col-sm-9" id="vEntity"></dd>
+                    <dt class="col-sm-3">Mã đối tượng</dt><dd class="col-sm-9" id="vCode"></dd>
+                    <dt class="col-sm-3">Dữ liệu trước</dt>
+                    <dd class="col-sm-9"><pre class="bg-light p-2 rounded small mb-0" id="vOld" style="max-height: 200px; overflow:auto;"></pre></dd>
+                    <dt class="col-sm-3">Dữ liệu sau</dt>
+                    <dd class="col-sm-9"><pre class="bg-light p-2 rounded small mb-0" id="vNew" style="max-height: 200px; overflow:auto;"></pre></dd>
                 </dl>
+                <div class="alert alert-secondary small mt-3 mb-0">
+                    Thông tin "Dữ liệu trước / sau" được lưu dưới dạng JSON kỹ thuật để phục vụ kiểm toán.
+                    Nếu cần dịch ra ngôn ngữ nghiệp vụ chi tiết, hãy liên hệ phòng IT.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Delete hidden form -->
-<form id="deleteForm" method="post" action="<%= ctx %>/activity-log" style="display:none;">
-    <input type="hidden" name="action" value="delete">
-    <input type="hidden" name="id" id="deleteId">
-</form>
-
 <script>
-function openLogModal(mode, id, empId, actionName, tableName, recordId, oldData, newData) {
-    document.getElementById('logAction').value = mode;
-    document.getElementById('logModalTitle').innerText = (mode === 'edit') ? 'Cập nhật hoạt động' : 'Thêm hoạt động';
-    document.getElementById('logId').value = id || '';
-    document.getElementById('logEmpId').value = empId || '';
-    document.getElementById('logActionName').value = actionName || '';
-    document.getElementById('logTableName').value = tableName || '';
-    document.getElementById('logRecordId').value = recordId || '';
-    document.getElementById('logOldData').value = oldData || '';
-    document.getElementById('logNewData').value = newData || '';
-    new bootstrap.Modal(document.getElementById('logModal')).show();
-}
-
-function viewLog(id, time, emp, actionName, tableName, recordId, oldData, newData) {
-    document.getElementById('vId').innerText = '#' + id;
+function viewLog(time, actor, action, entity, code, summary, oldData, newData) {
+    document.getElementById('vSummary').innerText = summary;
     document.getElementById('vTime').innerText = time;
-    document.getElementById('vEmp').innerText = emp;
-    document.getElementById('vAction').innerText = actionName;
-    document.getElementById('vTable').innerText = tableName;
-    document.getElementById('vRecord').innerText = recordId;
+    document.getElementById('vActor').innerText = actor;
+    document.getElementById('vAction').innerText = action;
+    document.getElementById('vEntity').innerText = entity;
+    document.getElementById('vCode').innerText = code || '—';
     document.getElementById('vOld').innerText = oldData || '(trống)';
     document.getElementById('vNew').innerText = newData || '(trống)';
     new bootstrap.Modal(document.getElementById('viewModal')).show();
-}
-
-function deleteLog(id) {
-    if (confirm('Bạn chắc chắn muốn xóa hoạt động #' + id + ' khỏi nhật ký?')) {
-        document.getElementById('deleteId').value = id;
-        document.getElementById('deleteForm').submit();
-    }
 }
 </script>
 

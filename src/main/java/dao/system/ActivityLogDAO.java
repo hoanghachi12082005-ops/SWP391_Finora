@@ -7,14 +7,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DAO cho Activity Log (b\u1ea3ng audit_log).
- * Cung c\u1ea5p CRUD + ph\u00e2n trang + l\u1ecdc + l\u1ea5y c\u00e1c b\u1ea3n ghi g\u1ea7n nh\u1ea5t cho dashboard.
+ * DAO cho Activity Log (bảng audit_log).
+ * READ-ONLY: chỉ truy vấn. Không có insert/update/delete vì audit log
+ * là immutable theo nguyên tắc bảo toàn dấu vết hệ thống.
+ * Việc ghi log do trigger DB / service nội bộ phụ trách, không qua DAO này.
  */
 public class ActivityLogDAO {
 
@@ -23,7 +24,7 @@ public class ActivityLogDAO {
           + "       a.old_data, a.new_data, a.created_at, e.fullName AS emp_name "
           + "FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id ";
 
-    /** L\u1ea5y danh s\u00e1ch m\u1edbi nh\u1ea5t, ph\u1ee5c v\u1ee5 card "Ho\u1ea1t \u0111\u1ed9ng g\u1ea7n \u0111\u00e2y" tr\u00ean dashboard. */
+    /** Lấy danh sách mới nhất, phục vụ card "Hoạt động gần đây" trên dashboard. */
     public List<ActivityLog> findRecent(int limit) throws SQLException {
         String sql = "SELECT TOP (?) a.audit_log_id, a.emp_id, a.action_name, a.table_name, a.record_id, "
                    + "a.old_data, a.new_data, a.created_at, e.fullName AS emp_name "
@@ -111,55 +112,7 @@ public class ActivityLogDAO {
         }
     }
 
-    public int insert(ActivityLog log) throws SQLException {
-        String sql = "INSERT INTO audit_log (emp_id, action_name, table_name, record_id, old_data, new_data, created_at) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            if (log.getEmpId() > 0) ps.setInt(1, log.getEmpId()); else ps.setNull(1, java.sql.Types.INTEGER);
-            ps.setString(2, log.getActionName());
-            ps.setString(3, log.getTableName());
-            if (log.getRecordId() != null) ps.setInt(4, log.getRecordId()); else ps.setNull(4, java.sql.Types.INTEGER);
-            ps.setString(5, log.getOldData());
-            ps.setString(6, log.getNewData());
-            ps.executeUpdate();
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) {
-                    int newId = keys.getInt(1);
-                    log.setId(newId);
-                    return newId;
-                }
-            }
-        }
-        return -1;
-    }
-
-    public boolean update(ActivityLog log) throws SQLException {
-        String sql = "UPDATE audit_log SET emp_id=?, action_name=?, table_name=?, record_id=?, old_data=?, new_data=? "
-                   + "WHERE audit_log_id=?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            if (log.getEmpId() > 0) ps.setInt(1, log.getEmpId()); else ps.setNull(1, java.sql.Types.INTEGER);
-            ps.setString(2, log.getActionName());
-            ps.setString(3, log.getTableName());
-            if (log.getRecordId() != null) ps.setInt(4, log.getRecordId()); else ps.setNull(4, java.sql.Types.INTEGER);
-            ps.setString(5, log.getOldData());
-            ps.setString(6, log.getNewData());
-            ps.setInt(7, log.getId());
-            return ps.executeUpdate() > 0;
-        }
-    }
-
-    public boolean delete(int id) throws SQLException {
-        String sql = "DELETE FROM audit_log WHERE audit_log_id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
-        }
-    }
-
-    /** L\u1ea5y danh s\u00e1ch t\u00ean b\u1ea3ng distinct \u0111\u1ec3 hi\u1ec3n th\u1ecb trong filter. */
+    /** Lấy danh sách tên bảng distinct để hiển thị trong filter. */
     public List<String> findDistinctTables() throws SQLException {
         List<String> list = new ArrayList<>();
         String sql = "SELECT DISTINCT table_name FROM audit_log WHERE table_name IS NOT NULL ORDER BY table_name";

@@ -151,7 +151,9 @@
                     </div>
                 </div>
 
-                <!-- Column 2: Recent Activity -->
+                <!-- Column 2: Recent Activity (chỉ hiển thị cho Owner) -->
+                <c:set var="ownerRole" value="${sessionScope.currentUser != null ? sessionScope.currentUser.roleName : ''}" />
+                <c:if test="${ownerRole == 'Owner'}">
                 <div class="dashboard-card">
                     <div class="dashboard-card-title">
                         <h5>Hoạt động gần đây</h5>
@@ -170,9 +172,8 @@
                                         </div>
                                         <div class="activity-details">
                                             <p>
-                                                <strong>${act.actionName != null ? act.actionName : 'Hoạt động'}</strong>
-                                                <c:if test="${not empty act.tableName}"> trên <em>${act.tableName}</em></c:if>
-                                                <c:if test="${not empty act.recordId}"> (#${act.recordId})</c:if>
+                                                ${act.description}
+                                                <c:if test="${not empty act.entityCode}"> &middot; <strong>${act.entityCode}</strong></c:if>
                                             </p>
                                             <small>
                                                 <c:if test="${not empty act.createdAtFormatted}">${act.createdAtFormatted} - </c:if>
@@ -185,6 +186,7 @@
                         </c:choose>
                     </div>
                 </div>
+                </c:if>
             </div>
 
             <!-- Branch List Table -->
