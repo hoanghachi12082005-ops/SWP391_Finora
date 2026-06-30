@@ -115,11 +115,11 @@
 
                             <div class="profile-badges">
                                 <span class="role-badge">
-                                    ${empty profile.roleNames ? profile.roleName : profile.roleNames}
+                                    ${profile.roleName}
                                 </span>
 
                                 <c:choose>
-                                    <c:when test="${profile.status == 'active'}">
+                                    <c:when test="${profile.status == 'ACTIVE'}">
                                         <span class="status-badge active">Active</span>
                                     </c:when>
                                     <c:otherwise>
@@ -155,7 +155,7 @@
 
                                 <div class="detail-item">
                                     <span>Role</span>
-                                    <strong>${empty profile.roleNames ? profile.roleName : profile.roleNames}</strong>
+                                    <strong>${profile.roleName}</strong>
                                 </div>
 
                                 <div class="detail-item">
@@ -177,39 +177,82 @@
                             </div>
                         </div>
 
-                        <div class="profile-card">
-                            <div class="card-header">
-                                <h3>Sales Performance</h3>
+                        <c:if test="${showSalesSection}">
+                            <div class="profile-card">
+                                <div class="card-header">
+                                    <h3>Sales Performance</h3>
+                                </div>
+
+                                <div class="sales-grid">
+                                    <div class="sales-card">
+                                        <span class="material-symbols-outlined">receipt_long</span>
+                                        <p>Total Orders</p>
+                                        <h4>${empty salesSummary ? 0 : salesSummary.totalOrders}</h4>
+                                    </div>
+
+                                    <div class="sales-card">
+                                        <span class="material-symbols-outlined">payments</span>
+                                        <p>Total Revenue</p>
+                                        <h4>
+                                            <fmt:formatNumber value="${empty salesSummary ? 0 : salesSummary.totalRevenue}"
+                                                              type="number"
+                                                              groupingUsed="true"/> ₫
+                                        </h4>
+                                    </div>
+
+                                    <div class="sales-card">
+                                        <span class="material-symbols-outlined">trending_up</span>
+                                        <p>Average Order</p>
+                                        <h4>
+                                            <fmt:formatNumber value="${empty salesSummary ? 0 : salesSummary.averageOrderValue}"
+                                                              type="number"
+                                                              groupingUsed="true"/> ₫
+                                        </h4>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="sales-grid">
-                                <div class="sales-card">
-                                    <span class="material-symbols-outlined">receipt_long</span>
-                                    <p>Total Orders</p>
-                                    <h4>${empty salesSummary ? 0 : salesSummary.totalOrders}</h4>
+                            <div class="profile-card">
+                                <div class="card-header">
+                                    <h3>Order History</h3>
+                                    <p>Your recent orders</p>
                                 </div>
 
-                                <div class="sales-card">
-                                    <span class="material-symbols-outlined">payments</span>
-                                    <p>Total Revenue</p>
-                                    <h4>
-                                        <fmt:formatNumber value="${empty salesSummary ? 0 : salesSummary.totalRevenue}"
-                                                          type="number"
-                                                          groupingUsed="true"/> ₫
-                                    </h4>
-                                </div>
-
-                                <div class="sales-card">
-                                    <span class="material-symbols-outlined">trending_up</span>
-                                    <p>Average Order</p>
-                                    <h4>
-                                        <fmt:formatNumber value="${empty salesSummary ? 0 : salesSummary.averageOrderValue}"
-                                                          type="number"
-                                                          groupingUsed="true"/> ₫
-                                    </h4>
-                                </div>
+                                <c:choose>
+                                    <c:when test="${empty orderHistory}">
+                                        <p style="color:var(--secondary);font-size:13px;">No orders found.</p>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="profile-order-table-wrap">
+                                            <table class="profile-order-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Code</th>
+                                                        <th>Customer</th>
+                                                        <th>Total</th>
+                                                        <th>Payment</th>
+                                                        <th>Status</th>
+                                                        <th>Date</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <c:forEach var="ord" items="${orderHistory}">
+                                                        <tr>
+                                                            <td>${ord.orderCode}</td>
+                                                            <td>${empty ord.customerName ? '—' : ord.customerName}</td>
+                                                            <td class="amount"><fmt:formatNumber value="${ord.totalAmount}" type="number" groupingUsed="true"/> ₫</td>
+                                                            <td class="payment">${ord.paymentMethod}</td>
+                                                            <td><span class="status-badge ${ord.status == 'COMPLETED' ? 'active' : 'locked'}">${ord.status}</span></td>
+                                                            <td class="date"><fmt:formatDate value="${ord.createdAt}" pattern="dd/MM/yy HH:mm"/></td>
+                                                        </tr>
+                                                    </c:forEach>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
-                        </div>
+                        </c:if>
 
                     </section>
 

@@ -6,6 +6,7 @@ package controller.user;
  */
 
 import java.io.IOException;
+import dao.sales.OrderDAO;
 import dao.user.ProfileDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -162,6 +163,12 @@ public class ManagerEmployeeServlet extends HttpServlet {
 
         request.setAttribute("profile", profile);
         request.setAttribute("salesSummary", profileDao.getEmployeeSalesSummaryInBranch(employeeID, branchID));
+
+        boolean isSalesStaff = profile.getRoleID() == 4 || (profile.getRoleName() != null && profile.getRoleName().toLowerCase().contains("sales"));
+        if (isSalesStaff) {
+            request.setAttribute("orderHistory", new OrderDAO().findByEmployeeId(employeeID));
+        }
+        request.setAttribute("showSalesSection", isSalesStaff);
 
         request.setAttribute("readOnlyProfile", true);
         request.setAttribute("profileTitle", "Employee Profile");

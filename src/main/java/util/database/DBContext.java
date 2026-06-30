@@ -14,7 +14,7 @@ public class DBContext {
 
     private static final String DEFAULT_URL
             = "jdbc:sqlserver://localhost:1433;"
-            + "databaseName=DBFinoraV2;" 
+            + "databaseName=DBFinoraV3;"
             + "encrypt=true;"
             + "trustServerCertificate=true;"
             + "characterEncoding=UTF-8";

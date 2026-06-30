@@ -254,7 +254,7 @@
 
                                             <td>
                                                 <span class="role-badge">
-                                                    ${empty user.roleNames ? user.roleName : user.roleNames}
+                                                    ${user.roleName}
                                                 </span>
                                             </td>
 
@@ -339,11 +339,6 @@
                             </c:if>
                         </div>
 
-                        <%-- 
-                            baseUrl trong Servlet đã có contextPath, ví dụ: /finoraretail/owner/emp.
-                            c:url lại tự thêm contextPath nữa.
-                            Vì vậy phải bỏ contextPath khỏi baseUrl trước khi dùng c:url.
-                        --%>
                         <c:set var="paginationBaseUrl"
                                value="${fn:replace(baseUrl, pageContext.request.contextPath, '')}"/>
 
@@ -593,7 +588,7 @@
                     <p><strong>Name:</strong> ${detailUser.fullName}</p>
                     <p><strong>Email:</strong> ${detailUser.email}</p>
                     <p><strong>Phone:</strong> ${detailUser.phone}</p>
-                    <p><strong>Role:</strong> ${empty detailUser.roleNames ? detailUser.roleName : detailUser.roleNames}</p>
+                    <p><strong>Role:</strong> ${detailUser.roleName}</p>
 
                     <c:if test="${showBranch}">
                         <p><strong>Branch:</strong> ${empty detailUser.branchName ? '—' : detailUser.branchName}</p>

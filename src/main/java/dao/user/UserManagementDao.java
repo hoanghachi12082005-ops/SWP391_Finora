@@ -27,20 +27,19 @@ public class UserManagementDao extends DBContext {
 
     private static final String USER_SELECT =
             "SELECT DISTINCT " +
-            "    e.EmployeeID, " +
-            "    e.RoleID, " +
-            "    e.BranchID, " +
-            "    e.FullName, " +
-            "    e.Email, " +
-            "    e.Phone, " +
-            "    e.Status, " +
-            "    e.CreatedAt, " +
-            "    r.Name AS RoleName, " +
-            "    b.Name AS BranchName, " +
-            "    r.Name AS RoleNames " +
+            "    e.emp_id, " +
+            "    e.role_id, " +
+            "    e.branch_id, " +
+            "    e.fullName, " +
+            "    e.email, " +
+            "    e.phone, " +
+            "    e.status, " +
+            "    e.created_at, " +
+            "    r.role_name AS RoleName, " +
+            "    b.branch_name AS BranchName " +
             "FROM Employee e " +
-            "LEFT JOIN Role r ON e.RoleID = r.RoleID " +
-            "LEFT JOIN Branch b ON e.BranchID = b.BranchID ";
+            "LEFT JOIN [Role] r ON e.role_id = r.role_id " +
+            "LEFT JOIN Branch b ON e.branch_id = b.branch_id ";
 
     // =====================================================
     // ADMIN SIDE
@@ -277,17 +276,17 @@ public class UserManagementDao extends DBContext {
 
         String sql =
                 USER_SELECT +
-                "WHERE (r.Name IS NULL OR r.Name NOT IN (\'Admin\', \'Owner\')) " +
+                "WHERE (r.role_name IS NULL OR r.role_name NOT IN (\'Admin\', \'Owner\')) " +
                 "AND ( " +
                 "    ? IS NULL " +
-                "    OR e.FullName LIKE ? " +
-                "    OR e.Email LIKE ? " +
-                "    OR e.Phone LIKE ? " +
+                "    OR e.fullName LIKE ? " +
+                "    OR e.email LIKE ? " +
+                "    OR e.phone LIKE ? " +
                 ") " +
-                "AND (? IS NULL OR e.BranchID = ?) " +
-                "AND (? IS NULL OR e.RoleID = ?) " +
-                "AND (? IS NULL OR e.Status = ?) " +
-                "ORDER BY e.EmployeeID DESC " +
+                "AND (? IS NULL OR e.branch_id = ?) " +
+                "AND (? IS NULL OR e.role_id = ?) " +
+                "AND (? IS NULL OR e.status = ?) " +
+                "ORDER BY e.emp_id DESC " +
                 "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         try (Connection connection = DBContext.getConnection(); 
@@ -332,19 +331,19 @@ public class UserManagementDao extends DBContext {
                           String roleFilter,
                           String statusFilter) {
         String sql =
-                "SELECT COUNT(DISTINCT e.EmployeeID) AS Total " +
+                "SELECT COUNT(DISTINCT e.emp_id) AS Total " +
                 "FROM Employee e " +
-                "LEFT JOIN Role r ON e.RoleID = r.RoleID " +
-                "WHERE (r.Name IS NULL OR r.Name NOT IN (\'Admin\', \'Owner\')) " +
+                "LEFT JOIN [Role] r ON e.role_id = r.role_id " +
+                "WHERE (r.role_name IS NULL OR r.role_name NOT IN (\'Admin\', \'Owner\')) " +
                 "AND ( " +
                 "    ? IS NULL " +
-                "    OR e.FullName LIKE ? " +
-                "    OR e.Email LIKE ? " +
-                "    OR e.Phone LIKE ? " +
+                "    OR e.fullName LIKE ? " +
+                "    OR e.email LIKE ? " +
+                "    OR e.phone LIKE ? " +
                 ") " +
-                "AND (? IS NULL OR e.BranchID = ?) " +
-                "AND (? IS NULL OR e.RoleID = ?) " +
-                "AND (? IS NULL OR e.Status = ?)";
+                "AND (? IS NULL OR e.branch_id = ?) " +
+                "AND (? IS NULL OR e.role_id = ?) " +
+                "AND (? IS NULL OR e.status = ?)";
 
         try (Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql);) {
@@ -388,17 +387,17 @@ public class UserManagementDao extends DBContext {
 
         String sql =
                 USER_SELECT +
-                "WHERE e.BranchID = ? " +
-                "AND (r.Name IS NULL OR r.Name NOT IN (\'Admin\', \'Owner\')) " +
+                "WHERE e.branch_id = ? " +
+                "AND (r.role_name IS NULL OR r.role_name NOT IN (\'Admin\', \'Owner\')) " +
                 "AND ( " +
                 "    ? IS NULL " +
-                "    OR e.FullName LIKE ? " +
-                "    OR e.Email LIKE ? " +
-                "    OR e.Phone LIKE ? " +
+                "    OR e.fullName LIKE ? " +
+                "    OR e.email LIKE ? " +
+                "    OR e.phone LIKE ? " +
                 ") " +
-                "AND (? IS NULL OR e.RoleID = ?) " +
-                "AND (? IS NULL OR e.Status = ?) " +
-                "ORDER BY e.EmployeeID DESC " +
+                "AND (? IS NULL OR e.role_id = ?) " +
+                "AND (? IS NULL OR e.status = ?) " +
+                "ORDER BY e.emp_id DESC " +
                 "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         try (Connection connection = DBContext.getConnection(); 
@@ -441,19 +440,19 @@ public class UserManagementDao extends DBContext {
                                   String roleFilter,
                                   String statusFilter) {
         String sql =
-                "SELECT COUNT(DISTINCT e.EmployeeID) AS Total " +
+                "SELECT COUNT(DISTINCT e.emp_id) AS Total " +
                 "FROM Employee e " +
-                "LEFT JOIN Role r ON e.RoleID = r.RoleID " +
-                "WHERE e.BranchID = ? " +
-                "AND (r.Name IS NULL OR r.Name NOT IN (\'Admin\', \'Owner\')) " +
+                "LEFT JOIN [Role] r ON e.role_id = r.role_id " +
+                "WHERE e.branch_id = ? " +
+                "AND (r.role_name IS NULL OR r.role_name NOT IN (\'Admin\', \'Owner\')) " +
                 "AND ( " +
                 "    ? IS NULL " +
-                "    OR e.FullName LIKE ? " +
-                "    OR e.Email LIKE ? " +
-                "    OR e.Phone LIKE ? " +
+                "    OR e.fullName LIKE ? " +
+                "    OR e.email LIKE ? " +
+                "    OR e.phone LIKE ? " +
                 ") " +
-                "AND (? IS NULL OR e.RoleID = ?) " +
-                "AND (? IS NULL OR e.Status = ?)";
+                "AND (? IS NULL OR e.role_id = ?) " +
+                "AND (? IS NULL OR e.status = ?)";
 
         try (Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql);) {
@@ -488,8 +487,8 @@ public class UserManagementDao extends DBContext {
     public Employee getEmployeeById(int employeeId) {
         String sql =
                 USER_SELECT +
-                "WHERE e.EmployeeID = ? " +
-                "AND (r.Name IS NULL OR r.Name NOT IN (\'Admin\', \'Owner\'))";
+                "WHERE e.emp_id = ? " +
+                "AND (r.role_name IS NULL OR r.role_name NOT IN (\'Admin\', \'Owner\'))";
 
         try (Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql);) {
@@ -514,7 +513,7 @@ public class UserManagementDao extends DBContext {
 
         String insertEmployeeSql =
                 "INSERT INTO Employee " +
-                "(RoleID, BranchID, FullName, Email, Phone, PasswordHash, Status) " +
+                "(role_id, branch_id, fullName, email, phone, passwordHash, status) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         
@@ -571,20 +570,14 @@ public class UserManagementDao extends DBContext {
 
         String updateEmployeeSql =
                 "UPDATE Employee " +
-                "SET RoleID = ?, " +
-                "    BranchID = ?, " +
-                "    FullName = ?, " +
-                "    Email = ?, " +
-                "    Phone = ?, " +
-                "    Status = ? " +
-                "WHERE EmployeeID = ? " +
-                "AND NOT EXISTS (SELECT 1 FROM Role rr WHERE rr.RoleID = Employee.RoleID AND rr.Name IN ('Admin', 'Owner'))";
-
-        String deleteRoleSql =
-                "DELETE FROM EmployeeRole " +
-                "WHERE EmployeeID = ?";
-
-        
+                "SET role_id = ?, " +
+                "    branch_id = ?, " +
+                "    fullName = ?, " +
+                "    email = ?, " +
+                "    phone = ?, " +
+                "    status = ? " +
+                "WHERE emp_id = ? " +
+                "AND NOT EXISTS (SELECT 1 FROM [Role] rr WHERE rr.role_id = Employee.role_id AND rr.role_name IN ('Admin', 'Owner'))";
 
         try {Connection connection = DBContext.getConnection(); 
             connection.setAutoCommit(false);
@@ -606,13 +599,6 @@ public class UserManagementDao extends DBContext {
                 }
             }
 
-            try (PreparedStatement deletePs = connection.prepareStatement(deleteRoleSql)) {
-                deletePs.setInt(1, employee.getEmployeeID());
-                deletePs.executeUpdate();
-            }
-
-            
-
             connection.commit();
             return true;
         } catch (SQLException e) {
@@ -627,9 +613,9 @@ public class UserManagementDao extends DBContext {
     public boolean updateEmployeeStatus(int employeeId, String status) {
         String sql =
                 "UPDATE Employee " +
-                "SET Status = ? " +
-                "WHERE EmployeeID = ? " +
-                "AND NOT EXISTS (SELECT 1 FROM Role rr WHERE rr.RoleID = Employee.RoleID AND rr.Name IN ('Admin', 'Owner'))";
+                "SET status = ? " +
+                "WHERE emp_id = ? " +
+                "AND NOT EXISTS (SELECT 1 FROM [Role] rr WHERE rr.role_id = Employee.role_id AND rr.role_name IN ('Admin', 'Owner'))";
 
         try (Connection connection = DBContext.getConnection(); 
              PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -647,9 +633,9 @@ public class UserManagementDao extends DBContext {
     public boolean resetEmployeePassword(int employeeId, String hashedPassword) {
         String sql =
                 "UPDATE Employee " +
-                "SET PasswordHash = ? " +
-                "WHERE EmployeeID = ? " +
-                "AND NOT EXISTS (SELECT 1 FROM Role rr WHERE rr.RoleID = Employee.RoleID AND rr.Name IN ('Admin', 'Owner'))";
+                "SET passwordHash = ? " +
+                "WHERE emp_id = ? " +
+                "AND NOT EXISTS (SELECT 1 FROM [Role] rr WHERE rr.role_id = Employee.role_id AND rr.role_name IN ('Admin', 'Owner'))";
 
         try (Connection connection = DBContext.getConnection(); 
              PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -677,17 +663,17 @@ public class UserManagementDao extends DBContext {
 
         String sql =
                 USER_SELECT +
-                "WHERE e.BranchID = ? " +
-                "AND (r.Name IS NULL OR r.Name NOT IN (\'Admin\', \'Owner\')) " +
+                "WHERE e.branch_id = ? " +
+                "AND (r.role_name IS NULL OR r.role_name NOT IN (\'Admin\', \'Owner\')) " +
                 "AND ( " +
                 "    ? IS NULL " +
-                "    OR e.FullName LIKE ? " +
-                "    OR e.Email LIKE ? " +
-                "    OR e.Phone LIKE ? " +
+                "    OR e.fullName LIKE ? " +
+                "    OR e.email LIKE ? " +
+                "    OR e.phone LIKE ? " +
                 ") " +
-                "AND (? IS NULL OR e.RoleID = ?) " +
-                "AND (? IS NULL OR e.Status = ?) " +
-                "ORDER BY e.EmployeeID DESC";
+                "AND (? IS NULL OR e.role_id = ?) " +
+                "AND (? IS NULL OR e.status = ?) " +
+                "ORDER BY e.emp_id DESC";
 
         try (Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql);) {
@@ -723,9 +709,9 @@ public class UserManagementDao extends DBContext {
     public Employee getEmployeeByIdInBranch(int employeeId, int managerBranchId) {
         String sql =
                 USER_SELECT +
-                "WHERE e.EmployeeID = ? " +
-                "AND e.BranchID = ? " +
-                "AND NOT EXISTS (SELECT 1 FROM Role rr WHERE rr.RoleID = Employee.RoleID AND rr.Name IN ('Admin', 'Owner'))";
+                "WHERE e.emp_id = ? " +
+                "AND e.branch_id = ? " +
+                "AND NOT EXISTS (SELECT 1 FROM [Role] rr WHERE rr.role_id = e.role_id AND rr.role_name IN ('Admin', 'Owner'))";
 
         try (Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -764,20 +750,15 @@ public class UserManagementDao extends DBContext {
     private void loadTotalInfo(EmployeeOverview overview, Integer branchId) {
         String sql =
                 "SELECT " +
-                "    COUNT(DISTINCT e.EmployeeID) AS TotalEmployees, " +
-                "    COUNT(DISTINCT CASE WHEN e.Status = 'active' THEN e.EmployeeID END) AS ActiveEmployees, " +
-                "    COUNT(o.OrderID) AS TotalOrders, " +
-                "    COALESCE(SUM(o.TotalAmount), 0) AS TotalRevenue " +
+                "    COUNT(DISTINCT e.emp_id) AS TotalEmployees, " +
+                "    COUNT(DISTINCT CASE WHEN e.status = 'active' THEN e.emp_id END) AS ActiveEmployees, " +
+                "    COUNT(o.order_id) AS TotalOrders, " +
+                "    COALESCE(SUM(o.total_amount), 0) AS TotalRevenue " +
                 "FROM Employee e " +
-                "LEFT JOIN [Order] o ON e.EmployeeID = o.EmployeeID " +
-                "WHERE NOT EXISTS ( " +
-                "    SELECT 1 " +
-                "    FROM EmployeeRole er " +
-                "    JOIN Role r ON er.RoleID = r.RoleID " +
-                "    WHERE er.EmployeeID = e.EmployeeID " +
-                "      AND r.Name IN ('Admin', 'Owner') " +
-                ") " +
-                "AND (? IS NULL OR e.BranchID = ?)";
+                "LEFT JOIN [Order] o ON e.emp_id = o.emp_id " +
+                "LEFT JOIN [Role] r ON e.role_id = r.role_id " +
+                "WHERE (r.role_name IS NULL OR r.role_name NOT IN ('Admin', 'Owner')) " +
+                "AND (? IS NULL OR e.branch_id = ?)";
 
         try (Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -807,19 +788,14 @@ public class UserManagementDao extends DBContext {
     private void loadTopEmployee(EmployeeOverview overview, Integer branchId) {
         String sql =
                 "SELECT TOP 1 " +
-                "    e.FullName, " +
-                "    COALESCE(SUM(o.TotalAmount), 0) AS EmployeeRevenue " +
+                "    e.fullName, " +
+                "    COALESCE(SUM(o.total_amount), 0) AS EmployeeRevenue " +
                 "FROM Employee e " +
-                "LEFT JOIN [Order] o ON e.EmployeeID = o.EmployeeID " +
-                "WHERE NOT EXISTS ( " +
-                "    SELECT 1 " +
-                "    FROM EmployeeRole er " +
-                "    JOIN Role r ON er.RoleID = r.RoleID " +
-                "    WHERE er.EmployeeID = e.EmployeeID " +
-                "      AND r.Name IN ('Admin', 'Owner') " +
-                ") " +
-                "AND (? IS NULL OR e.BranchID = ?) " +
-                "GROUP BY e.EmployeeID, e.FullName " +
+                "LEFT JOIN [Order] o ON e.emp_id = o.emp_id " +
+                "LEFT JOIN [Role] r ON e.role_id = r.role_id " +
+                "WHERE (r.role_name IS NULL OR r.role_name NOT IN ('Admin', 'Owner')) " +
+                "AND (? IS NULL OR e.branch_id = ?) " +
+                "GROUP BY e.emp_id, e.fullName " +
                 "ORDER BY EmployeeRevenue DESC";
 
         try (Connection connection = DBContext.getConnection(); 
@@ -834,7 +810,7 @@ public class UserManagementDao extends DBContext {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    overview.setTopEmployeeName(rs.getString("FullName"));
+                    overview.setTopEmployeeName(rs.getString("fullName"));
 
                     BigDecimal revenue = rs.getBigDecimal("EmployeeRevenue");
                     overview.setTopEmployeeRevenue(revenue == null ? BigDecimal.ZERO : revenue);
@@ -853,10 +829,10 @@ public class UserManagementDao extends DBContext {
         List<Role> list = new ArrayList<Role>();
 
         String sql =
-                "SELECT RoleID, Name, Description " +
-                "FROM Role " +
-                "WHERE Name IN ('StoreManager', 'SalesStaff', 'WarehouseStaff') " +
-                "ORDER BY RoleID";
+                "SELECT role_id, role_name, discription " +
+                "FROM [Role] " +
+                "WHERE role_name IN ('StoreManager', 'SalesStaff', 'WarehouseStaff') " +
+                "ORDER BY role_id";
 
         try (Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql);
@@ -865,9 +841,9 @@ public class UserManagementDao extends DBContext {
             while (rs.next()) {
                 Role role = new Role();
 
-                role.setRoleID(rs.getInt("RoleID"));
-                role.setName(rs.getString("Name"));
-                role.setDescription(rs.getString("Description"));
+                role.setRoleID(rs.getInt("role_id"));
+                role.setName(rs.getString("role_name"));
+                role.setDescription(rs.getString("discription"));
 
                 list.add(role);
             }
@@ -882,9 +858,9 @@ public class UserManagementDao extends DBContext {
         List<Branch> list = new ArrayList<Branch>();
 
         String sql =
-                "SELECT BranchID, Name, Address, Phone, Status " +
+                "SELECT branch_id, branch_name, address, phone, status " +
                 "FROM Branch " +
-                "ORDER BY BranchID";
+                "ORDER BY branch_id";
 
         try (Connection connection = DBContext.getConnection(); 
              PreparedStatement ps = connection.prepareStatement(sql);
@@ -893,11 +869,11 @@ public class UserManagementDao extends DBContext {
             while (rs.next()) {
                 Branch branch = new Branch();
 
-                branch.setBranchID(rs.getInt("BranchID"));
-                branch.setName(rs.getString("Name"));
-                branch.setAddress(rs.getString("Address"));
-                branch.setPhone(rs.getString("Phone"));
-                branch.setStatus(rs.getString("Status"));
+                branch.setBranchID(rs.getInt("branch_id"));
+                branch.setName(rs.getString("branch_name"));
+                branch.setAddress(rs.getString("address"));
+                branch.setPhone(rs.getString("phone"));
+                branch.setStatus(rs.getString("status"));
 
                 list.add(branch);
             }
@@ -928,10 +904,10 @@ public class UserManagementDao extends DBContext {
                 "SELECT COUNT(*) AS Total " +
                 "FROM Employee " +
                 "WHERE ( " +
-                "    (? IS NOT NULL AND Email = ?) " +
-                "    OR (? IS NOT NULL AND Phone = ?) " +
+                "    (? IS NOT NULL AND email = ?) " +
+                "    OR (? IS NOT NULL AND phone = ?) " +
                 ") " +
-                "AND (? IS NULL OR EmployeeID <> ?)";
+                "AND (? IS NULL OR emp_id <> ?)";
         
         try (Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -965,9 +941,9 @@ public class UserManagementDao extends DBContext {
     // =====================================================
     
     public Employee getEmployeeInfoById(int id) {
-        String sql = "SELECT EmployeeID, Email, FullName " +
+        String sql = "SELECT emp_id, email, fullName " +
                      "FROM Employee " +
-                     "WHERE EmployeeID = ?";
+                     "WHERE emp_id = ?";
 
         try (Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -977,9 +953,9 @@ public class UserManagementDao extends DBContext {
                 if (rs.next()) {
                     Employee employee = new Employee();
 
-                    employee.setEmployeeID(rs.getInt("EmployeeID"));
-                    employee.setEmail(rs.getString("Email"));
-                    employee.setFullName(rs.getString("FullName"));
+                    employee.setEmployeeID(rs.getInt("emp_id"));
+                    employee.setEmail(rs.getString("email"));
+                    employee.setFullName(rs.getString("fullName"));
 
                     return employee;
                 }
@@ -993,9 +969,9 @@ public class UserManagementDao extends DBContext {
     }
     private int getRoleIdByName(String roleName) {
         String sql =
-                "SELECT RoleID " +
-                "FROM Role " +
-                "WHERE Name = ?";
+                "SELECT role_id " +
+                "FROM [Role] " +
+                "WHERE role_name = ?";
 
         try (Connection connection = DBContext.getConnection(); 
              PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -1003,7 +979,7 @@ public class UserManagementDao extends DBContext {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getInt("RoleID");
+                    return rs.getInt("role_id");
                 }
             }
         } catch (SQLException e) {
@@ -1016,24 +992,23 @@ public class UserManagementDao extends DBContext {
     private Employee mapEmployee(ResultSet rs) throws SQLException {
         Employee employee = new Employee();
 
-        employee.setEmployeeID(rs.getInt("EmployeeID"));
-        employee.setRoleID(rs.getInt("RoleID"));
+        employee.setEmployeeID(rs.getInt("emp_id"));
+        employee.setRoleID(rs.getInt("role_id"));
 
-        int branchId = rs.getInt("BranchID");
+        int branchId = rs.getInt("branch_id");
         if (rs.wasNull()) {
             employee.setBranchID((Integer) null);
         } else {
             employee.setBranchID(branchId);
         }
 
-        employee.setFullName(rs.getString("FullName"));
-        employee.setEmail(rs.getString("Email"));
-        employee.setPhone(rs.getString("Phone"));
-        employee.setStatus(rs.getString("Status"));
-        employee.setCreatedAt(rs.getTimestamp("CreatedAt"));
+        employee.setFullName(rs.getString("fullName"));
+        employee.setEmail(rs.getString("email"));
+        employee.setPhone(rs.getString("phone"));
+        employee.setStatus(rs.getString("status"));
+        employee.setCreatedAt(rs.getTimestamp("created_at"));
 
         employee.setRoleName(rs.getString("RoleName"));
-        employee.setRoleNames(rs.getString("RoleNames"));
         employee.setBranchName(rs.getString("BranchName"));
 
         return employee;

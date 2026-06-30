@@ -15,12 +15,14 @@ import jakarta.servlet.annotation.WebServlet;
  *
  * @author PCQN
  */
+import dao.sales.OrderDAO;
 import dao.user.UserManagementDao;
 import dao.user.ProfileDao;
 import jakarta.servlet.http.HttpSession;
 import model.Employee;
 import util.email.EmailUtil;
 import util.security.PasswordUtil;
+import service.system.ActivityLogService;
 
 /**
  *
@@ -31,11 +33,13 @@ public class AdminUserServlet extends HttpServlet {
 
     private UserManagementDao adminUserDao;
     private ProfileDao profileDao;
+    private ActivityLogService activityLogService;
 
     @Override
     public void init() throws ServletException {
         adminUserDao = new UserManagementDao();
         profileDao = new ProfileDao();
+        activityLogService = new ActivityLogService();
     }   
 
     @Override
@@ -107,11 +111,11 @@ public class AdminUserServlet extends HttpServlet {
                 break;
 
             case "lock":
-                updateStatus(request, "locked");
+                updateStatus(request, "INACTIVE");
                 break;
 
             case "unlock":
-                updateStatus(request, "active");
+                updateStatus(request, "ACTIVE");
                 break;
 
             case "resetPassword":
@@ -271,6 +275,15 @@ public class AdminUserServlet extends HttpServlet {
             success = adminUserDao.addEmployee(employee, hashedPassword);
         }
 
+        if (success) {
+            Employee currentUser = getCurrentUser(request);
+            if (isUpdate) {
+                activityLogService.log(currentUser.getEmployeeID(), "UPDATE", "Employee", employeeId, null, email);
+            } else {
+                activityLogService.log(currentUser.getEmployeeID(), "CREATE", "Employee", null, null, email);
+            }
+        }
+
         setFlash(
                 request,
                 success ? "successMessage" : "errorMessage",
@@ -300,6 +313,12 @@ public class AdminUserServlet extends HttpServlet {
         request.setAttribute("profile", profile);
         request.setAttribute("salesSummary", profileDao.getEmployeeSalesSummary(employeeId));
 
+        boolean isSalesStaff = profile.getRoleID() == 4 || (profile.getRoleName() != null && profile.getRoleName().toLowerCase().contains("sales"));
+        if (isSalesStaff) {
+            request.setAttribute("orderHistory", new OrderDAO().findByEmployeeId(employeeId));
+        }
+        request.setAttribute("showSalesSection", isSalesStaff);
+
         request.setAttribute("readOnlyProfile", true);
         request.setAttribute("profileTitle", "Employee Profile");
         request.setAttribute("profileSubtitle", "Owner views employee information and sales performance");
@@ -319,6 +338,11 @@ public class AdminUserServlet extends HttpServlet {
         }
 
         boolean success = adminUserDao.updateEmployeeStatus(employeeId, status);
+
+        if (success) {
+            Employee currentUser = getCurrentUser(request);
+            activityLogService.log(currentUser.getEmployeeID(), status.equals("ACTIVE") ? "UNLOCK" : "LOCK", "Employee", employeeId, null, null);
+        }
 
         setFlash(
                 request,
@@ -364,6 +388,9 @@ public class AdminUserServlet extends HttpServlet {
         }
 
         setFlash(request, "successMessage", "Employee password reset successfully.");
+
+        Employee currentUser = getCurrentUser(request);
+        activityLogService.log(currentUser.getEmployeeID(), "RESET_PASSWORD", "Employee", employeeId, null, employee.getEmail());
     }
 
     private boolean isAdmin(HttpServletRequest request, HttpServletResponse response)
@@ -396,6 +423,11 @@ public class AdminUserServlet extends HttpServlet {
         }
 
 
+
+    private Employee getCurrentUser(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        return session == null ? null : (Employee) session.getAttribute("currentUser");
+    }
 
     private void setFlash(HttpServletRequest request, String key, String message) {
         request.getSession().setAttribute(key, message);

@@ -1,12 +1,11 @@
-//package       service.system;
-//
-//import       service.common.GenericService;
-//
-//import       dao.system.ActivityLogDAO;
-//import       model.ActivityLog;
-//
-//public class ActivityLogService extends GenericService<ActivityLog> {
-//    public ActivityLogService() {
-//        super(new ActivityLogDAO());
-//    }
-//}
+package service.system;
+
+import dao.system.ActivityLogDAO;
+
+public class ActivityLogService {
+    private final ActivityLogDAO dao = new ActivityLogDAO();
+
+    public void log(Integer empId, String action, String table, Integer recordId, String oldData, String newData) {
+        dao.log(empId, action, table, recordId, oldData, newData);
+    }
+}

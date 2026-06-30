@@ -8,21 +8,21 @@ package controller.user;
  *
  * @author PCQN
  */
-import dao.user.ProfileDao;
-import model.Employee;
-import util.security.PasswordUtil;
+import java.io.File;
+import java.io.IOException;
 
+import dao.sales.OrderDAO;
+import dao.user.ProfileDao;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
-import java.io.IOException;
-import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.Part;
-import java.io.File;
-import jakarta.servlet.annotation.WebServlet;
+import model.Employee;
+import util.security.PasswordUtil;
 
 @WebServlet(name = "ProfileServlet", urlPatterns = {"/profile"})
 @MultipartConfig(
@@ -34,10 +34,12 @@ import jakarta.servlet.annotation.WebServlet;
 public class ProfileServlet extends HttpServlet {
 
     private ProfileDao profileDao;
+    private OrderDAO orderDao;
 
     @Override
     public void init() throws ServletException {
         profileDao = new ProfileDao();
+        orderDao = new OrderDAO();
     }
 
     @Override
@@ -50,7 +52,6 @@ public class ProfileServlet extends HttpServlet {
 
         loadProfile(request);
 
-        // FIX: Đường dẫn đúng: /views/profile/ (có chữ 's', không phải /view/)
         request.getRequestDispatcher("/views/profile/profile.jsp")
                 .forward(request, response);
     }
@@ -83,6 +84,11 @@ public class ProfileServlet extends HttpServlet {
         
         request.setAttribute("profile", profile);
         request.setAttribute("salesSummary", profileDao.getEmployeeSalesSummary(employeeID));
+        request.setAttribute("showSalesSection", isSalesStaff(profile));
+
+        if (isSalesStaff(profile)) {
+            request.setAttribute("orderHistory", orderDao.findByEmployeeId(employeeID));
+        }
 
         request.setAttribute("readOnlyProfile", false);
         request.setAttribute("profileTitle", "My Profile");
@@ -106,11 +112,16 @@ public class ProfileServlet extends HttpServlet {
             return;
         }
 
-        String avatarUrl = null;
+        Employee currentProfile = profileDao.getProfileById(employeeID);
+        String avatarUrl = currentProfile != null ? currentProfile.getAvatarUrl() : null;
 
         try {
             Part avatarPart = request.getPart("avatarFile");
-            avatarUrl = saveAvatarFile(request, avatarPart, employeeID);
+            String uploadedAvatarUrl = saveAvatarFile(request, avatarPart, employeeID);
+
+            if (!isBlank(uploadedAvatarUrl)) {
+                avatarUrl = uploadedAvatarUrl;
+            }
         } catch (Exception e) {
             e.printStackTrace();
             setFlash(request, "errorMessage", "Cannot upload avatar image.");
@@ -135,9 +146,7 @@ public class ProfileServlet extends HttpServlet {
                     employee.setEmail(email);
                     employee.setPhone(phone);
 
-                    if (!isBlank(avatarUrl)) {
-                        employee.setAvatarUrl(avatarUrl);
-                    }
+                    employee.setAvatarUrl(avatarUrl);
 
                     // FIX: Cập nhật lại session với key đúng
                     session.setAttribute("currentUser", employee);
@@ -173,12 +182,10 @@ public class ProfileServlet extends HttpServlet {
             throw new IOException("Only JPG, PNG, WEBP images are allowed.");
         }
 
-        String uploadFolder = request.getServletContext().getRealPath("/uploads/avatars");
+        File folder = resolvePersistentUploadFolder(request);
 
-        File folder = new File(uploadFolder);
-
-        if (!folder.exists()) {
-            folder.mkdirs();
+        if (!folder.exists() && !folder.mkdirs()) {
+            throw new IOException("Unable to create upload folder: " + folder.getAbsolutePath());
         }
 
         String extension = submittedFileName.substring(submittedFileName.lastIndexOf("."));
@@ -186,9 +193,59 @@ public class ProfileServlet extends HttpServlet {
 
         File file = new File(folder, fileName);
 
-        avatarPart.write(file.getAbsolutePath());
+        try (var input = avatarPart.getInputStream();
+             var output = new java.io.FileOutputStream(file)) {
+            input.transferTo(output);
+        }
 
-        return "/uploads/avatars/" + fileName;
+        return "/assets/upload/avatars/" + fileName;
+    }
+
+    private File resolvePersistentUploadFolder(HttpServletRequest request) throws IOException {
+        String appPath = request.getServletContext().getRealPath("");
+
+        if (appPath == null) {
+            throw new IOException("Unable to resolve application root path.");
+        }
+
+        File currentRoot = new File(appPath).getAbsoluteFile();
+        File sourceFolder = findSourceUploadFolder(currentRoot);
+
+        if (sourceFolder != null) {
+            return sourceFolder;
+        }
+
+        String runtimePath = request.getServletContext().getRealPath("/assets/upload/avatars");
+
+        if (runtimePath == null) {
+            throw new IOException("Unable to resolve upload folder path.");
+        }
+
+        return new File(runtimePath);
+    }
+
+    private File findSourceUploadFolder(File currentRoot) {
+        File folder = currentRoot;
+
+        while (folder != null) {
+            if ("target".equals(folder.getName())) {
+                File projectRoot = folder.getParentFile();
+
+                if (projectRoot != null) {
+                    return new File(projectRoot,
+                            "src" + File.separator + "main" + File.separator + "webapp" + File.separator + "assets"
+                            + File.separator + "upload" + File.separator + "avatars");
+                }
+            }
+
+            folder = folder.getParentFile();
+        }
+
+        File fallback = new File(currentRoot,
+                "src" + File.separator + "main" + File.separator + "webapp" + File.separator + "assets"
+                + File.separator + "upload" + File.separator + "avatars");
+
+        return fallback.exists() ? fallback : null;
     }
 
     private void changePassword(HttpServletRequest request) {
@@ -224,6 +281,22 @@ public class ProfileServlet extends HttpServlet {
                 success ? "successMessage" : "errorMessage",
                 success ? "Password changed successfully." : "Cannot change password."
         );
+    }
+
+    private boolean isSalesStaff(Employee profile) {
+        if (profile == null) {
+            return false;
+        }
+
+        if (profile.getRoleID() == 4) {
+            return true;
+        }
+
+        String roleName = profile.getRoleName();
+
+        // ponytail: getRoleNames removed in V3, single role from role_id
+
+        return !isBlank(roleName) && roleName.toLowerCase().contains("sales");
     }
 
     private boolean isLoggedIn(HttpServletRequest request, HttpServletResponse response)

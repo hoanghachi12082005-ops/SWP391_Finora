@@ -6,6 +6,7 @@ public class EmployeeSalesSummary {
     private int employeeId;
     private String fullName;
     private String branchName;
+    private String roleName;
     private int totalOrders;
     private BigDecimal totalRevenue;
     private BigDecimal averageOrderValue;
@@ -37,6 +38,14 @@ public class EmployeeSalesSummary {
 
     public void setBranchName(String branchName) {
         this.branchName = branchName;
+    }
+
+    public String getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
     }
 
     public int getTotalOrders() {

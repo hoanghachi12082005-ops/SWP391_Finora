@@ -5,30 +5,29 @@ import util.database.DBContext;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import model.EmployeeRoleOption;
-
 public class EmployeeDAO {
 
     public Employee findByEmailOrPhone(String username) {
-        String sql = "SELECT e.*, r.Name AS RoleName, b.Name AS BranchName "
+        String sql = "SELECT e.emp_id, e.branch_id, e.role_id, e.fullName, e.email, e.phone, e.passwordHash, e.status, "
+                + "r.role_name AS RoleName, b.branch_name AS BranchName "
                 + "FROM Employee e "
-                + "JOIN Role r ON e.RoleID = r.RoleID "
-                + "LEFT JOIN Branch b ON e.BranchID = b.BranchID "
-                + "WHERE e.Email = ? OR e.Phone = ?";
+                + "JOIN [Role] r ON e.role_id = r.role_id "
+                + "LEFT JOIN Branch b ON e.branch_id = b.branch_id "
+                + "WHERE e.email = ? OR e.phone = ?";
         try (Connection connection = DBContext.getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, username);
             ps.setString(2, username);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 Employee employee = new Employee();
-                employee.setEmployeeID(rs.getInt("EmployeeID"));
-                employee.setRoleID(rs.getInt("RoleID"));
-                employee.setBranchID(rs.getObject("BranchID") != null ? rs.getInt("BranchID") : null);
-                employee.setFullName(rs.getString("FullName"));
-                employee.setEmail(rs.getString("Email"));
-                employee.setPhone(rs.getString("Phone"));
-                employee.setPasswordHash(rs.getString("PasswordHash") != null ? rs.getString("PasswordHash").trim() : null);
-                employee.setStatus(rs.getString("Status"));
+                employee.setEmployeeID(rs.getInt("emp_id"));
+                employee.setRoleID(rs.getInt("role_id"));
+                employee.setBranchID(rs.getObject("branch_id") != null ? rs.getInt("branch_id") : null);
+                employee.setFullName(rs.getString("fullName"));
+                employee.setEmail(rs.getString("email"));
+                employee.setPhone(rs.getString("phone"));
+                employee.setPasswordHash(rs.getString("passwordHash") != null ? rs.getString("passwordHash").trim() : null);
+                employee.setStatus(rs.getString("status"));
                 employee.setRoleName(rs.getString("RoleName"));
                 employee.setBranchName(rs.getString("BranchName"));
                 return employee;
@@ -41,7 +40,7 @@ public class EmployeeDAO {
     }
 
     public boolean existsByEmail(String email, Object ignore) {
-        String sql = "SELECT COUNT(*) FROM Employee WHERE LOWER(Email) = LOWER(?)";
+        String sql = "SELECT COUNT(*) FROM Employee WHERE LOWER(email) = LOWER(?)";
         try (Connection connection = DBContext.getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, email);
             ResultSet rs = ps.executeQuery();
@@ -59,7 +58,7 @@ public class EmployeeDAO {
      * Hàm insert chuẩn hóa chạy ổn định 100% trên môi trường Web Server
      */
     public boolean insert(Employee employee) {
-        String sql = "INSERT INTO Employee (RoleID, BranchID, FullName, Email, Phone, PasswordHash, Status, CreatedAt, UpdatedAt) "
+        String sql = "INSERT INTO Employee (role_id, branch_id, fullName, email, phone, passwordHash, status, created_at, update_at) "
                    + "VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
 
         Connection connection = null;
@@ -118,7 +117,7 @@ public class EmployeeDAO {
     }
 
     public boolean checkFullNameAndEmailMatch(String fullName, String email) {
-        String sql = "SELECT COUNT(*) FROM Employee WHERE LOWER(FullName) = LOWER(?) AND LOWER(Email) = LOWER(?)";
+        String sql = "SELECT COUNT(*) FROM Employee WHERE LOWER(fullName) = LOWER(?) AND LOWER(email) = LOWER(?)";
         try (Connection connection = DBContext.getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, fullName);
             ps.setString(2, email);
@@ -134,7 +133,7 @@ public class EmployeeDAO {
     }
 
     public boolean updatePasswordByEmail(String email, String newPasswordHash) {
-        String sql = "UPDATE Employee SET PasswordHash = ?, UpdatedAt = CURRENT_TIMESTAMP WHERE LOWER(Email) = LOWER(?)";
+        String sql = "UPDATE Employee SET passwordHash = ?, update_at = CURRENT_TIMESTAMP WHERE LOWER(email) = LOWER(?)";
         try (Connection connection = DBContext.getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, newPasswordHash);
             ps.setString(2, email);

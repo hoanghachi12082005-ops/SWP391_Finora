@@ -1,0 +1,587 @@
+/*
+    customer-management.css
+    Dùng riêng cho: /views/customers/customer-list.jsp
+    Pattern dựa trên user-management.css
+*/
+
+/* =========================
+   Page header
+========================= */
+
+.customer-page .page-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.customer-page .page-header h2 {
+    margin: 0;
+    font-size: 24px;
+    line-height: 32px;
+}
+
+.customer-page .page-header p {
+    margin: 6px 0 0;
+    color: var(--secondary);
+}
+
+/* =========================
+   Buttons
+========================= */
+
+.customer-page .btn-primary,
+.customer-page .btn-secondary {
+    min-height: 40px;
+    padding: 9px 14px;
+    border-radius: var(--radius-md);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.customer-page .btn-primary {
+    background: var(--primary);
+    color: var(--on-primary);
+}
+
+.customer-page .btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.customer-page .btn-secondary {
+    background: var(--surface-container-lowest);
+    color: var(--secondary);
+    border: 1px solid var(--outline-variant);
+}
+
+.customer-page .btn-secondary:hover {
+    background: var(--primary-fixed);
+    color: var(--primary);
+}
+
+/* =========================
+   Alert
+========================= */
+
+.customer-page .alert {
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    margin-bottom: 18px;
+    font-weight: 600;
+}
+
+.customer-page .alert-success {
+    background: var(--success-bg);
+    color: var(--success-text);
+    border: 1px solid var(--success-border);
+}
+
+.customer-page .alert-error {
+    background: var(--error-container);
+    color: var(--on-error-container);
+    border: 1px solid rgba(186, 26, 26, 0.18);
+}
+
+/* =========================
+   Overview cards
+========================= */
+
+.customer-page .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(180px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+}
+
+.customer-page .overview-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+.customer-page .overview-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: #eff6ff;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.customer-page .overview-icon .material-symbols-outlined {
+    font-size: 26px;
+}
+
+.customer-page .overview-info p {
+    margin: 0;
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.customer-page .overview-info h3 {
+    margin: 6px 0 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    word-break: break-word;
+}
+
+.customer-page .overview-info small {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+/* =========================
+   Filter
+========================= */
+
+.customer-page .filter-card,
+.customer-page .table-card {
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+}
+
+.customer-page .filter-card {
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.customer-page .filter-grid {
+    display: flex;
+    align-items: end;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.customer-page .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.customer-page .form-group label {
+    color: var(--secondary);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.customer-page .form-group input,
+.customer-page .form-group select,
+.customer-page .form-group textarea {
+    min-height: 40px;
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    padding: 0 12px;
+    outline: 0;
+    min-width: 160px;
+}
+
+.customer-page .form-group textarea {
+    padding: 10px 12px;
+    resize: vertical;
+}
+
+.customer-page .form-group input:focus,
+.customer-page .form-group select:focus,
+.customer-page .form-group textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(147, 0, 11, 0.08);
+}
+
+.customer-page .filter-search {
+    flex: 1;
+    min-width: 260px;
+}
+
+.customer-page .filter-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* =========================
+   Table
+========================= */
+
+.customer-page .table-card {
+    overflow: hidden;
+}
+
+.customer-page .table-scroll {
+    overflow-x: auto;
+}
+
+.customer-page .data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.customer-page .data-table thead {
+    background: var(--surface);
+}
+
+.customer-page .data-table th {
+    padding: 14px 18px;
+    color: var(--secondary);
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.customer-page .data-table td {
+    padding: 16px 18px;
+    border-top: 1px solid rgba(227, 189, 191, 0.55);
+    vertical-align: middle;
+}
+
+.customer-page .text-right {
+    text-align: right;
+}
+
+.customer-page .customer-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.customer-page .customer-cell strong {
+    display: block;
+}
+
+.customer-page .customer-cell span {
+    display: block;
+    color: var(--secondary);
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.customer-page .avatar-text {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: var(--primary-fixed);
+    color: var(--on-primary-fixed);
+    border: 1px solid var(--outline-variant);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.customer-page .type-badge {
+    display: inline-flex;
+    padding: 5px 9px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-container-high);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+
+.customer-page .table-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+}
+
+.customer-page .table-actions a,
+.customer-page .table-actions button {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: 0;
+    background: transparent;
+    color: var(--secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.customer-page .table-actions a:hover,
+.customer-page .table-actions button:hover {
+    background: var(--primary-fixed);
+    color: var(--primary);
+}
+
+.customer-page .table-actions form {
+    margin: 0;
+}
+
+.customer-page .empty-row {
+    text-align: center;
+    color: var(--secondary);
+    padding: 42px !important;
+}
+
+/* =========================
+   Modal Add/Edit/Detail
+========================= */
+
+.customer-page .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 24px;
+}
+
+.customer-page .modal-box {
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+    border: 1px solid #f1c7cf;
+}
+
+.customer-page .small-modal {
+    max-width: 520px;
+}
+
+.customer-page .modal-header,
+.customer-page .modal-footer {
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.customer-page .modal-header {
+    border-bottom: 1px solid var(--outline-variant);
+}
+
+.customer-page .modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--on-surface);
+}
+
+.customer-page .modal-body {
+    padding: 22px;
+}
+
+.customer-page .modal-footer {
+    border-top: 1px solid var(--outline-variant);
+}
+
+.customer-page .modal-close {
+    text-decoration: none;
+    color: var(--secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.customer-page .modal-close:hover {
+    color: var(--primary);
+}
+
+.customer-page .form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.customer-page .modal-body .form-group {
+    margin-bottom: 14px;
+}
+
+.customer-page .modal-body .form-group input,
+.customer-page .modal-body .form-group select,
+.customer-page .modal-body .form-group textarea {
+    width: 100%;
+    min-width: 0;
+}
+
+.customer-page .text-muted {
+    color: var(--secondary);
+    font-size: 13px;
+}
+
+.customer-page .detail-list p {
+    margin: 0 0 12px;
+    color: var(--secondary);
+}
+
+.customer-page .detail-list strong {
+    color: var(--on-surface);
+}
+
+.customer-page .detail-section {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid var(--outline-variant);
+}
+
+.customer-page .detail-section h4 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--on-surface);
+}
+
+.customer-page .detail-section .inline-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.customer-page .detail-section .inline-form input {
+    max-width: 160px;
+    min-height: 36px;
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-md);
+    padding: 0 10px;
+}
+
+/* =========================
+   Pagination
+========================= */
+
+.customer-page .table-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--outline-variant);
+    color: var(--secondary);
+    font-size: 12px;
+}
+
+.customer-page .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.customer-page .page-btn {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-sm);
+    background: var(--surface-container-lowest);
+    color: var(--secondary);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.customer-page .page-btn:hover {
+    background: var(--primary-fixed);
+    color: var(--primary);
+}
+
+.customer-page .page-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--on-primary);
+}
+
+.customer-page .page-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.customer-page .page-size-note {
+    color: #94a3b8;
+    margin-left: 6px;
+}
+
+/* =========================
+   Responsive
+========================= */
+
+@media (max-width: 1200px) {
+    .customer-page .overview-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .customer-page .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .customer-page .filter-grid {
+        align-items: stretch;
+    }
+
+    .customer-page .form-group,
+    .customer-page .filter-actions {
+        width: 100%;
+    }
+
+    .customer-page .form-group input,
+    .customer-page .form-group select {
+        width: 100%;
+    }
+
+    .customer-page .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .customer-page .table-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .customer-page .pagination {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 640px) {
+    .customer-page .overview-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .customer-page .modal-overlay {
+        padding: 12px;
+    }
+}

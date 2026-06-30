@@ -1,19 +1,41 @@
 package model;
 
-    public class Product  {
-    private String sku;
-private int categoryId;
-private double price;
-private int quantity;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
-        public Product() {}
+public class Product {
+    private int productId;
+    private String productCodebar;
+    private String productName;
+    private Integer categoryId;
+    private Integer unitId;
+    private BigDecimal sellingPrice;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    public String getSku() { return sku; }
-public void setSku(String sku) { this.sku = sku; }
-public int getCategoryId() { return categoryId; }
-public void setCategoryId(int categoryId) { this.categoryId = categoryId; }
-public double getPrice() { return price; }
-public void setPrice(double price) { this.price = price; }
-public int getQuantity() { return quantity; }
-public void setQuantity(int quantity) { this.quantity = quantity; }
-    }
+    private String categoryName;
+    private String unitName;
+
+    public Product() { this.sellingPrice = BigDecimal.ZERO; }
+
+    public int getProductId() { return productId; }
+    public void setProductId(int productId) { this.productId = productId; }
+    public String getProductCodebar() { return productCodebar; }
+    public void setProductCodebar(String productCodebar) { this.productCodebar = productCodebar; }
+    public String getProductName() { return productName; }
+    public void setProductName(String productName) { this.productName = productName; }
+    public Integer getCategoryId() { return categoryId; }
+    public void setCategoryId(Integer categoryId) { this.categoryId = categoryId; }
+    public Integer getUnitId() { return unitId; }
+    public void setUnitId(Integer unitId) { this.unitId = unitId; }
+    public BigDecimal getSellingPrice() { return sellingPrice; }
+    public void setSellingPrice(BigDecimal sellingPrice) { this.sellingPrice = sellingPrice; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getCategoryName() { return categoryName; }
+    public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
+    public String getUnitName() { return unitName; }
+    public void setUnitName(String unitName) { this.unitName = unitName; }
+}
