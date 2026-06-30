@@ -13,6 +13,9 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +49,15 @@ public class ActivityLogController extends BaseController {
         String keyword = request.getParameter("keyword");
         String tableName = request.getParameter("tableName");
         String actionName = request.getParameter("actionName");
+        String dateFromRaw = request.getParameter("dateFrom");
+        String dateToRaw   = request.getParameter("dateTo");
+
+        LocalDate dateFrom = parseDate(dateFromRaw);
+        LocalDate dateTo   = parseDate(dateToRaw);
+        // Nếu khoảng đảo ngược (from > to) thì hoán đổi để tránh kết quả rỗng vô lý.
+        if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
+            LocalDate tmp = dateFrom; dateFrom = dateTo; dateTo = tmp;
+        }
 
         int page = 1;
         try {
@@ -54,12 +66,13 @@ public class ActivityLogController extends BaseController {
         } catch (NumberFormatException ignored) {}
 
         try {
-            int totalCount = dao.countAll(keyword, tableName, actionName);
+            int totalCount = dao.countAll(keyword, tableName, actionName, dateFrom, dateTo);
             int totalPages = (int) Math.ceil((double) totalCount / ITEMS_PER_PAGE);
             page = Math.max(1, Math.min(page, totalPages > 0 ? totalPages : 1));
 
             List<ActivityLog> logs = dao.findAll(
-                    (page - 1) * ITEMS_PER_PAGE, ITEMS_PER_PAGE, keyword, tableName, actionName);
+                    (page - 1) * ITEMS_PER_PAGE, ITEMS_PER_PAGE,
+                    keyword, tableName, actionName, dateFrom, dateTo);
 
             // Bộ filter dạng "giá trị kỹ thuật" → "nhãn nghiệp vụ" để JSP render dropdown.
             request.setAttribute("entityOptions", buildEntityOptions(dao.findDistinctTables()));
@@ -72,6 +85,8 @@ public class ActivityLogController extends BaseController {
             request.setAttribute("keyword", keyword != null ? keyword : "");
             request.setAttribute("filterTable", tableName != null ? tableName : "");
             request.setAttribute("filterAction", actionName != null ? actionName : "");
+            request.setAttribute("filterDateFrom", dateFrom != null ? dateFrom.toString() : "");
+            request.setAttribute("filterDateTo",   dateTo != null ? dateTo.toString() : "");
 
             forward(request, response, "activity-log/list");
         } catch (SQLException e) {
@@ -102,6 +117,16 @@ public class ActivityLogController extends BaseController {
             return false;
         }
         return true;
+    }
+
+    /** Parse "yyyy-MM-dd" từ input HTML date; trả null nếu trống/không hợp lệ. */
+    private LocalDate parseDate(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            return LocalDate.parse(raw.trim(), DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (DateTimeParseException ex) {
+            return null;
+        }
     }
 
     /** Sinh map { table_name → "Đối tượng nghiệp vụ" } để render dropdown. */
