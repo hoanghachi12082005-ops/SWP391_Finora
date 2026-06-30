@@ -9,6 +9,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.nio.file.Paths;
+import java.io.FileOutputStream;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -18,8 +22,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-@WebServlet(name = "BranchController", urlPatterns = {"/branch"})
-@MultipartConfig
+@WebServlet(name = "BranchServlet", urlPatterns = {"/branch"})
+@MultipartConfig(
+        fileSizeThreshold = 1024 * 1024,
+        maxFileSize = 5 * 1024 * 1024,
+        maxRequestSize = 10 * 1024 * 1024
+)
 public class BranchController extends HttpServlet {
 
     private final BranchDAO dao = new BranchDAO();
@@ -75,45 +83,85 @@ public class BranchController extends HttpServlet {
                 String status = req.getParameter("status");
                 String city = req.getParameter("city");
                 String keyword = req.getParameter("keyword");
-                
-                if(keyword != null){
+
+                if (keyword != null) {
                     keyword = keyword.trim().replaceAll("\\s+", " ");
                 }
-                 
+
                 int page = 1;
                 try {
                     page = Integer.parseInt(req.getParameter("page"));
-                } catch (Exception ignored) {}
-                
-                int pageSize = 10;
-                try {
-                    pageSize = Integer.parseInt(req.getParameter("pageSize"));
-                } catch (Exception ignored) {}
-                
-                if (pageSize != 10 &&
-                    pageSize != 20 &&
-                    pageSize != 50 &&
-                    pageSize != 100) {
-                    
-                    pageSize = 10;
+                } catch (Exception ignored) {
                 }
-                
-                int totalRecords = dao.countBranch(keyword,status, city);
+
+                int sizeValue = 30;
+
+                try {
+                    sizeValue = Integer.parseInt(req.getParameter("sizeValue"));
+                } catch (Exception ignored) {
+                }
+
+                int pageSize;
+                int totalRecords = dao.countBranch(keyword, status, city);
+
+                switch (sizeValue) {
+                    case 30:
+                        pageSize = (int) Math.ceil(totalRecords * 0.3);
+                        break;
+                    case 50:
+                        pageSize = (int) Math.ceil(totalRecords * 0.5);
+                        break;
+                    case 70:
+                        pageSize = (int) Math.ceil(totalRecords * 0.7);
+                        break;
+                    case 100:
+                        pageSize = totalRecords;
+                        break;
+                    default:
+                        sizeValue = 30;
+                        pageSize = (int) Math.ceil(totalRecords * 0.3);
+                }
+
+                if (pageSize <= 0) {
+                    pageSize = 1;
+                }
+
                 int totalPages = (int) Math.ceil(totalRecords * 1.0 / pageSize);
-                
-                
-                
-                req.setAttribute(
-                        "branchList",
-                        dao.findBranchPaging(
-                                keyword,
-                                status,
-                                city,
-                                page,
-                                pageSize));
+
+                int startRecord = totalRecords == 0 ? 0 : (page - 1) * pageSize + 1;
+                int endRecord = Math.min(page * pageSize, totalRecords);
+
+                List<Branch> branchList = dao.findBranchPaging(
+                        keyword,
+                        status,
+                        city,
+                        page,
+                        pageSize);
+
+                boolean showEmployeeColumn = false;
+
+                for (Branch branch : branchList) {
+                    if (branch.getEmployeeCount() > 0) {
+                        showEmployeeColumn = true;
+                        break;
+                    }
+                }
+
+                req.setAttribute("branchList", branchList);
+                req.setAttribute("showEmployeeColumn", showEmployeeColumn);
 
                 req.setAttribute("currentPage", page);
                 req.setAttribute("totalPages", totalPages);
+
+                req.setAttribute("pageSize", pageSize);
+                req.setAttribute("sizeValue", sizeValue);
+                req.setAttribute("startRecord", startRecord);
+                req.setAttribute("endRecord", endRecord);
+                req.setAttribute("option30", (int) Math.ceil(totalRecords * 0.3));
+                req.setAttribute("option50", (int) Math.ceil(totalRecords * 0.5));
+                req.setAttribute("option70", (int) Math.ceil(totalRecords * 0.7));
+                req.setAttribute("option100", totalRecords);
+                req.setAttribute("totalRecords", totalRecords);
 
                 req.setAttribute("selectedStatus", status);
                 req.setAttribute("selectedCity", city);
@@ -137,69 +185,6 @@ public class BranchController extends HttpServlet {
         }
     }
 
-//    // ────────── Xử lý Thêm ──────────────────────────────────────
-//    private void handleAdd(HttpServletRequest req, HttpServletResponse resp)
-//            throws ServletException, IOException {
-//
-//        Branch b = buildBranchFromRequest(req, 0);
-//        Map<String, String> errors = BranchValidator.validateForInsert(b, dao::isCodeDuplicate);
-//
-//        if (!errors.isEmpty()) {
-//            req.setAttribute("errors", errors);
-//            req.setAttribute("branch", b);
-//            loadEmployeeList(req);
-//            forward(req, resp, "branch-form.jsp");
-//            return;
-//        }
-//
-//        int newId = dao.insert(b);
-//        if (newId > 0) {
-//            resp.sendRedirect("branch?action=detail&id=" + newId + "&success=add");
-//        } else {
-//            errors.put("branchCode", "Mã cửa hàng đã tồn tại trong hệ thống.");
-//            req.setAttribute("errors", errors);
-//            req.setAttribute("branch", b);
-//            loadEmployeeList(req);
-//            forward(req, resp, "branch-form.jsp");
-//        }
-//    }
-//
-//    // ────────── Xử lý Sửa ───────────────────────────────────────
-//    private void handleEdit(HttpServletRequest req, HttpServletResponse resp)
-//            throws ServletException, IOException {
-//        int id = resolveBranchId(req);
-//        if (id <= 0) {
-//            resp.sendRedirect(req.getContextPath() + "/branch?error=invalid");
-//            return;
-//        }
-//        Branch existing = dao.findById(id);
-//        if (existing == null) {
-//            resp.sendRedirect(req.getContextPath() + "/branch?error=notfound");
-//            return;
-//        }
-//        Branch b = buildBranchFromRequest(req, id);
-//        mergeMissingFieldsFromExisting(b, existing);
-//        Map<String, String> errors = BranchValidator.validateForUpdate(b, id, dao::isCodeDuplicate);
-//        if (!errors.isEmpty()) {
-//            req.setAttribute("errors", errors);
-//            req.setAttribute("branch", b);
-//            loadEmployeeList(req);
-//            forward(req, resp, "branch-form.jsp");
-//            return;
-//        }
-//        if (!dao.update(b)) {
-//            Map<String, String> updateErrors = new HashMap<>();
-//            updateErrors.put("general", "Cập nhật thất bại. Vui lòng thử lại.");
-//            req.setAttribute("errors", updateErrors);
-//            req.setAttribute("branch", b);
-//            loadEmployeeList(req);
-//            forward(req, resp, "branch-form.jsp");
-//            return;
-//        }
-//        resp.sendRedirect(req.getContextPath()
-//                + "/branch?action=detail&id=" + b.getBranchId() + "&success=edit");
-//    }
-//    
     // ────────── Kết hợp sửa + cập nhật───────────────────────────────────────
     private void saveBranch(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -213,20 +198,34 @@ public class BranchController extends HttpServlet {
         //Néu là update kiểm tra xem ID đó có tồn tại không
         if (isUpdate && dao.findById(id) == null) {
             resp.sendRedirect(req.getContextPath() + "/branch?error=notfound");
-        } 
-        
+        }
+
         //Build object từ form
         Branch b = buildBranchFromRequest(req, id);
-        
+
+        if (isUpdate) {
+            Branch oldBranch = dao.findById(id);
+            if (oldBranch != null) {
+                b.setImageUrl(oldBranch.getImageUrl());
+            }
+        }
+
         //validate
         Map<String, String> errors = isUpdate
                 ? BranchValidator.validateForUpdate(b, id, dao::isCodeDuplicate)
                 : BranchValidator.validateForInsert(b, dao::isCodeDuplicate);
-                if (dao.isInforDuplicate(b.getEmail(),b.getPhone(), id)) {
-                    errors.put("general", "Email hoặc số điện thoại đã tồn tại trong hệ thống.");
-                }
-                
-                
+        if (dao.isInforDuplicate(b.getEmail(), b.getPhone(), id)) {
+            errors.put("general", "Email hoặc số điện thoại đã tồn tại trong hệ thống.");
+        }
+
+        Part imagePart = req.getPart("image");
+
+        String imageError = BranchValidator.validateImage(imagePart);
+
+        if (imageError != null) {
+            errors.put("image", imageError);
+        }
+
         //Nếu gặp lỗi thì quay lại branch-form.jsp
         if (!errors.isEmpty()) {
             req.setAttribute("errors", errors);
@@ -234,6 +233,14 @@ public class BranchController extends HttpServlet {
             loadEmployeeList(req);
             forward(req, resp, "branch-form.jsp");
             return;
+        }
+
+        if (imagePart != null && imagePart.getSize() > 0) {
+            String imageUrl = saveBranchImage(req, imagePart, b.getBranchCode());
+
+            if (imageUrl != null) {
+                b.setImageUrl(imageUrl);
+            }
         }
 
         //Lưu dữ liệu
@@ -343,7 +350,7 @@ public class BranchController extends HttpServlet {
         b.setCity(trim(req.getParameter("city")));
         b.setDistrict(trim(req.getParameter("district")));
         return b;
-    }   
+    }
 
     private void forward(HttpServletRequest req, HttpServletResponse resp, String view)
             throws ServletException, IOException {
@@ -376,5 +383,114 @@ public class BranchController extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private String saveBranchImage(HttpServletRequest request,
+            Part imagePart,
+            String branchCode) throws IOException {
+
+        if (imagePart == null || imagePart.getSize() <= 0) {
+            return null;
+        }
+
+        String submittedFileName = imagePart.getSubmittedFileName();
+
+        if (submittedFileName == null || submittedFileName.trim().isEmpty()) {
+            return null;
+        }
+
+        String lowerName = submittedFileName.toLowerCase();
+
+        if (!(lowerName.endsWith(".jpg")
+                || lowerName.endsWith(".jpeg")
+                || lowerName.endsWith(".png")
+                || lowerName.endsWith(".webp"))) {
+
+            throw new IOException("Only JPG, PNG and WEBP images are allowed.");
+        }
+
+        File folder = resolvePersistentUploadFolder(request);
+
+        if (!folder.exists() && !folder.mkdirs()) {
+            throw new IOException("Unable to create upload folder: "
+                    + folder.getAbsolutePath());
+        }
+
+        String extension = submittedFileName.substring(
+                submittedFileName.lastIndexOf(".")).toLowerCase();
+
+        String fileName = branchCode + extension;
+
+        File file = new File(folder, fileName);
+
+        try (var input = imagePart.getInputStream(); var output = new java.io.FileOutputStream(file)) {
+
+            input.transferTo(output);
+        }
+
+        return fileName;
+    }
+
+    private File resolvePersistentUploadFolder(HttpServletRequest request)
+            throws IOException {
+
+        String appPath = request.getServletContext().getRealPath("");
+
+        if (appPath == null) {
+            throw new IOException("Unable to resolve application root path.");
+        }
+
+        File currentRoot = new File(appPath).getAbsoluteFile();
+
+        File sourceFolder = findSourceUploadFolder(currentRoot);
+
+        if (sourceFolder != null) {
+            return sourceFolder;
+        }
+
+        String runtimePath = request.getServletContext()
+                .getRealPath("/assets/images/images_branch");
+
+        if (runtimePath == null) {
+            throw new IOException("Unable to resolve upload folder path.");
+        }
+
+        return new File(runtimePath);
+    }
+
+    private File findSourceUploadFolder(File currentRoot) {
+
+        File folder = currentRoot;
+
+        while (folder != null) {
+
+            if ("target".equals(folder.getName())) {
+
+                File projectRoot = folder.getParentFile();
+
+                if (projectRoot != null) {
+
+                    return new File(projectRoot,
+                            "src"
+                            + File.separator + "main"
+                            + File.separator + "webapp"
+                            + File.separator + "assets"
+                            + File.separator + "images"
+                            + File.separator + "images_branch");
+                }
+            }
+
+            folder = folder.getParentFile();
+        }
+
+        File fallback = new File(currentRoot,
+                "src"
+                + File.separator + "main"
+                + File.separator + "webapp"
+                + File.separator + "assets"
+                + File.separator + "images"
+                + File.separator + "images_branch");
+
+        return fallback.exists() ? fallback : null;
     }
 }

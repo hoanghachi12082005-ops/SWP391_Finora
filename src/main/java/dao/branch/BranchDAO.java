@@ -56,8 +56,8 @@ public class BranchDAO {
     public int insert(Branch b) {
         String sql = """
             INSERT INTO branch
-                (branch_name, branch_code, address, phone, email, opening_time, closing_time, status, city, district)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (branch_name, branch_code, address, phone, email, opening_time, closing_time, status, city, district, image_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -88,14 +88,14 @@ public class BranchDAO {
         String sql = """
             UPDATE branch
             SET branch_name=?, branch_code=?, address=?, phone=?, email=?,
-                opening_time=?, closing_time=?, status=?, city=?, district=?
+                opening_time=?, closing_time=?, status=?, city=?, district=?, image_url=?
             WHERE branch_id=?
             """;
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             setParams(ps, b);
-            ps.setInt(11, b.getBranchId());
+            ps.setInt(12, b.getBranchId());
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
@@ -518,6 +518,7 @@ public class BranchDAO {
         ps.setString(8, b.getStatus());
         ps.setString(9, b.getCity());
         ps.setString(10, b.getDistrict());
+        ps.setString(11, b.getImageUrl());
     }
 
     // ── Helper: ánh xạ ResultSet → Branch ───────────────────────
@@ -535,7 +536,8 @@ public class BranchDAO {
                 rs.getString("created_at"),
                 rs.getString("update_at"),
                 rs.getString("city"),
-                rs.getString("district")
+                rs.getString("district"),
+                rs.getString("image_url")
         );
         try {
             b.setEmployeeCount(rs.getInt("employee_count"));

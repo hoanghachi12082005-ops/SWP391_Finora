@@ -66,7 +66,7 @@
 
                 <!-- THÔNG TIN CƠ BẢN -->
 
-                <div class="form-card">
+                <div class="form-card"> 
                     <h2>Thông tin cơ bản</h2>
                     <div class="form-grid">
                         <div class="form-group">
@@ -242,13 +242,32 @@
 
                 <!-- HÌNH ẢNH -->
 
-                <div class="form-card">
-                    <h2>Hình ảnh chi nhánh</h2>
+                <h2>Hình ảnh chi nhánh</h2>
 
-                    <div class="form-group">
-                        <input type="file"
-                               name="image">
+                <div class="form-group">
+
+                    <label>Ảnh chi nhánh</label>
+
+                    <input
+                        id="imageInput"
+                        type="file"
+                        name="image"
+                        accept="image/*">
+
+                    <c:if test="${not empty errors.image}">
+                        <span style="color:red;font-size:13px;">
+                            ${errors.image}
+                        </span>
+                    </c:if>
+
+                    <div class="branch-preview" style="margin-top: 15px;">
+                        <img
+                            id="previewImage"
+                            src="${pageContext.request.contextPath}/assets/images/images_branch/${branch.imageUrl}"
+                            alt="${branch.branchName}"
+                            style="${empty branch.imageUrl ? 'display: none;' : ''}; max-width: 220px; border-radius: 12px; border: 1px solid #ddd;">
                     </div>
+
                 </div>
 
                 <!-- BUTTON -->
@@ -330,6 +349,18 @@
                         console.error("Lỗi tải quận huyện:", error);
                     }
                 }
+                const imageInput = document.getElementById("imageInput");
+                const previewImage = document.getElementById("previewImage");
+                imageInput.addEventListener("change", function () {
+                    const file = this.files[0];
+                    if (!file) {
+                        return;
+                    }
+                    // Tạo đường dẫn tạm thời từ file ảnh vừa chọn trong máy tính
+                    previewImage.src = URL.createObjectURL(file);
+                    // Chuyển trạng thái thẻ img từ ẩn sang hiện để người dùng nhìn thấy ảnh
+                    previewImage.style.display = 'block';
+                });
             });
         </script>
     </body>
