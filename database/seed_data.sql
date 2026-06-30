@@ -22,9 +22,9 @@ GO
 -- 2. BRANCHES
 -- ============================================================
 INSERT INTO Branch (branch_name, branch_code, address, district, city, phone, email, opening_time, closing_time, status) VALUES
-(N'Finora Hà Nội',     'HN001', N'123 Trần Hưng Đạo', N'Hoàn Kiếm', N'Hà Nội',       '024-3822-0001', 'hn@finora.vn',    '07:00', '22:00', 'ACTIVE'),
-(N'Finora Hồ Chí Minh','HCM001', N'456 Nguyễn Huệ',   N'Quận 1',    N'Hồ Chí Minh',  '028-3911-0002', 'hcm@finora.vn',   '07:00', '22:00', 'ACTIVE'),
-(N'Finora Đà Nẵng',    'DN001',  N'789 Bạch Đằng',    N'Hải Châu',  N'Đà Nẵng',      '0236-3555-0003','dn@finora.vn',    '07:00', '21:30', 'ACTIVE');
+(N'Finora Hà Nội',     'BR-001', N'123 Trần Hưng Đạo', N'Hoàn Kiếm', N'Hà Nội',       '024-3822-0001', 'hn@finora.vn',    '07:00', '22:00', 'ACTIVE'),
+(N'Finora Hồ Chí Minh','BR-002', N'456 Nguyễn Huệ',   N'Quận 1',    N'Hồ Chí Minh',  '028-3911-0002', 'hcm@finora.vn',   '07:00', '22:00', 'ACTIVE'),
+(N'Finora Đà Nẵng',    'BR-003',  N'789 Bạch Đằng',    N'Hải Châu',  N'Đà Nẵng',      '0236-3555-0003','dn@finora.vn',    '07:00', '21:30', 'ACTIVE');
 GO
 
 -- ============================================================
