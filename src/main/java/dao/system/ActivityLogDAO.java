@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,14 +42,16 @@ public class ActivityLogDAO {
         return list;
     }
 
-    public List<ActivityLog> findAll(int offset, int limit, String keyword, String tableName, String actionName)
-            throws SQLException {
+    public List<ActivityLog> findAll(int offset, int limit, String keyword, String tableName, String actionName,
+                                     LocalDate dateFrom, LocalDate dateTo) throws SQLException {
         StringBuilder sql = new StringBuilder(BASE_SELECT).append(" WHERE 1=1 ");
         if (keyword != null && !keyword.isBlank()) {
             sql.append(" AND (a.action_name LIKE ? OR a.table_name LIKE ? OR e.fullName LIKE ? OR a.new_data LIKE ?) ");
         }
         if (tableName != null && !tableName.isBlank()) sql.append(" AND a.table_name = ? ");
         if (actionName != null && !actionName.isBlank()) sql.append(" AND a.action_name = ? ");
+        if (dateFrom != null) sql.append(" AND a.created_at >= ? ");
+        if (dateTo != null) sql.append(" AND a.created_at < ? ");
         sql.append(" ORDER BY a.created_at DESC, a.audit_log_id DESC ");
         sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
@@ -65,6 +68,8 @@ public class ActivityLogDAO {
             }
             if (tableName != null && !tableName.isBlank()) ps.setString(idx++, tableName);
             if (actionName != null && !actionName.isBlank()) ps.setString(idx++, actionName);
+            if (dateFrom != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateFrom.atStartOfDay()));
+            if (dateTo != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateTo.plusDays(1).atStartOfDay()));
             ps.setInt(idx++, offset);
             ps.setInt(idx, limit);
             try (ResultSet rs = ps.executeQuery()) {
@@ -74,7 +79,8 @@ public class ActivityLogDAO {
         return list;
     }
 
-    public int countAll(String keyword, String tableName, String actionName) throws SQLException {
+    public int countAll(String keyword, String tableName, String actionName,
+                        LocalDate dateFrom, LocalDate dateTo) throws SQLException {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id WHERE 1=1 ");
         if (keyword != null && !keyword.isBlank()) {
@@ -82,6 +88,8 @@ public class ActivityLogDAO {
         }
         if (tableName != null && !tableName.isBlank()) sql.append(" AND a.table_name = ? ");
         if (actionName != null && !actionName.isBlank()) sql.append(" AND a.action_name = ? ");
+        if (dateFrom != null) sql.append(" AND a.created_at >= ? ");
+        if (dateTo != null) sql.append(" AND a.created_at < ? ");
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -95,6 +103,8 @@ public class ActivityLogDAO {
             }
             if (tableName != null && !tableName.isBlank()) ps.setString(idx++, tableName);
             if (actionName != null && !actionName.isBlank()) ps.setString(idx++, actionName);
+            if (dateFrom != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateFrom.atStartOfDay()));
+            if (dateTo != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateTo.plusDays(1).atStartOfDay()));
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : 0;
             }

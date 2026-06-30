@@ -11,6 +11,8 @@
     String keyword     = (String) request.getAttribute("keyword");
     String filterTable = (String) request.getAttribute("filterTable");
     String filterAction= (String) request.getAttribute("filterAction");
+    String filterDateFrom = (String) request.getAttribute("filterDateFrom");
+    String filterDateTo   = (String) request.getAttribute("filterDateTo");
     String ctx         = request.getContextPath();
 %>
 <jsp:include page="../common/header.jsp">
@@ -48,13 +50,13 @@
             <div class="card shadow-sm border-0 mb-3">
                 <div class="card-body">
                     <form method="get" action="<%= ctx %>/activity-log" class="row g-2 align-items-end">
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <label class="form-label small text-muted mb-1">Tìm kiếm</label>
                             <input type="text" name="keyword" class="form-control"
                                    placeholder="Tìm theo tên nhân viên, đối tượng, nội dung..."
                                    value="<%= keyword != null ? keyword : "" %>">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label small text-muted mb-1">Đối tượng</label>
                             <select name="tableName" class="form-select">
                                 <option value="">Tất cả đối tượng</option>
@@ -82,9 +84,22 @@
 %>
                             </select>
                         </div>
-                        <div class="col-md-2 d-flex gap-2">
-                            <button type="submit" class="btn btn-danger flex-grow-1">Lọc</button>
-                            <a href="<%= ctx %>/activity-log" class="btn btn-outline-secondary">Xóa</a>
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted mb-1">Từ ngày</label>
+                            <input type="date" name="dateFrom" class="form-control"
+                                   value="<%= filterDateFrom != null ? filterDateFrom : "" %>">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted mb-1">Đến ngày</label>
+                            <input type="date" name="dateTo" class="form-control"
+                                   value="<%= filterDateTo != null ? filterDateTo : "" %>">
+                        </div>
+                        <div class="col-md-12 d-flex gap-2 justify-content-end">
+                            <button type="submit" class="btn btn-danger">
+                                <span class="material-icons align-middle me-1" style="font-size:16px;">filter_alt</span>
+                                Lọc
+                            </button>
+                            <a href="<%= ctx %>/activity-log" class="btn btn-outline-secondary">Xóa bộ lọc</a>
                         </div>
                     </form>
                 </div>
@@ -171,7 +186,9 @@
         String baseUrl = ctx + "/activity-log?"
                 + (keyword != null && !keyword.isBlank() ? "keyword=" + keyword + "&" : "")
                 + (filterTable != null && !filterTable.isBlank() ? "tableName=" + filterTable + "&" : "")
-                + (filterAction != null && !filterAction.isBlank() ? "actionName=" + filterAction + "&" : "");
+                + (filterAction != null && !filterAction.isBlank() ? "actionName=" + filterAction + "&" : "")
+                + (filterDateFrom != null && !filterDateFrom.isBlank() ? "dateFrom=" + filterDateFrom + "&" : "")
+                + (filterDateTo != null && !filterDateTo.isBlank() ? "dateTo=" + filterDateTo + "&" : "");
 %>
                     <div class="d-flex justify-content-between align-items-center mt-3">
                         <div class="text-muted small">Trang <strong><%= currentPage %></strong> / <strong><%= totalPages %></strong></div>
