@@ -7,22 +7,22 @@
     <input type="hidden" name="warehouseId" value="${param.warehouseId}">
     
     <div class="modal-header border-bottom-0 pb-0">
-        <h5 class="modal-title fw-bold" style="color: #111827;">Kiểm đếm Nhập Hàng - ${ticket.ticketCode}</h5>
+        <h5 class="modal-title fw-bold" style="color: #111827;">Kiểm Tra Nhập Hàng - ${ticket.ticketCode}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
     </div>
     <div class="modal-body pt-4">
         <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
             <i class="ph ph-info fs-5"></i>
-            <div>Vui lòng nhập số lượng <b>thực tế đếm được</b>. Nếu có chênh lệch, hệ thống sẽ tự động tạo phiếu Hao hụt.</div>
+            <div>Vui lòng nhập số lượng <b>thực tế đếm được</b>. Nếu có chênh lệch, hệ thống sẽ tự động tạo phiếu Sai lệch.</div>
         </div>
         
         <div class="table-responsive">
             <table class="table table-bordered table-sm text-center align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th class="text-start">Sản phẩm</th>
-                        <th width="120px">SL Gửi</th>
-                        <th width="150px">Thực Nhận</th>
+                        <th class="text-start">Sản Phẩm</th>
+                        <th width="120px">SL Chứng Từ</th>
+                        <th width="150px">SL Thực Tế</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -56,6 +56,6 @@
     </div>
     <div class="modal-footer border-top-0 pt-0">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 500;">Hủy</button>
-        <button type="submit" class="btn btn-success" style="border-radius: 8px; font-weight: 500;">Xác nhận Nhập kho</button>
+        <button type="submit" class="btn btn-success" style="border-radius: 8px; font-weight: 500;">Xác Nhận Nhập Kho</button>
     </div>
 </form>

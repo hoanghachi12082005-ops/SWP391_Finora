@@ -3,17 +3,17 @@
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 
 <div class="modal-header">
-    <h5 class="modal-title fw-bold">Chi tiết phiếu: ${ticket.ticketCode}</h5>
+    <h5 class="modal-title fw-bold">Chi Tiết Chứng Từ: ${ticket.ticketCode}</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
 <div class="modal-body">
     <div class="row mb-4">
         <div class="col-6 mb-3">
-            <div class="text-muted small mb-1">Người tạo</div>
+            <div class="text-muted small mb-1">Người Lập Phiếu</div>
             <div class="fw-bold">${ticket.createdByName}</div>
         </div>
         <div class="col-6 mb-3 text-end">
-            <div class="text-muted small mb-1">Thời gian</div>
+            <div class="text-muted small mb-1">Thời Gian</div>
             <div class="fw-bold">
                 <fmt:parseDate value="${ticket.createdAt}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedDateTime" type="both" />
                 <fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${parsedDateTime}" />
@@ -29,17 +29,17 @@
         </div>
     </div>
     
-    <h6 class="fw-bold mb-3">Danh sách sản phẩm</h6>
+    <h6 class="fw-bold mb-3">Danh Sách Sản Phẩm</h6>
     <div class="table-responsive">
         <table class="table table-bordered table-sm text-center align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="text-start">Sản phẩm</th>
+                    <th class="text-start">Sản Phẩm</th>
                     <th style="width: 100px;">Loại GD</th>
                     <c:if test="${not empty transactions}">
                         <th style="width: 80px;">Trước</th>
                     </c:if>
-                    <th style="width: 90px;">Số lượng</th>
+                    <th style="width: 90px;">Số Lượng</th>
                     <c:if test="${not empty transactions}">
                         <th style="width: 80px;">Sau</th>
                     </c:if>
@@ -65,12 +65,27 @@
                     <tr>
                         <td class="text-start fw-medium">${d.productName}</td>
                         <td>
+                            <c:set var="trueSourceId" value="${ticket.fromWarehouseId}" />
+                            <c:if test="${ticket.ticketType == 'TRANSFER_REQUEST' && d.actionType == 'RECEIVE'}">
+                                <c:set var="trueSourceId" value="${ticket.toWarehouseId}" />
+                            </c:if>
+                            
                             <c:choose>
-                                <c:when test="${d.actionType == 'SEND'}">
+                                <c:when test="${not empty selectedWarehouseId and selectedWarehouseId == trueSourceId}">
                                     <span class="badge bg-danger">XUẤT</span>
                                 </c:when>
-                                <c:otherwise>
+                                <c:when test="${not empty selectedWarehouseId and selectedWarehouseId != trueSourceId}">
                                     <span class="badge bg-success">NHẬP</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <c:choose>
+                                        <c:when test="${trueSourceId == ticket.fromWarehouseId}">
+                                            <span class="badge bg-danger">XUẤT</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="badge bg-success">NHẬP</span>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </c:otherwise>
                             </c:choose>
                         </td>

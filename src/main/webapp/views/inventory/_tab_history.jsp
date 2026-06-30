@@ -4,7 +4,7 @@
 
 <div class="dashboard-card">
     <div class="card-header d-flex justify-content-between align-items-center mb-3">
-        <h5>Lịch Sử Xuất Nhập Kho</h5>
+        <h5>Lịch Sử Giao Dịch</h5>
         
         <form action="" method="GET" class="d-flex gap-2">
             <input type="hidden" name="tab" value="history">
@@ -32,7 +32,7 @@
     <div class="activity-feed-container" style="max-height: 600px; overflow-y: auto;">
         <c:choose>
             <c:when test="${empty history}">
-                <p class="text-center text-muted p-4">Không có giao dịch xuất nhập kho nào.</p>
+                <p class="text-center text-muted p-4">Không có dữ liệu giao dịch.</p>
             </c:when>
             <c:otherwise>
                 <div class="premium-table-container">
@@ -41,7 +41,7 @@
                             <tr>
                                 <th>Thời Gian</th>
                                 <th>Mã Phiếu</th>
-                                <th>Kho Gửi</th>
+                                <th>Kho Đề Xuất</th>
                                 <th>Kho Xử Lý</th>
                                 <th>Trạng Thái</th>
                                 <th>Người Thực Hiện</th>

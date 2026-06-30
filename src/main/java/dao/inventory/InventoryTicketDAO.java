@@ -186,6 +186,30 @@ public class InventoryTicketDAO {
         return null;
     }
 
+    public InventoryTicket getTicketById(int ticketId) throws SQLException {
+        String sql = "SELECT * FROM inventory_ticket WHERE ticket_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, ticketId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    InventoryTicket t = new InventoryTicket();
+                    t.setTicketId(rs.getInt("ticket_id"));
+                    t.setTicketCode(rs.getString("ticket_code"));
+                    t.setTicketType(rs.getString("ticket_type"));
+                    t.setFromWarehouseId(rs.getInt("from_warehouse_id"));
+                    t.setToWarehouseId(rs.getInt("to_warehouse_id"));
+                    t.setStatus(rs.getString("status"));
+                    t.setNote(rs.getString("note"));
+                    t.setCreatedBy(rs.getInt("created_by"));
+                    t.setCreatedAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null);
+                    return t;
+                }
+            }
+        }
+        return null;
+    }
+    
     public List<InventoryTicketDetail> getTicketDetails(int ticketId) throws SQLException {
         List<InventoryTicketDetail> details = new ArrayList<>();
         String sql = "SELECT d.*, p.Name as product_name FROM inventory_ticket_detail d JOIN Product p ON d.product_id = p.ProductID WHERE d.ticket_id = ?";
@@ -225,6 +249,26 @@ public class InventoryTicketDAO {
         }
     }
 
+    public void cancelTicket(int ticketId, int userId, String reason) throws SQLException {
+        String sql = "UPDATE inventory_ticket SET status = 'CANCELLED', note = CONCAT(ISNULL(note,''), ?) WHERE ticket_id = ? AND status = 'PENDING'";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "\nHủy bởi UID " + userId + (reason != null && !reason.isEmpty() ? ": " + reason : ""));
+            stmt.setInt(2, ticketId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public void rejectTicket(int ticketId, int userId, String reason) throws SQLException {
+        String sql = "UPDATE inventory_ticket SET status = 'REJECTED', note = CONCAT(ISNULL(note,''), ?) WHERE ticket_id = ? AND status = 'PENDING'";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "\nTừ chối bởi UID " + userId + (reason != null && !reason.isEmpty() ? ": " + reason : ""));
+            stmt.setInt(2, ticketId);
+            stmt.executeUpdate();
+        }
+    }
+
     public void confirmDispatch(int ticketId, int userId) throws SQLException {
         InventoryTicket ticket = findById(ticketId);
         if (ticket == null || !ticket.getStatus().equals("IN_TRANSIT") || ticket.isExportedBySender()) {
@@ -234,57 +278,58 @@ public class InventoryTicketDAO {
         List<InventoryTicketDetail> details = getTicketDetails(ticketId);
         String getInventorySql = "SELECT quantity_in_stock FROM inventory WHERE warehouse_id = ? AND product_id = ?";
         String updateInventorySql = "UPDATE inventory SET quantity_in_stock = quantity_in_stock - ? WHERE warehouse_id = ? AND product_id = ?";
-        String insertTxSql = "INSERT INTO stock_transaction (warehouse_id, product_id, reference_type, reference_id, transaction_type, quantity, before_quantity, after_quantity, note, created_by) VALUES (?, ?, 'TRANSFER', ?, 'EXPORT', ?, ?, ?, 'Xác nhận xuất kho (Trung chuyển)', ?)";
-        String updateTicketSql = "UPDATE inventory_ticket SET is_exported_by_sender = 1 ";
+        String insertTxSql = "INSERT INTO stock_transaction (warehouse_id, product_id, reference_type, reference_id, transaction_type, quantity, before_quantity, after_quantity, note, created_by) VALUES (?, ?, 'TRANSFER', ?, 'EXPORT', ?, ?, ?, ?, ?)";
         
-        // If receiver already confirmed, complete it
-        boolean completeIt = ticket.isImportedByReceiver();
-        if (completeIt) {
-            updateTicketSql += ", status = 'COMPLETED' ";
-        }
-        updateTicketSql += "WHERE ticket_id = ?";
-
         try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
             try {
+                // Update InventoryTicket status
+                String updateTicketSql = "UPDATE inventory_ticket SET is_exported_by_sender = 1";
+                boolean completeIt = ticket.isImportedByReceiver();
+                if (completeIt) {
+                    updateTicketSql += ", status = 'COMPLETED'";
+                }
+                updateTicketSql += " WHERE ticket_id = ?";
+                try (PreparedStatement s = conn.prepareStatement(updateTicketSql)) {
+                    s.setInt(1, ticketId);
+                    s.executeUpdate();
+                }
+                
+                // Trừ tồn kho và ghi log stock_transaction
                 for (InventoryTicketDetail d : details) {
-                    int qty = d.getQuantity();
-                    String action = d.getActionType();
-                    // Identify the sending warehouse for this specific detail
-                    int sendingWId = "SEND".equals(action) ? ticket.getFromWarehouseId() : ticket.getToWarehouseId();
+                    int senderWId = "SEND".equals(d.getActionType()) ? ticket.getFromWarehouseId() : ticket.getToWarehouseId();
                     
-                    int beforeSend = 0;
+                    int beforeQty = 0;
                     try (PreparedStatement s = conn.prepareStatement(getInventorySql)) {
-                        s.setInt(1, sendingWId);
+                        s.setInt(1, senderWId);
                         s.setInt(2, d.getProductId());
                         try (ResultSet r = s.executeQuery()) {
-                            if (r.next()) beforeSend = r.getInt(1);
+                            if (r.next()) beforeQty = r.getInt(1);
                         }
                     }
-                    if (beforeSend < qty) {
-                        throw new SQLException("Tồn kho không đủ cho sản phẩm " + d.getProductName() + " (cần " + qty + ", còn " + beforeSend + ").");
-                    }
+                    
                     try (PreparedStatement s = conn.prepareStatement(updateInventorySql)) {
-                        s.setInt(1, qty);
-                        s.setInt(2, sendingWId);
+                        s.setInt(1, d.getQuantity());
+                        s.setInt(2, senderWId);
                         s.setInt(3, d.getProductId());
                         s.executeUpdate();
                     }
+                    
                     try (PreparedStatement s = conn.prepareStatement(insertTxSql)) {
-                        s.setInt(1, sendingWId);
+                        s.setInt(1, senderWId);
                         s.setInt(2, d.getProductId());
                         s.setInt(3, ticketId);
-                        s.setInt(4, qty);
-                        s.setInt(5, beforeSend);
-                        s.setInt(6, beforeSend - qty);
-                        s.setInt(7, userId);
+                        s.setInt(4, d.getQuantity());
+                        s.setInt(5, beforeQty);
+                        s.setInt(6, beforeQty - d.getQuantity());
+                        s.setString(7, "Xác nhận xuất kho");
+                        s.setInt(8, userId);
                         s.executeUpdate();
                     }
                 }
                 
-                try (PreparedStatement s = conn.prepareStatement(updateTicketSql)) {
-                    s.setInt(1, ticketId);
-                    s.executeUpdate();
+                if (completeIt) {
+                    checkAndCompleteOriginalTransferRequest(ticket.getTicketCode(), conn);
                 }
                 
                 conn.commit();
@@ -301,11 +346,15 @@ public class InventoryTicketDAO {
             throw new SQLException("Phiếu không hợp lệ hoặc đã xuất kho.");
         }
         String updateSql = "UPDATE inventory_ticket SET status = 'REJECTED', note = ? WHERE ticket_id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(updateSql)) {
-            stmt.setString(1, "Từ chối xuất kho: " + (note != null ? note : ""));
-            stmt.setInt(2, ticketId);
-            stmt.executeUpdate();
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+                stmt.setString(1, "Từ chối xuất kho: " + (note != null ? note : ""));
+                stmt.setInt(2, ticketId);
+                stmt.executeUpdate();
+            }
+            checkAndCompleteOriginalTransferRequest(ticket.getTicketCode(), conn);
+            conn.commit();
         }
     }
 
@@ -412,6 +461,10 @@ public class InventoryTicketDAO {
                     createExchangeTicket(conn, discTicket, discrepancyDetails); // Reuse existing, need a transactional version
                 }
                 
+                if (completeIt) {
+                    checkAndCompleteOriginalTransferRequest(ticket.getTicketCode(), conn);
+                }
+                
                 conn.commit();
             } catch (SQLException e) {
                 conn.rollback();
@@ -447,6 +500,47 @@ public class InventoryTicketDAO {
                 dStmt.addBatch();
             }
             dStmt.executeBatch();
+        }
+    }
+    private void checkAndCompleteOriginalTransferRequest(String currentTicketCode, Connection conn) throws SQLException {
+        if (currentTicketCode == null || (!currentTicketCode.startsWith("TX-") && !currentTicketCode.startsWith("TI-"))) return;
+        try {
+            int originalTicketId = Integer.parseInt(currentTicketCode.substring(3));
+            String sql = "SELECT status FROM inventory_ticket WHERE ticket_type = 'TRANSFER_CHECK' AND (ticket_code = ? OR ticket_code = ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, "TX-" + originalTicketId);
+                stmt.setString(2, "TI-" + originalTicketId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    boolean allCompletedOrRejected = true;
+                    boolean hasError = false;
+                    boolean hasRejected = false;
+                    boolean foundAny = false;
+                    while (rs.next()) {
+                        foundAny = true;
+                        String status = rs.getString("status");
+                        if (!status.startsWith("COMPLETED") && !"REJECTED".equals(status) && !"CANCELLED".equals(status)) {
+                            allCompletedOrRejected = false;
+                            break;
+                        }
+                        if ("COMPLETED_WITH_ERROR".equals(status)) hasError = true;
+                        if ("REJECTED".equals(status) || "CANCELLED".equals(status)) hasRejected = true;
+                    }
+                    if (foundAny && allCompletedOrRejected) {
+                        String finalStatus = "COMPLETED";
+                        if (hasRejected) finalStatus = "REJECTED";
+                        else if (hasError) finalStatus = "COMPLETED_WITH_ERROR";
+                        
+                        String updateSql = "UPDATE inventory_ticket SET status = ? WHERE ticket_id = ?";
+                        try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                            updateStmt.setString(1, finalStatus);
+                            updateStmt.setInt(2, originalTicketId);
+                            updateStmt.executeUpdate();
+                        }
+                    }
+                }
+            }
+        } catch (NumberFormatException e) {
+            // ignore if not our specific format
         }
     }
 }

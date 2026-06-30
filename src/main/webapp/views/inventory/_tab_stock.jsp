@@ -64,7 +64,7 @@
                     <div class="ms-3 action-buttons shrink-0 d-flex align-items-center">
                         <button type="button" class="btn premium-btn" style="background: #10b981; border-color: #10b981; display: flex; align-items: center; gap: 4px;" onclick="Swal.fire({icon: 'info', title: 'Đang phát triển', text: 'Tính năng lập phiếu nhập kho đang được phát triển!'})">
                             <span class="material-icons" style="font-size: 18px;">add_box</span>
-                            Nhập kho
+                            Nhập Hàng
                         </button>
                     </div>
                 </div>
@@ -73,13 +73,13 @@
         <table class="premium-table table-hover">
             <thead>
                 <tr>
-                    <th>Sản phẩm</th>
+                    <th>Sản Phẩm</th>
                     <th>Mã SKU</th>
-                    <th>Danh mục</th>
-                    <th>Giá bán</th>
-                    <th>Kho</th>
-                    <th>Tồn kho</th>
-                    <th>Trạng thái</th>
+                    <th>Danh Mục</th>
+                    <th>Giá Bán</th>
+                    <th>Chi Nhánh</th>
+                    <th>Tồn Kho</th>
+                    <th>Trạng Thái</th>
                 </tr>
             </thead>
             <tbody>

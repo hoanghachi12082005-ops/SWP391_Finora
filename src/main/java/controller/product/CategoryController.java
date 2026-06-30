@@ -79,65 +79,43 @@ public class CategoryController extends BaseController {
     private void listCategories(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String keyword = request.getParameter("keyword");
         String status = request.getParameter("status");
-//        String parentName = request.getParameter("parentName");
         
         int page = parseOrDefault(request.getParameter("page"), 1);
         int limit = parseOrDefault(request.getParameter("limit"), 10);
-        List<Category> allRawCategories = categoryDAO.getAllCategories();
         
-        List<Category> filteredList = filterCategories(allRawCategories, keyword, status);
-        int totalItems = filteredList.size();
-        int fromIndex = 0;
-        int toIndex = 0;
-        int totalPages = 1;
+        int[] stats = categoryDAO.getCategoryStatistics(keyword, status);
+        int totalItems = stats[0];
+        int totalRootCategories = stats[1];
+        int totalLinkedProducts = stats[2];
 
+        int totalPages = 1;
+        int offset = 0;
         
-        
-        String percentAction = request.getParameter("percentAction");
-        if (percentAction != null && !percentAction.isEmpty()) {
-            limit = Math.max(1, (int) Math.ceil(totalItems * 0.3)); 
-            totalPages = (int) Math.ceil((double) totalItems / limit);
-            
-            if ("first".equals(percentAction)) {
-                fromIndex = 0;
-                toIndex = Math.min(limit, totalItems);
-                page = 1;
-            } else if ("middle".equals(percentAction)) {
-                fromIndex = Math.max(0, (totalItems - limit) / 2);
-                toIndex = Math.min(fromIndex + limit, totalItems);
-                page = Math.max(1, (fromIndex / limit) + 1); 
-            } else if ("last".equals(percentAction)) {
-                fromIndex = Math.max(0, totalItems - limit);
-                toIndex = totalItems;
-                page = totalPages;
-            }
-        } else {
+//        String percentAction = request.getParameter("percentAction");
+//        if (percentAction != null && !percentAction.isEmpty()) {
+//            limit = Math.max(1, (int) Math.ceil(totalItems * 0.3)); 
+//            totalPages = (int) Math.ceil((double) totalItems / limit);
+//            
+//            if ("first".equals(percentAction)) {
+//                offset = 0;
+//                page = 1;
+//            } else if ("middle".equals(percentAction)) {
+//                offset = Math.max(0, (totalItems - limit) / 2);
+//                page = Math.max(1, (offset / limit) + 1); 
+//            } else if ("last".equals(percentAction)) {
+//                offset = Math.max(0, totalItems - limit);
+//                page = totalPages;
+//            }
+//        } else {
             totalPages = (int) Math.ceil((double) totalItems / limit);
             if (page > totalPages && totalPages > 0) page = totalPages;
             
-            fromIndex = Math.max(0, (page - 1) * limit);
-            toIndex = Math.min(fromIndex + limit, totalItems);
-        }
-        List<Category> paginatedList;
-        if (fromIndex <= totalItems && fromIndex <= toIndex) {
-            paginatedList = filteredList.subList(fromIndex, toIndex);
-        } else {
-            paginatedList = new ArrayList<>();
-        }
-//        paginatedList.
-            List<Category> paginatedList1 = new ArrayList<>(); 
-            for (int i = paginatedList.size() - 1; i >= 0; i--) { 
-                paginatedList1.add(paginatedList.get(i));
-            }
+            offset = Math.max(0, (page - 1) * limit);
+//        }
 
-        int totalRootCategories = 0;
-        int totalLinkedProducts = 0;
-        for (Category c : filteredList) {
-            if (c.getParentName() == null || c.getParentName().trim().isEmpty()) totalRootCategories++;
-            totalLinkedProducts += c.getProductCount();
-        }
+        List<Category> paginatedList = categoryDAO.getPaginatedCategories(keyword, status, offset, limit);
 
-        request.setAttribute("categories", paginatedList1);
+        request.setAttribute("categories", paginatedList);
         request.setAttribute("totalItems", totalItems);
         request.setAttribute("totalRootCategories", totalRootCategories);
         request.setAttribute("totalLinkedProducts", totalLinkedProducts);
@@ -150,48 +128,12 @@ public class CategoryController extends BaseController {
         forward(request, response, "categories/list.jsp");
     }
 
-
     private int parseOrDefault(String param, int defaultValue) {
         try {
             return (param != null && !param.trim().isEmpty()) ? Integer.parseInt(param) : defaultValue;
         } catch (NumberFormatException e) {
             return defaultValue;
         }
-    }
-
-    private List<Category> filterCategories(List<Category> rawList, String keyword, String status) {
-        List<Category> result = new ArrayList<>();
-        for (Category c : rawList) {
-            boolean isMatch = true;
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                String kw = keyword.trim().toLowerCase(); 
-                String catName = "";
-                if (c.getName() != null) {
-                    catName = c.getName().toLowerCase();
-                }
-                String catDesc = "";
-                if (c.getDescription() != null) {
-                    catDesc = c.getDescription().toLowerCase();
-                }
-                String catParentName = "";
-                if (c.getParentName() != null) {
-                    catParentName = c.getParentName().toLowerCase();
-                }
-                if (catName.contains(kw) == false && catDesc.contains(kw) == false && catParentName.contains(kw) == false) {
-                    isMatch = false;
-                }
-            }
-            if (status != null && !status.trim().isEmpty()) {
-                String st = status.trim();
-                if (st.equals(c.getStatus()) == false) {
-                    isMatch = false;
-                }
-            }
-            if (isMatch == true) {
-                result.add(c);
-            }
-        }
-        return result;
     }
 
     private void addCategory(HttpServletRequest request, HttpServletResponse response)

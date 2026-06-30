@@ -97,7 +97,7 @@
                         <div class="kpi-grid mb-4">
                             <div class="kpi-card">
                                 <div class="kpi-card-info">
-                                    <p>Tổng mặt hàng</p>
+                                    <p>Tổng Sản Phẩm</p>
                                     <h3>${totalProducts != null ? totalProducts : 0}</h3>
                                     <span class="kpi-subtext">Thuộc ${totalCategories != null ? totalCategories : 0} danh mục</span>
                                 </div>
@@ -108,7 +108,7 @@
 
                             <div class="kpi-card">
                                 <div class="kpi-card-info">
-                                    <p>Sắp hết hàng</p>
+                                    <p>Sắp Hết Hàng</p>
                                     <h3 style="color: var(--danger-color);">${lowStockCount != null ? lowStockCount : 0}</h3>
                                     <span class="kpi-trend down">
                                         <span class="material-icons" style="font-size: 14px;">warning</span>
@@ -122,9 +122,9 @@
 
                             <div class="kpi-card" style="cursor: pointer;" onclick="window.location.href='?tab=transfer&warehouseId=${selectedWarehouseId}'">
                                 <div class="kpi-card-info">
-                                    <p>Đơn cần duyệt</p>
+                                    <p>Phiếu Chờ Xử Lý</p>
                                     <h3 style="color: #f59e0b;">${pendingTransferCount != null ? pendingTransferCount : 0}</h3>
-                                    <span class="kpi-subtext" style="color: #d97706;">Đang chờ xử lý</span>
+                                    <span class="kpi-subtext" style="color: #d97706;">Điều chuyển cần duyệt</span>
                                 </div>
                                 <div class="kpi-card-icon" style="background: rgba(245,158,11,0.1); color: #f59e0b;">
                                     <span class="material-icons">pending_actions</span>
@@ -135,11 +135,10 @@
 
                     <!-- Tab Navigation -->
                     <div class="tab-nav mb-4">
-                        <a href="?tab=stock&warehouseId=${selectedWarehouseId}" class="tab-btn ${activeTab == 'stock' ? 'active' : ''}">Tồn kho</a>
-                        <a href="?tab=transfer&warehouseId=${selectedWarehouseId}" class="tab-btn ${activeTab == 'transfer' || activeTab == 'createTransfer' ? 'active' : ''}">Chuyển kho</a>
+                        <a href="?tab=stock&warehouseId=${selectedWarehouseId}" class="tab-btn ${activeTab == 'stock' ? 'active' : ''}">Tồn Kho</a>
+                        <a href="?tab=transfer&warehouseId=${selectedWarehouseId}" class="tab-btn ${activeTab == 'transfer' || activeTab == 'createTransfer' ? 'active' : ''}">Điều Chuyển</a>
                         <a href="?tab=check&warehouseId=${selectedWarehouseId}" class="tab-btn ${activeTab == 'check' ? 'active' : ''}">Kiểm kho</a>
                         <a href="?tab=history&warehouseId=${selectedWarehouseId}" class="tab-btn ${activeTab == 'history' ? 'active' : ''}">Lịch sử xuất nhập kho</a>
-                        <a href="?tab=discrepancy&warehouseId=${selectedWarehouseId}" class="tab-btn ${activeTab == 'discrepancy' ? 'active' : ''}">Hao hụt Trung chuyển</a>
                     </div>
 
                     <!-- Tab Content -->
@@ -159,9 +158,6 @@
                             </c:when>
                             <c:when test="${activeTab == 'history'}">
                                 <jsp:include page="_tab_history.jsp" />
-                            </c:when>
-                            <c:when test="${activeTab == 'discrepancy'}">
-                                <jsp:include page="_tab_discrepancy.jsp" />
                             </c:when>
                         </c:choose>
                     </div>
@@ -265,7 +261,13 @@
         const myModal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
         myModal.show();
         
-        fetch('${pageContext.request.contextPath}/inventory?action=viewTicket&ticketId=' + ticketId)
+        const currentWarehouseId = '${selectedWarehouseId}';
+        let url = '${pageContext.request.contextPath}/inventory?action=viewTicket&ticketId=' + ticketId;
+        if (currentWarehouseId) {
+            url += '&warehouseId=' + currentWarehouseId;
+        }
+        
+        fetch(url)
             .then(response => response.text())
             .then(html => {
                 modalContent.innerHTML = html;

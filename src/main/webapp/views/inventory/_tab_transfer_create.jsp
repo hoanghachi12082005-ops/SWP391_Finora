@@ -20,11 +20,11 @@
 <div class="dashboard-card">
     <div class="card-header d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h5 class="mb-0">Tạo Phiếu Chuyển Kho</h5>
+            <h5 class="mb-0">Tạo Lệnh Điều Chuyển</h5>
         </div>
         <a href="${pageContext.request.contextPath}/inventory?tab=transfer&warehouseId=${selectedWarehouseId}" class="btn btn-outline-secondary btn-sm">
             <span class="material-icons" style="font-size:16px; vertical-align:text-bottom;">arrow_back</span>
-            Quay lại
+            Quay Lại
         </a>
     </div>
 
@@ -32,7 +32,7 @@
         <!-- Search Section -->
         <div class="search-box">
             <span class="material-icons search-icon">search</span>
-            <input type="text" class="search-input" id="productSearch" placeholder="Tìm theo sản phẩm hoặc kho (tên kho, mã SP)..." autocomplete="off">
+            <input type="text" class="search-input" id="productSearch" placeholder="Tìm kiếm sản phẩm hoặc chi nhánh..." autocomplete="off">
             <div class="search-results" id="searchResults">
                 <!-- JS Populated -->
             </div>
@@ -49,7 +49,7 @@
                         <tr>
                             <th width="25%">Sản Phẩm</th>
                             <th width="10%" class="text-center">Tồn Kho</th>
-                            <th width="25%">Kho Đối Tác</th>
+                            <th width="25%">Chi Nhánh Đối Tác</th>
                             <th width="15%">Loại Giao Dịch</th>
                             <th width="20%">Số Lượng</th>
                             <th width="5%" class="text-center">Xóa</th>
@@ -72,7 +72,7 @@
             <div class="d-flex justify-content-end">
                 <button type="submit" class="btn btn-danger px-4 py-2" id="submitBtn" disabled>
                     <span class="material-icons" style="font-size: 18px; vertical-align: text-bottom;">send</span>
-                    Lưu các Phiếu Chuyển Kho
+                    Khởi Tạo Lệnh Điều Chuyển
                 </button>
             </div>
         </form>

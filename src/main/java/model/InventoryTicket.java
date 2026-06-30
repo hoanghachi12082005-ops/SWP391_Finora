@@ -134,6 +134,12 @@ public class InventoryTicket {
     }
 
     public void setImportedByReceiver(boolean importedByReceiver) {
-        isImportedByReceiver = importedByReceiver;
+        this.isImportedByReceiver = importedByReceiver;
+    }
+
+    public String getFormattedCreatedAt() {
+        if (createdAt == null) return "";
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        return createdAt.format(formatter);
     }
 }

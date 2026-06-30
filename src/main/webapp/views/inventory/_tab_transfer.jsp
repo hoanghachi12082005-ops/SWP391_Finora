@@ -5,7 +5,7 @@
 
 <div class="dashboard-card">
     <div class="card-header d-flex justify-content-between align-items-center mb-3">
-        <h5>Danh sách Phiếu Chuyển Kho</h5>
+        <h5>Danh sách Phiếu Điều Chuyển</h5>
         <c:if test="${roleName == 'WarehouseStaff' || roleName == 'StoreManager' || roleName == 'Admin' || roleName == 'Owner'}">
             <a href="${pageContext.request.contextPath}/inventory?action=createTransfer&warehouseId=${selectedWarehouseId}" class="btn btn-danger text-decoration-none">
                 <span class="material-icons" style="font-size:16px; vertical-align:text-bottom;">add</span>
@@ -19,8 +19,8 @@
                 <thead>
                     <tr>
                         <th>Mã Phiếu</th>
-                        <th>Kho Đề Xuất</th>
-                        <th>Kho Xử Lý</th>
+                        <th>Kho Xuất</th>
+                        <th>Kho Nhận</th>
                         <th>Người Tạo</th>
                         <th>Thời Gian</th>
                         <th>Trạng Thái</th>
@@ -42,8 +42,7 @@
                                     <td>${tx.toWarehouseName}</td>
                                     <td>${tx.createdByName}</td>
                                     <td>
-                                        <fmt:parseDate value="${tx.createdAt}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedDateTime" type="both" />
-                                        <fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${parsedDateTime}" />
+                                        ${tx.formattedCreatedAt}
                                     </td>
                                     <td>
                                         <c:choose>
@@ -51,7 +50,14 @@
                                                 <span class="badge bg-warning text-dark">CHỜ DUYỆT</span>
                                             </c:when>
                                             <c:when test="${tx.status == 'IN_TRANSIT'}">
-                                                <span class="badge bg-info text-dark">ĐANG CHUYỂN</span>
+                                                <c:choose>
+                                                    <c:when test="${tx.exportedBySender}">
+                                                        <span class="badge bg-primary">CHỜ NHẬN</span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="badge bg-info text-dark">ĐANG CHUYỂN</span>
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </c:when>
                                             <c:when test="${tx.status == 'COMPLETED'}">
                                                 <span class="badge bg-success">HOÀN TẤT</span>
@@ -72,29 +78,31 @@
                                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewTicketDetails(${tx.ticketId})">Xem</button>
                                             
                                             <!-- PENDING: Duyệt phiếu -->
-                                            <c:if test="${tx.status == 'PENDING' && (roleName == 'WarehouseStaff' || roleName == 'Admin' || roleName == 'Owner') && (empty selectedWarehouseId || selectedWarehouseId == tx.fromWarehouseId)}">
-                                                <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
-                                                    <input type="hidden" name="action" value="confirmExport">
-                                                    <input type="hidden" name="transferId" value="${tx.ticketId}">
-                                                    <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
-                                                    <button type="submit" class="btn btn-sm btn-outline-warning">Duyệt Phiếu</button>
-                                                </form>
-                                            </c:if>
-                                            
-                                            <!-- IN_TRANSIT: Xác nhận Xuất (Kho Gửi) -->
-                                            <c:if test="${tx.status == 'IN_TRANSIT' && !tx.exportedBySender && (empty selectedWarehouseId || selectedWarehouseId == tx.fromWarehouseId)}">
-                                                <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
-                                                    <input type="hidden" name="action" value="confirmDispatch">
-                                                    <input type="hidden" name="transferId" value="${tx.ticketId}">
-                                                    <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
-                                                    <button type="submit" class="btn btn-sm btn-outline-info">Xác nhận Xuất</button>
-                                                </form>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="openRejectModal(${tx.ticketId})">Từ chối</button>
-                                            </c:if>
-
-                                            <!-- IN_TRANSIT: Xác nhận Nhập (Kho Nhận) -->
-                                            <c:if test="${tx.status == 'IN_TRANSIT' && !tx.importedByReceiver && (empty selectedWarehouseId || selectedWarehouseId == tx.toWarehouseId)}">
-                                                <button type="button" class="btn btn-sm btn-outline-success" onclick="openReceiptModal(${tx.ticketId})">Kiểm đếm Nhập</button>
+                                            <c:if test="${tx.status == 'PENDING' && (roleName == 'WarehouseStaff' || roleName == 'Admin' || roleName == 'Owner')}">
+                                                <c:choose>
+                                                    <c:when test="${empty selectedWarehouseId || selectedWarehouseId == tx.toWarehouseId}">
+                                                        <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+                                                            <input type="hidden" name="action" value="confirmExport">
+                                                            <input type="hidden" name="transferId" value="${tx.ticketId}">
+                                                            <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
+                                                            <button type="submit" class="btn btn-sm btn-outline-success">Phê Duyệt</button>
+                                                        </form>
+                                                        <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;" onsubmit="return confirm('Bạn có chắc muốn từ chối phiếu này không?');">
+                                                            <input type="hidden" name="action" value="rejectTransfer">
+                                                            <input type="hidden" name="transferId" value="${tx.ticketId}">
+                                                            <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger">Từ Chối</button>
+                                                        </form>
+                                                    </c:when>
+                                                    <c:when test="${selectedWarehouseId == tx.fromWarehouseId}">
+                                                        <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;" onsubmit="return confirm('Bạn có chắc muốn hủy lệnh này không?');">
+                                                            <input type="hidden" name="action" value="cancelTransfer">
+                                                            <input type="hidden" name="transferId" value="${tx.ticketId}">
+                                                            <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger">Hủy Lệnh</button>
+                                                        </form>
+                                                    </c:when>
+                                                </c:choose>
                                             </c:if>
                                         </div>
                                     </td>

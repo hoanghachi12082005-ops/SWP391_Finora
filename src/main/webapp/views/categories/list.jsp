@@ -62,7 +62,7 @@
                             </div>
                         </div>
                         
-
+<!--
                         <div class="row mt-3 border-top pt-3">
                             <div class="col-md-4 d-flex align-items-center gap-2">
                                 <label for="limitInput" class="fw-bold mb-0 text-nowrap">Hiển thị:</label>
@@ -74,7 +74,7 @@
                                 <button type="submit" class="btn btn-sm btn-outline-info" name="percentAction" value="middle">30% Giữa</button>
                                 <button type="submit" class="btn btn-sm btn-outline-info" name="percentAction" value="last">30% Cuối</button>
                             </div>
-                        </div>
+                        </div>-->
                     </form>
                 </div>
             </div>

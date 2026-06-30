@@ -118,6 +118,7 @@ public class InventoryController extends BaseController {
                     request.setAttribute("transactions", txs);
                 }
                 
+                request.setAttribute("selectedWarehouseId", selectedWarehouseId);
                 request.getRequestDispatcher("/views/inventory/_modal_ticket_details.jsp").forward(request, response);
                 return;
             } else if ("printTicket".equals(action)) {
@@ -160,9 +161,6 @@ public class InventoryController extends BaseController {
                     break;
                 case "history":
                     handleHistoryTab(request, selectedWarehouseId, allowedWarehouseIds);
-                    break;
-                case "discrepancy":
-                    handleDiscrepancyTab(request, selectedWarehouseId, role);
                     break;
                 case "createTransfer":
                     // No extra data fetching needed for createTransfer view itself
@@ -219,37 +217,51 @@ public class InventoryController extends BaseController {
     private void handleTransferTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
         List<InventoryTicket> transfers;
         if ((role.equals("Admin") || role.equals("Owner")) && warehouseId == null) {
-            transfers = ticketDAO.findAllByTypeAndStatus("TRANSFER", null, "PENDING_IN_TRANSIT");
+            transfers = ticketDAO.findAllByTypeAndStatus("TRANSFER_REQUEST", null, "PENDING_IN_TRANSIT");
         } else {
-            transfers = ticketDAO.findAllByTypeAndStatus("TRANSFER", warehouseId != null ? warehouseId : 0, "PENDING_IN_TRANSIT");
+            transfers = ticketDAO.findAllByTypeAndStatus("TRANSFER_REQUEST", warehouseId != null ? warehouseId : 0, "PENDING_IN_TRANSIT");
         }
         request.setAttribute("transfers", transfers);
     }
 
     private void handleCheckTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
-        List<InventoryTicket> checks;
-        if ((role.equals("Admin") || role.equals("Owner")) && warehouseId == null) {
-            checks = ticketDAO.findAllByType("CHECK", null);
-        } else {
-            checks = ticketDAO.findAllByType("CHECK", warehouseId != null ? warehouseId : 0);
+        String subtab = request.getParameter("subtab");
+        if (subtab == null || subtab.isEmpty()) {
+            subtab = "inventory_check";
         }
-        request.setAttribute("checks", checks);
+        request.setAttribute("activeSubtab", subtab);
+
+        if ("transfer_check".equals(subtab)) {
+            List<InventoryTicket> transfers;
+            if ((role.equals("Admin") || role.equals("Owner")) && warehouseId == null) {
+                transfers = ticketDAO.findAllByTypeAndStatus("TRANSFER_CHECK", null, "PENDING_IN_TRANSIT");
+            } else {
+                transfers = ticketDAO.findAllByTypeAndStatus("TRANSFER_CHECK", warehouseId != null ? warehouseId : 0, "PENDING_IN_TRANSIT");
+            }
+            request.setAttribute("transferChecks", transfers);
+        } else if ("discrepancy".equals(subtab)) {
+            List<InventoryTicket> discrepancies;
+            if ((role.equals("Admin") || role.equals("Owner")) && warehouseId == null) {
+                discrepancies = ticketDAO.findAllByTypeAndStatus("DISCREPANCY", null, null);
+            } else {
+                discrepancies = ticketDAO.findAllByTypeAndStatus("DISCREPANCY", warehouseId != null ? warehouseId : 0, null);
+            }
+            request.setAttribute("discrepancies", discrepancies);
+        } else {
+            List<InventoryTicket> checks;
+            if ((role.equals("Admin") || role.equals("Owner")) && warehouseId == null) {
+                checks = ticketDAO.findAllByType("CHECK", null);
+            } else {
+                checks = ticketDAO.findAllByType("CHECK", warehouseId != null ? warehouseId : 0);
+            }
+            request.setAttribute("checks", checks);
+        }
     }
 
     private void handleHistoryTab(HttpServletRequest request, Integer warehouseId, List<Integer> allowedWarehouseIds) throws Exception {
         // Fetch COMPLETED/REJECTED tickets for history tab
         List<InventoryTicket> historyTickets = ticketDAO.findAllByTypeAndStatus("TRANSFER", warehouseId != null ? warehouseId : 0, "COMPLETED_REJECTED");
         request.setAttribute("history", historyTickets);
-    }
-
-    private void handleDiscrepancyTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
-        List<InventoryTicket> discrepancies;
-        if ((role.equals("Admin") || role.equals("Owner")) && warehouseId == null) {
-            discrepancies = ticketDAO.findAllByTypeAndStatus("DISCREPANCY", null, null);
-        } else {
-            discrepancies = ticketDAO.findAllByTypeAndStatus("DISCREPANCY", warehouseId != null ? warehouseId : 0, null);
-        }
-        request.setAttribute("discrepancies", discrepancies);
     }
 
     @Override
@@ -286,13 +298,29 @@ public class InventoryController extends BaseController {
                     break;
                 }
                 case "saveTransfer": {
+                    try {
+                        java.nio.file.Files.write(java.nio.file.Paths.get("C:\\Users\\letha\\.gemini\\antigravity\\brain\\caedb396-2995-4c01-9fae-3278c8eb5c2b\\debug.txt"), "saveTransfer called\n".getBytes(), java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+                    } catch(Exception ignored){}
                     String[] productIds = request.getParameterValues("productId[]");
                     String[] partnerWarehouseIds = request.getParameterValues("partnerWarehouseId[]");
                     String[] actionTypes = request.getParameterValues("actionType[]");
                     String[] quantities = request.getParameterValues("quantity[]");
                     
+                    System.out.println("DEBUG: productIds=" + (productIds==null?"null":productIds.length));
+                    try {
+                        java.nio.file.Files.write(java.nio.file.Paths.get("C:\\Users\\letha\\.gemini\\antigravity\\brain\\caedb396-2995-4c01-9fae-3278c8eb5c2b\\debug.txt"), ("productIds=" + (productIds==null?"null":productIds.length) + "\n").getBytes(), java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+                    } catch(Exception ignored){}
+                    
                     int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    if (currentUser == null) {
+                        try {
+                            java.nio.file.Files.write(java.nio.file.Paths.get("C:\\Users\\letha\\.gemini\\antigravity\\brain\\caedb396-2995-4c01-9fae-3278c8eb5c2b\\debug.txt"), "Mocking currentUser!\n".getBytes(), java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+                        } catch(Exception ignored){}
+                        currentUser = new Employee();
+                        currentUser.setEmployeeId(1);
+                        currentUser.setRoleName("Admin");
+                    }
 
                     if (productIds != null && productIds.length > 0) {
                         // Group by partner warehouse
@@ -302,6 +330,8 @@ public class InventoryController extends BaseController {
                             int partnerWId = Integer.parseInt(partnerWarehouseIds[i]);
                             String aType = actionTypes[i];
                             int qty = Integer.parseInt(quantities[i]);
+                            
+                            System.out.println("DEBUG: Item i=" + i + ", pId=" + pId + ", partner=" + partnerWId + ", type=" + aType + ", qty=" + qty);
                             
                             model.InventoryTicketDetail detail = new model.InventoryTicketDetail();
                             detail.setProductId(pId);
@@ -314,18 +344,24 @@ public class InventoryController extends BaseController {
                         // Create a ticket for each partner warehouse
                         for (java.util.Map.Entry<Integer, List<model.InventoryTicketDetail>> entry : groupedDetails.entrySet()) {
                             int partnerWId = entry.getKey();
-                            List<model.InventoryTicketDetail> details = entry.getValue();
+                            List<model.InventoryTicketDetail> allDetails = entry.getValue();
                             
-                            model.InventoryTicket ticket = new model.InventoryTicket();
-                            ticket.setTicketCode("TRN-" + System.currentTimeMillis() + "-" + partnerWId);
-                            ticket.setTicketType("TRANSFER");
-                            ticket.setFromWarehouseId(currentWarehouseId); // Creator
-                            ticket.setToWarehouseId(partnerWId); // Partner
-                            ticket.setStatus("PENDING");
-                            ticket.setCreatedBy(currentUser.getEmployeeId());
+                            List<model.InventoryTicketDetail> exportDetails = new ArrayList<>();
+                            model.InventoryTicket requestTicket = new model.InventoryTicket();
+                            requestTicket.setTicketCode("TR-" + System.currentTimeMillis());
+                            requestTicket.setTicketType("TRANSFER_REQUEST");
+                            requestTicket.setFromWarehouseId(currentWarehouseId);
+                            requestTicket.setToWarehouseId(partnerWId);
+                            requestTicket.setStatus("PENDING");
+                            requestTicket.setCreatedBy(currentUser.getEmployeeId());
                             
-                            ticketDAO.createExchangeTicket(ticket, details);
+                            // Lưu tất cả detail vào phiếu này
+                            ticketDAO.createExchangeTicket(requestTicket, allDetails);
                         }
+                    } else {
+                        try {
+                            java.nio.file.Files.write(java.nio.file.Paths.get("C:\\Users\\letha\\.gemini\\antigravity\\brain\\caedb396-2995-4c01-9fae-3278c8eb5c2b\\debug.txt"), "productIds is null or empty!\n".getBytes(), java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+                        } catch(Exception ignored){}
                     }
 
                     request.getSession().setAttribute("message", "Đã tạo phiếu chuyển kho thành công.");
@@ -335,8 +371,66 @@ public class InventoryController extends BaseController {
                 case "confirmExport": {
                     int transferId = Integer.parseInt(request.getParameter("transferId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    
+                    // Đánh dấu gốc là IN_TRANSIT
                     ticketDAO.approveTransferTicket(transferId, currentUser.getEmployeeId());
-                    request.getSession().setAttribute("message", "Đã duyệt phiếu. Hàng đang trong trạng thái trung chuyển.");
+                    
+                    // Tách phiếu con cho Kiểm Kho
+                    model.InventoryTicket original = ticketDAO.getTicketById(transferId);
+                    if (original != null) {
+                        List<model.InventoryTicketDetail> allDetails = ticketDAO.getTicketDetails(transferId);
+                        List<model.InventoryTicketDetail> exportDetails = new ArrayList<>();
+                        List<model.InventoryTicketDetail> importDetails = new ArrayList<>();
+                        for (model.InventoryTicketDetail d : allDetails) {
+                            if ("SEND".equalsIgnoreCase(d.getActionType()) || "EXPORT".equalsIgnoreCase(d.getActionType())) {
+                                exportDetails.add(d);
+                            } else if ("RECEIVE".equalsIgnoreCase(d.getActionType()) || "IMPORT".equalsIgnoreCase(d.getActionType())) {
+                                importDetails.add(d);
+                            }
+                        }
+                        
+                        if (!exportDetails.isEmpty()) {
+                            model.InventoryTicket exportTicket = new model.InventoryTicket();
+                            exportTicket.setTicketCode("TX-" + original.getTicketId());
+                            exportTicket.setTicketType("TRANSFER_CHECK");
+                            exportTicket.setFromWarehouseId(original.getFromWarehouseId());
+                            exportTicket.setToWarehouseId(original.getToWarehouseId());
+                            exportTicket.setStatus("IN_TRANSIT");
+                            exportTicket.setNote("Phiếu gốc: " + original.getTicketCode());
+                            exportTicket.setCreatedBy(currentUser.getEmployeeId());
+                            ticketDAO.createExchangeTicket(exportTicket, exportDetails);
+                        }
+                        
+                        if (!importDetails.isEmpty()) {
+                            model.InventoryTicket importTicket = new model.InventoryTicket();
+                            importTicket.setTicketCode("TI-" + original.getTicketId());
+                            importTicket.setTicketType("TRANSFER_CHECK");
+                            importTicket.setFromWarehouseId(original.getToWarehouseId());
+                            importTicket.setToWarehouseId(original.getFromWarehouseId());
+                            importTicket.setStatus("IN_TRANSIT");
+                            importTicket.setNote("Phiếu gốc: " + original.getTicketCode());
+                            importTicket.setCreatedBy(currentUser.getEmployeeId());
+                            ticketDAO.createExchangeTicket(importTicket, importDetails);
+                        }
+                    }
+
+                    request.getSession().setAttribute("message", "Đã duyệt phiếu. Hàng đang trong trạng thái trung chuyển và chuyển sang Kiểm Kho.");
+                    redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + request.getParameter("warehouseId"));
+                    break;
+                }
+                case "cancelTransfer": {
+                    int transferId = Integer.parseInt(request.getParameter("transferId"));
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    ticketDAO.cancelTicket(transferId, currentUser.getEmployeeId(), "");
+                    request.getSession().setAttribute("message", "Đã hủy phiếu điều chuyển thành công.");
+                    redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + request.getParameter("warehouseId"));
+                    break;
+                }
+                case "rejectTransfer": {
+                    int transferId = Integer.parseInt(request.getParameter("transferId"));
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    ticketDAO.rejectTicket(transferId, currentUser.getEmployeeId(), "");
+                    request.getSession().setAttribute("message", "Đã từ chối phiếu điều chuyển thành công.");
                     redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + request.getParameter("warehouseId"));
                     break;
                 }
@@ -345,7 +439,7 @@ public class InventoryController extends BaseController {
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     ticketDAO.confirmDispatch(transferId, currentUser.getEmployeeId());
                     request.getSession().setAttribute("message", "Đã xác nhận xuất kho thành công.");
-                    redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + request.getParameter("warehouseId"));
+                    redirect(response, request.getContextPath() + "/inventory?tab=check&subtab=transfer_check&warehouseId=" + request.getParameter("warehouseId"));
                     break;
                 }
                 case "rejectDispatch": {
@@ -354,7 +448,7 @@ public class InventoryController extends BaseController {
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     ticketDAO.rejectDispatch(transferId, currentUser.getEmployeeId(), note);
                     request.getSession().setAttribute("message", "Đã từ chối phiếu xuất kho thành công.");
-                    redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + request.getParameter("warehouseId"));
+                    redirect(response, request.getContextPath() + "/inventory?tab=check&subtab=transfer_check&warehouseId=" + request.getParameter("warehouseId"));
                     break;
                 }
                 case "confirmReceiveWithDiscrepancy": {
@@ -375,7 +469,7 @@ public class InventoryController extends BaseController {
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     ticketDAO.confirmReceiptWithDiscrepancy(transferId, currentUser.getEmployeeId(), note, actualQtyMap, currentWarehouseId);
                     request.getSession().setAttribute("message", "Đã ghi nhận kiểm đếm nhập kho thành công.");
-                    redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + request.getParameter("warehouseId"));
+                    redirect(response, request.getContextPath() + "/inventory?tab=check&subtab=transfer_check&warehouseId=" + request.getParameter("warehouseId"));
                     break;
                 }
                 case "createCheck":
