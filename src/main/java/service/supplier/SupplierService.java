@@ -45,12 +45,8 @@ public class SupplierService {
         return dao.existsByNameOrPhone(name, phone);
     }
 
-    public boolean insert(Supplier s) {
-        return dao.insert(s);
-    }
-
-    public boolean update(Supplier s) {
-        return dao.update(s);
+    public boolean save(Supplier s) {
+        return dao.save(s);
     }
 
     public boolean delete(int id) {

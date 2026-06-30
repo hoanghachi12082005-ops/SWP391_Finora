@@ -108,8 +108,7 @@
                             </div>
                         </c:if>
 
-                        <form method="post"
-                              action="${pageContext.request.contextPath}/forgot-password">
+                        <form method="post" action="${pageContext.request.contextPath}/forgot-password">
 
                             <input type="hidden" name="action" value="send-otp">
 

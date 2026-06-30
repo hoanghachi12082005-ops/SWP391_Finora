@@ -144,7 +144,7 @@ public class SupplierServlet extends HttpServlet {
                 request.getSession().setAttribute("modalAddress", s.getAddress());
                 request.getSession().setAttribute("modalStatus", s.getStatus());
             } else {
-                boolean success = service.insert(s);
+                boolean success = service.save(s);
                 if (success) {
                     request.getSession().setAttribute("message", "Thêm nhà cung cấp thành công.");
                     request.getSession().setAttribute("messageType", "success");
@@ -156,7 +156,7 @@ public class SupplierServlet extends HttpServlet {
         } else if ("edit".equals(action)) {
             s.setSupplierID(
                     Integer.parseInt(request.getParameter("id")));
-            boolean success = service.update(s);
+            boolean success = service.save(s);
             if (success) {
                 request.getSession().setAttribute("message", "Cập nhật nhà cung cấp thành công.");
                 request.getSession().setAttribute("messageType", "success");
