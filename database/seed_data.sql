@@ -32,30 +32,30 @@ GO
 -- ============================================================
 INSERT INTO Employee (branch_id, role_id, fullName, gender, bod, address, email, phone, passwordHash, status) VALUES
 -- Admin (branch 1)
-(1, 1, N'Nguyễn Văn An',     N'Nam',  '1990-05-15', N'Hà Nội',     'admin@finora.vn',        '090-100-0001', '$2a$10$dummyhashfordemo', 'ACTIVE'),
+(1, 1, N'Nguyễn Văn An',     N'Nam',  '1990-05-15', N'Hà Nội',     'admin@finora.vn',        '090-100-0001', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
 -- Owner (branch 1)
-(1, 2, N'Trần Thị Bình',     N'Nữ',   '1985-08-20', N'Hà Nội',     'owner@finora.vn',        '090-100-0002', '$2a$10$dummyhashfordemo', 'ACTIVE'),
+(1, 2, N'Trần Thị Bình',     N'Nữ',   '1985-08-20', N'Hà Nội',     'owner@finora.vn',        '090-100-0002', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
 -- Store Managers (one per branch)
-(1, 3, N'Lê Văn Cường',      N'Nam',  '1992-03-10', N'Hà Nội',     'cuong.lv@finora.vn',     '090-100-0003', '$2a$10$dummyhashfordemo', 'ACTIVE'),
-(2, 3, N'Phạm Thị Dung',     N'Nữ',   '1991-07-22', N'Hồ Chí Minh','dung.pt@finora.vn',      '090-100-0004', '$2a$10$dummyhashfordemo', 'ACTIVE'),
-(3, 3, N'Hoàng Văn Em',      N'Nam',  '1993-11-05', N'Đà Nẵng',   'em.hv@finora.vn',        '090-100-0005', '$2a$10$dummyhashfordemo', 'ACTIVE'),
+(1, 3, N'Lê Văn Cường',      N'Nam',  '1992-03-10', N'Hà Nội',     'cuong.lv@finora.vn',     '090-100-0003', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
+(2, 3, N'Phạm Thị Dung',     N'Nữ',   '1991-07-22', N'Hồ Chí Minh','dung.pt@finora.vn',      '090-100-0004', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
+(3, 3, N'Hoàng Văn Em',      N'Nam',  '1993-11-05', N'Đà Nẵng',   'em.hv@finora.vn',        '090-100-0005', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
 -- Sales Staff — Branch 1 (Hà Nội)
-(1, 4, N'Nguyễn Thị Phương',  N'Nữ',   '1996-02-14', N'Hà Nội',     'phuong.nt@finora.vn',    '090-100-0006', '$2a$10$dummyhashfordemo', 'ACTIVE'),
-(1, 4, N'Vũ Văn Giang',      N'Nam',  '1995-09-30', N'Hà Nội',     'giang.vv@finora.vn',     '090-100-0007', '$2a$10$dummyhashfordemo', 'ACTIVE'),
-(1, 4, N'Đỗ Thị Hoa',        N'Nữ',   '1997-06-18', N'Hà Nội',     'hoa.dt@finora.vn',       '090-100-0008', '$2a$10$dummyhashfordemo', 'ACTIVE'),
-(1, 4, N'Bùi Văn Huy',       N'Nam',  '1994-12-01', N'Hà Nội',     'huy.bv@finora.vn',       '090-100-0009', '$2a$10$dummyhashfordemo', 'ACTIVE'),
+(1, 4, N'Nguyễn Thị Phương',  N'Nữ',   '1996-02-14', N'Hà Nội',     'phuong.nt@finora.vn',    '090-100-0006', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
+(1, 4, N'Vũ Văn Giang',      N'Nam',  '1995-09-30', N'Hà Nội',     'giang.vv@finora.vn',     '090-100-0007', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
+(1, 4, N'Đỗ Thị Hoa',        N'Nữ',   '1997-06-18', N'Hà Nội',     'hoa.dt@finora.vn',       '090-100-0008', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
+(1, 4, N'Bùi Văn Huy',       N'Nam',  '1994-12-01', N'Hà Nội',     'huy.bv@finora.vn',       '090-100-0009', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
 -- Sales Staff — Branch 2 (Hồ Chí Minh)
-(2, 4, N'Trương Thị Khanh',  N'Nữ',   '1998-04-25', N'Hồ Chí Minh','khanh.tt@finora.vn',     '090-100-0010', '$2a$10$dummyhashfordemo', 'ACTIVE'),
-(2, 4, N'Đặng Văn Lâm',      N'Nam',  '1993-08-12', N'Hồ Chí Minh','lam.dv@finora.vn',       '090-100-0011', '$2a$10$dummyhashfordemo', 'ACTIVE'),
-(2, 4, N'Võ Thị Mai',        N'Nữ',   '1996-01-07', N'Hồ Chí Minh','mai.vt@finora.vn',       '090-100-0012', '$2a$10$dummyhashfordemo', 'ACTIVE'),
+(2, 4, N'Trương Thị Khanh',  N'Nữ',   '1998-04-25', N'Hồ Chí Minh','khanh.tt@finora.vn',     '090-100-0010', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
+(2, 4, N'Đặng Văn Lâm',      N'Nam',  '1993-08-12', N'Hồ Chí Minh','lam.dv@finora.vn',       '090-100-0011', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
+(2, 4, N'Võ Thị Mai',        N'Nữ',   '1996-01-07', N'Hồ Chí Minh','mai.vt@finora.vn',       '090-100-0012', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
 -- Sales Staff — Branch 3 (Đà Nẵng)
-(3, 4, N'Ngô Văn Nam',       N'Nam',  '1995-10-19', N'Đà Nẵng',   'nam.nv@finora.vn',       '090-100-0013', '$2a$10$dummyhashfordemo', 'ACTIVE'),
-(3, 4, N'Dương Thị Oanh',    N'Nữ',   '1997-03-28', N'Đà Nẵng',   'oanh.dt@finora.vn',      '090-100-0014', '$2a$10$dummyhashfordemo', 'ACTIVE'),
-(3, 4, N'Lý Văn Phúc',       N'Nam',  '1994-07-15', N'Đà Nẵng',   'phuc.lv@finora.vn',      '090-100-0015', '$2a$10$dummyhashfordemo', 'ACTIVE'),
+(3, 4, N'Ngô Văn Nam',       N'Nam',  '1995-10-19', N'Đà Nẵng',   'nam.nv@finora.vn',       '090-100-0013', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
+(3, 4, N'Dương Thị Oanh',    N'Nữ',   '1997-03-28', N'Đà Nẵng',   'oanh.dt@finora.vn',      '090-100-0014', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
+(3, 4, N'Lý Văn Phúc',       N'Nam',  '1994-07-15', N'Đà Nẵng',   'phuc.lv@finora.vn',      '090-100-0015', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
 -- Warehouse Staff — one per branch
-(1, 5, N'Trần Văn Quân',     N'Nam',  '1993-04-10', N'Hà Nội',     'quan.tv@finora.vn',      '090-100-0016', '$2a$10$dummyhashfordemo', 'ACTIVE'),
-(2, 5, N'Lê Thị Ráng',       N'Nữ',   '1995-09-22', N'Hồ Chí Minh','rang.lt@finora.vn',       '090-100-0017', '$2a$10$dummyhashfordemo', 'ACTIVE'),
-(3, 5, N'Nguyễn Văn Sơn',    N'Nam',  '1994-12-05', N'Đà Nẵng',   'son.nv2@finora.vn',       '090-100-0018', '$2a$10$dummyhashfordemo', 'ACTIVE');
+(1, 5, N'Trần Văn Quân',     N'Nam',  '1993-04-10', N'Hà Nội',     'quan.tv@finora.vn',      '090-100-0016', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
+(2, 5, N'Lê Thị Ráng',       N'Nữ',   '1995-09-22', N'Hồ Chí Minh','rang.lt@finora.vn',       '090-100-0017', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
+(3, 5, N'Nguyễn Văn Sơn',    N'Nam',  '1994-12-05', N'Đà Nẵng',   'son.nv2@finora.vn',       '090-100-0018', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE');
 GO
 
 -- ============================================================
