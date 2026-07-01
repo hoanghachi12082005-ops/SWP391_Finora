@@ -65,8 +65,22 @@ public class ActivityLogController extends BaseController {
                 page = Integer.parseInt(request.getParameter("page").trim());
         } catch (NumberFormatException ignored) {}
 
+        // Thiết lập các bảng log được phép hiển thị (giới hạn activity center đúng 4 nhóm log cần thiết)
+        java.util.List<String> allowedTableNames = java.util.Arrays.asList(
+            "order", "orders", "order_detail",    // bán hàng
+            "product",                              // thêm/sửa/xóa sản phẩm  
+            "inventory", "stock_transaction", "stock_transfer", // kho
+            "branch", "store"                      // chi nhánh
+        );
+        // Nếu filter table được cung cấp, giữ lại nếu thuộc danh sách cho phép
+        if (tableName != null && !allowedTableNames.contains(tableName.toLowerCase())) {
+            tableName = null; // vô hiệu hóa filter table không được phép
+        }
+
         try {
-            int totalCount = dao.countAll(keyword, tableName, actionName, dateFrom, dateTo);
+            int totalCount = tableName != null ? 
+                dao.countByTableName(keyword, tableName, actionName, dateFrom, dateTo) :
+                dao.countAll(keyword, tableName, actionName, dateFrom, dateTo);
             int totalPages = (int) Math.ceil((double) totalCount / ITEMS_PER_PAGE);
             page = Math.max(1, Math.min(page, totalPages > 0 ? totalPages : 1));
 
@@ -74,8 +88,8 @@ public class ActivityLogController extends BaseController {
                     (page - 1) * ITEMS_PER_PAGE, ITEMS_PER_PAGE,
                     keyword, tableName, actionName, dateFrom, dateTo);
 
-            // Bộ filter dạng "giá trị kỹ thuật" → "nhãn nghiệp vụ" để JSP render dropdown.
-            request.setAttribute("entityOptions", buildEntityOptions(dao.findDistinctTables()));
+            // Chỉ hiển thị các bảng được phép trong filter dropdown
+            request.setAttribute("entityOptions", buildEntityOptionsFiltered(dao.findDistinctTables(), allowedTableNames));
             request.setAttribute("actionOptions", buildActionOptions(dao.findDistinctActions()));
 
             request.setAttribute("logs", logs);
@@ -137,6 +151,19 @@ public class ActivityLogController extends BaseController {
             ActivityLog tmp = new ActivityLog();
             tmp.setTableName(t);
             options.put(t, tmp.getEntityLabel());
+        }
+        return options;
+    }
+
+    private Map<String, String> buildEntityOptionsFiltered(List<String> tables, List<String> allowed) {
+        Map<String, String> options = new LinkedHashMap<>();
+        if (tables == null) return options;
+        for (String t : tables) {
+            if (allowed.contains(t.toLowerCase())) {
+                ActivityLog tmp = new ActivityLog();
+                tmp.setTableName(t);
+                options.put(t, tmp.getEntityLabel());
+            }
         }
         return options;
     }

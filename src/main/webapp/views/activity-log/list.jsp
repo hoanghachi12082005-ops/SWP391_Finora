@@ -158,7 +158,7 @@
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-primary"
                                                 onclick="viewLog('<%= when %>','<%= safeActor %>','<%= safeAction %>','<%= safeEntity %>','<%= safeCode %>','<%= safeDesc %>','<%= safeOld %>','<%= safeNew %>')">
-                                            Xem
+                                            Xem nội dung
                                         </button>
                                     </td>
                                 </tr>

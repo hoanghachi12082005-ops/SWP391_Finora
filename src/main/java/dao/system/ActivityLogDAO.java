@@ -122,6 +122,37 @@ public class ActivityLogDAO {
         }
     }
 
+    public int countByTableName(String keyword, String tableName, String actionName,
+                                LocalDate dateFrom, LocalDate dateTo) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id WHERE a.table_name = ? ");
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (a.action_name LIKE ? OR a.table_name LIKE ? OR e.fullName LIKE ? OR a.new_data LIKE ?) ");
+        }
+        if (actionName != null && !actionName.isBlank()) sql.append(" AND a.action_name = ? ");
+        if (dateFrom != null) sql.append(" AND a.created_at >= ? ");
+        if (dateTo != null) sql.append(" AND a.created_at < ? ");
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            ps.setString(idx++, tableName);
+            if (keyword != null && !keyword.isBlank()) {
+                String k = "%" + keyword + "%";
+                ps.setString(idx++, k);
+                ps.setString(idx++, k);
+                ps.setString(idx++, k);
+                ps.setString(idx++, k);
+            }
+            if (actionName != null && !actionName.isBlank()) ps.setString(idx++, actionName);
+            if (dateFrom != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateFrom.atStartOfDay()));
+            if (dateTo != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateTo.plusDays(1).atStartOfDay()));
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
     /** Lấy danh sách tên bảng distinct để hiển thị trong filter. */
     public List<String> findDistinctTables() throws SQLException {
         List<String> list = new ArrayList<>();
