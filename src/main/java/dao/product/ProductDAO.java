@@ -195,7 +195,7 @@ public class ProductDAO {
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                list.add(new Category(rs.getInt("category_id"), rs.getString("category_name")));
+                list.add(new Category(rs.getInt("CategoryID"), rs.getString("Name")));
             }
         }
         return list;
@@ -208,7 +208,7 @@ public class ProductDAO {
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                list.add(new Unit(rs.getInt("unit_id"), rs.getString("unit_name")));
+                list.add(new Unit(rs.getInt("UnitID"), rs.getString("Name")));
             }
         }
         return list;
