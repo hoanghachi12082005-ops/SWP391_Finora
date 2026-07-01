@@ -93,13 +93,38 @@ public class AuthServlet extends HttpServlet {
         String emailOrPhone = request.getParameter("username");
         String password = request.getParameter("password");
 
-        // Validate input
+        System.out.println("[DEBUG] Request Login nhận được username: [" + emailOrPhone + "]");
+        try {
+            // Xác thực thông tin qua tầng xử lý mật khẩu băm AuthService
+            Employee employee = authService.login(emailOrPhone, password);
+            System.out.println("[DEBUG AUTH] Login thành công! Employee: " + employee);
+
+            // Ghi nhớ đăng nhập
+            String rememberMe = request.getParameter("remember-me");
+            Cookie rememberCookie = new Cookie("remembered_username", emailOrPhone);
+            if (rememberMe != null) {
+                rememberCookie.setMaxAge(30 * 24 * 60 * 60); // 30 ngày
+            } else {
+                rememberCookie.setMaxAge(0);
+            }
+            rememberCookie.setPath(request.getContextPath().isEmpty() ? "/" : request.getContextPath());
+            response.addCookie(rememberCookie);
+
+            HttpSession session = request.getSession(true);
+            session.setAttribute("currentUser", employee);
+            System.out.println("Session ID Login = " + session.getId());
+            System.out.println("CurrentUser Login = " + session.getAttribute("currentUser"));
+            response.sendRedirect(request.getContextPath() + getRedirectPath(employee));
+        } catch (RuntimeException e) {
+            System.err.println("[DEBUG] Đăng nhập thất bại do: " + e.getMessage());
+            request.setAttribute("error", e.getMessage());
+            request.setAttribute("username", emailOrPhone);
+            request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
         if (emailOrPhone == null || password == null || emailOrPhone.trim().isEmpty() || password.trim().isEmpty()) {
             request.setAttribute("error", "Vui lòng nhập email/số điện thoại và mật khẩu.");
             request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
             return;
         }
-
         try {
             Employee employee = authService.login(emailOrPhone.trim(), password);
 
@@ -134,6 +159,7 @@ public class AuthServlet extends HttpServlet {
             request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
         }
     }
+    
 
     /**
      * 3. Xử lý Quên mật khẩu (Forgot Password)
@@ -144,13 +170,11 @@ public class AuthServlet extends HttpServlet {
         String email = request.getParameter("email");
         request.setAttribute("fullName", fullName);
         request.setAttribute("email", email);
-
         if (fullName == null || email == null || fullName.trim().isEmpty() || email.trim().isEmpty()) {
             request.setAttribute("error", "Vui lòng nhập đầy đủ họ tên và email đăng ký!");
             request.getRequestDispatcher("/views/auth/forgot-password.jsp").forward(request, response);
             return;
         }
-
         try {
             boolean isMatch = employeeDAO.checkFullNameAndEmailMatch(fullName.trim(), email.trim());
             if (isMatch) {
@@ -160,12 +184,17 @@ public class AuthServlet extends HttpServlet {
                 if (updated) {
                     boolean sent = EmailUtil.sendPasswordEmail(email.trim(), fullName.trim(), newPassword);
                     if (sent) {
+                boolean sent = EmailUtil.sendPasswordEmail(email.trim(), fullName.trim(), newPassword);
+                if (sent) {
+                    boolean updated = employeeDAO.updatePasswordByEmail(email.trim(), hashedPassword);
+                    if (updated) {
                         request.setAttribute("successMessage", "Password đã được gửi về email của bạn, vui lòng check mail và đăng nhập lại.");
-                    } else {
-                        request.setAttribute("error", "Không thể gửi email! Vui lòng kiểm tra lại địa chỉ email hoặc liên hệ quản trị viên.");
+                        request.getRequestDispatcher("/views/auth/forgot-password.jsp").forward(request, response);
+                        return;
                     }
-                } else {
                     request.setAttribute("error", "Có lỗi cập nhật mật khẩu vào cơ sở dữ liệu! Vui lòng liên hệ quản trị viên.");
+                } else {
+                    request.setAttribute("error", "Không thể gửi email! Vui lòng kiểm tra lại địa chỉ email hoặc liên hệ quản trị viên.");
                 }
             } else {
                 request.setAttribute("error", "Sai Họ tên hoặc Email!");
