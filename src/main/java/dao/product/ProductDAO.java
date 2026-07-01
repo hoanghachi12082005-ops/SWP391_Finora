@@ -122,10 +122,10 @@ public class ProductDAO {
         }
     }
 
-    public void insert(Product product) throws SQLException {
+    public int insert(Product product) throws SQLException {
         String sql = "INSERT INTO Product (Name, Quantity, CategoryID, UnitID, SupplierIDs, SellingPrice, ImportPrice, Status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, product.getName());
             stmt.setInt(2, product.getQuantity());
             if (product.getCategoryID() > 0) stmt.setInt(3, product.getCategoryID()); else stmt.setNull(3, java.sql.Types.INTEGER);
@@ -135,7 +135,15 @@ public class ProductDAO {
             stmt.setBigDecimal(7, product.getImportPrice());
             stmt.setString(8, product.getStatus());
             stmt.executeUpdate();
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    int newId = keys.getInt(1);
+                    product.setProductID(newId);
+                    return newId;
+                }
+            }
         }
+        return -1;
     }
 
     public void update(Product product) throws SQLException {
