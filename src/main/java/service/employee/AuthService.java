@@ -26,6 +26,7 @@ public class AuthService {
         System.out.println("[DEBUG AUTH] PasswordHash từ DB    : [" + dbHash + "]");
         System.out.println("[DEBUG AUTH] Độ dài hash DB        : " + (dbHash != null ? dbHash.length() : 0) + " ký tự");
         System.out.println("[DEBUG AUTH] Có phải BCrypt hash?  : " + PasswordUtil.isHashed(dbHash));
+        System.out.println("[DEBUG AUTH] Hash thực tế của password nhập: [" + PasswordUtil.hash(password) + "]");
         // ─────────────────────────────────────────────────────────────
 
         if (!"ACTIVE".equalsIgnoreCase(employee.getStatus())) {
