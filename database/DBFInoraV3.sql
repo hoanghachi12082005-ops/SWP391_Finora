@@ -156,6 +156,15 @@ CREATE TABLE Product (
 );
 GO
 
+-- 12.5. SupplierProduct
+CREATE TABLE SupplierProduct (
+    SupplierID  INT NOT NULL FOREIGN KEY REFERENCES Supplier(SupplierID),
+    ProductID   INT NOT NULL FOREIGN KEY REFERENCES Product(ProductID),
+    ImportPrice DECIMAL(18,2) DEFAULT 0,
+    PRIMARY KEY (SupplierID, ProductID)
+);
+GO
+
 -- 13. Inventory
 CREATE TABLE Inventory (
     InventoryID     INT      IDENTITY(1,1) PRIMARY KEY,
@@ -302,8 +311,8 @@ GO
 
 -- Data for Employee
 SET IDENTITY_INSERT Employee ON;
-INSERT INTO Employee (EmployeeID, RoleID, BranchID, FullName, Gender, DOB, Address, Email, Phone, PasswordHash, Status, CreatedAt, UpdatedAt, FailedLoginCount) VALUES (1, 1, NULL, 'Nguyễn Văn A', 'Male', '1995-01-10', 'Hà Nội', 'admin@finora.vn', '0900000001', '$2a$12$AxaGhSfDQmoi644FUJk0UuukyWoY2q/aSy1Vd7u8aSJxaV19Riswm', 'active', '2026-06-11 03:22:58.733', '2026-07-01 01:02:06.740', 0);
-INSERT INTO Employee (EmployeeID, RoleID, BranchID, FullName, Gender, DOB, Address, Email, Phone, PasswordHash, Status, CreatedAt, UpdatedAt, FailedLoginCount) VALUES (2, 2, NULL, 'La Văn Cầu', 'Male', '1990-03-15', 'Hà Nội', 'owner@finora.vn', '0900000002', '$2a$12$AxaGhSfDQmoi644FUJk0UuukyWoY2q/aSy1Vd7u8aSJxaV19Riswm', 'active', '2026-06-11 03:22:58.733', '2026-06-11 03:22:58.733', 0);
+INSERT INTO Employee (EmployeeID, RoleID, BranchID, FullName, Gender, DOB, Address, Email, Phone, PasswordHash, Status, CreatedAt, UpdatedAt, FailedLoginCount) VALUES (1, 1, NULL, 'Nguyễn Văn A', 'Male', '1995-01-10', 'Hà Nội', 'admin@finora.vn', '0900000001', '$2a$12$AxaGhSfDQmoi644FUJk0UuukyWoY2q/aSy1Vd7u8aSJxaV19Riswm', 'active', '2026-06-11 03:22:58.733', '2026-07-01 01:59:25.233', 0);
+INSERT INTO Employee (EmployeeID, RoleID, BranchID, FullName, Gender, DOB, Address, Email, Phone, PasswordHash, Status, CreatedAt, UpdatedAt, FailedLoginCount) VALUES (2, 2, NULL, 'La Văn Cầu', 'Male', '1990-03-15', 'Hà Nội', 'owner@finora.vn', '0900000002', '$2a$12$AxaGhSfDQmoi644FUJk0UuukyWoY2q/aSy1Vd7u8aSJxaV19Riswm', 'active', '2026-06-11 03:22:58.733', '2026-07-01 01:47:53.740', 0);
 INSERT INTO Employee (EmployeeID, RoleID, BranchID, FullName, Gender, DOB, Address, Email, Phone, PasswordHash, Status, CreatedAt, UpdatedAt, FailedLoginCount) VALUES (3, 3, 1, 'Trần Quang Minh', 'Male', '1993-05-20', 'Cầu Giấy', 'manager.hn@finora.vn', '0900000003', '$2a$12$AxaGhSfDQmoi644FUJk0UuukyWoY2q/aSy1Vd7u8aSJxaV19Riswm', 'active', '2026-06-11 03:22:58.733', '2026-06-11 03:22:58.733', 0);
 INSERT INTO Employee (EmployeeID, RoleID, BranchID, FullName, Gender, DOB, Address, Email, Phone, PasswordHash, Status, CreatedAt, UpdatedAt, FailedLoginCount) VALUES (4, 3, 2, 'Phạm Ánh Chi', 'Female', '1994-07-18', 'Hà Nội', 'manager.hadong@finora.vn', '0900000004', '$2a$12$AxaGhSfDQmoi644FUJk0UuukyWoY2q/aSy1Vd7u8aSJxaV19Riswm', 'active', '2026-06-11 03:22:58.733', '2026-06-11 03:22:58.733', 0);
 INSERT INTO Employee (EmployeeID, RoleID, BranchID, FullName, Gender, DOB, Address, Email, Phone, PasswordHash, Status, CreatedAt, UpdatedAt, FailedLoginCount) VALUES (5, 3, 3, 'Vũ Lan Anh', 'Female', '1992-09-08', 'Quận 1, TPHCM', 'manager.hcm@finora.vn', '0900000005', '$2a$12$AxaGhSfDQmoi644FUJk0UuukyWoY2q/aSy1Vd7u8aSJxaV19Riswm', 'active', '2026-06-11 03:22:58.733', '2026-06-11 03:22:58.733', 0);
@@ -422,6 +431,16 @@ INSERT INTO Product (ProductID, Name, Quantity, CategoryID, UnitID, SellingPrice
 SET IDENTITY_INSERT Product OFF;
 GO
 
+-- Data for SupplierProduct
+INSERT INTO SupplierProduct (SupplierID, ProductID, ImportPrice) VALUES (1, 1, 100000.00);
+INSERT INTO SupplierProduct (SupplierID, ProductID, ImportPrice) VALUES (1, 2, 200000.00);
+INSERT INTO SupplierProduct (SupplierID, ProductID, ImportPrice) VALUES (1, 3, 250000.00);
+INSERT INTO SupplierProduct (SupplierID, ProductID, ImportPrice) VALUES (2, 4, 80000.00);
+INSERT INTO SupplierProduct (SupplierID, ProductID, ImportPrice) VALUES (2, 8, 300000.00);
+INSERT INTO SupplierProduct (SupplierID, ProductID, ImportPrice) VALUES (3, 6, 120000.00);
+INSERT INTO SupplierProduct (SupplierID, ProductID, ImportPrice) VALUES (3, 7, 150000.00);
+GO
+
 -- Data for Inventory
 SET IDENTITY_INSERT Inventory ON;
 INSERT INTO Inventory (InventoryID, WarehouseID, ProductID, QuantityInStock, UpdatedAt) VALUES (1, 1, 1, 120, '2026-06-11 03:22:58.847');
@@ -490,6 +509,8 @@ INSERT INTO Payment (PaymentID, OrderID, PaymentMethod, PaymentAmount, PaymentDa
 INSERT INTO Payment (PaymentID, OrderID, PaymentMethod, PaymentAmount, PaymentDate, PaymentStatus, TransactionCode, PaymentType, Description, EmployeeID, BranchID) VALUES (6, 6, 'CASH', 348000.00, '2026-06-11 03:22:58.963', 'PAID', 'TXN-OD202606006', 'INCOME', 'Thanh toÃ¡n Ä‘Æ¡n hÃ ng OD202606006', 10, 3);
 INSERT INTO Payment (PaymentID, OrderID, PaymentMethod, PaymentAmount, PaymentDate, PaymentStatus, TransactionCode, PaymentType, Description, EmployeeID, BranchID) VALUES (7, 7, 'CASH', 456000.00, '2026-06-11 03:22:58.963', 'UNPAID', 'TXN-OD202606007', 'INCOME', 'Thanh toÃ¡n Ä‘Æ¡n hÃ ng OD202606007', 7, 1);
 INSERT INTO Payment (PaymentID, OrderID, PaymentMethod, PaymentAmount, PaymentDate, PaymentStatus, TransactionCode, PaymentType, Description, EmployeeID, BranchID) VALUES (8, 8, 'BANKING', 582300.00, '2026-06-11 03:22:58.963', 'PAID', 'TXN-OD202606008', 'INCOME', 'Thanh toÃ¡n Ä‘Æ¡n hÃ ng OD202606008', 9, 2);
+INSERT INTO Payment (PaymentID, OrderID, PaymentMethod, PaymentAmount, PaymentDate, PaymentStatus, TransactionCode, PaymentType, Description, EmployeeID, BranchID) VALUES (9, NULL, 'CASH', 200000.00, '2026-07-01 01:50:16.120', 'PAID', 'PC00001', 'EXPENSE', 'Thanh toán tiền điện', 2, NULL);
+INSERT INTO Payment (PaymentID, OrderID, PaymentMethod, PaymentAmount, PaymentDate, PaymentStatus, TransactionCode, PaymentType, Description, EmployeeID, BranchID) VALUES (10, NULL, 'BANK_TRANSFER', 500000.00, '2026-07-01 01:52:57.640', 'PAID', 'PT00001', 'INCOME', 'Tiền thu công nợ ', 2, NULL);
 SET IDENTITY_INSERT Payment OFF;
 GO
 

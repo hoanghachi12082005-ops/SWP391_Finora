@@ -163,7 +163,7 @@
                                 <th>Điện thoại</th>
                                 <th>Địa chỉ</th>
                                 <th>Trạng thái</th>
-                                <th width="150">Thao tác</th>
+                                <th width="280">Thao tác</th>
                             </tr>
                         </thead>
 
@@ -203,6 +203,10 @@
                                                 data-status="<c:out value='${s.status}'/>">
                                             Sửa
                                         </button>
+
+                                        <a href="suppliers?action=manage-products&id=${s.supplierID}" class="btn btn-sm btn-outline-primary">
+                                            Sản phẩm
+                                        </a>
 
                                         <a href="suppliers?action=delete&id=${s.supplierID}&page=${page}&keyword=${keyword}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa nhà cung cấp này?')"> Xóa</a>
                                     </td>
