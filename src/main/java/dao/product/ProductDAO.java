@@ -125,6 +125,7 @@ public class ProductDAO {
                 }
             }
         }
+        return -1;
     }
 
     public void update(Product product) throws SQLException {
@@ -193,7 +194,7 @@ public class ProductDAO {
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                list.add(new Category(rs.getInt("CategoryID"), rs.getString("Name")));
+                list.add(new Category(rs.getInt("category_id"), rs.getString("category_name")));
             }
         }
         return list;
@@ -206,7 +207,7 @@ public class ProductDAO {
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                list.add(new Unit(rs.getInt("UnitID"), rs.getString("Name")));
+                list.add(new Unit(rs.getInt("unit_id"), rs.getString("unit_name")));
             }
         }
         return list;
@@ -216,7 +217,6 @@ public class ProductDAO {
         Product item = new Product();
         item.setProductID(rs.getInt("ProductID"));
         item.setName(rs.getString("Name"));
-        item.setQuantity(rs.getInt("Quantity"));
         item.setCategoryID(rs.getInt("CategoryID"));
         item.setCategoryName(rs.getString("CategoryName"));
         item.setUnitID(rs.getInt("UnitID"));
