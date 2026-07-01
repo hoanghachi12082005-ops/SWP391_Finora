@@ -35,7 +35,7 @@
                 <span class="material-symbols-outlined">warning</span>
             </div>
             <div class="overview-info">
-                <p>Hàng sắp hết</p>
+                <p>Sản phẩm sắp hết</p>
                 <h3>${lowStockCount}</h3>
             </div>
         </div>

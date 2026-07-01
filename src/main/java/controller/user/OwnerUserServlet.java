@@ -268,8 +268,8 @@ public class OwnerUserServlet extends HttpServlet {
                 request,
                 success ? "successMessage" : "errorMessage",
                 success
-                        ? (isUpdate ? "Cập nhật tài khoản nhân viên thành công." : "Tạo tài khoản nhân viên thành công.")
-                        : (isUpdate ? "Không thể cập nhật tài khoản nhân viên." : "Không thể tạo tài khoản nhân viên.")
+                        ? (isUpdate ? "Cập nhật tài khoản nhân viên thành công." : "Thêm tài khoản nhân viên thành công.")
+                        : (isUpdate ? "Không thể cập nhật tài khoản nhân viên." : "Không thể thêm tài khoản nhân viên.")
         );
     }
 

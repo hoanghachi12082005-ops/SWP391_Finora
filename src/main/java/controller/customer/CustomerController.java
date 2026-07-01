@@ -210,10 +210,10 @@ public class CustomerController extends HttpServlet {
                     created.getLoyaltyPoint()
                 ));
             } else {
-                sendJsonResponse(response, "{\"status\":\"success\",\"message\":\"Tạo khách hàng thành công.\"}");
+                sendJsonResponse(response, "{\"status\":\"success\",\"message\":\"Thêm khách hàng thành công.\"}");
             }
         } else {
-            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Không thể tạo khách hàng.\"}");
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Không thể thêm khách hàng.\"}");
         }
     }
 
@@ -441,8 +441,8 @@ public class CustomerController extends HttpServlet {
                 request,
                 success ? "successMessage" : "errorMessage",
                 success
-                        ? (isUpdate ? "Cập nhật khách hàng thành công." : "Tạo khách hàng thành công.")
-                        : (isUpdate ? "Không thể cập nhật khách hàng." : "Không thể tạo khách hàng.")
+                        ? (isUpdate ? "Cập nhật khách hàng thành công." : "Thêm khách hàng thành công.")
+                        : (isUpdate ? "Không thể cập nhật khách hàng." : "Không thể thêm khách hàng.")
         );
     }
 

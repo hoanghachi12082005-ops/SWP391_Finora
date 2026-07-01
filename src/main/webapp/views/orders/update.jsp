@@ -1,11 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<% request.setAttribute("pageTitle", "Cập nhật đơn hàng"); %>
+<% request.setAttribute("pageTitle", "Chỉnh sửa đơn hàng"); %>
 <jsp:include page="/views/common/header.jsp" />
 <jsp:include page="/views/common/sidebar.jsp" />
 <main class="main">
     <div class="card">
-        <h1>Cập nhật đơn hàng</h1>
-        <p>Đây là trang JSP mẫu cho chức năng <strong>Cập nhật đơn hàng</strong>.</p>
+        <h1>Chỉnh sửa đơn hàng</h1>
+        <p>Đây là trang JSP mẫu cho chức năng <strong>Chỉnh sửa đơn hàng</strong>.</p>
         <% if (request.getAttribute("message") != null) { %>
             <div class="message"><%= request.getAttribute("message") %></div>
         <% } %>
