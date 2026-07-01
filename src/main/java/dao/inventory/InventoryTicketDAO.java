@@ -54,7 +54,11 @@ public class InventoryTicketDAO {
             if ("COMPLETED_REJECTED".equals(status)) {
                 sql += " AND t.status IN ('COMPLETED', 'REJECTED', 'COMPLETED_WITH_ERROR', 'CANCELLED') ";
             } else if ("PENDING_IN_TRANSIT".equals(status)) {
-                sql += " AND t.status IN ('PENDING', 'IN_TRANSIT') ";
+                if ("TRANSFER_CHECK".equals(ticketType)) {
+                    sql += " AND EXISTS (SELECT 1 FROM inventory_ticket parent WHERE parent.ticket_id = TRY_CAST(SUBSTRING(t.ticket_code, 4, 20) AS INT) AND parent.status NOT IN ('COMPLETED', 'REJECTED', 'COMPLETED_WITH_ERROR', 'CANCELLED')) ";
+                } else {
+                    sql += " AND t.status IN ('PENDING', 'IN_TRANSIT') ";
+                }
             } else {
                 sql += " AND t.status = '" + status + "' ";
             }
@@ -295,9 +299,16 @@ public class InventoryTicketDAO {
                     s.executeUpdate();
                 }
                 
+                // Cập nhật actual_quantity = quantity cho tất cả chi tiết của phiếu TX này
+                String updateDetailSql = "UPDATE inventory_ticket_detail SET actual_quantity = quantity WHERE ticket_id = ?";
+                try (PreparedStatement s = conn.prepareStatement(updateDetailSql)) {
+                    s.setInt(1, ticketId);
+                    s.executeUpdate();
+                }
+
                 // Trừ tồn kho và ghi log stock_transaction
                 for (InventoryTicketDetail d : details) {
-                    int senderWId = "SEND".equals(d.getActionType()) ? ticket.getFromWarehouseId() : ticket.getToWarehouseId();
+                    int senderWId = ticket.getFromWarehouseId();
                     
                     int beforeQty = 0;
                     try (PreparedStatement s = conn.prepareStatement(getInventorySql)) {
@@ -369,7 +380,7 @@ public class InventoryTicketDAO {
         String updateInventorySql = "UPDATE inventory SET quantity_in_stock = quantity_in_stock + ? WHERE warehouse_id = ? AND product_id = ?";
         String insertInventorySql = "INSERT INTO inventory (warehouse_id, product_id, quantity_in_stock, min_stock_level, max_stock_level) VALUES (?, ?, ?, 0, 999999)";
         String insertTxSql = "INSERT INTO stock_transaction (warehouse_id, product_id, reference_type, reference_id, transaction_type, quantity, before_quantity, after_quantity, note, created_by) VALUES (?, ?, 'TRANSFER', ?, 'IMPORT', ?, ?, ?, ?, ?)";
-        String updateTicketSql = "UPDATE inventory_ticket SET is_imported_by_receiver = 1, note = CONCAT(IFNULL(note, ''), ?) ";
+        String updateTicketSql = "UPDATE inventory_ticket SET is_imported_by_receiver = 1, note = CONCAT(ISNULL(note, ''), ?) ";
         
         boolean hasDiscrepancy = false;
         List<InventoryTicketDetail> discrepancyDetails = new java.util.ArrayList<>();
@@ -378,7 +389,7 @@ public class InventoryTicketDAO {
             conn.setAutoCommit(false);
             try {
                 for (InventoryTicketDetail d : details) {
-                    int receivingWId = "SEND".equals(d.getActionType()) ? ticket.getToWarehouseId() : ticket.getFromWarehouseId();
+                    int receivingWId = ticket.getToWarehouseId();
                     if (receivingWId != currentWarehouseId) continue; // Only process items meant for this receiver
                     
                     int expectedQty = d.getQuantity();
@@ -454,7 +465,7 @@ public class InventoryTicketDAO {
                     discTicket.setTicketCode("ERR-" + System.currentTimeMillis());
                     discTicket.setTicketType("DISCREPANCY");
                     discTicket.setFromWarehouseId(currentWarehouseId); // The warehouse that found the issue
-                    discTicket.setToWarehouseId(ticketId); // Store reference to original ticket in toWarehouseId (hacky but works)
+                    discTicket.setToWarehouseId(currentWarehouseId); // Same warehouse to avoid NOT NULL constraint
                     discTicket.setStatus("PENDING");
                     discTicket.setCreatedBy(userId);
                     discTicket.setNote("Lệch từ phiếu chuyển: " + ticket.getTicketCode());
@@ -479,8 +490,16 @@ public class InventoryTicketDAO {
         try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, ticket.getTicketCode());
             stmt.setString(2, ticket.getTicketType());
-            stmt.setInt(3, ticket.getFromWarehouseId());
-            stmt.setInt(4, ticket.getToWarehouseId());
+            if (ticket.getFromWarehouseId() != null) {
+                stmt.setInt(3, ticket.getFromWarehouseId());
+            } else {
+                stmt.setNull(3, java.sql.Types.INTEGER);
+            }
+            if (ticket.getToWarehouseId() != null) {
+                stmt.setInt(4, ticket.getToWarehouseId());
+            } else {
+                stmt.setNull(4, java.sql.Types.INTEGER);
+            }
             stmt.setString(5, ticket.getStatus());
             stmt.setInt(6, ticket.getCreatedBy());
             stmt.setString(7, ticket.getNote());
@@ -542,5 +561,65 @@ public class InventoryTicketDAO {
         } catch (NumberFormatException e) {
             // ignore if not our specific format
         }
+    }
+    
+    public String getTransferProgress(int parentTicketId) throws SQLException {
+        String sql = "SELECT ticket_code, status FROM inventory_ticket WHERE ticket_type = 'TRANSFER_CHECK' AND (ticket_code = ? OR ticket_code = ?)";
+        boolean hasTx = false;
+        boolean hasTi = false;
+        String txStatus = "";
+        String tiStatus = "";
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "TX-" + parentTicketId);
+            stmt.setString(2, "TI-" + parentTicketId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String code = rs.getString("ticket_code");
+                    String st = rs.getString("status");
+                    if (code.startsWith("TX-")) {
+                        hasTx = true;
+                        txStatus = st;
+                    } else if (code.startsWith("TI-")) {
+                        hasTi = true;
+                        tiStatus = st;
+                    }
+                }
+            }
+        }
+        
+        if (!hasTx && !hasTi) return "Chờ xử lý";
+        
+        boolean txDone = "COMPLETED".equals(txStatus) || "COMPLETED_WITH_ERROR".equals(txStatus);
+        boolean tiDone = "COMPLETED".equals(tiStatus) || "COMPLETED_WITH_ERROR".equals(tiStatus);
+        
+        if (txDone && tiDone) return "Hoàn tất 2 bên";
+        if (txDone) return "Bên gửi đã xuất, chờ bên nhận";
+        if (tiDone) return "Bên nhận đã nhập, chờ bên gửi xuất";
+        
+        return "Đang chờ 2 bên xử lý";
+    }
+
+    public InventoryTicket findByCode(String code) throws SQLException {
+        String sql = "SELECT t.*, " +
+                     "w1.warehouse_name as from_warehouse_name, " +
+                     "w2.warehouse_name as to_warehouse_name, " +
+                     "e.fullName as created_by_name " +
+                     "FROM inventory_ticket t " +
+                     "LEFT JOIN warehouse w1 ON t.from_warehouse_id = w1.warehouse_id " +
+                     "LEFT JOIN warehouse w2 ON t.to_warehouse_id = w2.warehouse_id " +
+                     "LEFT JOIN Employee e ON t.created_by = e.EmployeeID " +
+                     "WHERE t.ticket_code = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, code);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return extractTicket(rs);
+                }
+            }
+        }
+        return null;
     }
 }

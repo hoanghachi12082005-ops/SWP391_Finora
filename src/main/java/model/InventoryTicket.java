@@ -21,6 +21,7 @@ public class InventoryTicket {
     // New fields for Transit Workflow
     private boolean isExportedBySender;
     private boolean isImportedByReceiver;
+    private String transferProgress;
 
     public InventoryTicket() {
     }
@@ -135,6 +136,14 @@ public class InventoryTicket {
 
     public void setImportedByReceiver(boolean importedByReceiver) {
         this.isImportedByReceiver = importedByReceiver;
+    }
+
+    public String getTransferProgress() {
+        return transferProgress;
+    }
+
+    public void setTransferProgress(String transferProgress) {
+        this.transferProgress = transferProgress;
     }
 
     public String getFormattedCreatedAt() {

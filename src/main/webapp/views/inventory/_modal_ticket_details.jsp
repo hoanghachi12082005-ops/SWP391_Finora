@@ -103,6 +103,153 @@
             </tbody>
         </table>
     </div>
+    
+    <c:if test="${not empty txTicket}">
+        <div class="card mt-4 border shadow-sm" style="border-radius: 4px; overflow: hidden; border-color: #dee2e6;">
+            <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid #dee2e6;">
+                <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px; text-transform: uppercase;">
+                    Phiếu Xuất Kho Tương Ứng
+                </div>
+                <div style="font-size: 13px; font-weight: 500;" class="text-dark">
+                    Từ: <strong>${txTicket.fromWarehouseName}</strong>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-bordered text-center align-middle mb-0" style="font-size: 14px; border-style: hidden;">
+                    <thead class="table-light text-dark" style="border-bottom: 2px solid #dee2e6;">
+                        <tr>
+                            <th class="text-start ps-3 fw-bold py-2">Sản Phẩm</th>
+                            <th style="width: 100px;" class="fw-bold py-2">Tồn Trước</th>
+                            <th style="width: 100px;" class="fw-bold py-2">Yêu Cầu</th>
+                            <th style="width: 110px;" class="fw-bold py-2">Thực Tế Xuất</th>
+                            <th style="width: 100px;" class="fw-bold py-2">Tồn Sau</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <c:forEach var="td" items="${txDetails}">
+                            <c:set var="myTx" value="${null}"/>
+                            <c:if test="${not empty txTransactions}">
+                                <c:forEach var="trx" items="${txTransactions}">
+                                    <c:if test="${trx.productId == td.productId}">
+                                        <c:set var="myTx" value="${trx}"/>
+                                    </c:if>
+                                </c:forEach>
+                            </c:if>
+                            <tr>
+                                <td class="text-start fw-medium ps-3 text-dark">${td.productName}</td>
+                                <c:choose>
+                                    <c:when test="${not empty myTx}">
+                                        <td class="text-dark">${myTx.beforeQuantity}</td>
+                                        <td class="text-dark">${td.quantity}</td>
+                                        <td class="fw-bold text-dark">${td.actualQuantity != null ? td.actualQuantity : ''}</td>
+                                        <td class="fw-bold text-dark">${myTx.afterQuantity}</td>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <td class="text-dark">${txCurrentStock[td.productId] != null ? txCurrentStock[td.productId] : '-'}</td>
+                                        <td class="text-dark">${td.quantity}</td>
+                                        <td class="fw-bold text-dark">${td.actualQuantity != null ? td.actualQuantity : ''}</td>
+                                        <td class="fw-bold text-dark">${txCurrentStock[td.productId] != null ? txCurrentStock[td.productId] - td.quantity : '-'}</td>
+                                    </c:otherwise>
+                                </c:choose>
+                            </tr>
+                        </c:forEach>
+                    </tbody>
+                </table>
+            </div>
+            
+            <c:set var="exportTime" value="${null}"/>
+            <c:if test="${not empty txTransactions}">
+                <c:forEach var="trx" items="${txTransactions}" end="0">
+                    <c:set var="exportTime" value="${trx.createdAt}"/>
+                </c:forEach>
+            </c:if>
+            
+            <div class="card-footer bg-white py-2 d-flex justify-content-between align-items-center" style="font-size: 13px; border-top: 1px dashed #dee2e6;">
+                <span class="text-dark">Nhân sự xuất: <strong>${txTicket.createdByName}</strong></span>
+                <c:if test="${not empty exportTime}">
+                    <span class="text-dark">Thời gian xuất: <strong>
+                        <fmt:parseDate value="${exportTime}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedTxTime" type="both" />
+                        <fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${parsedTxTime}" />
+                    </strong></span>
+                </c:if>
+                <span class="text-dark">Trạng thái: <strong>${txTicket.status == 'COMPLETED' ? 'Hoàn Tất' : (txTicket.status == 'COMPLETED_WITH_ERROR' ? 'Hoàn Tất (Lệch)' : txTicket.status)}</strong></span>
+            </div>
+        </div>
+    </c:if>
+
+    <c:if test="${not empty tiTicket}">
+        <div class="card mt-4 border shadow-sm" style="border-radius: 4px; overflow: hidden; border-color: #dee2e6;">
+            <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid #dee2e6;">
+                <div class="fw-bold text-dark d-flex align-items-center" style="font-size: 14px; text-transform: uppercase;">
+                    Phiếu Nhập Kho Tương Ứng
+                </div>
+                <div style="font-size: 13px; font-weight: 500;" class="text-dark">
+                    Đến: <strong>${tiTicket.toWarehouseName}</strong>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-bordered text-center align-middle mb-0" style="font-size: 14px; border-style: hidden;">
+                    <thead class="table-light text-dark" style="border-bottom: 2px solid #dee2e6;">
+                        <tr>
+                            <th class="text-start ps-3 fw-bold py-2">Sản Phẩm</th>
+                            <th style="width: 100px;" class="fw-bold py-2">Tồn Trước</th>
+                            <th style="width: 100px;" class="fw-bold py-2">Yêu Cầu</th>
+                            <th style="width: 110px;" class="fw-bold py-2">Thực Tế Nhập</th>
+                            <th style="width: 100px;" class="fw-bold py-2">Tồn Sau</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <c:forEach var="tid" items="${tiDetails}">
+                            <c:set var="myTi" value="${null}"/>
+                            <c:if test="${not empty tiTransactions}">
+                                <c:forEach var="trx" items="${tiTransactions}">
+                                    <c:if test="${trx.productId == tid.productId}">
+                                        <c:set var="myTi" value="${trx}"/>
+                                    </c:if>
+                                </c:forEach>
+                            </c:if>
+                            <tr>
+                                <td class="text-start fw-medium ps-3 text-dark">${tid.productName}</td>
+                                <c:choose>
+                                    <c:when test="${not empty myTi}">
+                                        <td class="text-dark">${myTi.beforeQuantity}</td>
+                                        <td class="text-dark">${tid.quantity}</td>
+                                        <td class="fw-bold text-dark">${tid.actualQuantity != null ? tid.actualQuantity : ''}</td>
+                                        <td class="fw-bold text-dark">${myTi.afterQuantity}</td>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <td class="text-dark">${tiCurrentStock[tid.productId] != null ? tiCurrentStock[tid.productId] : '-'}</td>
+                                        <td class="text-dark">${tid.quantity}</td>
+                                        <td class="fw-bold text-dark">${tid.actualQuantity != null ? tid.actualQuantity : ''}</td>
+                                        <td class="fw-bold text-dark">${tiCurrentStock[tid.productId] != null ? tiCurrentStock[tid.productId] + tid.quantity : '-'}</td>
+                                    </c:otherwise>
+                                </c:choose>
+                            </tr>
+                        </c:forEach>
+                    </tbody>
+                </table>
+            </div>
+            
+            <c:set var="importTime" value="${null}"/>
+            <c:if test="${not empty tiTransactions}">
+                <c:forEach var="trx" items="${tiTransactions}" end="0">
+                    <c:set var="importTime" value="${trx.createdAt}"/>
+                </c:forEach>
+            </c:if>
+            
+            <div class="card-footer bg-white py-2 d-flex justify-content-between align-items-center" style="font-size: 13px; border-top: 1px dashed #dee2e6;">
+                <span class="text-dark">Nhân sự nhập: <strong>${tiTicket.createdByName}</strong></span>
+                <c:if test="${not empty importTime}">
+                    <span class="text-dark">Thời gian nhập: <strong>
+                        <fmt:parseDate value="${importTime}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedTiTime" type="both" />
+                        <fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${parsedTiTime}" />
+                    </strong></span>
+                </c:if>
+                <span class="text-dark">Trạng thái: <strong>${tiTicket.status == 'COMPLETED' ? 'Hoàn Tất' : (tiTicket.status == 'COMPLETED_WITH_ERROR' ? 'Hoàn Tất (Lệch)' : tiTicket.status)}</strong></span>
+            </div>
+        </div>
+    </c:if>
+
 </div>
 <div class="modal-footer">
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>

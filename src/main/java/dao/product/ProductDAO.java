@@ -23,30 +23,40 @@ public class ProductDAO {
     }
 
     public List<Product> findAll(int offset, int limit, String keyword, String status, Integer categoryID, Integer unitID) throws SQLException {
+        return findAll(offset, limit, keyword, status, categoryID, unitID, null);
+    }
+
+    public List<Product> findAll(int offset, int limit, String keyword, String status, Integer categoryID, Integer unitID, Integer supplierID) throws SQLException {
         List<Product> items = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
             "SELECT p.ProductID, p.Name, p.Quantity, p.CategoryID, c.Name AS CategoryName, " +
-            "p.UnitID, u.Name AS UnitName, p.SellingPrice, p.Status, p.CreatedAt, p.UpdatedAt " +
+            "p.UnitID, u.Name AS UnitName, p.SupplierIDs, p.SellingPrice, p.ImportPrice, p.Status, p.CreatedAt, p.UpdatedAt " +
             "FROM Product p " +
             "LEFT JOIN Category c ON p.CategoryID = c.CategoryID " +
             "LEFT JOIN Unit u ON p.UnitID = u.UnitID " +
             "WHERE 1=1"
         );
-        if (keyword != null && !keyword.isBlank()) sql.append(" AND p.Name LIKE ?");
+        String cleanedKeyword = null;
+        if (keyword != null && !keyword.isBlank()) {
+            cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
+            sql.append(" AND p.Name LIKE ?");
+        }
         if (status != null && !status.isBlank())  sql.append(" AND p.Status = ?");
         if (categoryID != null) sql.append(" AND p.CategoryID = ?");
         if (unitID != null) sql.append(" AND p.UnitID = ?");
+        if (supplierID != null) sql.append(" AND p.SupplierIDs LIKE ?");
         sql.append(" ORDER BY p.ProductID ASC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             int idx = 1;
-            if (keyword != null && !keyword.isBlank()) {
-                stmt.setString(idx++, "%" + keyword + "%");
+            if (cleanedKeyword != null && !cleanedKeyword.isBlank()) {
+                stmt.setString(idx++, "%" + cleanedKeyword + "%");
             }
             if (status != null && !status.isBlank()) stmt.setString(idx++, status);
             if (categoryID != null) stmt.setInt(idx++, categoryID);
             if (unitID != null) stmt.setInt(idx++, unitID);
+            if (supplierID != null) stmt.setString(idx++, "%[" + supplierID + "]%");
             stmt.setInt(idx++, offset);
             stmt.setInt(idx, limit);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -57,25 +67,38 @@ public class ProductDAO {
     }
 
     public int getTotalCount(String keyword, String status) throws SQLException {
-        return getTotalCount(keyword, status, null, null);
+        return getTotalCount(keyword, status, null, null, null);
     }
 
     public int getTotalCount(String keyword, String status, Integer categoryID, Integer unitID) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Product WHERE 1=1");
-        if (keyword != null && !keyword.isBlank()) sql.append(" AND Name LIKE ?");
-        if (status != null && !status.isBlank())  sql.append(" AND Status = ?");
-        if (categoryID != null) sql.append(" AND CategoryID = ?");
-        if (unitID != null) sql.append(" AND UnitID = ?");
+        return getTotalCount(keyword, status, categoryID, unitID, null);
+    }
+
+    public int getTotalCount(String keyword, String status, Integer categoryID, Integer unitID, Integer supplierID) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+            "SELECT COUNT(*) FROM Product p " +
+            "WHERE 1=1"
+        );
+        String cleanedKeyword = null;
+        if (keyword != null && !keyword.isBlank()) {
+            cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
+            sql.append(" AND p.Name LIKE ?");
+        }
+        if (status != null && !status.isBlank())  sql.append(" AND p.Status = ?");
+        if (categoryID != null) sql.append(" AND p.CategoryID = ?");
+        if (unitID != null) sql.append(" AND p.UnitID = ?");
+        if (supplierID != null) sql.append(" AND p.SupplierIDs LIKE ?");
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             int idx = 1;
-            if (keyword != null && !keyword.isBlank()) {
-                stmt.setString(idx++, "%" + keyword + "%");
+            if (cleanedKeyword != null && !cleanedKeyword.isBlank()) {
+                stmt.setString(idx++, "%" + cleanedKeyword + "%");
             }
             if (status != null && !status.isBlank()) stmt.setString(idx++, status);
             if (categoryID != null) stmt.setInt(idx++, categoryID);
             if (unitID != null) stmt.setInt(idx++, unitID);
+            if (supplierID != null) stmt.setString(idx++, "%[" + supplierID + "]%");
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : 0;
             }
@@ -85,7 +108,7 @@ public class ProductDAO {
     public Product findById(int id) throws SQLException {
         String sql = 
             "SELECT p.ProductID, p.Name, p.Quantity, p.CategoryID, c.Name AS CategoryName, " +
-            "p.UnitID, u.Name AS UnitName, p.SellingPrice, p.Status, p.CreatedAt, p.UpdatedAt " +
+            "p.UnitID, u.Name AS UnitName, p.SupplierIDs, p.SellingPrice, p.ImportPrice, p.Status, p.CreatedAt, p.UpdatedAt " +
             "FROM Product p " +
             "LEFT JOIN Category c ON p.CategoryID = c.CategoryID " +
             "LEFT JOIN Unit u ON p.UnitID = u.UnitID " +
@@ -100,30 +123,34 @@ public class ProductDAO {
     }
 
     public void insert(Product product) throws SQLException {
-        String sql = "INSERT INTO Product (Name, Quantity, CategoryID, UnitID, SellingPrice, Status) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Product (Name, Quantity, CategoryID, UnitID, SupplierIDs, SellingPrice, ImportPrice, Status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, product.getName());
             stmt.setInt(2, product.getQuantity());
-            stmt.setInt(3, product.getCategoryID());
-            stmt.setInt(4, product.getUnitID());
-            stmt.setBigDecimal(5, product.getSellingPrice());
-            stmt.setString(6, product.getStatus());
+            if (product.getCategoryID() > 0) stmt.setInt(3, product.getCategoryID()); else stmt.setNull(3, java.sql.Types.INTEGER);
+            if (product.getUnitID() > 0) stmt.setInt(4, product.getUnitID()); else stmt.setNull(4, java.sql.Types.INTEGER);
+            stmt.setString(5, product.getSupplierIDs());
+            stmt.setBigDecimal(6, product.getSellingPrice());
+            stmt.setBigDecimal(7, product.getImportPrice());
+            stmt.setString(8, product.getStatus());
             stmt.executeUpdate();
         }
     }
 
     public void update(Product product) throws SQLException {
-        String sql = "UPDATE Product SET Name=?, Quantity=?, CategoryID=?, UnitID=?, SellingPrice=?, Status=?, UpdatedAt=GETDATE() WHERE ProductID=?";
+        String sql = "UPDATE Product SET Name=?, Quantity=?, CategoryID=?, UnitID=?, SupplierIDs=?, SellingPrice=?, ImportPrice=?, Status=?, UpdatedAt=GETDATE() WHERE ProductID=?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, product.getName());
             stmt.setInt(2, product.getQuantity());
-            stmt.setInt(3, product.getCategoryID());
-            stmt.setInt(4, product.getUnitID());
-            stmt.setBigDecimal(5, product.getSellingPrice());
-            stmt.setString(6, product.getStatus());
-            stmt.setInt(7, product.getProductID());
+            if (product.getCategoryID() > 0) stmt.setInt(3, product.getCategoryID()); else stmt.setNull(3, java.sql.Types.INTEGER);
+            if (product.getUnitID() > 0) stmt.setInt(4, product.getUnitID()); else stmt.setNull(4, java.sql.Types.INTEGER);
+            stmt.setString(5, product.getSupplierIDs());
+            stmt.setBigDecimal(6, product.getSellingPrice());
+            stmt.setBigDecimal(7, product.getImportPrice());
+            stmt.setString(8, product.getStatus());
+            stmt.setInt(9, product.getProductID());
             stmt.executeUpdate();
         }
     }
@@ -195,6 +222,14 @@ public class ProductDAO {
         item.setCategoryName(rs.getString("CategoryName"));
         item.setUnitID(rs.getInt("UnitID"));
         item.setUnitName(rs.getString("UnitName"));
+        
+        try {
+            item.setSupplierIDs(rs.getString("SupplierIDs"));
+            item.setImportPrice(rs.getBigDecimal("ImportPrice"));
+        } catch (SQLException e) {
+            // ignore if columns are not selected or don't exist yet
+        }
+
         item.setSellingPrice(rs.getBigDecimal("SellingPrice"));
         item.setStatus(rs.getString("Status"));
         Timestamp ct = rs.getTimestamp("CreatedAt");

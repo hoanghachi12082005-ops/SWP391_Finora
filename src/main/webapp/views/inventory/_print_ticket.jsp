@@ -64,26 +64,123 @@
         </tr>
     </table>
 
-    <table class="detail-table">
-        <thead>
-            <tr>
-                <th width="50px">STT</th>
-                <th class="text-left">Tên sản phẩm</th>
-                <th width="150px">Loại Giao Dịch</th>
-                <th width="100px">Số Lượng</th>
-            </tr>
-        </thead>
-        <tbody>
-            <c:forEach var="d" items="${ticketDetails}" varStatus="loop">
-                <tr>
-                    <td>${loop.index + 1}</td>
-                    <td class="text-left">${d.productName}</td>
-                    <td>${d.actionType == 'SEND' ? 'XUẤT' : 'NHẬP'}</td>
-                    <td><strong>${d.quantity}</strong></td>
-                </tr>
-            </c:forEach>
-        </tbody>
-    </table>
+    <c:choose>
+        <c:when test="${ticket.ticketType == 'TRANSFER_REQUEST' && not empty txTicket && not empty tiTicket}">
+            <h3 style="margin-bottom: 10px; font-size: 14pt;">1. CHI TIẾT XUẤT KHO (Từ: ${ticket.fromWarehouseName})</h3>
+            <table class="detail-table">
+                <thead>
+                    <tr>
+                        <th class="text-left">Sản Phẩm</th>
+                        <th width="100px">Tồn Trước</th>
+                        <th width="100px">Yêu Cầu</th>
+                        <th width="120px">Thực Tế Xuất</th>
+                        <th width="100px">Tồn Sau</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <c:forEach var="td" items="${txDetails}">
+                        <c:set var="myTx" value="${null}"/>
+                        <c:if test="${not empty txTransactions}">
+                            <c:forEach var="trx" items="${txTransactions}">
+                                <c:if test="${trx.productId == td.productId}">
+                                    <c:set var="myTx" value="${trx}"/>
+                                </c:if>
+                            </c:forEach>
+                        </c:if>
+                        <tr>
+                            <td class="text-left">${td.productName}</td>
+                            <c:choose>
+                                <c:when test="${not empty myTx}">
+                                    <td>${myTx.beforeQuantity}</td>
+                                    <td>${td.quantity}</td>
+                                    <td><strong>${td.actualQuantity != null ? td.actualQuantity : ''}</strong></td>
+                                    <td><strong>${myTx.afterQuantity}</strong></td>
+                                </c:when>
+                                <c:otherwise>
+                                    <td>${txCurrentStock[td.productId] != null ? txCurrentStock[td.productId] : '-'}</td>
+                                    <td>${td.quantity}</td>
+                                    <td><strong>${td.actualQuantity != null ? td.actualQuantity : ''}</strong></td>
+                                    <td><strong>${txCurrentStock[td.productId] != null ? txCurrentStock[td.productId] - td.quantity : '-'}</strong></td>
+                                </c:otherwise>
+                            </c:choose>
+                        </tr>
+                    </c:forEach>
+                </tbody>
+            </table>
+            <div style="margin-bottom: 30px; font-size: 12pt;">
+                <span>Nhân sự xuất: <strong>${txTicket.createdByName}</strong></span>
+                <span style="margin-left: 20px;">Trạng thái: <strong>${txTicket.status == 'COMPLETED' ? 'Hoàn Tất' : (txTicket.status == 'COMPLETED_WITH_ERROR' ? 'Hoàn Tất (Lệch)' : txTicket.status)}</strong></span>
+            </div>
+
+            <h3 style="margin-bottom: 10px; font-size: 14pt;">2. CHI TIẾT NHẬP KHO (Đến: ${ticket.toWarehouseName})</h3>
+            <table class="detail-table">
+                <thead>
+                    <tr>
+                        <th class="text-left">Sản Phẩm</th>
+                        <th width="100px">Tồn Trước</th>
+                        <th width="100px">Yêu Cầu</th>
+                        <th width="120px">Thực Tế Nhập</th>
+                        <th width="100px">Tồn Sau</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <c:forEach var="tid" items="${tiDetails}">
+                        <c:set var="myTi" value="${null}"/>
+                        <c:if test="${not empty tiTransactions}">
+                            <c:forEach var="trx" items="${tiTransactions}">
+                                <c:if test="${trx.productId == tid.productId}">
+                                    <c:set var="myTi" value="${trx}"/>
+                                </c:if>
+                            </c:forEach>
+                        </c:if>
+                        <tr>
+                            <td class="text-left">${tid.productName}</td>
+                            <c:choose>
+                                <c:when test="${not empty myTi}">
+                                    <td>${myTi.beforeQuantity}</td>
+                                    <td>${tid.quantity}</td>
+                                    <td><strong>${tid.actualQuantity != null ? tid.actualQuantity : ''}</strong></td>
+                                    <td><strong>${myTi.afterQuantity}</strong></td>
+                                </c:when>
+                                <c:otherwise>
+                                    <td>${tiCurrentStock[tid.productId] != null ? tiCurrentStock[tid.productId] : '-'}</td>
+                                    <td>${tid.quantity}</td>
+                                    <td><strong>${tid.actualQuantity != null ? tid.actualQuantity : ''}</strong></td>
+                                    <td><strong>${tiCurrentStock[tid.productId] != null ? tiCurrentStock[tid.productId] + tid.quantity : '-'}</strong></td>
+                                </c:otherwise>
+                            </c:choose>
+                        </tr>
+                    </c:forEach>
+                </tbody>
+            </table>
+            <div style="margin-bottom: 30px; font-size: 12pt;">
+                <span>Nhân sự nhập: <strong>${tiTicket.createdByName}</strong></span>
+                <span style="margin-left: 20px;">Trạng thái: <strong>${tiTicket.status == 'COMPLETED' ? 'Hoàn Tất' : (tiTicket.status == 'COMPLETED_WITH_ERROR' ? 'Hoàn Tất (Lệch)' : tiTicket.status)}</strong></span>
+            </div>
+        </c:when>
+        <c:otherwise>
+            <table class="detail-table">
+                <thead>
+                    <tr>
+                        <th width="50px">STT</th>
+                        <th class="text-left">Tên sản phẩm</th>
+                        <th width="150px">Loại Giao Dịch</th>
+                        <th width="100px">Số Lượng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <c:forEach var="d" items="${ticketDetails}" varStatus="loop">
+                        <tr>
+                            <td>${loop.index + 1}</td>
+                            <td class="text-left">${d.productName}</td>
+                            <td>${d.actionType == 'SEND' ? 'XUẤT' : 'NHẬP'}</td>
+                            <td><strong>${d.quantity}</strong></td>
+                        </tr>
+                    </c:forEach>
+                </tbody>
+            </table>
+        </c:otherwise>
+    </c:choose>
 
     <table class="signatures">
         <tr>

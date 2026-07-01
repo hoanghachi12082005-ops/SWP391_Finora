@@ -13,6 +13,10 @@ public class CleanDB {
                 System.out.println("Deleted details.");
                 conn.createStatement().executeUpdate("DELETE FROM inventory_ticket");
                 System.out.println("Deleted tickets.");
+                conn.createStatement().executeUpdate("DELETE FROM stock_transaction WHERE reference_type = 'TRANSFER'");
+                System.out.println("Deleted transfer stock transactions.");
+                // We won't reset inventory quantity to 0 because there might be non-transfer transactions. 
+                // But if they want a clean slate for transfer testing, this should be enough to start a new transfer.
             } else {
                 System.out.println("Failed!");
             }

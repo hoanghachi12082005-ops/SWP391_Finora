@@ -4,7 +4,7 @@
 <form action="${pageContext.request.contextPath}/inventory" method="POST">
     <input type="hidden" name="action" value="confirmReceiveWithDiscrepancy">
     <input type="hidden" name="transferId" value="${ticket.ticketId}">
-    <input type="hidden" name="warehouseId" value="${param.warehouseId}">
+    <input type="hidden" name="warehouseId" value="${not empty param.warehouseId ? param.warehouseId : ticket.toWarehouseId}">
     
     <div class="modal-header border-bottom-0 pb-0">
         <h5 class="modal-title fw-bold" style="color: #111827;">Kiểm Tra Nhập Hàng - ${ticket.ticketCode}</h5>
@@ -27,8 +27,6 @@
                 </thead>
                 <tbody>
                     <c:forEach var="d" items="${ticketDetails}" varStatus="loop">
-                        <c:set var="isReceiving" value="${(d.actionType == 'SEND' && param.warehouseId == ticket.toWarehouseId) || (d.actionType == 'RECEIVE' && param.warehouseId == ticket.fromWarehouseId)}" />
-                        <c:if test="${isReceiving}">
                             <tr>
                                 <td class="text-start fw-medium">
                                     ${d.productName}
@@ -43,7 +41,6 @@
                                            value="${d.quantity}" min="0" required>
                                 </td>
                             </tr>
-                        </c:if>
                     </c:forEach>
                 </tbody>
             </table>

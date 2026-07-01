@@ -5,11 +5,13 @@ import dao.inventory.InventoryDAO;
 import dao.inventory.WarehouseDAO;
 import dao.inventory.InventoryTicketDAO;
 import dao.inventory.StockTransactionDAO;
+import dao.supplier.SupplierDAO;
 import model.Employee;
 import model.Inventory;
 import model.Warehouse;
 import model.InventoryTicket;
 import model.StockTransaction;
+import model.Supplier;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,6 +29,7 @@ public class InventoryController extends BaseController {
     private final WarehouseDAO warehouseDAO = new WarehouseDAO();
     private final InventoryTicketDAO ticketDAO = new InventoryTicketDAO();
     private final StockTransactionDAO transactionDAO = new StockTransactionDAO();
+    private final SupplierDAO supplierDAO = new SupplierDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -98,6 +101,12 @@ public class InventoryController extends BaseController {
             if ("searchProductsApi".equals(action)) {
                 handleSearchProductsApi(request, response, selectedWarehouseId);
                 return;
+            } else if ("searchAllProductsApi".equals(action)) {
+                handleSearchAllProductsApi(request, response);
+                return;
+            } else if ("searchImportProductsApi".equals(action)) {
+                handleSearchImportProductsApi(request, response);
+                return;
             } else if ("viewReceiptForm".equals(action)) {
                 int ticketId = Integer.parseInt(request.getParameter("ticketId"));
                 model.InventoryTicket ticket = ticketDAO.findById(ticketId);
@@ -118,6 +127,38 @@ public class InventoryController extends BaseController {
                     request.setAttribute("transactions", txs);
                 }
                 
+                if (ticket != null && "TRANSFER_REQUEST".equals(ticket.getTicketType())) {
+                    dao.inventory.InventoryDAO inventoryDAO = new dao.inventory.InventoryDAO();
+                    model.InventoryTicket txTicket = ticketDAO.findByCode("TX-" + ticketId);
+                    if (txTicket != null) {
+                        request.setAttribute("txTicket", txTicket);
+                        List<model.InventoryTicketDetail> txDetails = ticketDAO.getTicketDetails(txTicket.getTicketId());
+                        request.setAttribute("txDetails", txDetails);
+                        request.setAttribute("txTransactions", transactionDAO.findByReference("TRANSFER", txTicket.getTicketId()));
+                        if ("IN_TRANSIT".equals(txTicket.getStatus())) {
+                            java.util.Map<Integer, Integer> txCurrentStock = new java.util.HashMap<>();
+                            for (model.InventoryTicketDetail d : txDetails) {
+                                txCurrentStock.put(d.getProductId(), inventoryDAO.getCurrentStock(txTicket.getFromWarehouseId(), d.getProductId()));
+                            }
+                            request.setAttribute("txCurrentStock", txCurrentStock);
+                        }
+                    }
+                    model.InventoryTicket tiTicket = ticketDAO.findByCode("TI-" + ticketId);
+                    if (tiTicket != null) {
+                        request.setAttribute("tiTicket", tiTicket);
+                        List<model.InventoryTicketDetail> tiDetails = ticketDAO.getTicketDetails(tiTicket.getTicketId());
+                        request.setAttribute("tiDetails", tiDetails);
+                        request.setAttribute("tiTransactions", transactionDAO.findByReference("TRANSFER", tiTicket.getTicketId()));
+                        if ("IN_TRANSIT".equals(tiTicket.getStatus())) {
+                            java.util.Map<Integer, Integer> tiCurrentStock = new java.util.HashMap<>();
+                            for (model.InventoryTicketDetail d : tiDetails) {
+                                tiCurrentStock.put(d.getProductId(), inventoryDAO.getCurrentStock(tiTicket.getToWarehouseId(), d.getProductId()));
+                            }
+                            request.setAttribute("tiCurrentStock", tiCurrentStock);
+                        }
+                    }
+                }
+                
                 request.setAttribute("selectedWarehouseId", selectedWarehouseId);
                 request.getRequestDispatcher("/views/inventory/_modal_ticket_details.jsp").forward(request, response);
                 return;
@@ -127,6 +168,44 @@ public class InventoryController extends BaseController {
                 List<model.InventoryTicketDetail> details = ticketDAO.getTicketDetails(ticketId);
                 request.setAttribute("ticket", ticket);
                 request.setAttribute("ticketDetails", details);
+
+                dao.inventory.InventoryDAO inventoryDAO = new dao.inventory.InventoryDAO();
+                if (ticket != null && ("COMPLETED".equals(ticket.getStatus()) || "REJECTED".equals(ticket.getStatus()))) {
+                    List<model.StockTransaction> txs = transactionDAO.findByReference("TRANSFER", ticketId);
+                    request.setAttribute("transactions", txs);
+                }
+                
+                if (ticket != null && "TRANSFER_REQUEST".equals(ticket.getTicketType())) {
+                    model.InventoryTicket txTicket = ticketDAO.findByCode("TX-" + ticketId);
+                    if (txTicket != null) {
+                        request.setAttribute("txTicket", txTicket);
+                        List<model.InventoryTicketDetail> txDetails = ticketDAO.getTicketDetails(txTicket.getTicketId());
+                        request.setAttribute("txDetails", txDetails);
+                        request.setAttribute("txTransactions", transactionDAO.findByReference("TRANSFER", txTicket.getTicketId()));
+                        if ("IN_TRANSIT".equals(txTicket.getStatus())) {
+                            java.util.Map<Integer, Integer> txCurrentStock = new java.util.HashMap<>();
+                            for (model.InventoryTicketDetail d : txDetails) {
+                                txCurrentStock.put(d.getProductId(), inventoryDAO.getCurrentStock(txTicket.getFromWarehouseId(), d.getProductId()));
+                            }
+                            request.setAttribute("txCurrentStock", txCurrentStock);
+                        }
+                    }
+                    model.InventoryTicket tiTicket = ticketDAO.findByCode("TI-" + ticketId);
+                    if (tiTicket != null) {
+                        request.setAttribute("tiTicket", tiTicket);
+                        List<model.InventoryTicketDetail> tiDetails = ticketDAO.getTicketDetails(tiTicket.getTicketId());
+                        request.setAttribute("tiDetails", tiDetails);
+                        request.setAttribute("tiTransactions", transactionDAO.findByReference("TRANSFER", tiTicket.getTicketId()));
+                        if ("IN_TRANSIT".equals(tiTicket.getStatus())) {
+                            java.util.Map<Integer, Integer> tiCurrentStock = new java.util.HashMap<>();
+                            for (model.InventoryTicketDetail d : tiDetails) {
+                                tiCurrentStock.put(d.getProductId(), inventoryDAO.getCurrentStock(tiTicket.getToWarehouseId(), d.getProductId()));
+                            }
+                            request.setAttribute("tiCurrentStock", tiCurrentStock);
+                        }
+                    }
+                }
+                
                 request.getRequestDispatcher("/views/inventory/_print_ticket.jsp").forward(request, response);
                 return;
             }
@@ -212,6 +291,10 @@ public class InventoryController extends BaseController {
         request.setAttribute("totalItems", totalCount);
         int lowStockCount = inventoryDAO.getTotalCount(keyword, "LOW_STOCK", null, null, warehouseId);
         request.setAttribute("lowStockCount", lowStockCount);
+
+        // Fetch Suppliers for Import Modal
+        List<Supplier> suppliers = supplierDAO.getSuppliersPaging("", "active", 1, 1000);
+        request.setAttribute("suppliers", suppliers);
     }
 
     private void handleTransferTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
@@ -220,6 +303,13 @@ public class InventoryController extends BaseController {
             transfers = ticketDAO.findAllByTypeAndStatus("TRANSFER_REQUEST", null, "PENDING_IN_TRANSIT");
         } else {
             transfers = ticketDAO.findAllByTypeAndStatus("TRANSFER_REQUEST", warehouseId != null ? warehouseId : 0, "PENDING_IN_TRANSIT");
+        }
+        for (InventoryTicket t : transfers) {
+            if ("IN_TRANSIT".equals(t.getStatus())) {
+                t.setTransferProgress(ticketDAO.getTransferProgress(t.getTicketId()));
+            } else {
+                t.setTransferProgress("Chờ duyệt");
+            }
         }
         request.setAttribute("transfers", transfers);
     }
@@ -259,8 +349,11 @@ public class InventoryController extends BaseController {
     }
 
     private void handleHistoryTab(HttpServletRequest request, Integer warehouseId, List<Integer> allowedWarehouseIds) throws Exception {
-        // Fetch COMPLETED/REJECTED tickets for history tab
-        List<InventoryTicket> historyTickets = ticketDAO.findAllByTypeAndStatus("TRANSFER", warehouseId != null ? warehouseId : 0, "COMPLETED_REJECTED");
+        // Fetch COMPLETED/REJECTED tickets for history tab (Only TRANSFER_REQUEST)
+        List<InventoryTicket> historyTickets = ticketDAO.findAllByTypeAndStatus("TRANSFER_REQUEST", warehouseId != null ? warehouseId : 0, "COMPLETED_REJECTED");
+        for (InventoryTicket t : historyTickets) {
+            t.setTransferProgress(ticketDAO.getTransferProgress(t.getTicketId()));
+        }
         request.setAttribute("history", historyTickets);
     }
 
@@ -366,6 +459,65 @@ public class InventoryController extends BaseController {
 
                     request.getSession().setAttribute("message", "Đã tạo phiếu chuyển kho thành công.");
                     redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + currentWarehouseId);
+                    break;
+                }
+                case "saveImport": {
+                    int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
+                    String note = request.getParameter("note");
+                    String[] productIds = request.getParameterValues("productId[]");
+                    String[] quantities = request.getParameterValues("quantity[]");
+                    String[] supplierIds = request.getParameterValues("supplierId[]");
+                    
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    
+                    if (productIds != null && productIds.length > 0) {
+                        java.util.Map<Integer, List<model.InventoryTicketDetail>> groupedDetails = new java.util.HashMap<>();
+                        for (int i = 0; i < productIds.length; i++) {
+                            int pId = Integer.parseInt(productIds[i]);
+                            int qty = Integer.parseInt(quantities[i]);
+                            int sId = Integer.parseInt(supplierIds[i]);
+                            if (qty > 0) {
+                                model.InventoryTicketDetail detail = new model.InventoryTicketDetail();
+                                detail.setProductId(pId);
+                                detail.setActionType("RECEIVE");
+                                detail.setQuantity(qty);
+                                groupedDetails.computeIfAbsent(sId, k -> new ArrayList<>()).add(detail);
+                            }
+                        }
+                        
+                        for (java.util.Map.Entry<Integer, List<model.InventoryTicketDetail>> entry : groupedDetails.entrySet()) {
+                            int sId = entry.getKey();
+                            List<model.InventoryTicketDetail> importDetails = entry.getValue();
+                            
+                            model.InventoryTicket importTicket = new model.InventoryTicket();
+                            importTicket.setTicketCode("IMP-" + System.currentTimeMillis() + "-" + sId);
+                            importTicket.setTicketType("IMPORT");
+                            importTicket.setFromWarehouseId(sId); // SupplierID
+                            importTicket.setToWarehouseId(currentWarehouseId);
+                            importTicket.setStatus("COMPLETED");
+                            importTicket.setNote(note);
+                            importTicket.setCreatedBy(currentUser.getEmployeeId());
+                            
+                            ticketDAO.createExchangeTicket(importTicket, importDetails);
+                            
+                            for (model.InventoryTicketDetail d : importDetails) {
+                                inventoryDAO.increaseStock(currentWarehouseId, d.getProductId(), d.getQuantity());
+                                
+                                StockTransaction tx = new StockTransaction();
+                                tx.setWarehouseId(currentWarehouseId);
+                                tx.setProductId(d.getProductId());
+                                tx.setTransactionType("IMPORT");
+                                tx.setQuantity(d.getQuantity());
+                                tx.setReferenceType("IMPORT_TICKET");
+                                tx.setReferenceId(0); // Cannot easily get ticketId here without DAO changes
+                                tx.setCreatedBy(currentUser.getEmployeeId());
+                                transactionDAO.insert(tx);
+                            }
+                        }
+                    }
+
+                    request.getSession().setAttribute("message", "Đã nhập kho thành công.");
+                    redirect(response, request.getContextPath() + "/inventory?tab=stock&warehouseId=" + currentWarehouseId);
                     break;
                 }
                 case "confirmExport": {
@@ -483,7 +635,9 @@ public class InventoryController extends BaseController {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            request.getSession().setAttribute("error", "Lỗi: " + e.getMessage());
+            java.io.StringWriter sw = new java.io.StringWriter();
+            e.printStackTrace(new java.io.PrintWriter(sw));
+            request.getSession().setAttribute("error", "Lỗi: " + e.getMessage() + " | StackTrace: " + sw.toString().substring(0, Math.min(200, sw.toString().length())));
             redirect(response, request.getContextPath() + "/inventory");
         }
     }
@@ -512,6 +666,81 @@ public class InventoryController extends BaseController {
             json.append("\"partnerWarehouseId\":").append(dto.getPartnerWarehouseId()).append(",");
             json.append("\"partnerWarehouseName\":\"").append(dto.getPartnerWarehouseName().replace("\"", "\\\"")).append("\",");
             json.append("\"partnerStock\":").append(dto.getPartnerStock());
+            json.append("}");
+            if (i < list.size() - 1) json.append(",");
+        }
+        json.append("]");
+        
+        response.getWriter().write(json.toString());
+    }
+
+    private void handleSearchAllProductsApi(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        
+        String keyword = request.getParameter("keyword");
+        if (keyword == null) keyword = "";
+
+        Integer supplierId = null;
+        String supplierIdParam = request.getParameter("supplierId");
+        if (supplierIdParam != null && !supplierIdParam.trim().isEmpty()) {
+            try {
+                supplierId = Integer.parseInt(supplierIdParam.trim());
+            } catch (NumberFormatException e) {
+                // ignore
+            }
+        }
+        
+        dao.product.ProductDAO productDAO = new dao.product.ProductDAO();
+        List<model.Product> list = productDAO.findAll(0, 50, keyword, "ACTIVE", null, null, supplierId);
+        
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < list.size(); i++) {
+            model.Product p = list.get(i);
+            json.append("{");
+            json.append("\"productId\":").append(p.getProductID()).append(",");
+            json.append("\"productName\":\"").append(p.getName().replace("\"", "\\\"")).append("\",");
+            json.append("\"importPrice\":").append(p.getImportPrice() != null ? p.getImportPrice() : 0);
+            json.append("}");
+            if (i < list.size() - 1) json.append(",");
+        }
+        json.append("]");
+        
+        response.getWriter().write(json.toString());
+    }
+
+    private void handleSearchImportProductsApi(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        
+        String keyword = request.getParameter("keyword");
+        if (keyword == null) keyword = "";
+        
+        int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
+        
+        dao.inventory.InventoryDAO dao = new dao.inventory.InventoryDAO();
+        List<dto.inventory.ImportProductDTO> list = dao.searchImportProducts(warehouseId, keyword);
+        
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < list.size(); i++) {
+            dto.inventory.ImportProductDTO p = list.get(i);
+            json.append("{");
+            json.append("\"productId\":").append(p.getProductId()).append(",");
+            json.append("\"productName\":\"").append(p.getProductName().replace("\"", "\\\"")).append("\",");
+            json.append("\"importPrice\":").append(p.getImportPrice() != null ? p.getImportPrice() : 0).append(",");
+            json.append("\"myStock\":").append(p.getMyStock()).append(",");
+            json.append("\"suppliers\":[");
+            if (p.getSuppliers() != null) {
+                for (int j = 0; j < p.getSuppliers().size(); j++) {
+                    dto.inventory.ImportProductDTO.SupplierInfo s = p.getSuppliers().get(j);
+                    json.append("{");
+                    json.append("\"supplierId\":").append(s.getSupplierId()).append(",");
+                    json.append("\"supplierName\":\"").append(s.getSupplierName().replace("\"", "\\\"")).append("\"");
+                    json.append("}");
+                    if (j < p.getSuppliers().size() - 1) json.append(",");
+                }
+            }
+            json.append("]");
             json.append("}");
             if (i < list.size() - 1) json.append(",");
         }

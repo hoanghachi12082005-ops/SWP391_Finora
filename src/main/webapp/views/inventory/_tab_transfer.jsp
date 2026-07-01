@@ -50,14 +50,7 @@
                                                 <span class="badge bg-warning text-dark">CHỜ DUYỆT</span>
                                             </c:when>
                                             <c:when test="${tx.status == 'IN_TRANSIT'}">
-                                                <c:choose>
-                                                    <c:when test="${tx.exportedBySender}">
-                                                        <span class="badge bg-primary">CHỜ NHẬN</span>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <span class="badge bg-info text-dark">ĐANG CHUYỂN</span>
-                                                    </c:otherwise>
-                                                </c:choose>
+                                                <span class="badge bg-info text-dark">${tx.transferProgress}</span>
                                             </c:when>
                                             <c:when test="${tx.status == 'COMPLETED'}">
                                                 <span class="badge bg-success">HOÀN TẤT</span>

@@ -25,7 +25,9 @@ public class InventoryDAO {
             "WHERE 1=1"
         );
 
+        String cleanedKeyword = null;
         if (keyword != null && !keyword.trim().isEmpty()) {
+            cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
             sql.append(" AND p.Name LIKE ?");
         }
         if (status != null && !status.trim().isEmpty()) {
@@ -59,8 +61,8 @@ public class InventoryDAO {
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             
             int idx = 1;
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                stmt.setString(idx++, "%" + keyword.trim() + "%");
+            if (cleanedKeyword != null && !cleanedKeyword.isEmpty()) {
+                stmt.setString(idx++, "%" + cleanedKeyword + "%");
             }
             if (status != null && !status.trim().isEmpty() && !"LOW_STOCK".equals(status) && !"OUT_OF_STOCK".equals(status)) {
                 stmt.setString(idx++, status);
@@ -88,7 +90,9 @@ public class InventoryDAO {
             "WHERE 1=1"
         );
 
+        String cleanedKeyword = null;
         if (keyword != null && !keyword.trim().isEmpty()) {
+            cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
             sql.append(" AND p.Name LIKE ?");
         }
         if (status != null && !status.trim().isEmpty()) {
@@ -108,8 +112,8 @@ public class InventoryDAO {
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             
             int idx = 1;
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                stmt.setString(idx++, "%" + keyword.trim() + "%");
+            if (cleanedKeyword != null && !cleanedKeyword.isEmpty()) {
+                stmt.setString(idx++, "%" + cleanedKeyword + "%");
             }
             if (status != null && !status.trim().isEmpty() && !"LOW_STOCK".equals(status) && !"OUT_OF_STOCK".equals(status)) {
                 stmt.setString(idx++, status);
@@ -240,5 +244,130 @@ public class InventoryDAO {
             }
         }
         return list;
+    }
+
+    public List<dto.inventory.ImportProductDTO> searchImportProducts(int warehouseId, String keyword) throws SQLException {
+        List<dto.inventory.ImportProductDTO> list = new ArrayList<>();
+        
+        // Since SupplierIDs is JSON (e.g. "[1, 2]"), and we want to get the suppliers for each product.
+        // If SQL Server version supports OPENJSON, we can parse it in SQL. Otherwise we fetch SupplierIDs and parse in Java.
+        // To be safe across SQL Server versions, we'll fetch SupplierIDs and parse it in Java using simple string manipulation.
+        // We also need all Suppliers to map ID to Name. Let's fetch all suppliers first.
+        java.util.Map<Integer, String> supplierMap = new java.util.HashMap<>();
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT SupplierID, Name FROM Supplier");
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                supplierMap.put(rs.getInt(1), rs.getString(2));
+            }
+        }
+
+        StringBuilder sql = new StringBuilder(
+            "SELECT p.ProductID, p.Name as ProductName, p.SupplierIDs, p.ImportPrice, " +
+            "COALESCE(i.quantity_in_stock, 0) as MyStock " +
+            "FROM Product p "
+        );
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            // Suggestion mode: only suggest products that exist in THIS warehouse's inventory and are running low
+            sql.append("INNER JOIN inventory i ON p.ProductID = i.product_id AND i.warehouse_id = ? ");
+            sql.append("WHERE p.Status = 'ACTIVE' ");
+            sql.append("AND i.quantity_in_stock <= 10 ");
+        } else {
+            // Search mode: allow searching all active products, even those never imported to this warehouse
+            sql.append("LEFT JOIN inventory i ON p.ProductID = i.product_id AND i.warehouse_id = ? ");
+            sql.append("WHERE p.Status = 'ACTIVE' ");
+            sql.append("AND p.Name LIKE ? ");
+        }
+
+        sql.append("ORDER BY p.Name ASC");
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            
+            stmt.setInt(1, warehouseId);
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                stmt.setString(2, "%" + keyword + "%");
+            }
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    dto.inventory.ImportProductDTO dto = new dto.inventory.ImportProductDTO();
+                    dto.setProductId(rs.getInt("ProductID"));
+                    dto.setProductName(rs.getString("ProductName"));
+                    dto.setMyStock(rs.getInt("MyStock"));
+                    dto.setImportPrice(rs.getBigDecimal("ImportPrice"));
+                    
+                    String supplierIdsJson = rs.getString("SupplierIDs");
+                    List<dto.inventory.ImportProductDTO.SupplierInfo> suppliers = new ArrayList<>();
+                    if (supplierIdsJson != null && supplierIdsJson.startsWith("[") && supplierIdsJson.endsWith("]")) {
+                        String content = supplierIdsJson.substring(1, supplierIdsJson.length() - 1);
+                        if (!content.trim().isEmpty()) {
+                            String[] parts = content.split(",");
+                            for (String part : parts) {
+                                try {
+                                    int sid = Integer.parseInt(part.trim());
+                                    if (supplierMap.containsKey(sid)) {
+                                        suppliers.add(new dto.inventory.ImportProductDTO.SupplierInfo(sid, supplierMap.get(sid)));
+                                    }
+                                } catch (Exception e) {}
+                            }
+                        }
+                    }
+                    dto.setSuppliers(suppliers);
+                    list.add(dto);
+                }
+            }
+        }
+        return list;
+    }
+
+    public int getInventoryId(int warehouseId, int productId) throws SQLException {
+        String sql = "SELECT inventory_id FROM inventory WHERE warehouse_id = ? AND product_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, warehouseId);
+            stmt.setInt(2, productId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return -1;
+    }
+
+    public int getCurrentStock(int warehouseId, int productId) throws SQLException {
+        String sql = "SELECT quantity_in_stock FROM inventory WHERE warehouse_id = ? AND product_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, warehouseId);
+            stmt.setInt(2, productId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public void increaseStock(int warehouseId, int productId, int quantity) throws SQLException {
+        // If it exists, update; if not, insert
+        int invId = getInventoryId(warehouseId, productId);
+        if (invId != -1) {
+            String sql = "UPDATE inventory SET quantity_in_stock = quantity_in_stock + ?, updated_at = GETDATE() WHERE inventory_id = ?";
+            try (Connection conn = DBContext.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, quantity);
+                stmt.setInt(2, invId);
+                stmt.executeUpdate();
+            }
+        } else {
+            String sql = "INSERT INTO inventory (warehouse_id, product_id, quantity_in_stock, status, created_at, updated_at) VALUES (?, ?, ?, 'ACTIVE', GETDATE(), GETDATE())";
+            try (Connection conn = DBContext.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, warehouseId);
+                stmt.setInt(2, productId);
+                stmt.setInt(3, quantity);
+                stmt.executeUpdate();
+            }
+        }
     }
 }
