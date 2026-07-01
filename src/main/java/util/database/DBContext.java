@@ -12,7 +12,6 @@ public class DBContext {
     
 
     private static final String DRIVER = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-
     private static final String DEFAULT_URL
             = "jdbc:sqlserver://localhost:1433;"
             + "databaseName=DBFinoraV3;" 

@@ -223,19 +223,11 @@
                         <div class="text-muted small">
                             Trang <strong>${page}</strong> / <strong>${totalPage}</strong>
                         </div>
-                        <ul class="pagination mb-0">
-                            <li class="page-item ${page <= 1 ? 'disabled' : ''}">
-                                <a class="page-link" href="suppliers?page=${page - 1}&keyword=${keyword}&status=${status}&pageSize=${pageSizeOption}">Trước</a>
-                            </li>
-                            <c:forEach begin="1" end="${totalPage}" var="i">
-                                <li class="page-item ${page == i ? 'active' : ''}">
-                                    <a class="page-link" href="suppliers?page=${i}&keyword=${keyword}&status=${status}&pageSize=${pageSizeOption}">${i}</a>
-                                </li>
-                            </c:forEach>
-                            <li class="page-item ${page >= totalPage ? 'disabled' : ''}">
-                                <a class="page-link" href="suppliers?page=${page + 1}&keyword=${keyword}&status=${status}&pageSize=${pageSizeOption}">Tiếp</a>
-                            </li>
-                        </ul>
+                        <jsp:include page="../common/pagination.jsp">
+                            <jsp:param name="currentPage" value="${page}"/>
+                            <jsp:param name="totalPages" value="${totalPage}"/>
+                            <jsp:param name="url" value="suppliers?keyword=${keyword}&status=${status}&pageSize=${pageSizeOption}&page="/>
+                        </jsp:include>
                     </div>
 
                 </div>

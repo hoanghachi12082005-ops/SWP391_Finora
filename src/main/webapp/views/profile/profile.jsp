@@ -1,4 +1,4 @@
-<%-- 
+﻿<%-- 
     Document   : profile
     Created on : 2026
     Author     : PCQN
@@ -9,12 +9,26 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
-<jsp:include page="/views/common/header.jsp">
-    <jsp:param name="title" value="${empty profileTitle ? 'My Profile' : profileTitle}"/>
-</jsp:include>
-<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/profile.css?v=1"/>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 
-<div class="app-container profile-page">
+    <title>
+        ${empty profileTitle ? 'My Profile' : profileTitle} - FinoraRetail
+    </title>
+
+    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/base.css?v=20260528"/>
+    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/layout.css?v=20260528"/>
+    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/profile.css?v=1"/>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+</head>
+
+<body>
+<div class="app-layout">
 
     <jsp:include page="/views/common/sidebar.jsp"/>
 
@@ -96,16 +110,16 @@
 
                             <p>
                                 <span class="material-symbols-outlined">call</span>
-                                ${empty profile.phone ? '—' : profile.phone}
+                                ${empty profile.phone ? 'ΓÇö' : profile.phone}
                             </p>
 
                             <div class="profile-badges">
                                 <span class="role-badge">
-                                    ${empty profile.roleNames ? profile.roleName : profile.roleNames}
+                                    ${profile.roleName}
                                 </span>
 
                                 <c:choose>
-                                    <c:when test="${profile.status == 'active'}">
+                                    <c:when test="${profile.status == 'ACTIVE'}">
                                         <span class="status-badge active">Active</span>
                                     </c:when>
                                     <c:otherwise>
@@ -136,17 +150,17 @@
 
                                 <div class="detail-item">
                                     <span>Phone</span>
-                                    <strong>${empty profile.phone ? '—' : profile.phone}</strong>
+                                    <strong>${empty profile.phone ? 'ΓÇö' : profile.phone}</strong>
                                 </div>
 
                                 <div class="detail-item">
                                     <span>Role</span>
-                                    <strong>${empty profile.roleNames ? profile.roleName : profile.roleNames}</strong>
+                                    <strong>${profile.roleName}</strong>
                                 </div>
 
                                 <div class="detail-item">
                                     <span>Branch</span>
-                                    <strong>${empty profile.branchName ? '—' : profile.branchName}</strong>
+                                    <strong>${empty profile.branchName ? 'ΓÇö' : profile.branchName}</strong>
                                 </div>
 
                                 <div class="detail-item">
@@ -163,39 +177,82 @@
                             </div>
                         </div>
 
-                        <div class="profile-card">
-                            <div class="card-header">
-                                <h3>Sales Performance</h3>
+                        <c:if test="${showSalesSection}">
+                            <div class="profile-card">
+                                <div class="card-header">
+                                    <h3>Sales Performance</h3>
+                                </div>
+
+                                <div class="sales-grid">
+                                    <div class="sales-card">
+                                        <span class="material-symbols-outlined">receipt_long</span>
+                                        <p>Total Orders</p>
+                                        <h4>${empty salesSummary ? 0 : salesSummary.totalOrders}</h4>
+                                    </div>
+
+                                    <div class="sales-card">
+                                        <span class="material-symbols-outlined">payments</span>
+                                        <p>Total Revenue</p>
+                                        <h4>
+                                            <fmt:formatNumber value="${empty salesSummary ? 0 : salesSummary.totalRevenue}"
+                                                              type="number"
+                                                              groupingUsed="true"/> Γé½
+                                        </h4>
+                                    </div>
+
+                                    <div class="sales-card">
+                                        <span class="material-symbols-outlined">trending_up</span>
+                                        <p>Average Order</p>
+                                        <h4>
+                                            <fmt:formatNumber value="${empty salesSummary ? 0 : salesSummary.averageOrderValue}"
+                                                              type="number"
+                                                              groupingUsed="true"/> Γé½
+                                        </h4>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="sales-grid">
-                                <div class="sales-card">
-                                    <span class="material-symbols-outlined">receipt_long</span>
-                                    <p>Total Orders</p>
-                                    <h4>${empty salesSummary ? 0 : salesSummary.totalOrders}</h4>
+                            <div class="profile-card">
+                                <div class="card-header">
+                                    <h3>Order History</h3>
+                                    <p>Your recent orders</p>
                                 </div>
 
-                                <div class="sales-card">
-                                    <span class="material-symbols-outlined">payments</span>
-                                    <p>Total Revenue</p>
-                                    <h4>
-                                        <fmt:formatNumber value="${empty salesSummary ? 0 : salesSummary.totalRevenue}"
-                                                          type="number"
-                                                          groupingUsed="true"/> ₫
-                                    </h4>
-                                </div>
-
-                                <div class="sales-card">
-                                    <span class="material-symbols-outlined">trending_up</span>
-                                    <p>Average Order</p>
-                                    <h4>
-                                        <fmt:formatNumber value="${empty salesSummary ? 0 : salesSummary.averageOrderValue}"
-                                                          type="number"
-                                                          groupingUsed="true"/> ₫
-                                    </h4>
-                                </div>
+                                <c:choose>
+                                    <c:when test="${empty orderHistory}">
+                                        <p style="color:var(--secondary);font-size:13px;">No orders found.</p>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="profile-order-table-wrap">
+                                            <table class="profile-order-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Code</th>
+                                                        <th>Customer</th>
+                                                        <th>Total</th>
+                                                        <th>Payment</th>
+                                                        <th>Status</th>
+                                                        <th>Date</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <c:forEach var="ord" items="${orderHistory}">
+                                                        <tr>
+                                                            <td>${ord.orderCode}</td>
+                                                            <td>${empty ord.customerName ? 'ΓÇö' : ord.customerName}</td>
+                                                            <td class="amount"><fmt:formatNumber value="${ord.totalAmount}" type="number" groupingUsed="true"/> Γé½</td>
+                                                            <td class="payment">${ord.paymentMethod}</td>
+                                                            <td><span class="status-badge ${ord.status == 'COMPLETED' ? 'active' : 'locked'}">${ord.status}</span></td>
+                                                            <td class="date"><fmt:formatDate value="${ord.createdAt}" pattern="dd/MM/yy HH:mm"/></td>
+                                                        </tr>
+                                                    </c:forEach>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
-                        </div>
+                        </c:if>
 
                     </section>
 
@@ -306,4 +363,5 @@
         </main>
     </div>
 </div>
-<jsp:include page="/views/common/footer.jsp"/>
+</body>
+</html>

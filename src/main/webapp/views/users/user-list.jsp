@@ -1,4 +1,4 @@
-<%-- 
+﻿<%-- 
     Document   : user-list
     Created on : 27 May 2026, 21:16:05
     Author     : PCQN
@@ -9,14 +9,25 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
-<jsp:include page="/views/common/header.jsp">
-    <jsp:param name="title" value="${pageTitle}"/>
-</jsp:include>
-<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/form-modal.css"/>
-<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-management.css?v=6">
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+        <title>${pageTitle} - Finora</title>
 
-<div class="app-container user-page">
-    <jsp:include page="/views/common/sidebar.jsp"/>
+        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/base.css?v=20260528"/>
+        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/layout.css?v=20260528"/>
+        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/form-modal.css?v=20260528"/>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-management.css?v=6">
+
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    </head>
+
+    <body class="user-page">
+    <div class="app-layout">
+        <jsp:include page="/views/common/sidebar.jsp"/>
 
         <div class="main-wrapper">
             <main class="page-content">
@@ -49,7 +60,7 @@
                     <section class="overview-grid">
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-users">
                                 <span class="material-symbols-outlined">groups</span>
                             </div>
                             <div class="overview-info">
@@ -59,7 +70,7 @@
                         </div>
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-users">
                                 <span class="material-symbols-outlined">verified_user</span>
                             </div>
                             <div class="overview-info">
@@ -69,7 +80,7 @@
                         </div>
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-orders">
                                 <span class="material-symbols-outlined">receipt_long</span>
                             </div>
                             <div class="overview-info">
@@ -79,27 +90,27 @@
                         </div>
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-revenue">
                                 <span class="material-symbols-outlined">payments</span>
                             </div>
                             <div class="overview-info">
                                 <p>Total Revenue</p>
                                 <h3>
-                                    <fmt:formatNumber value="${employeeOverview.totalRevenue}" type="number" groupingUsed="true"/> ₫
+                                    <fmt:formatNumber value="${employeeOverview.totalRevenue}" type="number" groupingUsed="true"/> Γé½
                                 </h3>
                             </div>
                         </div>
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-warning">
                                 <span class="material-symbols-outlined">emoji_events</span>
                             </div>
                             <div class="overview-info">
                                 <p>Top Employee</p>
-                                <h3>${empty employeeOverview.topEmployeeName ? '—' : employeeOverview.topEmployeeName}</h3>
+                                <h3>${empty employeeOverview.topEmployeeName ? 'ΓÇö' : employeeOverview.topEmployeeName}</h3>
                                 <small>
                                     Revenue:
-                                    <fmt:formatNumber value="${employeeOverview.topEmployeeRevenue}" type="number" groupingUsed="true"/> ₫
+                                    <fmt:formatNumber value="${employeeOverview.topEmployeeRevenue}" type="number" groupingUsed="true"/> Γé½
                                 </small>
                             </div>
                         </div>
@@ -213,7 +224,11 @@
                                 <c:when test="${empty users}">
                                     <tr>
                                         <td colspan="${showBranch ? 6 : 5}" class="empty-row">
-                                            No user accounts found.
+                                            <div class="empty-state">
+                                                <span class="material-symbols-outlined">person_search</span>
+                                                <h4>No accounts found</h4>
+                                                <p>No user accounts match your search criteria.</p>
+                                            </div>
                                         </td>
                                     </tr>
                                 </c:when>
@@ -239,16 +254,16 @@
                                                 </div>
                                             </td>
 
-                                            <td>${empty user.phone ? '—' : user.phone}</td>
+                                            <td>${empty user.phone ? 'ΓÇö' : user.phone}</td>
 
                                             <td>
                                                 <span class="role-badge">
-                                                    ${empty user.roleNames ? user.roleName : user.roleNames}
+                                                    ${user.roleName}
                                                 </span>
                                             </td>
 
                                             <c:if test="${showBranch}">
-                                                <td>${empty user.branchName ? '—' : user.branchName}</td>
+                                                <td>${empty user.branchName ? 'ΓÇö' : user.branchName}</td>
                                             </c:if>
 
                                             <td>
@@ -283,7 +298,7 @@
 
                                                     <c:if test="${canLock}">
                                                         <form method="post" action="${baseUrl}">
-                                                            <input type="hidden" name="employeeId" value="${user.employeeID}"/>
+                                                            <input type="hidden" name="employeeID" value="${user.employeeID}"/>
 
                                                             <c:choose>
                                                                 <c:when test="${user.status == 'ACTIVE'}">
@@ -328,11 +343,6 @@
                             </c:if>
                         </div>
 
-                        <%-- 
-                            baseUrl trong Servlet đã có contextPath, ví dụ: /finoraretail/owner/emp.
-                            c:url lại tự thêm contextPath nữa.
-                            Vì vậy phải bỏ contextPath khỏi baseUrl trước khi dùng c:url.
-                        --%>
                         <c:set var="paginationBaseUrl"
                                value="${fn:replace(baseUrl, pageContext.request.contextPath, '')}"/>
 
@@ -402,6 +412,7 @@
 
             </main>
         </div>
+    </div>
 
     <c:if test="${formMode == 'add' || formMode == 'edit'}">
 
@@ -417,7 +428,7 @@
 
                 <c:if test="${isEdit}">
                     <input type="hidden"
-                           name="employeeId"
+                           name="DId"
                            value="${formUser.employeeID}"/>
                 </c:if>
 
@@ -527,7 +538,7 @@
         <div class="modal-overlay">
             <form class="modal-box small-modal" method="post" action="${baseUrl}">
                 <input type="hidden" name="action" value="resetPassword"/>
-                <input type="hidden" name="employeeId" value="${resetUser.employeeID}"/>
+                <input type="hidden" name="employeeID" value="${resetUser.employeeID}"/>
 
                 <div class="modal-header">
                     <h3>Reset Password</h3>
@@ -581,10 +592,10 @@
                     <p><strong>Name:</strong> ${detailUser.fullName}</p>
                     <p><strong>Email:</strong> ${detailUser.email}</p>
                     <p><strong>Phone:</strong> ${detailUser.phone}</p>
-                    <p><strong>Role:</strong> ${empty detailUser.roleNames ? detailUser.roleName : detailUser.roleNames}</p>
+                    <p><strong>Role:</strong> ${detailUser.roleName}</p>
 
                     <c:if test="${showBranch}">
-                        <p><strong>Branch:</strong> ${empty detailUser.branchName ? '—' : detailUser.branchName}</p>
+                        <p><strong>Branch:</strong> ${empty detailUser.branchName ? 'ΓÇö' : detailUser.branchName}</p>
                     </c:if>
 
                     <p><strong>Status:</strong> ${detailUser.status}</p>
@@ -603,8 +614,8 @@
         </div>
     </c:if>
 
-    </div>
-<jsp:include page="/views/common/footer.jsp"/>
+    </body>
+</html>
 
 
 

@@ -197,6 +197,110 @@ public class CategoryDAO {
         return false;
     }
 
+    public int[] getCategoryStatistics(String keyword, String status) {
+        int[] stats = new int[3]; // [totalItems, totalRootCategories, totalLinkedProducts]
+        
+        StringBuilder sql = new StringBuilder(
+                "WITH CategoryStats AS (" +
+                " SELECT c.CategoryID, c.ParentCategoryID, c.Status, c.Name, c.Description, p.Name AS ParentName, " +
+                " COUNT(pr.ProductID) AS ProductCount " +
+                " FROM Category c " +
+                " LEFT JOIN Category p ON c.ParentCategoryID = p.CategoryID " +
+                " LEFT JOIN Product pr ON c.CategoryID = pr.CategoryID " +
+                " WHERE 1=1"
+        );
+
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (LOWER(c.Name) LIKE ? OR LOWER(c.Description) LIKE ? OR LOWER(p.Name) LIKE ?)");
+            String kwPattern = "%" + keyword.trim().toLowerCase() + "%";
+            params.add(kwPattern);
+            params.add(kwPattern);
+            params.add(kwPattern);
+        }
+
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND c.Status = ?");
+            params.add(status.trim());
+        }
+
+        sql.append(" GROUP BY c.CategoryID, c.ParentCategoryID, c.Status, c.Name, c.Description, p.Name");
+        sql.append(") " +
+                   "SELECT " +
+                   " COUNT(*) AS TotalItems, " +
+                   " SUM(CASE WHEN ParentCategoryID IS NULL THEN 1 ELSE 0 END) AS TotalRootCategories, " +
+                   " SUM(ProductCount) AS TotalLinkedProducts " +
+                   "FROM CategoryStats");
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            
+            setParameters(stmt, params);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    stats[0] = rs.getInt("TotalItems");
+                    stats[1] = rs.getInt("TotalRootCategories");
+                    stats[2] = rs.getInt("TotalLinkedProducts");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return stats;
+    }
+
+    public List<Category> getPaginatedCategories(String keyword, String status, int offset, int limit) {
+        List<Category> categories = new ArrayList<>();
+        
+        StringBuilder sql = new StringBuilder(
+                "SELECT c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, " +
+                "p.Name AS ParentName, COUNT(pr.ProductID) AS ProductCount " +
+                "FROM Category c " +
+                "LEFT JOIN Category p ON c.ParentCategoryID = p.CategoryID " +
+                "LEFT JOIN Product pr ON c.CategoryID = pr.CategoryID " +
+                "WHERE 1=1"
+        );
+
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (LOWER(c.Name) LIKE ? OR LOWER(c.Description) LIKE ? OR LOWER(p.Name) LIKE ?)");
+            String kwPattern = "%" + keyword.trim().toLowerCase() + "%";
+            params.add(kwPattern);
+            params.add(kwPattern);
+            params.add(kwPattern);
+        }
+
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND c.Status = ?");
+            params.add(status.trim());
+        }
+
+        sql.append(" GROUP BY c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, p.Name ");
+        sql.append(" ORDER BY c.CategoryID DESC "); // DESC in SQL to avoid reversing later
+        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        
+        params.add(offset);
+        params.add(limit);
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+             
+            setParameters(stmt, params);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    categories.add(extractCategory(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return categories;
+    }
+
     private void setParameters(PreparedStatement stmt, List<Object> params) throws SQLException {
         for (int i = 0; i < params.size(); i++) {
             stmt.setObject(i + 1, params.get(i));
