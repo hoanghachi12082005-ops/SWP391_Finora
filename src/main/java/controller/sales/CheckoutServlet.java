@@ -180,11 +180,13 @@ public class CheckoutServlet extends HttpServlet {
             tabs.remove(tabId);
             if (tabs.isEmpty()) {
                 tabs.put(1, new OrderTab(1));
-                session.setAttribute("activeTab", 1);
+                String ACTIVE_TAB_ATTR = null;
+                session.setAttribute(ACTIVE_TAB_ATTR, 1);
             } else {
                 // Chuyển active tab sang tab còn lại đầu tiên
                 int remainingActiveTabId = tabs.keySet().iterator().next();
-                session.setAttribute("activeTab", remainingActiveTabId);
+                String ACTIVE_TAB_ATTR = null;
+                session.setAttribute(ACTIVE_TAB_ATTR, remainingActiveTabId);
             }
 
             // Trả kết quả thành công
@@ -197,10 +199,10 @@ public class CheckoutServlet extends HttpServlet {
             out.write("\"cashReceived\":" + cashReceived + ",");
             out.write("\"changeAmount\":" + changeAmount + "}");
 
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             if (conn != null) {
-                try { conn.rollback(); } catch (Exception ex) { ex.printStackTrace(); }
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
             }
             out.write("{\"status\":\"error\",\"message\":\"Lỗi hệ thống khi thanh toán: " + escJson(e.getMessage()) + "\"}");
         } finally {

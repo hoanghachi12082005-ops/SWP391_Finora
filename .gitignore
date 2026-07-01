@@ -1,6 +1,44 @@
+# === Maven Build ===
 target/
 *.class
 *.war
-.idea/
-.vscode/
+*.jar
+*.ear
+*.log
+
+# === IDE - NetBeans ===
 nbproject/private/
+nb-configuration.xml
+nbactions.xml
+
+# === IDE - IntelliJ IDEA ===
+.idea/
+*.iml
+
+# === IDE - VS Code ===
+.vscode/
+
+# === Server Local Config ===
+.smarttomcat/
+
+# === OS Files ===
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# === Third-party Libraries (FontAwesome) ===
+src/main/webapp/assets/fontawesome/
+
+# === Old / Backup Source Code ===
+old source/
+
+# === Environment & Personal Config ===
+*.env
+.env.local
+*.local
+application-local.properties
+application-local.yml
+
+# === Node.js (if any) ===
+node_modules/

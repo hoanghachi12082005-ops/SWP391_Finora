@@ -92,6 +92,34 @@ public class AuthServlet extends HttpServlet {
             throws ServletException, IOException {
         String emailOrPhone = request.getParameter("username");
         String password = request.getParameter("password");
+
+        System.out.println("[DEBUG] Request Login nhận được username: [" + emailOrPhone + "]");
+        try {
+            // Xác thực thông tin qua tầng xử lý mật khẩu băm AuthService
+            Employee employee = authService.login(emailOrPhone, password);
+            System.out.println("[DEBUG AUTH] Login thành công! Employee: " + employee);
+
+            // Ghi nhớ đăng nhập
+            String rememberMe = request.getParameter("remember-me");
+            Cookie rememberCookie = new Cookie("remembered_username", emailOrPhone);
+            if (rememberMe != null) {
+                rememberCookie.setMaxAge(30 * 24 * 60 * 60); // 30 ngày
+            } else {
+                rememberCookie.setMaxAge(0);
+            }
+            rememberCookie.setPath(request.getContextPath().isEmpty() ? "/" : request.getContextPath());
+            response.addCookie(rememberCookie);
+
+            HttpSession session = request.getSession(true);
+            session.setAttribute("currentUser", employee);
+            System.out.println("Session ID Login = " + session.getId());
+            System.out.println("CurrentUser Login = " + session.getAttribute("currentUser"));
+            response.sendRedirect(request.getContextPath() + getRedirectPath(employee));
+        } catch (RuntimeException e) {
+            System.err.println("[DEBUG] Đăng nhập thất bại do: " + e.getMessage());
+            request.setAttribute("error", e.getMessage());
+            request.setAttribute("username", emailOrPhone);
+            request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
         if (emailOrPhone == null || password == null || emailOrPhone.trim().isEmpty() || password.trim().isEmpty()) {
             request.setAttribute("error", "Vui lòng nhập email/số điện thoại và mật khẩu.");
             request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
@@ -152,6 +180,10 @@ public class AuthServlet extends HttpServlet {
             if (isMatch) {
                 String newPassword = EmailUtil.generateRandomPassword();
                 String hashedPassword = util.security.PasswordUtil.hash(newPassword);
+                boolean updated = employeeDAO.updatePasswordByEmail(email.trim(), hashedPassword);
+                if (updated) {
+                    boolean sent = EmailUtil.sendPasswordEmail(email.trim(), fullName.trim(), newPassword);
+                    if (sent) {
                 boolean sent = EmailUtil.sendPasswordEmail(email.trim(), fullName.trim(), newPassword);
                 if (sent) {
                     boolean updated = employeeDAO.updatePasswordByEmail(email.trim(), hashedPassword);
