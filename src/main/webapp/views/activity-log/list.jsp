@@ -32,18 +32,6 @@
                         Tổng <strong><%= totalCount != null ? totalCount : 0 %></strong> hoạt động
                     </small>
                 </div>
-                <span class="badge bg-secondary d-flex align-items-center gap-1" style="padding: 8px 12px;">
-                    <span class="material-icons" style="font-size:16px;">lock</span>
-                    Chỉ xem &middot; Quyền Chủ chuỗi
-                </span>
-            </div>
-
-            <div class="alert alert-info d-flex align-items-start" role="alert">
-                <span class="material-icons me-2">info</span>
-                <div>
-                    Mọi thao tác bán hàng, nhập xuất, chỉnh sửa của nhân viên đều được tự động ghi lại tại đây.
-                    Nhật ký này <strong>không thể chỉnh sửa hoặc xóa</strong> để bảo toàn dấu vết kiểm toán nội bộ.
-                </div>
             </div>
 
             <!-- Bộ lọc nghiệp vụ -->
@@ -138,6 +126,8 @@
                 String desc      = log.getDescription();
                 String iconColor = log.getIconColor();
                 String iconName  = log.getIconName();
+                String branch    = log.getBranchLabel();
+                String empIdStr  = log.getEmpId() > 0 ? "NV #" + log.getEmpId() : "";
                 String badge;
                 switch (iconColor) {
                     case "green":  badge = "bg-success"; break;
@@ -155,7 +145,11 @@
 %>
                                 <tr>
                                     <td><small class="text-muted"><%= when %></small></td>
-                                    <td><strong><%= actor %></strong></td>
+                                    <td>
+                                        <strong><%= actor %></strong>
+                                        <% if (!empIdStr.isEmpty()) { %><br><small class="text-muted"><%= empIdStr %></small><% } %>
+                                    </td>
+                                    <td><span class="badge bg-secondary"><%= branch %></span></td>
                                     <td>
                                         <span class="d-inline-flex align-items-center gap-2">
                                             <span class="badge <%= badge %> d-inline-flex align-items-center gap-1">
@@ -169,8 +163,8 @@
                                     <td><code><%= (code != null && !code.isEmpty()) ? code : "—" %></code></td>
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-primary"
-                                                onclick="viewLog('<%= when %>','<%= safeActor %>','<%= safeAction %>','<%= safeEntity %>','<%= safeCode %>','<%= safeDesc %>','<%= safeOld %>','<%= safeNew %>')">
-                                            Xem
+                                                onclick="viewLog('<%= when %>','<%= safeActor %>','<%= safeAction %>','<%= safeEntity %>','<%= safeCode %>','<%= safeDesc %>','<%= safeOld %>','<%= safeNew %>','<%= branch %>','<%= empIdStr %>')">
+                                            Xem nội dung
                                         </button>
                                     </td>
                                 </tr>
@@ -235,10 +229,6 @@
                     <dt class="col-sm-3">Dữ liệu sau</dt>
                     <dd class="col-sm-9"><pre class="bg-light p-2 rounded small mb-0" id="vNew" style="max-height: 200px; overflow:auto;"></pre></dd>
                 </dl>
-                <div class="alert alert-secondary small mt-3 mb-0">
-                    Thông tin "Dữ liệu trước / sau" được lưu dưới dạng JSON kỹ thuật để phục vụ kiểm toán.
-                    Nếu cần dịch ra ngôn ngữ nghiệp vụ chi tiết, hãy liên hệ phòng IT.
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
@@ -248,10 +238,12 @@
 </div>
 
 <script>
-function viewLog(time, actor, action, entity, code, summary, oldData, newData) {
+function viewLog(time, actor, action, entity, code, summary, oldData, newData, branch, empId) {
     document.getElementById('vSummary').innerText = summary;
     document.getElementById('vTime').innerText = time;
     document.getElementById('vActor').innerText = actor;
+    document.getElementById('vEmpId').innerText = empId || '—';
+    document.getElementById('vBranch').innerText = branch || '—';
     document.getElementById('vAction').innerText = action;
     document.getElementById('vEntity').innerText = entity;
     document.getElementById('vCode').innerText = code || '—';

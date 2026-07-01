@@ -21,22 +21,24 @@ import java.util.List;
 public class ActivityLogDAO {
 
     private static final String BASE_SELECT =
-            "SELECT a.audit_log_id, a.emp_id, a.action_name, a.table_name, a.record_id, "
-          + "       a.old_data, a.new_data, a.created_at, e.fullName AS emp_name "
-          + "FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id ";
+            "SELECT a.audit_log_id, a.emp_id, a.action_name, a.table_name, a.record_id, a.old_data, a.new_data, a.created_at, "
+          + "       e.fullName AS emp_name, e.branch_id, b.branch_name "
+          + "FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id "
+          + "LEFT JOIN branch b ON e.branch_id = b.branch_id ";
 
     /** Lấy danh sách mới nhất, phục vụ card "Hoạt động gần đây" trên dashboard. */
     public List<ActivityLog> findRecent(int limit) throws SQLException {
-        String sql = "SELECT TOP (?) a.audit_log_id, a.emp_id, a.action_name, a.table_name, a.record_id, "
-                   + "a.old_data, a.new_data, a.created_at, e.fullName AS emp_name "
+        String sql = "SELECT TOP (?) a.audit_log_id, a.emp_id, a.action_name, a.table_name, a.record_id, a.old_data, a.new_data, a.created_at, "
+                   + "e.fullName AS emp_name, e.branch_id, b.branch_name "
                    + "FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id "
+                   + "LEFT JOIN branch b ON e.branch_id = b.branch_id "
                    + "ORDER BY a.created_at DESC, a.audit_log_id DESC";
         List<ActivityLog> list = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, limit);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(extract(rs));
+                while (rs.next()) list.add(extractWithBranch(rs));
             }
         }
         return list;
@@ -73,7 +75,7 @@ public class ActivityLogDAO {
             ps.setInt(idx++, offset);
             ps.setInt(idx, limit);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(extract(rs));
+                while (rs.next()) list.add(extractWithBranch(rs));
             }
         }
         return list;
@@ -122,6 +124,37 @@ public class ActivityLogDAO {
         }
     }
 
+    public int countByTableName(String keyword, String tableName, String actionName,
+                                LocalDate dateFrom, LocalDate dateTo) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id WHERE a.table_name = ? ");
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (a.action_name LIKE ? OR a.table_name LIKE ? OR e.fullName LIKE ? OR a.new_data LIKE ?) ");
+        }
+        if (actionName != null && !actionName.isBlank()) sql.append(" AND a.action_name = ? ");
+        if (dateFrom != null) sql.append(" AND a.created_at >= ? ");
+        if (dateTo != null) sql.append(" AND a.created_at < ? ");
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            ps.setString(idx++, tableName);
+            if (keyword != null && !keyword.isBlank()) {
+                String k = "%" + keyword + "%";
+                ps.setString(idx++, k);
+                ps.setString(idx++, k);
+                ps.setString(idx++, k);
+                ps.setString(idx++, k);
+            }
+            if (actionName != null && !actionName.isBlank()) ps.setString(idx++, actionName);
+            if (dateFrom != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateFrom.atStartOfDay()));
+            if (dateTo != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateTo.plusDays(1).atStartOfDay()));
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
     /** Lấy danh sách tên bảng distinct để hiển thị trong filter. */
     public List<String> findDistinctTables() throws SQLException {
         List<String> list = new ArrayList<>();
@@ -132,6 +165,21 @@ public class ActivityLogDAO {
             while (rs.next()) list.add(rs.getString(1));
         }
         return list;
+    }
+
+    public void insertLog(Integer empId, String actionName, String tableName, Integer recordId,
+                          String oldData, String newData) throws SQLException {
+        String sql = "INSERT INTO audit_log (emp_id, action_name, table_name, record_id, old_data, new_data) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (empId == null) ps.setNull(1, java.sql.Types.INTEGER); else ps.setInt(1, empId);
+            ps.setString(2, actionName);
+            ps.setString(3, tableName);
+            if (recordId == null) ps.setNull(4, java.sql.Types.INTEGER); else ps.setInt(4, recordId);
+            ps.setString(5, oldData);
+            ps.setString(6, newData);
+            ps.executeUpdate();
+        }
     }
 
     public List<String> findDistinctActions() throws SQLException {
@@ -159,6 +207,14 @@ public class ActivityLogDAO {
         log.setNewData(rs.getString("new_data"));
         Timestamp ts = rs.getTimestamp("created_at");
         if (ts != null) log.setCreatedAt(ts.toLocalDateTime());
+        return log;
+    }
+
+    private ActivityLog extractWithBranch(ResultSet rs) throws SQLException {
+        ActivityLog log = extract(rs);
+        int branchId = rs.getInt("branch_id");
+        if (!rs.wasNull()) log.setBranchId(branchId);
+        log.setBranchName(rs.getString("branch_name"));
         return log;
     }
 }

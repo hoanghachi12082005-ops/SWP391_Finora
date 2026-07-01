@@ -17,6 +17,8 @@ public class ActivityLog {
     private int id;
     private int empId;
     private String empName;
+    private Integer branchId;
+    private String branchName;
     private String actionName;
     private String tableName;
     private Integer recordId;
@@ -34,6 +36,18 @@ public class ActivityLog {
 
     public String getEmpName() { return empName; }
     public void setEmpName(String empName) { this.empName = empName; }
+
+    public Integer getBranchId() { return branchId; }
+    public void setBranchId(Integer branchId) { this.branchId = branchId; }
+
+    public String getBranchName() { return branchName; }
+    public void setBranchName(String branchName) { this.branchName = branchName; }
+
+    public String getBranchLabel() {
+        if (branchName != null && !branchName.isBlank()) return branchName;
+        if (branchId != null) return "CN #" + branchId;
+        return "—";
+    }
 
     public String getActionName() { return actionName; }
     public void setActionName(String actionName) { this.actionName = actionName; }
