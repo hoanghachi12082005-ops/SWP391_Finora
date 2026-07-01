@@ -10,7 +10,7 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
     <head>
         <meta charset="UTF-8"/>
         <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -64,7 +64,7 @@
                                 <span class="material-symbols-outlined">groups</span>
                             </div>
                             <div class="overview-info">
-                                <p>Total Employees</p>
+                                <p>Tổng nhân viên</p>
                                 <h3>${employeeOverview.totalEmployees}</h3>
                             </div>
                         </div>
@@ -74,7 +74,7 @@
                                 <span class="material-symbols-outlined">verified_user</span>
                             </div>
                             <div class="overview-info">
-                                <p>Active Employees</p>
+                                <p>Nhân viên đang hoạt động</p>
                                 <h3>${employeeOverview.activeEmployees}</h3>
                             </div>
                         </div>
@@ -84,7 +84,7 @@
                                 <span class="material-symbols-outlined">receipt_long</span>
                             </div>
                             <div class="overview-info">
-                                <p>Total Orders</p>
+                                <p>Tổng đơn hàng</p>
                                 <h3>${employeeOverview.totalOrders}</h3>
                             </div>
                         </div>
@@ -94,7 +94,7 @@
                                 <span class="material-symbols-outlined">payments</span>
                             </div>
                             <div class="overview-info">
-                                <p>Total Revenue</p>
+                                <p>Tổng doanh thu</p>
                                 <h3>
                                     <fmt:formatNumber value="${employeeOverview.totalRevenue}" type="number" groupingUsed="true"/> ₫
                                 </h3>
@@ -106,10 +106,10 @@
                                 <span class="material-symbols-outlined">emoji_events</span>
                             </div>
                             <div class="overview-info">
-                                <p>Top Employee</p>
+                                <p>Nhân viên xuất sắc</p>
                                 <h3>${empty employeeOverview.topEmployeeName ? '—' : employeeOverview.topEmployeeName}</h3>
                                 <small>
-                                    Revenue:
+                                    Doanh thu:
                                     <fmt:formatNumber value="${employeeOverview.topEmployeeRevenue}" type="number" groupingUsed="true"/> ₫
                                 </small>
                             </div>
@@ -124,18 +124,18 @@
                     <div class="filter-grid">
 
                         <div class="form-group filter-search">
-                            <label>Search</label>
+                            <label>Tìm kiếm</label>
                             <input name="keyword"
                                    value="${keyword}"
                                    type="text"
-                                   placeholder="Name, email or phone..."/>
+                                   placeholder="Tên, email hoặc số điện thoại..."/>
                         </div>
 
                         <c:if test="${showBranch && not empty branches}">
                             <div class="form-group">
-                                <label>Branch</label>
+                                <label>Chi nhánh</label>
                                 <select name="branchId">
-                                    <option value="">All Branches</option>
+                                    <option value="">Tất cả chi nhánh</option>
 
                                     <c:forEach var="branch" items="${branches}">
                                         <option value="${branch.branchID}"
@@ -149,9 +149,9 @@
 
                         <c:if test="${not empty roles}">
                             <div class="form-group">
-                                <label>Role</label>
+                                <label>Vai trò</label>
                                 <select name="roleId">
-                                    <option value="">All Roles</option>
+                                    <option value="">Tất cả vai trò</option>
 
                                     <c:forEach var="role" items="${roles}">
                                         <option value="${role.roleID}"
@@ -164,38 +164,38 @@
                         </c:if>
 
                         <div class="form-group">
-                            <label>Status</label>
+                            <label>Trạng thái</label>
                             <select name="status">
-                                <option value="">All Status</option>
-                                <option value="active" ${statusFilter == 'ACTIVE' ? 'selected' : ''}>Active</option>
-                                <option value="locked" ${statusFilter == 'INACTIVE' ? 'selected' : ''}>INACTIVE</option>
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="active" ${statusFilter == 'ACTIVE' ? 'selected' : ''}>Đang hoạt động</option>
+                                <option value="locked" ${statusFilter == 'INACTIVE' ? 'selected' : ''}>Không hoạt động</option>
                             </select>
                         </div>
 
                         <div class="form-group">
-                            <label>Page Size</label>
+                            <label>Kích thước trang</label>
                             <select name="pageSize">
                                 <option value="5" ${empty pageSizeOption || pageSizeOption == '5' ? 'selected' : ''}>
-                                    5 records/page
+                                    5 bản ghi/trang
                                 </option>
 
                                 <option value="10" ${pageSizeOption == '10' ? 'selected' : ''}>
-                                    10 records/page
+                                    10 bản ghi/trang
                                 </option>
 
                                 <option value="30p" ${pageSizeOption == '30p' || pageSizeOption == '30%' || pageSizeOption == '30' ? 'selected' : ''}>
-                                    30% records/page
+                                    30% bản ghi/trang
                                 </option>
 
                                 <option value="50p" ${pageSizeOption == '50p' || pageSizeOption == '50%' || pageSizeOption == '50' ? 'selected' : ''}>
-                                    50% records/page
+                                    50% bản ghi/trang
                                 </option>
                             </select>
                         </div>
 
                         <div class="filter-actions">
-                            <button class="btn-primary" type="submit">Apply</button>
-                            <a class="btn-secondary" href="${baseUrl}">Reset</a>
+                            <button class="btn-primary" type="submit">Áp dụng</button>
+                            <a class="btn-secondary" href="${baseUrl}">Đặt lại</a>
                         </div>
 
                     </div>
@@ -206,16 +206,16 @@
                         <table class="data-table">
                             <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Phone</th>
-                                <th>Role</th>
+                                <th>Họ và tên</th>
+                                <th>Số điện thoại</th>
+                                <th>Vai trò</th>
 
                                 <c:if test="${showBranch}">
-                                    <th>Branch</th>
+                                    <th>Chi nhánh</th>
                                 </c:if>
 
-                                <th>Status</th>
-                                <th class="text-right">Actions</th>
+                                <th>Trạng thái</th>
+                                <th class="text-right">Thao tác</th>
                             </tr>
                             </thead>
 
@@ -226,8 +226,8 @@
                                         <td colspan="${showBranch ? 6 : 5}" class="empty-row">
                                             <div class="empty-state">
                                                 <span class="material-symbols-outlined">person_search</span>
-                                                <h4>No accounts found</h4>
-                                                <p>No user accounts match your search criteria.</p>
+                                                <h4>Không tìm thấy tài khoản</h4>
+                                                <p>Không có tài khoản nào phù hợp với điều kiện tìm kiếm.</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -280,12 +280,12 @@
                                             <td>
                                                 <div class="table-actions">
 
-                                                    <a href="${baseUrl}?action=detail&id=${user.employeeID}" title="View Detail">
+                                                    <a href="${baseUrl}?action=detail&id=${user.employeeID}" title="Xem chi tiết">
                                                         <span class="material-symbols-outlined">visibility</span>
                                                     </a>
 
                                                     <c:if test="${canEdit}">
-                                                        <a href="${baseUrl}?action=edit&id=${user.employeeID}" title="Edit">
+                                                        <a href="${baseUrl}?action=edit&id=${user.employeeID}" title="Sửa">
                                                             <span class="material-symbols-outlined">edit</span>
                                                         </a>
                                                     </c:if>
@@ -305,7 +305,7 @@
                                                                     <input type="hidden" name="action" value="lock"/>
                                                                     <button type="submit"
                                                                             title="Lock"
-                                                                            onclick="return confirm('Lock this account?')">
+                                                                            onclick="return confirm('Khóa tài khoản này?')">
                                                                         <span class="material-symbols-outlined">lock</span>
                                                                     </button>
                                                                 </c:when>
@@ -314,7 +314,7 @@
                                                                     <input type="hidden" name="action" value="unlock"/>
                                                                     <button type="submit"
                                                                             title="Unlock"
-                                                                            onclick="return confirm('Unlock this account?')">
+                                                                            onclick="return confirm('Mở khóa tài khoản này?')">
                                                                         <span class="material-symbols-outlined">lock_open</span>
                                                                     </button>
                                                                 </c:otherwise>
@@ -334,11 +334,11 @@
 
                     <div class="table-footer">
                         <div>
-                            Showing ${empty users ? 0 : fn:length(users)} of ${empty totalUsers ? 0 : totalUsers} entries
+                            Hiển thị ${empty users ? 0 : fn:length(users)} / ${empty totalUsers ? 0 : totalUsers} bản ghi
 
                             <c:if test="${not empty pageSize}">
                                 <span class="page-size-note">
-                                    / ${pageSize} per page
+                                    / ${pageSize} / trang
                                 </span>
                             </c:if>
                         </div>
@@ -360,10 +360,10 @@
 
                                 <c:choose>
                                     <c:when test="${currentPage > 1}">
-                                        <a class="page-btn" href="${prevUrl}">Previous</a>
+                                        <a class="page-btn" href="${prevUrl}">Trước</a>
                                     </c:when>
                                     <c:otherwise>
-                                        <span class="page-btn disabled">Previous</span>
+                                        <span class="page-btn disabled">Trước</span>
                                     </c:otherwise>
                                 </c:choose>
 
@@ -398,10 +398,10 @@
 
                                 <c:choose>
                                     <c:when test="${currentPage < totalPages}">
-                                        <a class="page-btn" href="${nextUrl}">Next</a>
+                                        <a class="page-btn" href="${nextUrl}">Sau</a>
                                     </c:when>
                                     <c:otherwise>
-                                        <span class="page-btn disabled">Next</span>
+                                        <span class="page-btn disabled">Sau</span>
                                     </c:otherwise>
                                 </c:choose>
 
@@ -433,7 +433,7 @@
                 </c:if>
 
                 <div class="modal-header">
-                    <h3>${isEdit ? 'Edit Employee' : 'Add Employee'}</h3>
+                    <h3>${isEdit ? 'Chỉnh sửa nhân viên' : 'Thêm nhân viên'}</h3>
 
                     <a href="${baseUrl}" class="modal-close">
                         <span class="material-symbols-outlined">close</span>
@@ -444,11 +444,11 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Full Name</label>
+                            <label>Họ và tên</label>
                             <input type="text"
                                    name="fullName"
                                    value="${isEdit ? formUser.fullName : ''}"
-                                   placeholder="Enter full name"
+                                   placeholder="Nhập họ và tên"
                                    required/>
                         </div>
 
@@ -457,31 +457,31 @@
                             <input type="email"
                                    name="email"
                                    value="${isEdit ? formUser.email : ''}"
-                                   placeholder="Enter email"
+                                   placeholder="Nhập email"
                                    required/>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Phone</label>
+                            <label>Số điện thoại</label>
                             <input type="text"
                                    name="phone"
                                    value="${isEdit ? formUser.phone : ''}"
-                                   placeholder="Enter phone number"/>
+                                   placeholder="Nhập số điện thoại"/>
                         </div>
 
                         <div class="form-group">
-                            <label>Status</label>
+                            <label>Trạng thái</label>
                             <select name="status">
                                 <option value="active"
                                     ${!isEdit || formUser.status == 'ACTIVE' ? 'selected' : ''}>
-                                    Active
+                                    Đang hoạt động
                                 </option>
 
                                 <option value="locked"
                                     ${isEdit && formUser.status == 'INACTIVE' ? 'selected' : ''}>
-                                    Locked
+                                    Đã khóa
                                 </option>
                             </select>
                         </div>
@@ -489,10 +489,10 @@
 
                     <c:if test="${showBranch}">
                         <div class="form-group">
-                            <label>Branch</label>
+                            <label>Chi nhánh</label>
 
                             <select name="branchId" required>
-                                <option value="">-- Select Branch --</option>
+                                <option value="">-- Chọn chi nhánh --</option>
 
                                 <c:forEach var="branch" items="${branches}">
                                     <option value="${branch.branchID}"
@@ -506,9 +506,9 @@
 
                     <c:if test="${not empty roles}">
                         <div class="form-group">
-                            <label>Role</label>
+                            <label>Vai trò</label>
                             <select name="roleId" required>
-                                <option value="">-- Select Role --</option>
+                                <option value="">-- Chọn vai trò --</option>
                                 <c:forEach var="role" items="${roles}">
                                     <option value="${role.roleID}"
                                         ${isEdit && formUser.roleID == role.roleID ? 'selected' : ''}>
@@ -522,10 +522,10 @@
                 </div>
 
                 <div class="modal-footer">
-                    <a href="${baseUrl}" class="btn-secondary">Cancel</a>
+                    <a href="${baseUrl}" class="btn-secondary">Hủy</a>
 
                     <button type="submit" class="btn-primary">
-                        ${isEdit ? 'Update Employee' : 'Add Employee'}
+                        ${isEdit ? 'Cập nhật nhân viên' : 'Thêm nhân viên'}
                     </button>
                 </div>
 
@@ -541,7 +541,7 @@
                 <input type="hidden" name="employeeID" value="${resetUser.employeeID}"/>
 
                 <div class="modal-header">
-                    <h3>Reset Password</h3>
+                    <h3>Đặt lại mật khẩu</h3>
 
                     <a href="${baseUrl}" class="modal-close">
                         <span class="material-symbols-outlined">close</span>
@@ -550,12 +550,12 @@
 
                 <div class="modal-body">
                     <p>
-                        Reset password for
+                        Đặt lại mật khẩu cho
                         <strong>${resetUser.fullName}</strong>?
                     </p>
 
                     <p class="text-muted">
-                        A new password will be generated automatically and sent to this user's email.
+                        Mật khẩu mới sẽ được tạo tự động và gửi đến email của người dùng.
                     </p>
 
                     <p>
@@ -564,12 +564,12 @@
                 </div>
 
                 <div class="modal-footer">
-                    <a class="btn-secondary" href="${baseUrl}">Cancel</a>
+                    <a class="btn-secondary" href="${baseUrl}">Hủy</a>
 
                     <button class="btn-primary"
                             type="submit"
-                            onclick="return confirm('Reset password for this account?')">
-                        Reset Password
+                            onclick="return confirm('Đặt lại mật khẩu cho tài khoản này?')">
+                        Đặt lại mật khẩu
                     </button>
                 </div>
             </form>
@@ -581,7 +581,7 @@
             <div class="modal-box small-modal">
 
                 <div class="modal-header">
-                    <h3>Account Detail</h3>
+                    <h3>Chi tiết tài khoản</h3>
 
                     <a href="${baseUrl}" class="modal-close">
                         <span class="material-symbols-outlined">close</span>
@@ -589,25 +589,25 @@
                 </div>
 
                 <div class="modal-body detail-list">
-                    <p><strong>Name:</strong> ${detailUser.fullName}</p>
+                    <p><strong>Họ và tên:</strong> ${detailUser.fullName}</p>
                     <p><strong>Email:</strong> ${detailUser.email}</p>
-                    <p><strong>Phone:</strong> ${detailUser.phone}</p>
-                    <p><strong>Role:</strong> ${detailUser.roleName}</p>
+                    <p><strong>Số điện thoại:</strong> ${detailUser.phone}</p>
+                    <p><strong>Vai trò:</strong> ${detailUser.roleName}</p>
 
                     <c:if test="${showBranch}">
-                        <p><strong>Branch:</strong> ${empty detailUser.branchName ? '—' : detailUser.branchName}</p>
+                        <p><strong>Chi nhánh:</strong> ${empty detailUser.branchName ? '—' : detailUser.branchName}</p>
                     </c:if>
 
-                    <p><strong>Status:</strong> ${detailUser.status}</p>
+                    <p><strong>Trạng thái:</strong> ${detailUser.status}</p>
 
                     <p>
-                        <strong>Created At:</strong>
+                        <strong>Ngày tạo:</strong>
                         <fmt:formatDate value="${detailUser.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
                     </p>
                 </div>
 
                 <div class="modal-footer">
-                    <a class="btn-primary" href="${baseUrl}">Close</a>
+                    <a class="btn-primary" href="${baseUrl}">Đóng</a>
                 </div>
 
             </div>

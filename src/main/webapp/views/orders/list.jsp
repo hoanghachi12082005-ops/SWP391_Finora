@@ -3,11 +3,11 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Order List - FinoraRetail</title>
+    <title>Danh sách đơn hàng - FinoraRetail</title>
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/base.css?v=20260528"/>
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/layout.css?v=20260528"/>
 </head>
@@ -19,11 +19,11 @@
         <main class="page-content">
             <section class="page-header">
                 <div>
-                    <h2>Order List</h2>
+                    <h2>Danh sách đơn hàng</h2>
                     <p>
                         <c:choose>
-                            <c:when test="${isSalesStaffView}">Your sales orders</c:when>
-                            <c:otherwise>Sales orders visible to managers and admins</c:otherwise>
+                            <c:when test="${isSalesStaffView}">Đơn hàng của bạn</c:when>
+                            <c:otherwise>Đơn hàng hiển thị cho quản lý và quản trị viên</c:otherwise>
                         </c:choose>
                     </p>
                 </div>
@@ -31,9 +31,9 @@
 
             <section class="profile-card">
                 <div class="card-header">
-                    <h3>Orders</h3>
+                    <h3>Đơn hàng</h3>
                 </div>
-                <p>This placeholder page is now reachable for the active role. Connect it to your DAO/service later if you want real order data.</p>
+                <p>Trang này đã có thể truy cập. Kết nối với DAO/Service để hiển thị dữ liệu đơn hàng thực tế.</p>
             </section>
         </main>
     </div>

@@ -11,7 +11,7 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
     <head>
         <meta charset="UTF-8"/>
         <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -68,7 +68,7 @@
                                 <span class="material-symbols-outlined">groups</span>
                             </div>
                             <div class="overview-info">
-                                <p>Total Customers</p>
+                                <p>Tổng khách hàng</p>
                                 <h3>${customerOverview.totalCustomers}</h3>
                             </div>
                         </div>
@@ -78,7 +78,7 @@
                                 <span class="material-symbols-outlined">person_add</span>
                             </div>
                             <div class="overview-info">
-                                <p>New This Month</p>
+                                <p>Mới trong tháng</p>
                                 <h3>${customerOverview.newCustomersThisMonth}</h3>
                             </div>
                         </div>
@@ -88,7 +88,7 @@
                                 <span class="material-symbols-outlined">payments</span>
                             </div>
                             <div class="overview-info">
-                                <p>Total Spent</p>
+                                <p>Tổng chi tiêu</p>
                                 <h3>
                                     <fmt:formatNumber value="${customerOverview.totalSpent}" type="number" groupingUsed="true"/> ₫
                                 </h3>
@@ -100,10 +100,10 @@
                                 <span class="material-symbols-outlined">emoji_events</span>
                             </div>
                             <div class="overview-info">
-                                <p>Top Current Points</p>
+                                <p>Khách hàng tích điểm cao</p>
                                 <h3>${empty customerOverview.topCustomerName ? '—' : customerOverview.topCustomerName}</h3>
                                 <small>
-                                    Points: ${customerOverview.topCustomerPoints}
+                                    Điểm: ${customerOverview.topCustomerPoints}
                                 </small>
                             </div>
                         </div>
@@ -113,7 +113,7 @@
                                 <span class="material-symbols-outlined">bar_chart</span>
                             </div>
                             <div class="overview-info">
-                                <p>Filtered Results</p>
+                                <p>Kết quả lọc</p>
                                 <h3>${empty totalCustomers ? 0 : totalCustomers}</h3>
                             </div>
                         </div>
@@ -128,18 +128,18 @@
                     <div class="filter-grid">
 
                         <div class="form-group filter-search">
-                            <label>Search</label>
+                            <label>Tìm kiếm</label>
                             <input name="keyword"
                                    value="${keyword}"
                                    type="text"
-                                   placeholder="Name, email or phone..."/>
+                                   placeholder="Tên, email hoặc số điện thoại..."/>
                         </div>
 
                         <c:if test="${not empty branches}">
                             <div class="form-group">
-                                <label>Branch</label>
+                                <label>Chi nhánh</label>
                                 <select name="branchId">
-                                    <option value="">All Branches</option>
+                                    <option value="">Tất cả chi nhánh</option>
                                     <c:forEach var="br" items="${branches}">
                                         <option value="${br.branchID}" ${branchFilter == br.branchID ? 'selected' : ''}>
                                             ${br.name}
@@ -150,29 +150,29 @@
                         </c:if>
 
                         <div class="form-group">
-                            <label>Page Size</label>
+                            <label>Kích thước trang</label>
                             <select name="pageSize">
                                 <option value="5" ${empty pageSizeOption || pageSizeOption == '5' ? 'selected' : ''}>
-                                    5 records/page
+                                    5 bản ghi/trang
                                 </option>
 
                                 <option value="10" ${pageSizeOption == '10' ? 'selected' : ''}>
-                                    10 records/page
+                                    10 bản ghi/trang
                                 </option>
 
                                 <option value="30p" ${pageSizeOption == '30p' || pageSizeOption == '30%' || pageSizeOption == '30' ? 'selected' : ''}>
-                                    30% records/page
+                                    30% bản ghi/trang
                                 </option>
 
                                 <option value="50p" ${pageSizeOption == '50p' || pageSizeOption == '50%' || pageSizeOption == '50' ? 'selected' : ''}>
-                                    50% records/page
+                                    50% bản ghi/trang
                                 </option>
                             </select>
                         </div>
 
                         <div class="filter-actions">
-                            <button class="btn-primary" type="submit">Apply</button>
-                            <a class="btn-secondary" href="${baseUrl}">Reset</a>
+                            <button class="btn-primary" type="submit">Áp dụng</button>
+                            <a class="btn-secondary" href="${baseUrl}">Đặt lại</a>
                         </div>
 
                     </div>
@@ -184,10 +184,10 @@
                         <table class="data-table">
                             <thead>
                             <tr>
-                                <th>Customer</th>
-                                <th>Phone</th>
-                                <th>Points</th>
-                                <th class="text-right">Actions</th>
+                                <th>Khách hàng</th>
+                                <th>Số điện thoại</th>
+                                <th>Điểm</th>
+                                <th class="text-right">Thao tác</th>
                             </tr>
                             </thead>
 
@@ -198,8 +198,8 @@
                                         <td colspan="4" class="empty-row">
                                             <div class="empty-state">
                                                 <span class="material-symbols-outlined">group_off</span>
-                                                <h4>No customers found</h4>
-                                                <p>No customers match your search criteria.</p>
+                                                <h4>Không tìm thấy khách hàng</h4>
+                                                <p>Không có khách hàng nào phù hợp với điều kiện tìm kiếm.</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -233,18 +233,18 @@
                                             <td>
                                                 <div class="table-actions">
 
-                                                    <a href="${baseUrl}?action=detail&id=${cust.customerId}" title="View Detail">
+                                                    <a href="${baseUrl}?action=detail&id=${cust.customerId}" title="Xem chi tiết">
                                                         <span class="material-symbols-outlined">visibility</span>
                                                     </a>
 
                                                     <c:if test="${canEdit}">
-                                                        <a href="${baseUrl}?action=edit&id=${cust.customerId}" title="Edit">
+                                                        <a href="${baseUrl}?action=edit&id=${cust.customerId}" title="Sửa">
                                                             <span class="material-symbols-outlined">edit</span>
                                                         </a>
                                                     </c:if>
 
                                                     <c:if test="${sessionScope.currentUser.roleName == 'Admin' || sessionScope.currentUser.roleName == 'Owner' || sessionScope.currentUser.roleName == 'Store Manager' || sessionScope.currentUser.roleName == 'StoreManager' || sessionScope.currentUser.roleName == 'Manager'}">
-                                                        <form method="post" action="${baseUrl}" style="display:inline;" onsubmit="return confirm('Soft delete this customer?')">
+                                                            <form method="post" action="${baseUrl}" style="display:inline;" onsubmit="return confirm('Xóa khách hàng này?')">
                                                             <input type="hidden" name="action" value="delete"/>
                                                             <input type="hidden" name="customerId" value="${cust.customerId}"/>
                                                             <button type="submit" style="background:none; border:none; color:var(--secondary); cursor:pointer; padding:0; display:inline-flex; align-items:center; vertical-align: middle;">
@@ -266,11 +266,11 @@
                     <%-- ========================= Table Footer & Pagination ========================= --%>
                     <div class="table-footer">
                         <div>
-                            Showing ${empty customers ? 0 : fn:length(customers)} of ${empty totalCustomers ? 0 : totalCustomers} entries
+                            Hiển thị ${empty customers ? 0 : fn:length(customers)} / ${empty totalCustomers ? 0 : totalCustomers} bản ghi
 
                             <c:if test="${not empty pageSize}">
                                 <span class="page-size-note">
-                                    / ${pageSize} per page
+                                    / ${pageSize} / trang
                                 </span>
                             </c:if>
                         </div>
@@ -287,10 +287,10 @@
 
                                 <c:choose>
                                     <c:when test="${currentPage > 1}">
-                                        <a class="page-btn" href="${prevUrl}">Previous</a>
+                                        <a class="page-btn" href="${prevUrl}">Trước</a>
                                     </c:when>
                                     <c:otherwise>
-                                        <span class="page-btn disabled">Previous</span>
+                                        <span class="page-btn disabled">Trước</span>
                                     </c:otherwise>
                                 </c:choose>
 
@@ -321,10 +321,10 @@
 
                                 <c:choose>
                                     <c:when test="${currentPage < totalPages}">
-                                        <a class="page-btn" href="${nextUrl}">Next</a>
+                                        <a class="page-btn" href="${nextUrl}">Sau</a>
                                     </c:when>
                                     <c:otherwise>
-                                        <span class="page-btn disabled">Next</span>
+                                        <span class="page-btn disabled">Sau</span>
                                     </c:otherwise>
                                 </c:choose>
 
@@ -357,7 +357,7 @@
                 </c:if>
 
                 <div class="modal-header">
-                    <h3>${isEdit ? 'Edit Customer' : 'Add Customer'}</h3>
+                    <h3>${isEdit ? 'Chỉnh sửa khách hàng' : 'Thêm khách hàng'}</h3>
 
                     <a href="${baseUrl}" class="modal-close">
                         <span class="material-symbols-outlined">close</span>
@@ -368,20 +368,20 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Full Name *</label>
+                            <label>Họ và tên *</label>
                             <input type="text"
                                    name="fullName"
                                    value="${isEdit ? formCust.fullName : ''}"
-                                   placeholder="Enter full name"
+                                    placeholder="Nhập họ và tên"
                                    required/>
                         </div>
 
                         <div class="form-group">
-                            <label>Phone *</label>
+                            <label>Số điện thoại *</label>
                             <input type="text"
                                    name="phone"
                                    value="${isEdit ? formCust.phone : ''}"
-                                   placeholder="Enter phone number"
+                                    placeholder="Nhập số điện thoại"
                                    required/>
                         </div>
                     </div>
@@ -392,13 +392,13 @@
                             <input type="email"
                                    name="email"
                                    value="${isEdit ? formCust.email : ''}"
-                                   placeholder="Enter email"/>
+                                    placeholder="Nhập email"/>
                         </div>
 
                         <div class="form-group">
-                            <label>Gender</label>
+                            <label>Giới tính</label>
                             <select name="gender">
-                                <option value="">-- Select --</option>
+                                <option value="">-- Chọn --</option>
                                 <option value="Nam" ${isEdit && formCust.gender == 'Nam' ? 'selected' : ''}>Nam</option>
                                 <option value="Nữ" ${isEdit && formCust.gender == 'Nữ' ? 'selected' : ''}>Nữ</option>
                                 <option value="Khác" ${isEdit && formCust.gender == 'Khác' ? 'selected' : ''}>Khác</option>
@@ -408,24 +408,24 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Date of Birth</label>
+                            <label>Ngày sinh</label>
                             <input type="date"
                                    name="dateOfBirth"
                                    value="${isEdit && formCust.dateOfBirth != null ? formCust.dateOfBirth : ''}"/>
                         </div>
 
                         <div class="form-group">
-                            <label>Address</label>
+                            <label>Địa chỉ</label>
                             <input type="text"
                                    name="address"
                                    value="${isEdit ? formCust.address : ''}"
-                                   placeholder="Enter address"/>
+                                    placeholder="Nhập địa chỉ"/>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Total Spent</label>
+                            <label>Tổng chi tiêu</label>
                             <input type="number"
                                    name="totalSpent"
                                    value="${isEdit && formCust.totalSpent != null ? formCust.totalSpent : '0'}"
@@ -438,7 +438,7 @@
                     <c:if test="${isEdit}">
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Current Point</label>
+                                <label>Điểm hiện tại</label>
                                 <input type="number"
                                        name="loyaltyPoint"
                                        value="${formCust.loyaltyPoint}"
@@ -446,7 +446,7 @@
                                        ${isAdmin ? '' : 'readonly'}/>
                             </div>
                             <div class="form-group">
-                                <label>Lifetime Point</label>
+                                <label>Điểm tích lũy</label>
                                 <input type="number"
                                        name="lifetimePoints"
                                        value="${formCust.lifetimePoints}"
@@ -459,10 +459,10 @@
                 </div>
 
                 <div class="modal-footer">
-                    <a href="${baseUrl}" class="btn-secondary">Cancel</a>
+                    <a href="${baseUrl}" class="btn-secondary">Hủy</a>
 
                     <button type="submit" class="btn-primary">
-                        ${isEdit ? 'Update Customer' : 'Add Customer'}
+                        ${isEdit ? 'Cập nhật khách hàng' : 'Thêm khách hàng'}
                     </button>
                 </div>
 
@@ -477,7 +477,7 @@
             <div class="modal-box">
 
                 <div class="modal-header">
-                    <h3>Customer Detail</h3>
+                    <h3>Chi tiết khách hàng</h3>
 
                     <a href="${baseUrl}" class="modal-close">
                         <span class="material-symbols-outlined">close</span>
@@ -487,37 +487,37 @@
                 <div class="modal-body detail-list">
                     <div class="form-row">
                         <div>
-                            <p><strong>Full Name:</strong> ${detailCustomer.fullName}</p>
-                            <p><strong>Phone:</strong> ${empty detailCustomer.phone ? '—' : detailCustomer.phone}</p>
+                            <p><strong>Họ và tên:</strong> ${detailCustomer.fullName}</p>
+                            <p><strong>Số điện thoại:</strong> ${empty detailCustomer.phone ? '—' : detailCustomer.phone}</p>
                             <p><strong>Email:</strong> ${empty detailCustomer.email ? '—' : detailCustomer.email}</p>
-                            <p><strong>Gender:</strong> ${empty detailCustomer.gender ? '—' : detailCustomer.gender}</p>
-                            <p><strong>Date of Birth:</strong> ${empty detailCustomer.dateOfBirth ? '—' : detailCustomer.dateOfBirth}</p>
+                            <p><strong>Giới tính:</strong> ${empty detailCustomer.gender ? '—' : detailCustomer.gender}</p>
+                            <p><strong>Ngày sinh:</strong> ${empty detailCustomer.dateOfBirth ? '—' : detailCustomer.dateOfBirth}</p>
                         </div>
                         <div>
-                            <p><strong>Address:</strong> ${empty detailCustomer.address ? '—' : detailCustomer.address}</p>
-                            <p><strong>Total Spent:</strong>
+                            <p><strong>Địa chỉ:</strong> ${empty detailCustomer.address ? '—' : detailCustomer.address}</p>
+                            <p><strong>Tổng chi tiêu:</strong>
                                 <fmt:formatNumber value="${detailCustomer.totalSpent}" type="number" groupingUsed="true"/> ₫
                             </p>
                         </div>
                     </div>
 
                     <div class="form-row">
-                        <p><strong>Current Points:</strong> ${detailCustomer.loyaltyPoint}</p>
-                        <p><strong>Lifetime Points:</strong> ${detailCustomer.lifetimePoints}</p>
+                        <p><strong>Điểm hiện tại:</strong> ${detailCustomer.loyaltyPoint}</p>
+                        <p><strong>Điểm tích lũy:</strong> ${detailCustomer.lifetimePoints}</p>
                     </div>
 
                     <%-- Point Transaction History --%>
                     <div class="detail-section">
-                        <h4>Point Transaction History</h4>
+                        <h4>Lịch sử giao dịch điểm</h4>
                         <div style="max-height: 150px; overflow-y: auto; border: 1px solid var(--outline-variant); border-radius: var(--radius-md); margin-top: 8px;">
                             <table class="data-table" style="font-size: 12px; width: 100%; margin: 0;">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Before</th>
-                                        <th>After</th>
-                                        <th>Change</th>
-                                        <th>Description</th>
+                                        <th>Ngày</th>
+                                        <th>Trước</th>
+                                        <th>Sau</th>
+                                        <th>Thay đổi</th>
+                                        <th>Mô tả</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -535,7 +535,7 @@
                                         </tr>
                                     </c:forEach>
                                     <c:if test="${empty detailCustomerTransactions}">
-                                        <tr><td colspan="5" style="text-align: center; color: var(--secondary); padding: 12px;">No transactions</td></tr>
+                                        <tr><td colspan="5" style="text-align: center; color: var(--secondary); padding: 12px;">Không có giao dịch</td></tr>
                                     </c:if>
                                 </tbody>
                             </table>
@@ -544,17 +544,17 @@
 
                     <%-- Order History --%>
                     <div class="detail-section">
-                        <h4>Order History</h4>
+                        <h4>Lịch sử đơn hàng</h4>
                         <div style="max-height: 150px; overflow-y: auto; border: 1px solid var(--outline-variant); border-radius: var(--radius-md); margin-top: 8px;">
                             <table class="data-table" style="font-size: 12px; width: 100%; margin: 0;">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Order Code</th>
-                                        <th>Type</th>
-                                        <th>Total</th>
-                                        <th>Status</th>
-                                        <th>Branch</th>
+                                        <th>Ngày</th>
+                                        <th>Mã đơn hàng</th>
+                                        <th>Loại</th>
+                                        <th>Tổng tiền</th>
+                                        <th>Trạng thái</th>
+                                        <th>Chi nhánh</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -569,7 +569,7 @@
                                         </tr>
                                     </c:forEach>
                                     <c:if test="${empty detailCustomerOrders}">
-                                        <tr><td colspan="6" style="text-align: center; color: var(--secondary); padding: 12px;">No orders</td></tr>
+                                        <tr><td colspan="6" style="text-align: center; color: var(--secondary); padding: 12px;">Không có đơn hàng</td></tr>
                                     </c:if>
                                 </tbody>
                             </table>
@@ -579,29 +579,29 @@
                     <c:if test="${isAdmin}">
                         <%-- Sync Loyalty Section --%>
                         <div class="detail-section">
-                            <h4>Sync Loyalty Points</h4>
+                            <h4>Đồng bộ điểm</h4>
                             <form method="post" action="${baseUrl}" class="inline-form">
                                 <input type="hidden" name="action" value="sync-loyalty"/>
                                 <input type="hidden" name="customerId" value="${detailCustomer.customerId}"/>
                                 <button type="submit" class="btn-primary"
-                                        onclick="return confirm('Sync loyalty points from paid orders?')">
+                                        onclick="return confirm('Đồng bộ điểm từ đơn hàng đã thanh toán?')">
                                     <span class="material-symbols-outlined">sync</span>
-                                    Sync from Orders
+                                    Đồng bộ từ đơn hàng
                                 </button>
                             </form>
                         </div>
 
                         <%-- Redeem Points Section --%>
                         <div class="detail-section">
-                            <h4>Redeem Points</h4>
+                            <h4>Đổi điểm</h4>
                             <form method="post" action="${baseUrl}" class="inline-form">
                                 <input type="hidden" name="action" value="redeem-points"/>
                                 <input type="hidden" name="customerId" value="${detailCustomer.customerId}"/>
-                                <input type="number" name="redeemPoints" min="1" placeholder="Points" required/>
+                                <input type="number" name="redeemPoints" min="1" placeholder="Điểm" required/>
                                 <button type="submit" class="btn-primary"
-                                        onclick="return confirm('Redeem these points?')">
+                                        onclick="return confirm('Đổi điểm này?')">
                                     <span class="material-symbols-outlined">redeem</span>
-                                    Redeem
+                                    Đổi
                                 </button>
                             </form>
                         </div>
@@ -609,12 +609,12 @@
                 </div>
 
                 <div class="modal-footer">
-                    <a class="btn-secondary" href="${baseUrl}">Close</a>
+                    <a class="btn-secondary" href="${baseUrl}">Đóng</a>
 
                     <c:if test="${canEdit}">
                         <a class="btn-primary" href="${baseUrl}?action=edit&id=${detailCustomer.customerId}">
                             <span class="material-symbols-outlined">edit</span>
-                            Edit Customer
+                            Chỉnh sửa khách hàng
                         </a>
                     </c:if>
                 </div>

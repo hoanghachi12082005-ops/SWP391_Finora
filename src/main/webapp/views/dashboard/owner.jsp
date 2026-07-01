@@ -1,17 +1,17 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
-<% request.setAttribute("pageTitle", "Dashboard"); %>
+<% request.setAttribute("pageTitle", "Tổng quan"); %>
 <jsp:include page="/views/common/header.jsp">
-    <jsp:param name="title" value="Dashboard"/>
+    <jsp:param name="title" value="Tổng quan"/>
 </jsp:include>
 <jsp:include page="/views/common/sidebar.jsp" />
 
 <div class="page-content">
     <section class="page-header">
         <div>
-            <h2>Owner Dashboard</h2>
-            <p>Overview of your retail business performance</p>
+            <h2>Tổng quan chủ cửa hàng</h2>
+            <p>Tổng quan hiệu suất kinh doanh</p>
         </div>
     </section>
 
@@ -25,7 +25,7 @@
                 <span class="material-symbols-outlined">payments</span>
             </div>
             <div class="overview-info">
-                <p>Total Sales</p>
+                <p>Tổng doanh thu</p>
                 <h3><fmt:formatNumber value="${totalSales}" type="number" groupingUsed="true"/> ₫</h3>
             </div>
         </div>
@@ -35,7 +35,7 @@
                 <span class="material-symbols-outlined">receipt_long</span>
             </div>
             <div class="overview-info">
-                <p>Total Orders</p>
+                <p>Tổng đơn hàng</p>
                 <h3>${totalOrders}</h3>
             </div>
         </div>
@@ -45,7 +45,7 @@
                 <span class="material-symbols-outlined">groups</span>
             </div>
             <div class="overview-info">
-                <p>Total Customers</p>
+                <p>Tổng khách hàng</p>
                 <h3>${totalCustomers}</h3>
             </div>
         </div>
@@ -55,7 +55,7 @@
                 <span class="material-symbols-outlined">inventory</span>
             </div>
             <div class="overview-info">
-                <p>Low Stock Items</p>
+                <p>Hàng sắp hết</p>
                 <h3>${lowStockCount}</h3>
             </div>
         </div>
@@ -67,9 +67,9 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th class="text-right">Action</th>
+                        <th>Tên</th>
+                        <th>Trạng thái</th>
+                        <th class="text-right">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -82,8 +82,8 @@
                                     <td><span class="status-badge active">ACTIVE</span></td>
                                     <td>
                                         <div class="table-actions">
-                                            <a href="#" title="View"><span class="material-symbols-outlined">visibility</span></a>
-                                            <a href="#" title="Edit"><span class="material-symbols-outlined">edit</span></a>
+                                            <a href="#" title="Xem"><span class="material-symbols-outlined">visibility</span></a>
+                                            <a href="#" title="Sửa"><span class="material-symbols-outlined">edit</span></a>
                                         </div>
                                     </td>
                                 </tr>
@@ -94,8 +94,8 @@
                                 <td colspan="4" class="empty-row">
                                     <div class="empty-state">
                                         <span class="material-symbols-outlined">inbox</span>
-                                        <h4>No data available</h4>
-                                        <p>Data will appear once you start using the system.</p>
+                                        <h4>Không có dữ liệu</h4>
+                                        <p>Dữ liệu sẽ xuất hiện khi bạn bắt đầu sử dụng hệ thống.</p>
                                     </div>
                                 </td>
                             </tr>

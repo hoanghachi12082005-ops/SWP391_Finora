@@ -1,17 +1,17 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
-<% request.setAttribute("pageTitle", "Financial Dashboard"); %>
+<% request.setAttribute("pageTitle", "Tổng quan tài chính"); %>
 <jsp:include page="/views/common/header.jsp">
-    <jsp:param name="title" value="Financial Dashboard"/>
+    <jsp:param name="title" value="Tổng quan tài chính"/>
 </jsp:include>
 <jsp:include page="/views/common/sidebar.jsp" />
 
 <div class="page-content">
     <section class="page-header">
         <div>
-            <h2>Financial Dashboard</h2>
-            <p>Revenue, expenses and profit overview</p>
+            <h2>Tổng quan tài chính</h2>
+            <p>Tổng quan doanh thu, chi phí và lợi nhuận</p>
         </div>
     </section>
 
@@ -25,7 +25,7 @@
                 <span class="material-symbols-outlined">payments</span>
             </div>
             <div class="overview-info">
-                <p>Total Revenue</p>
+                <p>Tổng doanh thu</p>
                 <h3><fmt:formatNumber value="${totalRevenue}" type="number" groupingUsed="true"/> ₫</h3>
             </div>
         </div>
@@ -35,7 +35,7 @@
                 <span class="material-symbols-outlined">money_off</span>
             </div>
             <div class="overview-info">
-                <p>Total Expenses</p>
+                <p>Tổng chi phí</p>
                 <h3><fmt:formatNumber value="${totalExpenses}" type="number" groupingUsed="true"/> ₫</h3>
             </div>
         </div>
@@ -45,7 +45,7 @@
                 <span class="material-symbols-outlined">trending_up</span>
             </div>
             <div class="overview-info">
-                <p>Net Profit</p>
+                <p>Lợi nhuận ròng</p>
                 <h3><fmt:formatNumber value="${netProfit}" type="number" groupingUsed="true"/> ₫</h3>
             </div>
         </div>
@@ -55,7 +55,7 @@
                 <span class="material-symbols-outlined">receipt_long</span>
             </div>
             <div class="overview-info">
-                <p>Total Invoices</p>
+                <p>Tổng hóa đơn</p>
                 <h3>${totalInvoices}</h3>
             </div>
         </div>
@@ -67,10 +67,10 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th class="text-right">Action</th>
+                        <th>Mô tả</th>
+                        <th>Số tiền</th>
+                        <th>Trạng thái</th>
+                        <th class="text-right">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -81,10 +81,10 @@
                                     <td>${item.id}</td>
                                     <td>${item.description}</td>
                                     <td><fmt:formatNumber value="${item.amount}" type="number" groupingUsed="true"/> ₫</td>
-                                    <td><span class="status-badge active">Completed</span></td>
+                                    <td><span class="status-badge active">Hoàn thành</span></td>
                                     <td>
                                         <div class="table-actions">
-                                            <a href="#" title="View"><span class="material-symbols-outlined">visibility</span></a>
+                                            <a href="#" title="Xem"><span class="material-symbols-outlined">visibility</span></a>
                                         </div>
                                     </td>
                                 </tr>
@@ -95,8 +95,8 @@
                                 <td colspan="5" class="empty-row">
                                     <div class="empty-state">
                                         <span class="material-symbols-outlined">account_balance</span>
-                                        <h4>No financial data</h4>
-                                        <p>Financial records will appear here once transactions are recorded.</p>
+                                        <h4>Không có dữ liệu tài chính</h4>
+                                        <p>Dữ liệu tài chính sẽ xuất hiện sau khi có giao dịch.</p>
                                     </div>
                                 </td>
                             </tr>

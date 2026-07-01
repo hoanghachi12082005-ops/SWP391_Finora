@@ -1,17 +1,17 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
-<% request.setAttribute("pageTitle", "Inventory Dashboard"); %>
+<% request.setAttribute("pageTitle", "Tổng quan kho hàng"); %>
 <jsp:include page="/views/common/header.jsp">
-    <jsp:param name="title" value="Inventory Dashboard"/>
+    <jsp:param name="title" value="Tổng quan kho hàng"/>
 </jsp:include>
 <jsp:include page="/views/common/sidebar.jsp" />
 
 <div class="page-content">
     <section class="page-header">
         <div>
-            <h2>Inventory Dashboard</h2>
-            <p>Monitor stock levels and inventory movements</p>
+            <h2>Tổng quan kho hàng</h2>
+            <p>Theo dõi mức tồn kho và biến động hàng hóa</p>
         </div>
     </section>
 
@@ -25,7 +25,7 @@
                 <span class="material-symbols-outlined">inventory</span>
             </div>
             <div class="overview-info">
-                <p>Total Products</p>
+                <p>Tổng sản phẩm</p>
                 <h3>${totalProducts}</h3>
             </div>
         </div>
@@ -35,7 +35,7 @@
                 <span class="material-symbols-outlined">warning</span>
             </div>
             <div class="overview-info">
-                <p>Low Stock Items</p>
+                <p>Hàng sắp hết</p>
                 <h3>${lowStockCount}</h3>
             </div>
         </div>
@@ -45,7 +45,7 @@
                 <span class="material-symbols-outlined">assignment</span>
             </div>
             <div class="overview-info">
-                <p>Pending Transfers</p>
+                <p>Chuyển kho đang chờ</p>
                 <h3>${pendingTransfers}</h3>
             </div>
         </div>
@@ -55,7 +55,7 @@
                 <span class="material-symbols-outlined">warehouse</span>
             </div>
             <div class="overview-info">
-                <p>Warehouses</p>
+                <p>Kho hàng</p>
                 <h3>${totalWarehouses}</h3>
             </div>
         </div>
@@ -67,10 +67,10 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Product</th>
-                        <th>Stock</th>
-                        <th>Status</th>
-                        <th class="text-right">Action</th>
+                        <th>Sản phẩm</th>
+                        <th>Tồn kho</th>
+                        <th>Trạng thái</th>
+                        <th class="text-right">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -81,11 +81,11 @@
                                     <td>${item.id}</td>
                                     <td>${item.name}</td>
                                     <td>${item.stock}</td>
-                                    <td><span class="status-badge active">In Stock</span></td>
+                                    <td><span class="status-badge active">Còn hàng</span></td>
                                     <td>
                                         <div class="table-actions">
-                                            <a href="#" title="View"><span class="material-symbols-outlined">visibility</span></a>
-                                            <a href="#" title="Edit"><span class="material-symbols-outlined">edit</span></a>
+                                            <a href="#" title="Xem"><span class="material-symbols-outlined">visibility</span></a>
+                                            <a href="#" title="Sửa"><span class="material-symbols-outlined">edit</span></a>
                                         </div>
                                     </td>
                                 </tr>
@@ -96,8 +96,8 @@
                                 <td colspan="5" class="empty-row">
                                     <div class="empty-state">
                                         <span class="material-symbols-outlined">inventory_2</span>
-                                        <h4>No inventory data</h4>
-                                        <p>Products will appear here once added to the system.</p>
+                                        <h4>Không có dữ liệu kho</h4>
+                                        <p>Sản phẩm sẽ xuất hiện sau khi được thêm vào hệ thống.</p>
                                     </div>
                                 </td>
                             </tr>
