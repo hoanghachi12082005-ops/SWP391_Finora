@@ -169,12 +169,12 @@
                         <div class="text-muted small">
                             Trang <strong><%= currentPage %></strong> / <strong><%= totalPages %></strong>
                         </div>
-<%      String baseUrl = ctx + "/products?view=" + viewMode
-                + (keyword != null && !keyword.isBlank() ? "&keyword=" + keyword : "")
-                + (filterStatus != null && !filterStatus.isBlank() ? "&status=" + filterStatus : "")
-                + (filterCategoryID != null ? "&categoryID=" + filterCategoryID : "")
-                + (filterUnitID != null ? "&unitID=" + filterUnitID : "")
-                + "&page=";
+<%      String baseUrl = ctx + "/products?"
+                + (keyword != null && !keyword.isBlank() ? "keyword=" + keyword + "&" : "")
+                + (filterStatus != null && !filterStatus.isBlank() ? "status=" + filterStatus + "&" : "")
+                + (filterCategoryID != null ? "categoryID=" + filterCategoryID + "&" : "")
+                + (filterUnitID != null ? "unitID=" + filterUnitID + "&" : "")
+                + "page=";
 %>
                         <jsp:include page="../common/pagination.jsp">
                             <jsp:param name="currentPage" value="<%= currentPage %>"/>
