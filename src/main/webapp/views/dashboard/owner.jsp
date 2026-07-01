@@ -1,8 +1,12 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <jsp:include page="/views/common/header.jsp">
     <jsp:param name="title" value="Tổng quan quản trị"/>
 </jsp:include>
+
+<%-- Helper format tiền tệ rút gọn (M / B) --%>
+<c:set var="ov" value="${overview}" />
 
 <div class="app-container">
     <jsp:include page="/views/common/sidebar.jsp" />
@@ -24,67 +28,173 @@
                     <h2>Quản lý chuỗi cửa hàng</h2>
                     <p>Tổng hợp kết quả kinh doanh và quản lý toàn bộ chi nhánh</p>
                 </div>
-                <button class="page-action-btn">
+                <a href="${pageContext.request.contextPath}/stores/add" class="page-action-btn" style="text-decoration:none;">
                     <span class="material-icons">add</span>
                     <span>Thêm cửa hàng</span>
-                </button>
+                </a>
             </div>
+
+            <c:if test="${not empty overviewError}">
+                <div class="alert alert-danger" style="background:#fee2e2;color:#b91c1c;padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:13px;">
+                    ${overviewError}
+                </div>
+            </c:if>
 
             <!-- KPI Cards Grid -->
             <div class="kpi-grid">
-                <!-- Card 1 -->
-                <div class="kpi-card">
-                    <div class="kpi-card-info">
-                        <p>Tổng số cửa hàng</p>
-                        <h3>12</h3>
-                        <span class="kpi-trend up">
-                            <span class="material-icons" style="font-size: 14px;">trending_up</span>
-                            <span>+2 tháng này</span>
-                        </span>
-                    </div>
-                    <div class="kpi-card-icon red">
-                        <span class="material-icons">storefront</span>
-                    </div>
-                </div>
-
-                <!-- Card 2 -->
+                <!-- Card 1: Doanh thu hôm nay -->
                 <div class="kpi-card">
                     <div class="kpi-card-info">
                         <p>Doanh thu hôm nay</p>
-                        <h3>150M</h3>
-                        <span class="kpi-trend up">
-                            <span class="material-icons" style="font-size: 14px;">trending_up</span>
-                            <span>+15% so với hôm qua</span>
-                        </span>
+                        <h3><fmt:formatNumber value="${ov.revenueToday}" type="number" maxFractionDigits="0"/> đ</h3>
+                        <c:choose>
+                            <c:when test="${ov.revenueChangeVsYesterday == null}">
+                                <span class="kpi-trend neutral">
+                                    <span>-- so với hôm qua</span>
+                                </span>
+                            </c:when>
+                            <c:when test="${ov.revenueChangeVsYesterday >= 0}">
+                                <span class="kpi-trend up">
+                                    <span class="material-icons" style="font-size: 14px;">trending_up</span>
+                                    <span>+<fmt:formatNumber value="${ov.revenueChangeVsYesterday}" maxFractionDigits="1"/>% so với hôm qua</span>
+                                </span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="kpi-trend down">
+                                    <span class="material-icons" style="font-size: 14px;">trending_down</span>
+                                    <span><fmt:formatNumber value="${ov.revenueChangeVsYesterday}" maxFractionDigits="1"/>% so với hôm qua</span>
+                                </span>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
                     <div class="kpi-card-icon orange">
                         <span class="material-icons">payments</span>
                     </div>
                 </div>
 
-                <!-- Card 3 -->
+                <!-- Card 2: Đơn hàng hôm nay -->
                 <div class="kpi-card">
                     <div class="kpi-card-info">
-                        <p>Tổng nhân viên</p>
-                        <h3>85</h3>
-                        <span class="kpi-trend neutral">
-                            <span>-- 0</span>
+                        <p>Đơn hàng hôm nay</p>
+                        <h3><fmt:formatNumber value="${ov.ordersToday}"/></h3>
+                        <span class="kpi-subtext">
+                            Tháng này: <strong><fmt:formatNumber value="${ov.ordersThisMonth}"/></strong> đơn
                         </span>
                     </div>
                     <div class="kpi-card-icon blue">
+                        <span class="material-icons">receipt_long</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: Khách hàng -->
+                <div class="kpi-card">
+                    <div class="kpi-card-info">
+                        <p>Tổng khách hàng</p>
+                        <h3><fmt:formatNumber value="${ov.totalCustomers}"/></h3>
+                        <c:choose>
+                            <c:when test="${ov.newCustomersThisMonth > 0}">
+                                <span class="kpi-trend up">
+                                    <span class="material-icons" style="font-size: 14px;">person_add</span>
+                                    <span>+<fmt:formatNumber value="${ov.newCustomersThisMonth}"/> tháng này</span>
+                                </span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="kpi-trend neutral">
+                                    <span>0 khách mới tháng này</span>
+                                </span>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                    <div class="kpi-card-icon green">
                         <span class="material-icons">group</span>
                     </div>
                 </div>
 
-                <!-- Card 4 -->
+                <!-- Card 4: Tồn kho -->
                 <div class="kpi-card">
                     <div class="kpi-card-info">
-                        <p>Cửa hàng tốt nhất</p>
-                        <h3 style="font-size: 18px; margin-top: 6px;">Quận 1</h3>
-                        <span class="kpi-subtext">Doanh thu 1.25B</span>
+                        <p>Sản phẩm trong kho</p>
+                        <h3><fmt:formatNumber value="${ov.totalProducts}"/></h3>
+                        <c:choose>
+                            <c:when test="${ov.outOfStockItems > 0 or ov.lowStockItems > 0}">
+                                <span class="kpi-trend down">
+                                    <span class="material-icons" style="font-size: 14px;">warning</span>
+                                    <span>${ov.outOfStockItems} hết hàng, ${ov.lowStockItems} sắp hết</span>
+                                </span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="kpi-trend up">
+                                    <span class="material-icons" style="font-size: 14px;">check_circle</span>
+                                    <span>Tồn kho ổn định</span>
+                                </span>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                    <div class="kpi-card-icon red">
+                        <span class="material-icons">inventory_2</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hàng thứ 2: Tổng hợp tháng -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-card-info">
+                        <p>Doanh thu tháng này</p>
+                        <h3><fmt:formatNumber value="${ov.revenueThisMonth}" type="number" maxFractionDigits="0"/> đ</h3>
+                        <c:choose>
+                            <c:when test="${ov.revenueChangeVsLastMonth == null}">
+                                <span class="kpi-trend neutral"><span>-- so với tháng trước</span></span>
+                            </c:when>
+                            <c:when test="${ov.revenueChangeVsLastMonth >= 0}">
+                                <span class="kpi-trend up">
+                                    <span class="material-icons" style="font-size: 14px;">trending_up</span>
+                                    <span>+<fmt:formatNumber value="${ov.revenueChangeVsLastMonth}" maxFractionDigits="1"/>% so với tháng trước</span>
+                                </span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="kpi-trend down">
+                                    <span class="material-icons" style="font-size: 14px;">trending_down</span>
+                                    <span><fmt:formatNumber value="${ov.revenueChangeVsLastMonth}" maxFractionDigits="1"/>% so với tháng trước</span>
+                                </span>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                    <div class="kpi-card-icon orange">
+                        <span class="material-icons">calendar_month</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-card-info">
+                        <p>Giá trị trung bình/đơn</p>
+                        <h3><fmt:formatNumber value="${ov.averageOrderValue}" type="number" maxFractionDigits="0"/> đ</h3>
+                        <span class="kpi-subtext">Đơn chờ xử lý: <strong>${ov.pendingOrders}</strong></span>
+                    </div>
+                    <div class="kpi-card-icon blue">
+                        <span class="material-icons">analytics</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-card-info">
+                        <p>Giá trị tồn kho</p>
+                        <h3><fmt:formatNumber value="${ov.totalStockValue}" type="number" maxFractionDigits="0"/> đ</h3>
+                        <span class="kpi-subtext">Tổng <strong>${ov.totalProducts}</strong> sản phẩm</span>
                     </div>
                     <div class="kpi-card-icon green">
-                        <span class="material-icons">workspace_premium</span>
+                        <span class="material-icons">warehouse</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-card-info">
+                        <p>Cửa hàng &amp; Nhân viên</p>
+                        <h3>${ov.totalStores} <small style="font-size:14px;color:#64748b;">cửa hàng</small></h3>
+                        <span class="kpi-subtext">${ov.totalEmployees} nhân viên đang hoạt động</span>
+                    </div>
+                    <div class="kpi-card-icon red">
+                        <span class="material-icons">storefront</span>
                     </div>
                 </div>
             </div>
@@ -94,192 +204,189 @@
                 <!-- Column 1: Chart Card -->
                 <div class="dashboard-card">
                     <div class="dashboard-card-title">
-                        <h5>Doanh thu theo chi nhánh</h5>
-                        <div class="card-filter-tabs">
-                            <button class="filter-tab active">Hôm nay</button>
-                            <button class="filter-tab">Tuần này</button>
-                            <button class="filter-tab">Tháng này</button>
-                        </div>
+                        <h5>Doanh thu theo chi nhánh (Tháng này)</h5>
+                        <c:if test="${not empty ov.topStoreName}">
+                            <span style="font-size:12px;color:#64748b;">
+                                Top: <strong style="color:#0f172a;">${ov.topStoreName}</strong>
+                                (<fmt:formatNumber value="${ov.topStoreRevenue}" type="number" maxFractionDigits="0"/> đ)
+                            </span>
+                        </c:if>
                     </div>
 
-                    <!-- Fake Bar Chart using pure CSS -->
-                    <div class="chart-box">
-                        <div class="chart-bar-group">
-                            <div class="chart-bar-container">
-                                <div class="chart-bar" style="height: 85%;"></div>
+                    <c:choose>
+                        <c:when test="${empty ov.branchRevenues}">
+                            <div class="text-center text-muted py-3" style="font-size: 13px;padding:24px;">
+                                Chưa có dữ liệu doanh thu theo chi nhánh trong tháng này.
                             </div>
-                            <span class="chart-label">CN Q.1</span>
-                        </div>
-                        <div class="chart-bar-group">
-                            <div class="chart-bar-container">
-                                <div class="chart-bar" style="height: 65%;"></div>
-                            </div>
-                            <span class="chart-label">CN Q.7</span>
-                        </div>
-                        <div class="chart-bar-group">
-                            <div class="chart-bar-container">
-                                <div class="chart-bar" style="height: 45%;"></div>
-                            </div>
-                            <span class="chart-label">CN Q.3</span>
-                        </div>
-                        <div class="chart-bar-group">
-                            <div class="chart-bar-container">
-                                <div class="chart-bar" style="height: 55%;"></div>
-                            </div>
-                            <span class="chart-label">CN Q.10</span>
-                        </div>
-                        <div class="chart-bar-group">
-                            <div class="chart-bar-container">
-                                <div class="chart-bar" style="height: 35%;"></div>
-                            </div>
-                            <span class="chart-label">CN Bình Thạnh</span>
-                        </div>
-                        <div class="chart-bar-group">
-                            <div class="chart-bar-container">
-                                <div class="chart-bar" style="height: 70%;"></div>
-                            </div>
-                            <span class="chart-label">CN Thủ Đức</span>
-                        </div>
-                    </div>
+                        </c:when>
+                        <c:otherwise>
+                            <%-- Tìm max để tính chiều cao tương đối --%>
+                            <c:set var="maxRev" value="0" />
+                            <c:forEach var="br" items="${ov.branchRevenues}">
+                                <c:if test="${br.revenue.doubleValue() > maxRev}">
+                                    <c:set var="maxRev" value="${br.revenue.doubleValue()}" />
+                                </c:if>
+                            </c:forEach>
 
-                    <!-- Chart Legend -->
-                    <div class="chart-legend">
-                        <div class="legend-item">
-                            <span class="legend-color primary"></span>
-                            <span>Doanh thu thực tế (triệu VNĐ)</span>
-                        </div>
-                    </div>
+                            <div class="chart-box">
+                                <c:forEach var="br" items="${ov.branchRevenues}">
+                                    <c:set var="height" value="${maxRev > 0 ? (br.revenue.doubleValue() / maxRev) * 100 : 0}" />
+                                    <div class="chart-bar-group">
+                                        <div class="chart-bar-container">
+                                            <div class="chart-bar" style="height: ${height}%;"
+                                                 title="<fmt:formatNumber value='${br.revenue}' type='number' maxFractionDigits='0'/> đ"></div>
+                                        </div>
+                                        <span class="chart-label">${br.branchName}</span>
+                                    </div>
+                                </c:forEach>
+                            </div>
+
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <span class="legend-color primary"></span>
+                                    <span>Doanh thu thực tế (VNĐ)</span>
+                                </div>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
 
-                <!-- Column 2: Recent Activity -->
+                <!-- Column 2: Recent Activity (chỉ hiển thị cho Owner) -->
+                <c:set var="ownerRole" value="${sessionScope.currentUser != null ? sessionScope.currentUser.roleName : ''}" />
+                <c:if test="${ownerRole == 'Owner'}">
                 <div class="dashboard-card">
                     <div class="dashboard-card-title">
                         <h5>Hoạt động gần đây</h5>
-                        <a href="#" style="font-size: 12px; font-weight: 600;">Xem tất cả</a>
+                        <a href="${pageContext.request.contextPath}/activity-log" style="font-size: 12px; font-weight: 600;">Xem tất cả</a>
                     </div>
                     <div class="activity-feed">
-                        <div class="activity-item">
-                            <div class="activity-icon blue">
-                                <span class="material-icons" style="font-size: 16px;">receipt</span>
-                            </div>
-                            <div class="activity-details">
-                                <p>Đơn hàng <strong>#INV-001</strong> đã thanh toán</p>
-                                <small>Vài phút trước - CN Q.1</small>
-                            </div>
-                        </div>
-
-                        <div class="activity-item">
-                            <div class="activity-icon red">
-                                <span class="material-icons" style="font-size: 16px;">warning</span>
-                            </div>
-                            <div class="activity-details">
-                                <p>Cảnh báo tồn kho: sản phẩm <strong>"Cà phê hạt Moka"</strong> còn dưới 5kg</p>
-                                <small>1 giờ trước - CN Q.1</small>
-                            </div>
-                        </div>
-
-                        <div class="activity-item">
-                            <div class="activity-icon green">
-                                <span class="material-icons" style="font-size: 16px;">check_circle</span>
-                            </div>
-                            <div class="activity-details">
-                                <p>Phiếu nhập hàng <strong>#PO-089</strong> được duyệt bởi Quản lý</p>
-                                <small>2 giờ trước - Hệ thống</small>
-                            </div>
-                        </div>
-
-                        <div class="activity-item">
-                            <div class="activity-icon blue">
-                                <span class="material-icons" style="font-size: 16px;">receipt</span>
-                            </div>
-                            <div class="activity-details">
-                                <p>Đơn hàng <strong>#INV-002</strong> đã thanh toán</p>
-                                <small>3 giờ trước - CN Q.7</small>
-                            </div>
-                        </div>
+                        <c:choose>
+                            <c:when test="${empty recentActivities}">
+                                <div class="text-center text-muted py-3" style="font-size: 13px;">Chưa có hoạt động nào.</div>
+                            </c:when>
+                            <c:otherwise>
+                                <c:forEach var="act" items="${recentActivities}">
+                                    <div class="activity-item">
+                                        <div class="activity-icon ${act.iconColor}">
+                                            <span class="material-icons" style="font-size: 16px;">${act.iconName}</span>
+                                        </div>
+                                        <div class="activity-details">
+                                            <p>
+                                                ${act.description}
+                                                <c:if test="${not empty act.entityCode}"> &middot; <strong>${act.entityCode}</strong></c:if>
+                                            </p>
+                                            <small>
+                                                <c:if test="${not empty act.createdAtFormatted}">${act.createdAtFormatted} - </c:if>
+                                                ${act.actorLabel}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </c:forEach>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
+                </div>
+                </c:if>
+            </div>
+
+            <!-- Top sản phẩm bán chạy -->
+            <div class="dashboard-card">
+                <div class="dashboard-card-title">
+                    <h5>Top 5 sản phẩm bán chạy (Tháng này)</h5>
+                    <a href="${pageContext.request.contextPath}/reports/inventory" style="font-size:12px;font-weight:600;">Xem báo cáo</a>
+                </div>
+
+                <div class="premium-table-container">
+                    <table class="premium-table">
+                        <thead>
+                            <tr>
+                                <th style="width:60px;">#</th>
+                                <th>Sản phẩm</th>
+                                <th style="text-align:right;">Số lượng bán</th>
+                                <th style="text-align:right;">Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <c:choose>
+                                <c:when test="${empty ov.topProducts}">
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted" style="padding:20px;font-size:13px;">
+                                            Chưa có sản phẩm nào được bán trong tháng này.
+                                        </td>
+                                    </tr>
+                                </c:when>
+                                <c:otherwise>
+                                    <c:forEach var="p" items="${ov.topProducts}" varStatus="loop">
+                                        <tr>
+                                            <td><strong>#${loop.index + 1}</strong></td>
+                                            <td>${p.productName}</td>
+                                            <td style="text-align:right;"><fmt:formatNumber value="${p.quantitySold}"/></td>
+                                            <td style="text-align:right;"><strong><fmt:formatNumber value="${p.revenue}" type="number" maxFractionDigits="0"/> đ</strong></td>
+                                        </tr>
+                                    </c:forEach>
+                                </c:otherwise>
+                            </c:choose>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- Branch List Table -->
+            <!-- Bảng chi tiết theo chi nhánh -->
             <div class="dashboard-card">
                 <div class="dashboard-card-title">
-                    <h5>Danh sách chi nhánh</h5>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="filter-tab active">Tất cả</button>
-                        <button class="filter-tab">Mới</button>
-                    </div>
+                    <h5>Hiệu suất các chi nhánh</h5>
+                    <a href="${pageContext.request.contextPath}/stores" style="font-size:12px;font-weight:600;">Quản lý chi nhánh</a>
                 </div>
                 
                 <div class="premium-table-container">
                     <table class="premium-table">
                         <thead>
                             <tr>
-                                <th>Chi nhánh & Mã</th>
-                                <th>Địa chỉ</th>
-                                <th>Liên hệ</th>
-                                <th>Quản lý</th>
-                                <th>Nhân viên</th>
-                                <th>Doanh thu</th>
+                                <th>Chi nhánh &amp; Mã</th>
+                                <th style="text-align:right;">Số đơn (Tháng này)</th>
+                                <th style="text-align:right;">Doanh thu (Tháng này)</th>
                                 <th>Trạng thái</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>
-                                    <div class="product-cell">
-                                        <div class="product-img-box">
-                                            <span class="material-icons">store</span>
-                                        </div>
-                                        <div class="product-details">
-                                            <h6>Chi nhánh Quận 1</h6>
-                                            <small>BM-001</small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>123 Lê Lợi, P. Bến Thành, Q1</td>
-                                <td>028.3822.XXXX</td>
-                                <td>Nguyễn Hùng</td>
-                                <td>24</td>
-                                <td><strong>1.25B</strong></td>
-                                <td>
-                                    <span class="badge-status active">
-                                        <span class="material-icons" style="font-size: 10px;">fiber_manual_record</span>
-                                        <span>Đang hoạt động</span>
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="#" class="table-action-link">Chi tiết</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="product-cell">
-                                        <div class="product-img-box">
-                                            <span class="material-icons">store</span>
-                                        </div>
-                                        <div class="product-details">
-                                            <h6>Chi nhánh Quận 7</h6>
-                                            <small>BM-002</small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>456 Nguyễn Văn Linh, Q7</td>
-                                <td>028.5412.XXXX</td>
-                                <td>Trần Thuỷ</td>
-                                <td>18</td>
-                                <td><strong>980M</strong></td>
-                                <td>
-                                    <span class="badge-status active">
-                                        <span class="material-icons" style="font-size: 10px;">fiber_manual_record</span>
-                                        <span>Đang hoạt động</span>
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="#" class="table-action-link">Chi tiết</a>
-                                </td>
-                            </tr>
+                            <c:choose>
+                                <c:when test="${empty ov.branchRevenues}">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted" style="padding:20px;font-size:13px;">
+                                            Chưa có chi nhánh nào.
+                                        </td>
+                                    </tr>
+                                </c:when>
+                                <c:otherwise>
+                                    <c:forEach var="br" items="${ov.branchRevenues}">
+                                        <tr>
+                                            <td>
+                                                <div class="product-cell">
+                                                    <div class="product-img-box">
+                                                        <span class="material-icons">store</span>
+                                                    </div>
+                                                    <div class="product-details">
+                                                        <h6>${br.branchName}</h6>
+                                                        <small>${not empty br.branchCode ? br.branchCode : '—'}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td style="text-align:right;"><fmt:formatNumber value="${br.orderCount}"/></td>
+                                            <td style="text-align:right;"><strong><fmt:formatNumber value="${br.revenue}" type="number" maxFractionDigits="0"/> đ</strong></td>
+                                            <td>
+                                                <span class="badge-status active">
+                                                    <span class="material-icons" style="font-size: 10px;">fiber_manual_record</span>
+                                                    <span>Đang hoạt động</span>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="${pageContext.request.contextPath}/stores/detail?id=${br.branchId}" class="table-action-link">Chi tiết</a>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                </c:otherwise>
+                            </c:choose>
                         </tbody>
                     </table>
                 </div>

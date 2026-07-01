@@ -123,6 +123,13 @@
         <!-- Configuration -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
             <div class="sidebar-menu-title" style="margin-top: 16px;">Hệ thống</div>
+            <c:if test="${roleName == 'Owner'}">
+                <a href="${pageContext.request.contextPath}/activity-log"
+                   class="sidebar-menu-item ${originalUri.contains('/activity-log') ? 'active' : ''}">
+                    <span class="material-icons">history</span>
+                    <span>Activity Center</span>
+                </a>
+            </c:if>
             <a href="${pageContext.request.contextPath}/configuration/business" 
                class="sidebar-menu-item ${pageContext.request.requestURI.contains('/configuration/') ? 'active' : ''}">
                 <span class="material-icons">settings</span>

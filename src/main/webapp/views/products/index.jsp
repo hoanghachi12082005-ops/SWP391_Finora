@@ -11,8 +11,6 @@
     String filterStatus      = (String) request.getAttribute("filterStatus");
     Integer filterCategoryID = (Integer) request.getAttribute("filterCategoryID");
     Integer filterUnitID     = (Integer) request.getAttribute("filterUnitID");
-    String viewMode          = (String) request.getAttribute("viewMode");
-    if (viewMode == null) viewMode = "table";
     NumberFormat vndFormat   = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 %>
 <jsp:include page="../common/header.jsp">
@@ -22,7 +20,21 @@
     <jsp:include page="../common/sidebar.jsp"/>
     <main class="main-content">
         <div class="container-fluid py-4">
-            
+
+<%-- Flash message từ session --%>
+<%
+    String flashMsg  = (String) session.getAttribute("message");
+    String flashType = (String) session.getAttribute("messageType");
+    if (flashMsg != null) {
+        session.removeAttribute("message");
+        session.removeAttribute("messageType");
+%>
+            <div class="alert alert-<%= flashType != null ? flashType : "info" %> alert-dismissible fade show" role="alert">
+                <%= flashMsg %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+<%  } %>
+
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 class="fw-bold">Quản lý Sản phẩm</h2>
@@ -39,7 +51,6 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <form id="filterForm" method="get" action="<%= ctx %>/products">
-                        <input type="hidden" name="view" id="viewInput" value="<%= viewMode %>">
                         <input type="hidden" name="status" id="statusInput" value="<%= filterStatus != null ? filterStatus : "" %>">
                         <input type="hidden" name="categoryID" id="categoryInput" value="<%= filterCategoryID != null ? filterCategoryID : "" %>">
                         <input type="hidden" name="unitID" id="unitInput" value="<%= filterUnitID != null ? filterUnitID : "" %>">
@@ -78,7 +89,7 @@
                             </div>
                             <% if ((keyword != null && !keyword.isBlank()) || (filterStatus != null && !filterStatus.isBlank()) || filterCategoryID != null || filterUnitID != null) { %>
                             <div style="width: 100px;">
-                                <a href="<%= ctx %>/products?view=<%= viewMode %>" class="btn btn-outline-secondary w-100">Xóa lọc</a>
+                                <a href="<%= ctx %>/products" class="btn btn-outline-secondary w-100">Xóa lọc</a>
                             </div>
                             <% } %>
                         </div>
@@ -90,10 +101,10 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
+                                <th>Ảnh</th>
                                 <th>Tên sản phẩm</th>
                                 <th>Danh mục</th>
                                 <th>Đơn vị</th>
-                                <th>Số lượng</th>
                                 <th>Giá bán</th>
                                 <th>Trạng thái</th>
                                 <th>Thao tác</th>
@@ -110,13 +121,20 @@
 <%
         } else {
             for (Product p : products) {
+                String imgUrl = p.getImageUrl();
 %>
                             <tr>
                                 <td>#<%= p.getProductID() %></td>
+                                <td>
+                                    <% if (imgUrl != null && !imgUrl.isBlank()) { %>
+                                        <img src="<%= imgUrl %>" alt="product" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #eee;">
+                                    <% } else { %>
+                                        <span class="text-muted" style="font-size:12px;">No image</span>
+                                    <% } %>
+                                </td>
                                 <td><strong><%= p.getName() != null ? p.getName() : "" %></strong></td>
                                 <td><%= p.getCategoryName() != null ? p.getCategoryName() : ("#" + p.getCategoryID()) %></td>
                                 <td><%= p.getUnitName() != null ? p.getUnitName() : ("#" + p.getUnitID()) %></td>
-                                <td><%= p.getQuantity() %></td>
                                 <td><strong class="text-danger"><%= p.getSellingPrice() != null ? vndFormat.format(p.getSellingPrice()) : "0 ₫" %></strong></td>
                                 <td>
                                     <% if ("Active".equalsIgnoreCase(p.getStatus())) { %>
@@ -126,14 +144,14 @@
                                     <% } %>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-warning" onclick="openProductModal('edit', 
+                                    <button class="btn btn-sm btn-warning" onclick="openProductModal('edit',
                                         '<%= p.getProductID() %>',
                                         '<%= p.getCategoryID() %>',
                                         '<%= (p.getName() != null ? p.getName() : "").replace("'", "\\'") %>',
-                                        '<%= p.getQuantity() %>',
                                         '<%= p.getUnitID() %>',
                                         '<%= p.getSellingPrice() != null ? p.getSellingPrice().toPlainString() : "0" %>',
-                                        '<%= p.getStatus() != null ? p.getStatus() : "Active" %>'
+                                        '<%= p.getStatus() != null ? p.getStatus() : "Active" %>',
+                                        '<%= imgUrl != null ? imgUrl : "" %>'
                                     )">Sửa</button>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="deleteProduct('<%= p.getProductID() %>')">Xóa</button>
                                 </td>
@@ -180,9 +198,8 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="closeProductModal()"></button>
       </div>
       <div class="modal-body">
-        <form action="<%= ctx %>/products" method="post" id="product-form">
+        <form action="<%= ctx %>/products" method="post" id="product-form" enctype="multipart/form-data">
             <input type="hidden" name="action" id="modal-action" value="add">
-            <input type="hidden" name="view" value="<%= viewMode %>">
             <input type="hidden" name="productID" id="modal-id">
             <input type="hidden" name="keyword" value="<%= keyword != null ? keyword : "" %>">
             <input type="hidden" name="filterStatus" value="<%= filterStatus != null ? filterStatus : "" %>">
@@ -213,15 +230,9 @@
                        } %>
                 </select>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Số lượng</label>
-                    <input type="number" id="modal-quantity" name="quantity" class="form-control" required value="0" min="0">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Giá bán (VNĐ)</label>
-                    <input type="number" id="modal-sellingPrice" name="sellingPrice" class="form-control" min="0" required placeholder="0">
-                </div>
+            <div class="mb-3">
+                <label class="form-label">Giá bán (VNĐ)</label>
+                <input type="number" id="modal-sellingPrice" name="sellingPrice" class="form-control" min="0" required placeholder="0">
             </div>
             <div class="mb-3">
                 <label class="form-label">Trạng thái</label>
@@ -229,6 +240,14 @@
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                 </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Ảnh sản phẩm</label>
+                <input type="file" id="modal-image" name="imageFile" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,image/*" onchange="previewProductImage(event)">
+                <div class="form-text">Chỉ chấp nhận file ảnh: JPG, JPEG, PNG, WEBP, GIF, BMP. Tối đa 3MB. Có thể bỏ trống khi tạo mới.</div>
+                <div class="mt-2">
+                    <img id="modal-image-preview" src="" alt="preview" style="display:none;max-width:160px;max-height:160px;object-fit:cover;border-radius:8px;border:1px solid #eee;">
+                </div>
             </div>
             <div class="d-flex justify-content-end">
                 <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal" onclick="closeProductModal()">Huỷ</button>
@@ -244,7 +263,6 @@
     <input type="hidden" name="action" value="delete">
     <input type="hidden" name="id" id="delete-id">
     <input type="hidden" name="page" value="<%= currentPage %>">
-    <input type="hidden" name="view" value="<%= viewMode %>">
     <input type="hidden" name="keyword" value="<%= keyword != null ? keyword : "" %>">
     <input type="hidden" name="filterStatus" value="<%= filterStatus != null ? filterStatus : "" %>">
     <input type="hidden" name="filterCategoryID" value="<%= filterCategoryID != null ? filterCategoryID : "" %>">
@@ -266,10 +284,34 @@
         } else {
             console.warn("Bootstrap JS is not loaded!");
         }
+        // Chặn submit nếu file không phải ảnh hợp lệ
+        const productForm = document.getElementById('product-form');
+        if (productForm) {
+            productForm.addEventListener('submit', function(e) {
+                const fileInput = document.getElementById('modal-image');
+                const file = fileInput && fileInput.files && fileInput.files[0];
+                if (!file) return; // không có ảnh thì cho qua
+                if (!isValidImageFile(file)) {
+                    e.preventDefault();
+                    alert('File tải lên không phải ảnh hợp lệ. Chỉ chấp nhận: ' + ALLOWED_IMAGE_EXT.join(', ') + '.');
+                    fileInput.value = '';
+                    return false;
+                }
+                if (file.size > 3 * 1024 * 1024) {
+                    e.preventDefault();
+                    alert('Ảnh vượt quá 3MB. Vui lòng chọn ảnh khác.');
+                    fileInput.value = '';
+                    return false;
+                }
+            });
+        }
     });
 
-    function openProductModal(action, id, catId, name, quantity, unitId, sellingPrice, status) {
+    function openProductModal(action, id, catId, name, unitId, sellingPrice, status, imageUrl) {
         document.getElementById('modal-action').value = action;
+        const fileInput = document.getElementById('modal-image');
+        const preview = document.getElementById('modal-image-preview');
+        if (fileInput) fileInput.value = '';
         if (action === 'edit') {
             document.getElementById('modal-title').innerText = 'Chỉnh sửa sản phẩm';
             document.getElementById('modal-submit').innerText = 'Cập nhật';
@@ -277,9 +319,8 @@
             document.getElementById('modal-cat').value = catId;
             document.getElementById('modal-name').value = name;
             document.getElementById('modal-unit').value = unitId;
-            document.getElementById('modal-quantity').value = quantity;
             document.getElementById('modal-sellingPrice').value = sellingPrice;
-            
+
             let normStatus = "Active";
             if (status) {
                 let s = status.trim().toUpperCase();
@@ -288,6 +329,14 @@
                 }
             }
             document.getElementById('modal-status').value = normStatus;
+
+            if (imageUrl && imageUrl.length > 0) {
+                preview.src = imageUrl;
+                preview.style.display = 'inline-block';
+            } else {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
         } else {
             document.getElementById('modal-title').innerText = 'Thêm sản phẩm mới';
             document.getElementById('modal-submit').innerText = 'Lưu sản phẩm';
@@ -295,15 +344,69 @@
             document.getElementById('product-form').reset();
             document.getElementById('modal-cat').value = '1';
             document.getElementById('modal-unit').value = '1';
-            document.getElementById('modal-quantity').value = '0';
             document.getElementById('modal-sellingPrice').value = '0';
             document.getElementById('modal-status').value = 'Active';
+            if (preview) {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
         }
         if(bsModal) bsModal.show();
     }
 
-    function closeProductModal() { 
-        if(bsModal) bsModal.hide(); 
+    // Các đuôi ảnh hợp lệ ở client
+    const ALLOWED_IMAGE_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'];
+
+    function getFileExt(filename) {
+        if (!filename) return '';
+        const dot = filename.lastIndexOf('.');
+        if (dot < 0 || dot === filename.length - 1) return '';
+        return filename.substring(dot + 1).toLowerCase();
+    }
+
+    function isValidImageFile(file) {
+        if (!file) return false;
+        const ext = getFileExt(file.name);
+        if (ALLOWED_IMAGE_EXT.indexOf(ext) === -1) return false;
+        // kiểm tra thêm MIME type nếu có
+        if (file.type && file.type.indexOf('image/') !== 0) return false;
+        return true;
+    }
+
+    function previewProductImage(event) {
+        const file = event.target.files && event.target.files[0];
+        const preview = document.getElementById('modal-image-preview');
+        if (!file) {
+            preview.src = '';
+            preview.style.display = 'none';
+            return;
+        }
+        // 1) Kiểm tra đuôi file phải là ảnh
+        if (!isValidImageFile(file)) {
+            alert('File tải lên không phải ảnh hợp lệ. Chỉ chấp nhận: ' + ALLOWED_IMAGE_EXT.join(', ') + '.');
+            event.target.value = '';
+            preview.src = '';
+            preview.style.display = 'none';
+            return;
+        }
+        // 2) Chặn sớm phía client nếu vượt 3MB
+        if (file.size > 3 * 1024 * 1024) {
+            alert('Ảnh vượt quá 3MB. Vui lòng chọn ảnh khác.');
+            event.target.value = '';
+            preview.src = '';
+            preview.style.display = 'none';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'inline-block';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function closeProductModal() {
+        if(bsModal) bsModal.hide();
     }
 
     document.getElementById('unifiedFilter').addEventListener('change', function() {
@@ -311,7 +414,7 @@
         document.getElementById('statusInput').value = '';
         document.getElementById('categoryInput').value = '';
         document.getElementById('unitInput').value = '';
-        
+
         if (selectedValue === '') {
             document.getElementById('filterForm').submit();
         } else if (selectedValue.startsWith('cat_')) {
