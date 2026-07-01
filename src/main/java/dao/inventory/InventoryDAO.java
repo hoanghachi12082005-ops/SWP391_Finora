@@ -15,12 +15,12 @@ public class InventoryDAO {
         List<Inventory> items = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
             "SELECT i.inventory_id, i.warehouse_id, i.product_id, i.quantity_in_stock, i.status, i.updated_at, " +
-            "p.Name as product_name, '' as product_codebar, p.SellingPrice as selling_price, " +
-            "c.Name as category_name, u.Name as unit_name, w.warehouse_name " +
+            "p.product_name as product_name, '' as product_codebar, p.selling_price as selling_price, " +
+            "c.category_name as category_name, u.unit_name as unit_name, w.warehouse_name " +
             "FROM inventory i " +
-            "JOIN Product p ON i.product_id = p.ProductID " +
-            "LEFT JOIN Category c ON p.CategoryID = c.CategoryID " +
-            "LEFT JOIN Unit u ON p.UnitID = u.UnitID " +
+            "JOIN product p ON i.product_id = p.product_id " +
+            "LEFT JOIN category c ON p.category_id = c.category_id " +
+            "LEFT JOIN unit u ON p.unit_id = u.unit_id " +
             "JOIN warehouse w ON i.warehouse_id = w.warehouse_id " +
             "WHERE 1=1"
         );
@@ -28,7 +28,7 @@ public class InventoryDAO {
         String cleanedKeyword = null;
         if (keyword != null && !keyword.trim().isEmpty()) {
             cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
-            sql.append(" AND p.Name LIKE ?");
+            sql.append(" AND p.product_name LIKE ?");
         }
         if (status != null && !status.trim().isEmpty()) {
             if ("LOW_STOCK".equals(status)) {
@@ -39,15 +39,15 @@ public class InventoryDAO {
                 sql.append(" AND i.status = ?");
             }
         }
-        if (categoryId != null && categoryId > 0) sql.append(" AND p.CategoryID = ?");
-        if (unitId != null && unitId > 0) sql.append(" AND p.UnitID = ?");
+        if (categoryId != null && categoryId > 0) sql.append(" AND p.category_id = ?");
+        if (unitId != null && unitId > 0) sql.append(" AND p.unit_id = ?");
         if (warehouseId != null && warehouseId > 0) sql.append(" AND i.warehouse_id = ?");
 
         // Sorting
         if ("qty_desc".equals(sortParam)) {
             sql.append(" ORDER BY i.quantity_in_stock DESC");
         } else if ("name_asc".equals(sortParam)) {
-            sql.append(" ORDER BY p.Name ASC");
+            sql.append(" ORDER BY p.product_name ASC");
         } else if ("updated_desc".equals(sortParam)) {
             sql.append(" ORDER BY i.updated_at DESC");
         } else {
@@ -86,14 +86,14 @@ public class InventoryDAO {
     public int getTotalCount(String keyword, String status, Integer categoryId, Integer unitId, Integer warehouseId) throws SQLException {
         StringBuilder sql = new StringBuilder(
             "SELECT COUNT(*) FROM inventory i " +
-            "JOIN Product p ON i.product_id = p.ProductID " +
+            "JOIN product p ON i.product_id = p.product_id " +
             "WHERE 1=1"
         );
 
         String cleanedKeyword = null;
         if (keyword != null && !keyword.trim().isEmpty()) {
             cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
-            sql.append(" AND p.Name LIKE ?");
+            sql.append(" AND p.product_name LIKE ?");
         }
         if (status != null && !status.trim().isEmpty()) {
             if ("LOW_STOCK".equals(status)) {
@@ -104,8 +104,8 @@ public class InventoryDAO {
                 sql.append(" AND i.status = ?");
             }
         }
-        if (categoryId != null && categoryId > 0) sql.append(" AND p.CategoryID = ?");
-        if (unitId != null && unitId > 0) sql.append(" AND p.UnitID = ?");
+        if (categoryId != null && categoryId > 0) sql.append(" AND p.category_id = ?");
+        if (unitId != null && unitId > 0) sql.append(" AND p.unit_id = ?");
         if (warehouseId != null && warehouseId > 0) sql.append(" AND i.warehouse_id = ?");
 
         try (Connection conn = DBContext.getConnection();
@@ -173,8 +173,8 @@ public class InventoryDAO {
         }
 
         // Query 1: Total unique products and unique categories
-        String sql1 = "SELECT COUNT(DISTINCT i.product_id) as totalProducts, COUNT(DISTINCT p.CategoryID) as totalCategories " +
-                      "FROM inventory i JOIN Product p ON i.product_id = p.ProductID" + whereClause.toString();
+        String sql1 = "SELECT COUNT(DISTINCT i.product_id) as totalProducts, COUNT(DISTINCT p.category_id) as totalCategories " +
+                      "FROM inventory i JOIN product p ON i.product_id = p.product_id" + whereClause.toString();
 
         // Query 2: Low stock count
         String sql2 = "SELECT COUNT(i.inventory_id) FROM inventory i " + whereClause.toString() + " AND i.quantity_in_stock > 0 AND i.quantity_in_stock <= 10";
@@ -201,24 +201,24 @@ public class InventoryDAO {
     public List<dto.inventory.ExchangeProductDTO> searchExchangeProducts(int myWarehouseId, String keyword) throws SQLException {
         List<dto.inventory.ExchangeProductDTO> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-            "SELECT p.ProductID, p.Name as ProductName, " +
-            "COALESCE(i1.quantity_in_stock, 0) as MyStock, " +
-            "w.warehouse_id as PartnerWarehouseId, w.warehouse_name as PartnerWarehouseName, " +
-            "i2.quantity_in_stock as PartnerStock " +
-            "FROM Product p " +
-            "LEFT JOIN inventory i1 ON p.ProductID = i1.product_id AND i1.warehouse_id = ? " +
-            "JOIN inventory i2 ON p.ProductID = i2.product_id AND i2.warehouse_id != ? " +
-            "JOIN warehouse w ON i2.warehouse_id = w.warehouse_id " +
-            "WHERE w.status = 'ACTIVE' "
+"SELECT p.product_id as ProductID, p.product_name as ProductName, " +
+"COALESCE(i1.quantity_in_stock, 0) as MyStock, " +
+"w.warehouse_id as PartnerWarehouseId, w.warehouse_name as PartnerWarehouseName, " +
+"i2.quantity_in_stock as PartnerStock " +
+"FROM product p " +
+"LEFT JOIN inventory i1 ON p.product_id = i1.product_id AND i1.warehouse_id = ? " +
+"JOIN inventory i2 ON p.product_id = i2.product_id AND i2.warehouse_id != ? " +
+"JOIN warehouse w ON i2.warehouse_id = w.warehouse_id " +
+"WHERE w.status = 'ACTIVE' "
         );
 
         if (keyword == null || keyword.trim().isEmpty()) {
             sql.append("AND COALESCE(i1.quantity_in_stock, 0) <= 10 AND i2.quantity_in_stock > 0 ");
         } else {
-            sql.append("AND (p.Name LIKE ? OR w.warehouse_name LIKE ?) ");
+            sql.append("AND (p.product_name LIKE ? OR w.warehouse_name LIKE ?) ");
         }
 
-        sql.append("ORDER BY p.Name ASC, w.warehouse_name ASC");
+        sql.append("ORDER BY p.product_name ASC, w.warehouse_name ASC");
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
@@ -249,38 +249,26 @@ public class InventoryDAO {
     public List<dto.inventory.ImportProductDTO> searchImportProducts(int warehouseId, String keyword) throws SQLException {
         List<dto.inventory.ImportProductDTO> list = new ArrayList<>();
         
-        // Since SupplierIDs is JSON (e.g. "[1, 2]"), and we want to get the suppliers for each product.
-        // If SQL Server version supports OPENJSON, we can parse it in SQL. Otherwise we fetch SupplierIDs and parse in Java.
-        // To be safe across SQL Server versions, we'll fetch SupplierIDs and parse it in Java using simple string manipulation.
-        // We also need all Suppliers to map ID to Name. Let's fetch all suppliers first.
-        java.util.Map<Integer, String> supplierMap = new java.util.HashMap<>();
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT SupplierID, Name FROM Supplier");
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                supplierMap.put(rs.getInt(1), rs.getString(2));
-            }
-        }
-
+        // ponytail: supplier map removed — SupplierIDs column doesn't exist in V3 schema
         StringBuilder sql = new StringBuilder(
-            "SELECT p.ProductID, p.Name as ProductName, p.SupplierIDs, p.ImportPrice, " +
-            "COALESCE(i.quantity_in_stock, 0) as MyStock " +
-            "FROM Product p "
+"SELECT p.product_id as ProductID, p.product_name as ProductName, " +
+"COALESCE(i.quantity_in_stock, 0) as MyStock " +
+"FROM product p "
         );
 
         if (keyword == null || keyword.trim().isEmpty()) {
             // Suggestion mode: only suggest products that exist in THIS warehouse's inventory and are running low
-            sql.append("INNER JOIN inventory i ON p.ProductID = i.product_id AND i.warehouse_id = ? ");
-            sql.append("WHERE p.Status = 'ACTIVE' ");
+            sql.append("INNER JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? ");
+            sql.append("WHERE 1=1 ");
             sql.append("AND i.quantity_in_stock <= 10 ");
         } else {
             // Search mode: allow searching all active products, even those never imported to this warehouse
-            sql.append("LEFT JOIN inventory i ON p.ProductID = i.product_id AND i.warehouse_id = ? ");
-            sql.append("WHERE p.Status = 'ACTIVE' ");
-            sql.append("AND p.Name LIKE ? ");
+            sql.append("LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? ");
+            sql.append("WHERE 1=1 ");
+            sql.append("AND p.product_name LIKE ? ");
         }
 
-        sql.append("ORDER BY p.Name ASC");
+        sql.append("ORDER BY p.product_name ASC");
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
@@ -296,25 +284,7 @@ public class InventoryDAO {
                     dto.setProductId(rs.getInt("ProductID"));
                     dto.setProductName(rs.getString("ProductName"));
                     dto.setMyStock(rs.getInt("MyStock"));
-                    dto.setImportPrice(rs.getBigDecimal("ImportPrice"));
-                    
-                    String supplierIdsJson = rs.getString("SupplierIDs");
-                    List<dto.inventory.ImportProductDTO.SupplierInfo> suppliers = new ArrayList<>();
-                    if (supplierIdsJson != null && supplierIdsJson.startsWith("[") && supplierIdsJson.endsWith("]")) {
-                        String content = supplierIdsJson.substring(1, supplierIdsJson.length() - 1);
-                        if (!content.trim().isEmpty()) {
-                            String[] parts = content.split(",");
-                            for (String part : parts) {
-                                try {
-                                    int sid = Integer.parseInt(part.trim());
-                                    if (supplierMap.containsKey(sid)) {
-                                        suppliers.add(new dto.inventory.ImportProductDTO.SupplierInfo(sid, supplierMap.get(sid)));
-                                    }
-                                } catch (Exception e) {}
-                            }
-                        }
-                    }
-                    dto.setSuppliers(suppliers);
+                    // ponytail: removed setImportPrice and supplier parsing — columns don't exist in V3 schema
                     list.add(dto);
                 }
             }
@@ -360,7 +330,7 @@ public class InventoryDAO {
                 stmt.executeUpdate();
             }
         } else {
-            String sql = "INSERT INTO inventory (warehouse_id, product_id, quantity_in_stock, status, created_at, updated_at) VALUES (?, ?, ?, 'ACTIVE', GETDATE(), GETDATE())";
+            String sql = "INSERT INTO inventory (warehouse_id, product_id, quantity_in_stock, status, updated_at) VALUES (?, ?, ?, 'ACTIVE', GETDATE())";
             try (Connection conn = DBContext.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, warehouseId);

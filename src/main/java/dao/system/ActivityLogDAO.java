@@ -19,8 +19,8 @@ import java.util.List;
  */
 public class ActivityLogDAO {
 
-    // DB V3: audit_log(audit_log_id, emp_id, action_name, table_name, record_id, old_data, new_data, created_at)
-    // Employee: employee(emp_id, fullName, ...)
+    // DB V3: AuditLog(AuditLogID, EmployeeID, ActionName, TableName, RecordID, OldData, NewData, CreatedAt)
+    // Employee: Employee(EmployeeID, FullName, ...)
     private static final String BASE_SELECT =
             "SELECT a.audit_log_id, a.emp_id, a.action_name, a.table_name, a.record_id, a.old_data, a.new_data, a.created_at, "
           + "       e.fullName AS emp_name, e.branch_id, b.branch_name "

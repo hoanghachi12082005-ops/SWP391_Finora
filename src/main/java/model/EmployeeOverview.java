@@ -9,10 +9,13 @@ public class EmployeeOverview {
     private BigDecimal totalRevenue;
     private String topEmployeeName;
     private BigDecimal topEmployeeRevenue;
+    private String lowestEmployeeName;
+    private BigDecimal lowestEmployeeRevenue;
 
     public EmployeeOverview() {
         totalRevenue = BigDecimal.ZERO;
         topEmployeeRevenue = BigDecimal.ZERO;
+        lowestEmployeeRevenue = BigDecimal.ZERO;
     }
 
     public int getTotalEmployees() {
@@ -62,4 +65,10 @@ public class EmployeeOverview {
     public void setTopEmployeeRevenue(BigDecimal topEmployeeRevenue) {
         this.topEmployeeRevenue = topEmployeeRevenue;
     }
+
+    public String getLowestEmployeeName() { return lowestEmployeeName; }
+    public void setLowestEmployeeName(String lowestEmployeeName) { this.lowestEmployeeName = lowestEmployeeName; }
+
+    public BigDecimal getLowestEmployeeRevenue() { return lowestEmployeeRevenue; }
+    public void setLowestEmployeeRevenue(BigDecimal lowestEmployeeRevenue) { this.lowestEmployeeRevenue = lowestEmployeeRevenue; }
 }

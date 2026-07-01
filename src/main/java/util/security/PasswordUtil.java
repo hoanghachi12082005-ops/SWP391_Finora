@@ -39,8 +39,8 @@ public final class PasswordUtil {
         }
         try {
             return BCrypt.checkpw(plainPassword, hashedPassword);
-        } catch (IllegalArgumentException e) {
-            // Hash is malformed or not a valid BCrypt string.
+        } catch (Exception e) {
+            // ponytail: BCrypt throws StringIndexOutOfBoundsException on malformed hashes
             return false;
         }
     }

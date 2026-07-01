@@ -62,11 +62,11 @@
                             </div>
                         </div>
                         
-<!--                         Extra teacher checks - hidden usually but ported for functionality 
+<!--
                         <div class="row mt-3 border-top pt-3">
                             <div class="col-md-4 d-flex align-items-center gap-2">
-                                <label class="fw-bold mb-0 text-nowrap">Hiển thị:</label>
-                                <input type="number" class="form-control form-control-sm" name="limit" value="${currentLimit}" style="width: 80px;" />
+                                <label for="limitInput" class="fw-bold mb-0 text-nowrap">Hiển thị:</label>
+                                <input type="text" inputmode="numeric" pattern="[0-9]*" id="limitInput" name="limit" value="${currentLimit}" class="form-control form-control-sm" style="width: 80px;" />
                                 <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">Áp dụng</button>
                             </div>
                             <div class="col-md-8 d-flex justify-content-end gap-2">
@@ -171,25 +171,11 @@
                     <div class="text-muted small">
                         Hiển thị <strong>${fn:length(categories)}</strong> / <strong>${totalItems}</strong> danh mục
                     </div>
-                    <ul class="pagination mb-0">
-                        <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                            <a class="page-link" href="${pageContext.request.contextPath}/category?page=${currentPage - 1}&keyword=${keyword}&status=${selectedStatus}&parentName=${parentNameFilter}">
-                                Trước
-                            </a>
-                        </li>
-                        <c:forEach var="pageIndex" begin="1" end="${totalPages}">
-                            <li class="page-item ${currentPage == pageIndex ? 'active' : ''}">
-                                <a class="page-link" href="${pageContext.request.contextPath}/category?page=${pageIndex}&keyword=${keyword}&status=${selectedStatus}&parentName=${parentNameFilter}">
-                                    ${pageIndex}
-                                </a>
-                            </li>
-                        </c:forEach>
-                        <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                            <a class="page-link" href="${pageContext.request.contextPath}/category?page=${currentPage + 1}&keyword=${keyword}&status=${selectedStatus}&parentName=${parentNameFilter}">
-                                Tiếp
-                            </a>
-                        </li>
-                    </ul>
+                    <jsp:include page="/views/common/pagination.jsp">
+                        <jsp:param name="currentPage" value="${currentPage}"/>
+                        <jsp:param name="totalPages" value="${totalPages}"/>
+                        <jsp:param name="url" value="${pageContext.request.contextPath}/category?keyword=${keyword}&status=${selectedStatus}&parentName=${parentNameFilter}&page="/>
+                    </jsp:include>
                 </div>
             </c:if>
 

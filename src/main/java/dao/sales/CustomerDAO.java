@@ -85,9 +85,7 @@ public class CustomerDAO {
         c.setPhone(rs.getString("phone"));
         c.setPasswordHash(null);
         c.setStatus("active");
-        
-        String typeStr = rs.getString("cus_type");
-        c.setCusType(typeStr != null ? typeStr : "REGULAR");
+        c.setCusType("REGULAR");
         
         c.setTotalSpent(rs.getDouble("total_spent"));
         c.setCreatedAt(rs.getString("created_at"));
@@ -111,8 +109,8 @@ public class CustomerDAO {
      * Thêm khách hàng mới, trả về cus_id tự tăng. Trả -1 nếu thất bại.
      */
     public int insert(Customer c) {
-        String sql = "INSERT INTO customer (full_name, gender, bod, address, email, phone, cus_type, total_spent, created_at, updated_at) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, 0, GETDATE(), GETDATE())";
+        String sql = "INSERT INTO customer (full_name, gender, bod, address, email, phone, total_spent, created_at, updated_at) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, 0, GETDATE(), GETDATE())";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, c.getFullName());
@@ -125,7 +123,6 @@ public class CustomerDAO {
             ps.setString(4, c.getAddress());
             ps.setString(5, c.getEmail());
             ps.setString(6, c.getPhone());
-            ps.setString(7, c.getCusType() != null ? c.getCusType() : "REGULAR");
             if (ps.executeUpdate() > 0) {
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (keys.next()) return keys.getInt(1);

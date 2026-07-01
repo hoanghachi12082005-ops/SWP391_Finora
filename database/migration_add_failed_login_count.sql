@@ -9,7 +9,7 @@
 -- Bước 1: Thêm cột failed_login_count nếu chưa có
 IF NOT EXISTS (
     SELECT 1 FROM sys.columns
-    WHERE object_id = OBJECT_ID(N'Employee')
+    WHERE object_id = OBJECT_ID(N'
     AND name = N'FailedLoginCount'
 )
 BEGIN
@@ -21,5 +21,17 @@ END
 ELSE
 BEGIN
     PRINT 'Cột FailedLoginCount đã tồn tại, bỏ qua.';
+
+    AND name = N'failed_login_count'
+)
+BEGIN
+    ALTER TABLE Employee
+    ADD failed_login_count INT NOT NULL DEFAULT 0;
+
+    PRINT 'Đã thêm cột failed_login_count vào bảng Employee.';
+END
+ELSE
+BEGIN
+    PRINT 'Cột failed_login_count đã tồn tại, bỏ qua.';
 END
 GO

@@ -11,6 +11,8 @@ import jakarta.servlet.http.Cookie;
 import model.Employee;
 import service.employee.AuthService;
 import util.email.EmailUtil;
+import java.security.SecureRandom;
+import java.util.Base64;
 @WebServlet(name = "AuthServlet", urlPatterns = {"/login", "/logout", "/forgot-password", "/role-selection"})
 public class AuthServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -90,6 +92,7 @@ public class AuthServlet extends HttpServlet {
             throws ServletException, IOException {
         String emailOrPhone = request.getParameter("username");
         String password = request.getParameter("password");
+
         System.out.println("[DEBUG] Request Login nhận được username: [" + emailOrPhone + "]");
         try {
             // Xác thực thông tin qua tầng xử lý mật khẩu băm AuthService
@@ -114,6 +117,43 @@ public class AuthServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + getRedirectPath(employee));
         } catch (RuntimeException e) {
             System.err.println("[DEBUG] Đăng nhập thất bại do: " + e.getMessage());
+            request.setAttribute("error", e.getMessage());
+            request.setAttribute("username", emailOrPhone);
+            request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
+        if (emailOrPhone == null || password == null || emailOrPhone.trim().isEmpty() || password.trim().isEmpty()) {
+            request.setAttribute("error", "Vui lòng nhập email/số điện thoại và mật khẩu.");
+            request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
+            return;
+        }
+        try {
+            Employee employee = authService.login(emailOrPhone.trim(), password);
+
+            // Ghi nhớ đăng nhập
+            String rememberMe = request.getParameter("remember-me");
+            Cookie rememberCookie = new Cookie("remembered_username", emailOrPhone.trim());
+            if (rememberMe != null) {
+                rememberCookie.setMaxAge(30 * 24 * 60 * 60);
+            } else {
+                rememberCookie.setMaxAge(0);
+            }
+            rememberCookie.setPath(request.getContextPath().isEmpty() ? "/" : request.getContextPath());
+            response.addCookie(rememberCookie);
+
+            // Session fixation protection: regenerate session ID
+            HttpSession oldSession = request.getSession(false);
+            if (oldSession != null) oldSession.invalidate();
+            HttpSession session = request.getSession(true);
+
+            session.setAttribute("currentUser", employee);
+            session.setAttribute("employee", employee);
+
+            // Generate CSRF token
+            byte[] csrfBytes = new byte[32];
+            new SecureRandom().nextBytes(csrfBytes);
+            session.setAttribute("csrfToken", Base64.getEncoder().encodeToString(csrfBytes));
+
+            response.sendRedirect(request.getContextPath() + getRedirectPath(employee));
+        } catch (RuntimeException e) {
             request.setAttribute("error", e.getMessage());
             request.setAttribute("username", emailOrPhone);
             request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
@@ -144,13 +184,17 @@ public class AuthServlet extends HttpServlet {
                 if (updated) {
                     boolean sent = EmailUtil.sendPasswordEmail(email.trim(), fullName.trim(), newPassword);
                     if (sent) {
+                boolean sent = EmailUtil.sendPasswordEmail(email.trim(), fullName.trim(), newPassword);
+                if (sent) {
+                    boolean updated = employeeDAO.updatePasswordByEmail(email.trim(), hashedPassword);
+                    if (updated) {
                         request.setAttribute("successMessage", "Password đã được gửi về email của bạn, vui lòng check mail và đăng nhập lại.");
                         request.getRequestDispatcher("/views/auth/forgot-password.jsp").forward(request, response);
                         return;
                     }
-                    request.setAttribute("error", "Hệ thống đã cập nhật mật khẩu mới nhưng tiến trình gửi Email bị lỗi!");
+                    request.setAttribute("error", "Có lỗi cập nhật mật khẩu vào cơ sở dữ liệu! Vui lòng liên hệ quản trị viên.");
                 } else {
-                    request.setAttribute("error", "Không thể cập nhật mật khẩu mới vào Cơ sở dữ liệu!");
+                    request.setAttribute("error", "Không thể gửi email! Vui lòng kiểm tra lại địa chỉ email hoặc liên hệ quản trị viên.");
                 }
             } else {
                 request.setAttribute("error", "Sai Họ tên hoặc Email!");

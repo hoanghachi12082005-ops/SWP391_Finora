@@ -10,7 +10,9 @@
     <title>Finora POS — Bán hàng</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/assets/css/base.css" rel="stylesheet">
     <script>
     tailwind.config={darkMode:"class",theme:{extend:{colors:{"secondary":"#b51a1b","primary-fixed-dim":"#ffb3ac","tertiary-fixed-dim":"#88d982","on-tertiary-container":"#d8ffd0","tertiary":"#11651d","background":"#f8f9fa","tertiary-fixed":"#a3f69c","inverse-on-surface":"#f0f1f2","error-container":"#ffdad6","surface-dim":"#d9dadb","on-background":"#191c1d","on-surface":"#191c1d","primary-fixed":"#ffdad6","on-secondary-container":"#fffbff","surface-container-lowest":"#ffffff","surface-container-highest":"#e1e3e4","surface-variant":"#e1e3e4","surface-container-high":"#e7e8e9","on-secondary":"#ffffff","inverse-surface":"#2e3132","on-tertiary":"#ffffff","on-secondary-fixed-variant":"#93000b","surface-tint":"#ba1a20","surface":"#f8f9fa","error":"#ba1a1a","on-error-container":"#93000a","primary-container":"#d32f2f","surface-container-low":"#f3f4f5","on-surface-variant":"#5b403d","on-primary-fixed-variant":"#930010","on-primary-container":"#fff2f0","surface-container":"#edeeef","surface-bright":"#f8f9fa","on-error":"#ffffff","on-tertiary-fixed":"#002204","tertiary-container":"#307f34","inverse-primary":"#ffb3ac","on-tertiary-fixed-variant":"#005312","on-primary-fixed":"#410003","outline":"#8f6f6c","secondary-fixed-dim":"#ffb4ab","outline-variant":"#e4beba","on-primary":"#ffffff","secondary-fixed":"#ffdad6","secondary-container":"#d93630","on-secondary-fixed":"#410002","primary":"#af101a"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"stack-lg":"24px","container-padding":"32px","stack-sm":"8px","gutter":"24px","section-gap":"48px","unit":"8px","stack-md":"16px"},fontFamily:{"body-md":["Inter"],"label-md":["Inter"],"caption":["Inter"],"headline-md":["Inter"],"headline-lg":["Inter"],"button-text":["Inter"],"title-lg":["Inter"],"display-lg":["Inter"],"body-lg":["Inter"]},fontSize:{"body-md":["16px",{lineHeight:"24px",fontWeight:"500"}],"label-md":["14px",{lineHeight:"20px",fontWeight:"600"}],"caption":["12px",{lineHeight:"16px",fontWeight:"400"}],"headline-md":["24px",{lineHeight:"32px",fontWeight:"700"}],"headline-lg":["32px",{lineHeight:"40px",letterSpacing:"-0.01em",fontWeight:"700"}],"button-text":["16px",{lineHeight:"24px",fontWeight:"600"}],"title-lg":["20px",{lineHeight:"28px",fontWeight:"600"}],"display-lg":["48px",{lineHeight:"56px",letterSpacing:"-0.02em",fontWeight:"700"}],"body-lg":["18px",{lineHeight:"26px",fontWeight:"500"}]}}}};
     </script>
@@ -30,7 +32,7 @@
     </style>
 </head>
 <body class="bg-background text-on-surface overflow-hidden h-screen">
-<div class="flex h-screen">
+<div class="flex h-screen pl-[var(--sidebar-width,260px)] pr-6">
 
 <!-- ═══════════════ SIDEBAR (80px) ═══════════════ -->
 <jsp:include page="/views/common/sidebar.jsp" />
@@ -355,7 +357,7 @@
                 <div class="text-label-md truncate">${c.fullName}</div>
                 <div class="flex items-center gap-3 text-caption text-outline">
                     <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">call</span>${c.phone}</span>
-                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">stars</span>${c.cusType.displayName}</span>
+                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">stars</span>${c.cusType}</span>
                 </div>
             </div>
             <span class="text-label-md text-primary opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-lg group-hover:bg-primary group-hover:text-white">Chọn</span>
@@ -421,6 +423,8 @@
     </div>
 </div>
 </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- ═══════════════ SUCCESS TOAST ═══════════════ -->
 <div id="successToast" class="hidden fixed top-6 right-6 z-[70] bg-tertiary-container text-on-tertiary-container px-6 py-4 rounded-xl shadow-xl flex items-center gap-3 animate-fadeIn">

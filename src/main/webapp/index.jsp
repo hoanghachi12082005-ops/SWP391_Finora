@@ -1,8 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-<c:if test="${not empty sessionScope.employee}">
-    <c:redirect url="/admin/dashboard"/>
+<c:if test="${not empty sessionScope.currentUser}">
+    <c:redirect url="${pageContext.request.contextPath}/dashboard/owner"/>
 </c:if>
 
 <!DOCTYPE html>
@@ -207,7 +207,7 @@
                 </div>
                 <div class="col-md-6">
                     <img src="https://via.placeholder.com/600x400/93000b/ffffff?text=KiotRetail+Dashboard"
-                         alt="Dashboard" class="img-fluid rounded shadow">
+                         alt="Tổng quan" class="img-fluid rounded shadow">
                 </div>
             </div>
         </div>

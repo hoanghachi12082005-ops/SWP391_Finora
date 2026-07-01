@@ -675,7 +675,7 @@
 
 .chart-bar {
     width: 100%;
-    background-color: var(--primary-color);
+    background-color: var(--primary, #d32f2f);
     border-radius: 6px 6px 0 0;
     transition: height 0.5s ease;
 }

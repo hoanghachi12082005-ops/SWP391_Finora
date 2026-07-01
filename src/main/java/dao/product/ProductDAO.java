@@ -4,14 +4,10 @@ import model.Product;
 import model.Category;
 import model.Unit;
 import util.database.DBContext;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-//check
+
 public class ProductDAO {
 
     public List<Product> findAll(int offset, int limit) throws SQLException {
@@ -23,20 +19,27 @@ public class ProductDAO {
     }
 
     public List<Product> findAll(int offset, int limit, String keyword, String status, Integer categoryID, Integer unitID) throws SQLException {
+        return findAll(offset, limit, keyword, status, categoryID, unitID, null);
+    }
+
+    public List<Product> findAll(int offset, int limit, String keyword, String status, Integer categoryID, Integer unitID, Integer supplierID) throws SQLException {
         List<Product> items = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
             "SELECT p.product_id AS ProductID, p.product_name AS Name, " +
+            "ISNULL((SELECT SUM(quantity_in_stock) FROM inventory WHERE product_id = p.product_id), 0) AS Quantity, " +
             "p.category_id AS CategoryID, c.category_name AS CategoryName, " +
-            "p.unit_id AS UnitID, u.unit_name AS UnitName, " +
-            "p.selling_price AS SellingPrice, p.Status AS Status, " +
-            "p.created_at AS CreatedAt, p.update_at AS UpdatedAt " +
-            "FROM [product] p " +
+            "p.unit_id AS UnitID, u.unit_name AS UnitName, p.selling_price AS SellingPrice, " +
+            "'active' AS Status, p.created_at AS CreatedAt, p.update_at AS UpdatedAt " +
+            "FROM product p " +
             "LEFT JOIN category c ON p.category_id = c.category_id " +
-            "LEFT JOIN unit u ON p.unit_id = u.unit_id " +
-            "WHERE 1=1"
+            "LEFT JOIN unit u ON p.unit_id = u.unit_id "
         );
-        if (keyword != null && !keyword.isBlank()) sql.append(" AND p.product_name LIKE ?");
-        if (status != null && !status.isBlank())  sql.append(" AND p.Status = ?");
+        sql.append(" WHERE 1=1");
+        String cleanedKeyword = null;
+        if (keyword != null && !keyword.isBlank()) {
+            cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
+            sql.append(" AND p.product_name LIKE ?");
+        }
         if (categoryID != null) sql.append(" AND p.category_id = ?");
         if (unitID != null) sql.append(" AND p.unit_id = ?");
         sql.append(" ORDER BY p.product_id ASC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
@@ -44,10 +47,9 @@ public class ProductDAO {
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             int idx = 1;
-            if (keyword != null && !keyword.isBlank()) {
-                stmt.setString(idx++, "%" + keyword + "%");
+            if (cleanedKeyword != null && !cleanedKeyword.isBlank()) {
+                stmt.setString(idx++, "%" + cleanedKeyword + "%");
             }
-            if (status != null && !status.isBlank()) stmt.setString(idx++, status);
             if (categoryID != null) stmt.setInt(idx++, categoryID);
             if (unitID != null) stmt.setInt(idx++, unitID);
             stmt.setInt(idx++, offset);
@@ -60,23 +62,29 @@ public class ProductDAO {
     }
 
     public int getTotalCount(String keyword, String status) throws SQLException {
-        return getTotalCount(keyword, status, null, null);
+        return getTotalCount(keyword, status, null, null, null);
     }
 
     public int getTotalCount(String keyword, String status, Integer categoryID, Integer unitID) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM [product] WHERE 1=1");
-        if (keyword != null && !keyword.isBlank()) sql.append(" AND product_name LIKE ?");
-        if (status != null && !status.isBlank())  sql.append(" AND Status = ?");
-        if (categoryID != null) sql.append(" AND category_id = ?");
-        if (unitID != null) sql.append(" AND unit_id = ?");
+        return getTotalCount(keyword, status, categoryID, unitID, null);
+    }
+
+    public int getTotalCount(String keyword, String status, Integer categoryID, Integer unitID, Integer supplierID) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM product p WHERE 1=1");
+        String cleanedKeyword = null;
+        if (keyword != null && !keyword.isBlank()) {
+            cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
+            sql.append(" AND p.product_name LIKE ?");
+        }
+        if (categoryID != null) sql.append(" AND p.category_id = ?");
+        if (unitID != null) sql.append(" AND p.unit_id = ?");
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             int idx = 1;
-            if (keyword != null && !keyword.isBlank()) {
-                stmt.setString(idx++, "%" + keyword + "%");
+            if (cleanedKeyword != null && !cleanedKeyword.isBlank()) {
+                stmt.setString(idx++, "%" + cleanedKeyword + "%");
             }
-            if (status != null && !status.isBlank()) stmt.setString(idx++, status);
             if (categoryID != null) stmt.setInt(idx++, categoryID);
             if (unitID != null) stmt.setInt(idx++, unitID);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -86,13 +94,13 @@ public class ProductDAO {
     }
 
     public Product findById(int id) throws SQLException {
-        String sql =
+        String sql = 
             "SELECT p.product_id AS ProductID, p.product_name AS Name, " +
+            "ISNULL((SELECT SUM(quantity_in_stock) FROM inventory WHERE product_id = p.product_id), 0) AS Quantity, " +
             "p.category_id AS CategoryID, c.category_name AS CategoryName, " +
-            "p.unit_id AS UnitID, u.unit_name AS UnitName, " +
-            "p.selling_price AS SellingPrice, p.Status AS Status, " +
-            "p.created_at AS CreatedAt, p.update_at AS UpdatedAt " +
-            "FROM [product] p " +
+            "p.unit_id AS UnitID, u.unit_name AS UnitName, p.selling_price AS SellingPrice, " +
+            "'active' AS Status, p.created_at AS CreatedAt, p.update_at AS UpdatedAt " +
+            "FROM product p " +
             "LEFT JOIN category c ON p.category_id = c.category_id " +
             "LEFT JOIN unit u ON p.unit_id = u.unit_id " +
             "WHERE p.product_id = ?";
@@ -106,20 +114,27 @@ public class ProductDAO {
     }
 
     public int insert(Product product) throws SQLException {
-        String sql = "INSERT INTO [product] (product_name, category_id, unit_id, selling_price, Status) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO product (product_name, category_id, unit_id, selling_price, created_at, update_at) VALUES (?, ?, ?, ?, GETDATE(), GETDATE())";
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, product.getName());
-            stmt.setInt(2, product.getCategoryID());
-            stmt.setInt(3, product.getUnitID());
+            stmt.setObject(2, product.getCategoryID() > 0 ? product.getCategoryID() : null, java.sql.Types.INTEGER);
+            stmt.setObject(3, product.getUnitID() > 0 ? product.getUnitID() : null, java.sql.Types.INTEGER);
             stmt.setBigDecimal(4, product.getSellingPrice());
-            stmt.setString(5, product.getStatus());
             stmt.executeUpdate();
+
             try (ResultSet keys = stmt.getGeneratedKeys()) {
                 if (keys.next()) {
-                    int newId = keys.getInt(1);
-                    product.setProductID(newId);
-                    return newId;
+                    int newProdId = keys.getInt(1);
+                    product.setProductID(newProdId);
+                    // Nhập tồn kho ban đầu cho Kho 1 (Kho chính)
+                    String invSql = "INSERT INTO inventory (warehouse_id, product_id, quantity_in_stock, status, updated_at) VALUES (1, ?, ?, 'active', GETDATE())";
+                    try (PreparedStatement invStmt = conn.prepareStatement(invSql)) {
+                        invStmt.setInt(1, newProdId);
+                        invStmt.setInt(2, product.getQuantity());
+                        invStmt.executeUpdate();
+                    }
+                    return newProdId;
                 }
             }
         }
@@ -127,16 +142,29 @@ public class ProductDAO {
     }
 
     public void update(Product product) throws SQLException {
-        String sql = "UPDATE [product] SET product_name=?, category_id=?, unit_id=?, selling_price=?, Status=?, update_at=GETDATE() WHERE product_id=?";
+        String sql = "UPDATE product SET product_name=?, category_id=?, unit_id=?, selling_price=?, update_at=GETDATE() WHERE product_id=?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, product.getName());
-            stmt.setInt(2, product.getCategoryID());
-            stmt.setInt(3, product.getUnitID());
+            stmt.setObject(2, product.getCategoryID() > 0 ? product.getCategoryID() : null, java.sql.Types.INTEGER);
+            stmt.setObject(3, product.getUnitID() > 0 ? product.getUnitID() : null, java.sql.Types.INTEGER);
             stmt.setBigDecimal(4, product.getSellingPrice());
-            stmt.setString(5, product.getStatus());
-            stmt.setInt(6, product.getProductID());
+            stmt.setInt(5, product.getProductID());
             stmt.executeUpdate();
+
+            // Cập nhật số lượng trong kho 1
+            String invSql = "IF EXISTS (SELECT 1 FROM inventory WHERE product_id = ? AND warehouse_id = 1) "
+                          + "  UPDATE inventory SET quantity_in_stock = ?, updated_at = GETDATE() WHERE product_id = ? AND warehouse_id = 1 "
+                          + "ELSE "
+                          + "  INSERT INTO inventory (warehouse_id, product_id, quantity_in_stock, status, updated_at) VALUES (1, ?, ?, 'active', GETDATE())";
+            try (PreparedStatement invStmt = conn.prepareStatement(invSql)) {
+                invStmt.setInt(1, product.getProductID());
+                invStmt.setInt(2, product.getQuantity());
+                invStmt.setInt(3, product.getProductID());
+                invStmt.setInt(4, product.getProductID());
+                invStmt.setInt(5, product.getQuantity());
+                invStmt.executeUpdate();
+            }
         }
     }
 
@@ -152,15 +180,11 @@ public class ProductDAO {
                     stmt.setInt(1, id);
                     stmt.executeUpdate();
                 }
-                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM stock_transfer_detail WHERE product_id = ?")) {
-                    stmt.setInt(1, id);
-                    stmt.executeUpdate();
-                }
                 try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM order_detail WHERE product_id = ?")) {
                     stmt.setInt(1, id);
                     stmt.executeUpdate();
                 }
-                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM [product] WHERE product_id = ?")) {
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM product WHERE product_id = ?")) {
                     stmt.setInt(1, id);
                     stmt.executeUpdate();
                 }
@@ -174,12 +198,12 @@ public class ProductDAO {
 
     public List<Category> findAllCategories() throws SQLException {
         List<Category> list = new ArrayList<>();
-        String sql = "SELECT category_id, category_name FROM category ORDER BY category_id ASC";
+        String sql = "SELECT category_id AS CategoryID, category_name AS Name FROM category ORDER BY category_id ASC";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                list.add(new Category(rs.getInt("category_id"), rs.getString("category_name")));
+                list.add(new Category(rs.getInt("CategoryID"), rs.getString("Name")));
             }
         }
         return list;
@@ -187,12 +211,12 @@ public class ProductDAO {
 
     public List<Unit> findAllUnits() throws SQLException {
         List<Unit> list = new ArrayList<>();
-        String sql = "SELECT unit_id, unit_name FROM unit ORDER BY unit_id ASC";
+        String sql = "SELECT unit_id AS UnitID, unit_name AS Name FROM unit ORDER BY unit_id ASC";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                list.add(new Unit(rs.getInt("unit_id"), rs.getString("unit_name")));
+                list.add(new Unit(rs.getInt("UnitID"), rs.getString("Name")));
             }
         }
         return list;
@@ -202,10 +226,12 @@ public class ProductDAO {
         Product item = new Product();
         item.setProductID(rs.getInt("ProductID"));
         item.setName(rs.getString("Name"));
+        item.setQuantity(rs.getInt("Quantity"));
         item.setCategoryID(rs.getInt("CategoryID"));
         item.setCategoryName(rs.getString("CategoryName"));
         item.setUnitID(rs.getInt("UnitID"));
         item.setUnitName(rs.getString("UnitName"));
+        
         item.setSellingPrice(rs.getBigDecimal("SellingPrice"));
         item.setStatus(rs.getString("Status"));
         Timestamp ct = rs.getTimestamp("CreatedAt");
@@ -215,3 +241,4 @@ public class ProductDAO {
         return item;
     }
 }
+

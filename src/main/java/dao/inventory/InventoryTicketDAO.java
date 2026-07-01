@@ -11,24 +11,27 @@ public class InventoryTicketDAO {
 
     public List<InventoryTicket> findAllByType(String ticketType, Integer warehouseId) throws SQLException {
         List<InventoryTicket> tickets = new ArrayList<>();
-        String sql = "SELECT t.*, " +
-                     "fw.warehouse_name as from_warehouse_name, " +
-                     "tw.warehouse_name as to_warehouse_name, " +
-                     "e.fullName as created_by_name " +
-                     "FROM inventory_ticket t " +
-                     "LEFT JOIN warehouse fw ON t.from_warehouse_id = fw.warehouse_id " +
-                     "LEFT JOIN warehouse tw ON t.to_warehouse_id = tw.warehouse_id " +
-                     "LEFT JOIN Employee e ON t.created_by = e.EmployeeID " +
-                     "WHERE t.ticket_type = ? ";
-        
+        StringBuilder sql = new StringBuilder(
+            "SELECT t.*, fw.warehouse_name as from_warehouse_name, " +
+            "tw.warehouse_name as to_warehouse_name, e.fullName as created_by_name " +
+            "FROM inventory_ticket t " +
+            "LEFT JOIN warehouse fw ON t.from_warehouse_id = fw.warehouse_id " +
+            "LEFT JOIN warehouse tw ON t.to_warehouse_id = tw.warehouse_id " +
+            "LEFT JOIN Employee e ON t.created_by = e.emp_id " +
+            "WHERE t.ticket_type = ?");
         if (warehouseId != null && warehouseId > 0) {
-            sql += " AND (t.from_warehouse_id = " + warehouseId + " OR t.to_warehouse_id = " + warehouseId + ") ";
+            sql.append(" AND (t.from_warehouse_id = ? OR t.to_warehouse_id = ?)");
         }
-        sql += " ORDER BY t.created_at DESC";
+        sql.append(" ORDER BY t.created_at DESC");
 
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, ticketType);
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            stmt.setString(idx++, ticketType);
+            if (warehouseId != null && warehouseId > 0) {
+                stmt.setInt(idx++, warehouseId);
+                stmt.setInt(idx, warehouseId);
+            }
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     tickets.add(extractTicket(rs));
@@ -40,38 +43,45 @@ public class InventoryTicketDAO {
 
     public List<InventoryTicket> findAllByTypeAndStatus(String ticketType, Integer warehouseId, String status) throws SQLException {
         List<InventoryTicket> tickets = new ArrayList<>();
-        String sql = "SELECT t.*, " +
-                     "fw.warehouse_name as from_warehouse_name, " +
-                     "tw.warehouse_name as to_warehouse_name, " +
-                     "e.fullName as created_by_name " +
-                     "FROM inventory_ticket t " +
-                     "LEFT JOIN warehouse fw ON t.from_warehouse_id = fw.warehouse_id " +
-                     "LEFT JOIN warehouse tw ON t.to_warehouse_id = tw.warehouse_id " +
-                     "LEFT JOIN Employee e ON t.created_by = e.EmployeeID " +
-                     "WHERE t.ticket_type = ? ";
+        StringBuilder sql = new StringBuilder(
+            "SELECT t.*, fw.warehouse_name as from_warehouse_name, " +
+            "tw.warehouse_name as to_warehouse_name, e.fullName as created_by_name " +
+            "FROM inventory_ticket t " +
+            "LEFT JOIN warehouse fw ON t.from_warehouse_id = fw.warehouse_id " +
+            "LEFT JOIN warehouse tw ON t.to_warehouse_id = tw.warehouse_id " +
+            "LEFT JOIN Employee e ON t.created_by = e.emp_id " +
+            "WHERE t.ticket_type = ?");
         
         if (status != null && !status.isEmpty()) {
             if ("COMPLETED_REJECTED".equals(status)) {
-                sql += " AND t.status IN ('COMPLETED', 'REJECTED', 'COMPLETED_WITH_ERROR', 'CANCELLED') ";
+                sql.append(" AND t.status IN ('COMPLETED', 'REJECTED', 'COMPLETED_WITH_ERROR', 'CANCELLED')");
             } else if ("PENDING_IN_TRANSIT".equals(status)) {
                 if ("TRANSFER_CHECK".equals(ticketType)) {
-                    sql += " AND EXISTS (SELECT 1 FROM inventory_ticket parent WHERE parent.ticket_id = TRY_CAST(SUBSTRING(t.ticket_code, 4, 20) AS INT) AND parent.status NOT IN ('COMPLETED', 'REJECTED', 'COMPLETED_WITH_ERROR', 'CANCELLED')) ";
+                    sql.append(" AND EXISTS (SELECT 1 FROM inventory_ticket parent WHERE parent.ticket_id = TRY_CAST(SUBSTRING(t.ticket_code, 4, 20) AS INT) AND parent.status NOT IN ('COMPLETED', 'REJECTED', 'COMPLETED_WITH_ERROR', 'CANCELLED'))");
                 } else {
-                    sql += " AND t.status IN ('PENDING', 'IN_TRANSIT') ";
+                    sql.append(" AND t.status IN ('PENDING', 'IN_TRANSIT')");
                 }
             } else {
-                sql += " AND t.status = '" + status + "' ";
+                sql.append(" AND t.status = ?");
             }
         }
         
         if (warehouseId != null && warehouseId > 0) {
-            sql += " AND (t.from_warehouse_id = " + warehouseId + " OR t.to_warehouse_id = " + warehouseId + ") ";
+            sql.append(" AND (t.from_warehouse_id = ? OR t.to_warehouse_id = ?)");
         }
-        sql += " ORDER BY t.created_at DESC";
+        sql.append(" ORDER BY t.created_at DESC");
 
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, ticketType);
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            stmt.setString(idx++, ticketType);
+            if (status != null && !status.isEmpty() && !"COMPLETED_REJECTED".equals(status) && !"PENDING_IN_TRANSIT".equals(status)) {
+                stmt.setString(idx++, status);
+            }
+            if (warehouseId != null && warehouseId > 0) {
+                stmt.setInt(idx++, warehouseId);
+                stmt.setInt(idx, warehouseId);
+            }
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     tickets.add(extractTicket(rs));
@@ -82,18 +92,23 @@ public class InventoryTicketDAO {
     }
 
     public int getPendingCount(String ticketType, Integer warehouseId) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM inventory_ticket WHERE status = 'PENDING'";
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM inventory_ticket WHERE status = 'PENDING'");
         if (ticketType != null) {
-            sql += " AND ticket_type = '" + ticketType + "'";
+            sql.append(" AND ticket_type = ?");
         }
         if (warehouseId != null && warehouseId > 0) {
-            sql += " AND (from_warehouse_id = " + warehouseId + " OR to_warehouse_id = " + warehouseId + ")";
+            sql.append(" AND (from_warehouse_id = ? OR to_warehouse_id = ?)");
         }
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            if (ticketType != null) stmt.setString(idx++, ticketType);
+            if (warehouseId != null && warehouseId > 0) {
+                stmt.setInt(idx++, warehouseId);
+                stmt.setInt(idx, warehouseId);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
             }
         }
         return 0;
@@ -176,8 +191,8 @@ public class InventoryTicketDAO {
                      "FROM inventory_ticket t " +
                      "LEFT JOIN warehouse fw ON t.from_warehouse_id = fw.warehouse_id " +
                      "LEFT JOIN warehouse tw ON t.to_warehouse_id = tw.warehouse_id " +
-                     "LEFT JOIN Employee e ON t.created_by = e.EmployeeID " +
-                     "WHERE t.ticket_id = ?";
+                      "LEFT JOIN Employee e ON t.created_by = e.emp_id " +
+                      "WHERE t.ticket_id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, ticketId);
@@ -216,7 +231,7 @@ public class InventoryTicketDAO {
     
     public List<InventoryTicketDetail> getTicketDetails(int ticketId) throws SQLException {
         List<InventoryTicketDetail> details = new ArrayList<>();
-        String sql = "SELECT d.*, p.Name as product_name FROM inventory_ticket_detail d JOIN Product p ON d.product_id = p.ProductID WHERE d.ticket_id = ?";
+        String sql = "SELECT d.*, p.product_name FROM inventory_ticket_detail d JOIN product p ON d.product_id = p.product_id WHERE d.ticket_id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, ticketId);
@@ -319,6 +334,10 @@ public class InventoryTicketDAO {
                         }
                     }
                     
+                    if (beforeQty < d.getQuantity()) {
+                        throw new SQLException("Không đủ tồn kho để xuất sản phẩm ID=" + d.getProductId() + " (cần " + d.getQuantity() + ", còn " + beforeQty + ")");
+                    }
+                    
                     try (PreparedStatement s = conn.prepareStatement(updateInventorySql)) {
                         s.setInt(1, d.getQuantity());
                         s.setInt(2, senderWId);
@@ -378,7 +397,7 @@ public class InventoryTicketDAO {
         List<InventoryTicketDetail> details = getTicketDetails(ticketId);
         String getInventorySql = "SELECT quantity_in_stock FROM inventory WHERE warehouse_id = ? AND product_id = ?";
         String updateInventorySql = "UPDATE inventory SET quantity_in_stock = quantity_in_stock + ? WHERE warehouse_id = ? AND product_id = ?";
-        String insertInventorySql = "INSERT INTO inventory (warehouse_id, product_id, quantity_in_stock, min_stock_level, max_stock_level) VALUES (?, ?, ?, 0, 999999)";
+        String insertInventorySql = "INSERT INTO inventory (warehouse_id, product_id, quantity_in_stock, status, updated_at) VALUES (?, ?, ?, 'ACTIVE', GETDATE())";
         String insertTxSql = "INSERT INTO stock_transaction (warehouse_id, product_id, reference_type, reference_id, transaction_type, quantity, before_quantity, after_quantity, note, created_by) VALUES (?, ?, 'TRANSFER', ?, 'IMPORT', ?, ?, ?, ?, ?)";
         String updateTicketSql = "UPDATE inventory_ticket SET is_imported_by_receiver = 1, note = CONCAT(ISNULL(note, ''), ?) ";
         
@@ -609,8 +628,8 @@ public class InventoryTicketDAO {
                      "FROM inventory_ticket t " +
                      "LEFT JOIN warehouse w1 ON t.from_warehouse_id = w1.warehouse_id " +
                      "LEFT JOIN warehouse w2 ON t.to_warehouse_id = w2.warehouse_id " +
-                     "LEFT JOIN Employee e ON t.created_by = e.EmployeeID " +
-                     "WHERE t.ticket_code = ?";
+                      "LEFT JOIN Employee e ON t.created_by = e.emp_id " +
+                      "WHERE t.ticket_code = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, code);

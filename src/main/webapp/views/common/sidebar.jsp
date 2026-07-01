@@ -31,10 +31,10 @@
             </a>
         </c:if>
 
-        <!-- Inventory Dashboard (WarehouseStaff) -->
-        <c:if test="${roleName == 'WarehouseStaff'}">
-            <a href="${pageContext.request.contextPath}/inventory/dashboard" 
-               class="sidebar-menu-item ${originalUri.contains('/inventory/') ? 'active' : ''}">
+        <!-- Inventory Dashboard -->
+        <c:if test="${roleName == 'WarehouseStaff' || roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+            <a href="${pageContext.request.contextPath}/inventory" 
+               class="sidebar-menu-item ${originalUri.contains('/inventory') ? 'active' : ''}">
                 <span class="material-icons">inventory_2</span>
                 <span>Kho hàng</span>
             </a>
@@ -61,12 +61,41 @@
             </div>
         </c:if>
 
-        <!-- Create Order (SalesStaff, StoreManager, Admin, Owner) -->
+        <!-- POS Sales Menu -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'SalesStaff'}">
-            <a href="${pageContext.request.contextPath}/orders/create" 
-               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/orders/') ? 'active' : ''}">
+            <c:set var="isSalesActive" value="${originalUri.contains('/sales') || originalUri.contains('/orders') || originalUri.contains('/shift') || originalUri.contains('/revenue')}" />
+            <a href="#salesCollapse" data-bs-toggle="collapse" role="button" aria-expanded="${isSalesActive ? 'true' : 'false'}" aria-controls="salesCollapse"
+               class="sidebar-menu-item ${isSalesActive ? 'active' : ''} d-flex align-items-center">
                 <span class="material-icons">point_of_sale</span>
-                <span>Bán hàng (POS)</span>
+                <span>Giao dịch</span>
+                <span class="material-icons ms-auto transition-icon" style="font-size: 1.2rem;">expand_more</span>
+            </a>
+            <div class="collapse ${isSalesActive ? 'show' : ''}" id="salesCollapse">
+                <div class="sidebar-submenu">
+                    <a href="${pageContext.request.contextPath}/sales" class="sidebar-submenu-item ${originalUri.contains('/sales') ? 'active' : ''}">
+                        Bán hàng (POS)
+                    </a>
+                    <a href="${pageContext.request.contextPath}/orders" class="sidebar-submenu-item ${originalUri.contains('/orders') ? 'active' : ''}">
+                        Lịch sử đơn hàng
+                    </a>
+                    <a href="${pageContext.request.contextPath}/shift" class="sidebar-submenu-item ${originalUri.contains('/shift') ? 'active' : ''}">
+                        Ca làm việc
+                    </a>
+                    <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+                        <a href="${pageContext.request.contextPath}/revenue" class="sidebar-submenu-item ${originalUri.contains('/revenue') ? 'active' : ''}">
+                            Báo cáo doanh thu
+                        </a>
+                    </c:if>
+                </div>
+            </div>
+        </c:if>
+
+        <!-- Cashbook (Sổ Quỹ) (Admin, Owner, StoreManager) -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+            <a href="${pageContext.request.contextPath}/cashbook" 
+               class="sidebar-menu-item ${originalUri.contains('/cashbook') ? 'active' : ''}">
+                <span class="material-icons">account_balance_wallet</span>
+                <span>Sổ Quỹ</span>
             </a>
         </c:if>
 
@@ -76,6 +105,15 @@
                class="sidebar-menu-item ${pageContext.request.requestURI.contains('/suppliers') ? 'active' : ''}">
                 <span class="material-icons">handshake</span>
                 <span>Đối tác</span>
+            </a>
+        </c:if>
+
+        <!-- Branch / Store Management (Admin, Owner) -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
+            <a href="${pageContext.request.contextPath}/branch" 
+               class="sidebar-menu-item ${originalUri.contains('/branch') ? 'active' : ''}">
+                <span class="material-icons">storefront</span>
+                <span>Chi nhánh</span>
             </a>
         </c:if>
 
@@ -104,11 +142,24 @@
 
         <!-- Reports -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
-            <a href="${pageContext.request.contextPath}/reports/export" 
-               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/reports/') ? 'active' : ''}">
+            <c:set var="isReportsActive" value="${originalUri.contains('/reports/') || originalUri.contains('/reports/employee-sales')}" />
+            <a href="#reportsCollapse" data-bs-toggle="collapse" role="button" aria-expanded="${isReportsActive ? 'true' : 'false'}" aria-controls="reportsCollapse"
+               class="sidebar-menu-item ${isReportsActive ? 'active' : ''} d-flex align-items-center">
                 <span class="material-icons">bar_chart</span>
                 <span>Báo cáo</span>
+                <span class="material-icons ms-auto transition-icon" style="font-size: 1.2rem;">expand_more</span>
             </a>
+            <div class="collapse ${isReportsActive ? 'show' : ''}" id="reportsCollapse">
+                <div class="sidebar-submenu">
+                    <a href="${pageContext.request.contextPath}/reports/export" class="sidebar-submenu-item ${originalUri.contains('/reports/export') ? 'active' : ''}">
+                        Xuất báo cáo
+                    </a>
+                    <a href="${pageContext.request.contextPath}/reports/employee-sales" class="sidebar-submenu-item ${originalUri.contains('/reports/employee-sales') ? 'active' : ''}">
+                        <span class="material-icons" style="font-size: 1rem; margin-right: 4px;">bar_chart</span>
+                        Doanh thu nhân viên
+                    </a>
+                </div>
+            </div>
         </c:if>
 
         <!-- Configuration -->

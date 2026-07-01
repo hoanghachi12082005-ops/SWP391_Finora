@@ -557,4 +557,54 @@
     box-shadow:0 2px 10px rgba(0,0,0,.08);
 }
 
+/* -- Branch header/topbar styles (migrated from common.css) -- */
+.topbar {
+    height:70px;
+    background:white;
+    border-radius:12px;
+    padding:0 25px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+}
+
+.search-box input{
+    width:350px;
+    padding:10px 15px;
+    border:1px solid #ddd;
+    border-radius:8px;
+}
+
+.topbar-right{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.topbar-right button{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    background:#f3f4f6;
+}
+
+.user-info{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.avatar{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    background:#8b0000;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+}
+ 
  

@@ -72,8 +72,8 @@ public class CustomerPointDAO {
 
         if (cusPointId == -1) {
             // Chưa có bản ghi → tạo mới
-            String insertSql = "INSERT INTO customer_point (cus_id, current_points, lifetime_points, level_name, updated_at) "
-                             + "VALUES (?, ?, ?, N'Bronze', GETDATE())";
+            String insertSql = "INSERT INTO customer_point (cus_id, current_points, lifetime_points, updated_at) "
+                             + "VALUES (?, ?, ?, GETDATE())";
             try (PreparedStatement ps = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setInt(1, cusId);
                 ps.setInt(2, pointsEarned);
