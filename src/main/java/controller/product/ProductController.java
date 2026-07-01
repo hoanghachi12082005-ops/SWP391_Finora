@@ -2,7 +2,9 @@ package controller.product;
 
 import controller.common.BaseController;
 import dao.product.ProductDAO;
+import dao.system.ActivityLogDAO;
 import model.Product;
+import model.Employee;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -103,7 +105,7 @@ public class ProductController extends BaseController {
                 Product p = buildProductFromRequest(request);
                 Part imagePart = safeGetPart(request, "imageFile");
 
-                // Nếu có upload ảnh thì verify trước khi insert
+                // verify image
                 String verifyError = (imagePart != null && imagePart.getSize() > 0)
                         ? verifyImage(imagePart) : null;
                 if (verifyError != null) {
@@ -114,11 +116,18 @@ public class ProductController extends BaseController {
                 }
 
                 int newId = productDAO.insert(p);
+                // audit log
+                try {
+                    ActivityLogDAO logDao = new ActivityLogDAO();
+                    Employee currentUser = (Employee) session.getAttribute("currentUser");
+                    Integer empId = currentUser != null ? currentUser.getEmployeeId() : null;
+                    logDao.insertLog(empId, "INSERT", "product", newId, null, p.toString());
+                } catch (Exception e) { /* ignore log failures */ }
+
                 if (newId > 0 && imagePart != null && imagePart.getSize() > 0) {
-                    try {
-                        saveProductImage(request, imagePart, newId);
-                    } catch (IOException ioe) {
-                        session.setAttribute("message", "Tạo sản phẩm thành công nhưng lưu ảnh thất bại: " + ioe.getMessage());
+                    try { saveProductImage(request, imagePart, newId); }
+                    catch (IOException ioe) {
+                        session.setAttribute("message", "Thêm thành công, nhưng lưu ảnh thất bại: " + ioe.getMessage());
                         session.setAttribute("messageType", "warning");
                         response.sendRedirect(buildRedirectUrl(request));
                         return;
@@ -142,14 +151,20 @@ public class ProductController extends BaseController {
                 }
 
                 productDAO.update(p);
+                // audit log
+                try {
+                    ActivityLogDAO logDao = new ActivityLogDAO();
+                    Employee currentUser = (Employee) session.getAttribute("currentUser");
+                    Integer empId = currentUser != null ? currentUser.getEmployeeId() : null;
+                    logDao.insertLog(empId, "UPDATE", "product", productID, null, p.toString());
+                } catch (Exception e) { /* ignore */ }
 
                 if (imagePart != null && imagePart.getSize() > 0) {
                     try {
-                        // xoá ảnh cũ rồi lưu ảnh mới
                         deleteProductImage(request, productID);
                         saveProductImage(request, imagePart, productID);
                     } catch (IOException ioe) {
-                        session.setAttribute("message", "Cập nhật sản phẩm thành công nhưng lưu ảnh thất bại: " + ioe.getMessage());
+                        session.setAttribute("message", "Cập nhật thành công, nhưng lưu ảnh thất bại: " + ioe.getMessage());
                         session.setAttribute("messageType", "warning");
                         response.sendRedirect(buildRedirectUrl(request));
                         return;
@@ -161,15 +176,23 @@ public class ProductController extends BaseController {
                 try {
                     int id = Integer.parseInt(request.getParameter("id"));
                     productDAO.delete(id);
+                    // audit log
+                    try {
+                        ActivityLogDAO logDao = new ActivityLogDAO();
+                        Employee currentUser = (Employee) session.getAttribute("currentUser");
+                        Integer empId = currentUser != null ? currentUser.getEmployeeId() : null;
+                        logDao.insertLog(empId, "DELETE", "product", id, null, null);
+                    } catch (Exception e) { /* ignore */ }
                     deleteProductImage(request, id);
                     session.setAttribute("message", "Xóa sản phẩm thành công!");
                     session.setAttribute("messageType", "success");
                 } catch (Exception e) {
                     e.printStackTrace();
-                    session.setAttribute("message", "Không thể xóa sản phẩm này do đang có dữ liệu liên quan (giao dịch, đơn hàng...)!");
+                    session.setAttribute("message", "Không thể xóa sản phẩm này do đang có dữ liệu liên quan!");
                     session.setAttribute("messageType", "danger");
                 }
             }
+
 
             response.sendRedirect(buildRedirectUrl(request));
         } catch (Exception e) {

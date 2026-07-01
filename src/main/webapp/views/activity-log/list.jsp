@@ -126,6 +126,8 @@
                 String desc      = log.getDescription();
                 String iconColor = log.getIconColor();
                 String iconName  = log.getIconName();
+                String branch    = log.getBranchLabel();
+                String empIdStr  = log.getEmpId() > 0 ? "NV #" + log.getEmpId() : "";
                 String badge;
                 switch (iconColor) {
                     case "green":  badge = "bg-success"; break;
@@ -143,7 +145,11 @@
 %>
                                 <tr>
                                     <td><small class="text-muted"><%= when %></small></td>
-                                    <td><strong><%= actor %></strong></td>
+                                    <td>
+                                        <strong><%= actor %></strong>
+                                        <% if (!empIdStr.isEmpty()) { %><br><small class="text-muted"><%= empIdStr %></small><% } %>
+                                    </td>
+                                    <td><span class="badge bg-secondary"><%= branch %></span></td>
                                     <td>
                                         <span class="d-inline-flex align-items-center gap-2">
                                             <span class="badge <%= badge %> d-inline-flex align-items-center gap-1">
@@ -157,7 +163,7 @@
                                     <td><code><%= (code != null && !code.isEmpty()) ? code : "—" %></code></td>
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-primary"
-                                                onclick="viewLog('<%= when %>','<%= safeActor %>','<%= safeAction %>','<%= safeEntity %>','<%= safeCode %>','<%= safeDesc %>','<%= safeOld %>','<%= safeNew %>')">
+                                                onclick="viewLog('<%= when %>','<%= safeActor %>','<%= safeAction %>','<%= safeEntity %>','<%= safeCode %>','<%= safeDesc %>','<%= safeOld %>','<%= safeNew %>','<%= branch %>','<%= empIdStr %>')">
                                             Xem nội dung
                                         </button>
                                     </td>
@@ -232,10 +238,12 @@
 </div>
 
 <script>
-function viewLog(time, actor, action, entity, code, summary, oldData, newData) {
+function viewLog(time, actor, action, entity, code, summary, oldData, newData, branch, empId) {
     document.getElementById('vSummary').innerText = summary;
     document.getElementById('vTime').innerText = time;
     document.getElementById('vActor').innerText = actor;
+    document.getElementById('vEmpId').innerText = empId || '—';
+    document.getElementById('vBranch').innerText = branch || '—';
     document.getElementById('vAction').innerText = action;
     document.getElementById('vEntity').innerText = entity;
     document.getElementById('vCode').innerText = code || '—';
