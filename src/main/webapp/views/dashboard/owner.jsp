@@ -1,35 +1,110 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<% request.setAttribute("pageTitle", "Dashboard Owner Overview"); %>
-<jsp:include page="/views/common/header.jsp" />
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<% request.setAttribute("pageTitle", "Dashboard"); %>
+<jsp:include page="/views/common/header.jsp">
+    <jsp:param name="title" value="Dashboard"/>
+</jsp:include>
 <jsp:include page="/views/common/sidebar.jsp" />
-<main class="main">
-    <div class="card">
-        <h1>Dashboard Owner Overview</h1>
-        <p>Đây là trang JSP mẫu cho chức năng <strong>Dashboard Owner Overview</strong>.</p>
-        <% if (request.getAttribute("message") != null) { %>
-            <div class="message"><%= request.getAttribute("message") %></div>
-        <% } %>
-    </div>
 
-    <div class="card">
-        <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">
-            <input style="max-width:320px" placeholder="Search keyword...">
-            <button class="btn">Search</button>
-            <button class="btn secondary">Filter</button>
+<div class="page-content">
+    <section class="page-header">
+        <div>
+            <h2>Owner Dashboard</h2>
+            <p>Overview of your retail business performance</p>
         </div>
-        <table>
-            <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Action</th></tr></thead>
-            <tbody>
-                <tr><td>1</td><td>Sample data</td><td>ACTIVE</td><td><a href="#">View</a> | <a href="#">Edit</a></td></tr>
-            </tbody>
-        </table>
-    </div>
+    </section>
 
-    <div class="grid">
-        <div class="card"><h3>Total Sales</h3><p>0 VND</p></div>
-        <div class="card"><h3>Total Orders</h3><p>0</p></div>
-        <div class="card"><h3>Total Customers</h3><p>0</p></div>
-    </div>
+    <c:if test="${not empty message}">
+        <div class="alert alert-success">${message}</div>
+    </c:if>
 
-</main>
+    <section class="overview-grid">
+        <div class="overview-card">
+            <div class="overview-icon overview-icon-revenue">
+                <span class="material-symbols-outlined">payments</span>
+            </div>
+            <div class="overview-info">
+                <p>Total Sales</p>
+                <h3><fmt:formatNumber value="${totalSales}" type="number" groupingUsed="true"/> ₫</h3>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-icon overview-icon-orders">
+                <span class="material-symbols-outlined">receipt_long</span>
+            </div>
+            <div class="overview-info">
+                <p>Total Orders</p>
+                <h3>${totalOrders}</h3>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-icon overview-icon-users">
+                <span class="material-symbols-outlined">groups</span>
+            </div>
+            <div class="overview-info">
+                <p>Total Customers</p>
+                <h3>${totalCustomers}</h3>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-icon overview-icon-warning">
+                <span class="material-symbols-outlined">inventory</span>
+            </div>
+            <div class="overview-info">
+                <p>Low Stock Items</p>
+                <h3>${lowStockCount}</h3>
+            </div>
+        </div>
+    </section>
+
+    <section class="table-card">
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th class="text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <c:choose>
+                        <c:when test="${not empty sampleData}">
+                            <c:forEach var="item" items="${sampleData}">
+                                <tr>
+                                    <td>${item.id}</td>
+                                    <td>${item.name}</td>
+                                    <td><span class="status-badge active">ACTIVE</span></td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <a href="#" title="View"><span class="material-symbols-outlined">visibility</span></a>
+                                            <a href="#" title="Edit"><span class="material-symbols-outlined">edit</span></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                        </c:when>
+                        <c:otherwise>
+                            <tr>
+                                <td colspan="4" class="empty-row">
+                                    <div class="empty-state">
+                                        <span class="material-symbols-outlined">inbox</span>
+                                        <h4>No data available</h4>
+                                        <p>Data will appear once you start using the system.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </c:otherwise>
+                    </c:choose>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
 <jsp:include page="/views/common/footer.jsp" />

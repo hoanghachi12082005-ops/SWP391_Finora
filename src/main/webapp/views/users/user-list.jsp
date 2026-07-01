@@ -60,7 +60,7 @@
                     <section class="overview-grid">
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-users">
                                 <span class="material-symbols-outlined">groups</span>
                             </div>
                             <div class="overview-info">
@@ -70,7 +70,7 @@
                         </div>
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-users">
                                 <span class="material-symbols-outlined">verified_user</span>
                             </div>
                             <div class="overview-info">
@@ -80,7 +80,7 @@
                         </div>
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-orders">
                                 <span class="material-symbols-outlined">receipt_long</span>
                             </div>
                             <div class="overview-info">
@@ -90,7 +90,7 @@
                         </div>
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-revenue">
                                 <span class="material-symbols-outlined">payments</span>
                             </div>
                             <div class="overview-info">
@@ -102,7 +102,7 @@
                         </div>
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-warning">
                                 <span class="material-symbols-outlined">emoji_events</span>
                             </div>
                             <div class="overview-info">
@@ -224,7 +224,11 @@
                                 <c:when test="${empty users}">
                                     <tr>
                                         <td colspan="${showBranch ? 6 : 5}" class="empty-row">
-                                            No user accounts found.
+                                            <div class="empty-state">
+                                                <span class="material-symbols-outlined">person_search</span>
+                                                <h4>No accounts found</h4>
+                                                <p>No user accounts match your search criteria.</p>
+                                            </div>
                                         </td>
                                     </tr>
                                 </c:when>

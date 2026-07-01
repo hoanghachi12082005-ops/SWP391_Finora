@@ -64,7 +64,7 @@
                     <section class="overview-grid">
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-users">
                                 <span class="material-symbols-outlined">groups</span>
                             </div>
                             <div class="overview-info">
@@ -74,7 +74,7 @@
                         </div>
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-users">
                                 <span class="material-symbols-outlined">person_add</span>
                             </div>
                             <div class="overview-info">
@@ -84,7 +84,7 @@
                         </div>
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-revenue">
                                 <span class="material-symbols-outlined">payments</span>
                             </div>
                             <div class="overview-info">
@@ -96,7 +96,7 @@
                         </div>
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-warning">
                                 <span class="material-symbols-outlined">emoji_events</span>
                             </div>
                             <div class="overview-info">
@@ -109,7 +109,7 @@
                         </div>
 
                         <div class="overview-card">
-                            <div class="overview-icon">
+                            <div class="overview-icon overview-icon-orders">
                                 <span class="material-symbols-outlined">bar_chart</span>
                             </div>
                             <div class="overview-info">
@@ -196,7 +196,11 @@
                                 <c:when test="${empty customers}">
                                     <tr>
                                         <td colspan="4" class="empty-row">
-                                            No customers found.
+                                            <div class="empty-state">
+                                                <span class="material-symbols-outlined">group_off</span>
+                                                <h4>No customers found</h4>
+                                                <p>No customers match your search criteria.</p>
+                                            </div>
                                         </td>
                                     </tr>
                                 </c:when>

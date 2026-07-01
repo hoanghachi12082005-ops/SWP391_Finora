@@ -255,12 +255,8 @@ FORM
 
 .custom-input:focus{
     border-color:var(--primary) !important;
-
-
     box-shadow:
         0 0 0 4px rgba(147,0,11,.08) !important;
-
-
 }
 
 .form-select{
@@ -297,13 +293,9 @@ BUTTON
 .btn-finora:hover{
     background:var(--primary-hover);
     border-color:var(--primary-hover);
-
-
     color:#fff;
-
-    transform:translateY(-1px);
-
-
+    transform:translateY(-2px);
+    box-shadow:0 6px 16px rgba(147,0,11,.2);
 }
 
 .btn-finora:focus{

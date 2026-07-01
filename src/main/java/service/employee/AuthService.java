@@ -70,8 +70,8 @@ public class AuthService {
         employee.setPasswordHash(PasswordUtil.hash(password));
 
         employee.setRoleID(roleId);
-        // Nếu là Owner/Admin đăng ký tự do, branchId truyền vào có thể xử lý null
-        employee.setBranchID(branchId > 0 ? branchId : null);
+        // ponytail: V3 Employee.branch_id is NOT NULL — default to branch 1 if not provided
+        employee.setBranchID(branchId > 0 ? branchId : 1);
         employee.setStatus("active");
         
         

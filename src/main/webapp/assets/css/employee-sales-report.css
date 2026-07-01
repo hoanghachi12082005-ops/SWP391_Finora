@@ -65,14 +65,19 @@
 }
 
 .report-page .overview-card {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    padding: 18px;
+    background: var(--surface-container-lowest);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-lg);
+    padding: 20px;
     display: flex;
     align-items: center;
-    gap: 14px;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    gap: 16px;
+    box-shadow: var(--shadow-sm);
+    transition: transform .2s, box-shadow .2s;
+}
+.report-page .overview-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .report-page .overview-icon {
@@ -90,6 +95,10 @@
 .report-page .overview-icon .material-symbols-outlined {
     font-size: 26px;
 }
+.report-page .overview-icon-revenue{background:#dcfce7;color:#166534}
+.report-page .overview-icon-orders{background:#dbeafe;color:#1e40af}
+.report-page .overview-icon-users{background:#f3e8ff;color:#6b21a8}
+.report-page .overview-icon-warning{background:#fef3c7;color:#92400e}
 
 .report-page .overview-info p {
     margin: 0;

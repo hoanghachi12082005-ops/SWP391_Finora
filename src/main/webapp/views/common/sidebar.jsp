@@ -73,7 +73,7 @@
             </a>
         </c:if>
 
-        <c:if test="${isAdmin || isOwner || isManager}">
+        <c:if test="${isOwner || isManager}">
             <a class="menu-item ${fn:contains(pageContext.request.requestURI, '/customers') ? 'active' : ''}" href="${pageContext.request.contextPath}/customers">
                 <span class="material-symbols-outlined">group</span>
                 <span>Customers</span>

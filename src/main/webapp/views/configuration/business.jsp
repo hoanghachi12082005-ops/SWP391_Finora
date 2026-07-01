@@ -1,25 +1,38 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<% request.setAttribute("pageTitle", "Business Configuration"); %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%
+    request.setAttribute("pageTitle", "Business Configuration");
+    String successMessage = (String) session.getAttribute("successMessage");
+    String errorMessage = (String) session.getAttribute("errorMessage");
+    session.removeAttribute("successMessage");
+    session.removeAttribute("errorMessage");
+    if (successMessage != null) request.setAttribute("_success", successMessage);
+    if (errorMessage != null) request.setAttribute("_error", errorMessage);
+%>
 <jsp:include page="/views/common/header.jsp" />
 <jsp:include page="/views/common/sidebar.jsp" />
 <main class="main">
+    <c:if test="${not empty _success}"><div class="alert alert-success">${_success}</div></c:if>
+    <c:if test="${not empty _error}"><div class="alert alert-error">${_error}</div></c:if>
+
     <div class="card">
         <h1>Business Configuration</h1>
-        <p>Đây là trang JSP mẫu cho chức năng <strong>Business Configuration</strong>.</p>
-        <% if (request.getAttribute("message") != null) { %>
-            <div class="message"><%= request.getAttribute("message") %></div>
-        <% } %>
+        <p>Configure system-wide business settings</p>
     </div>
 
     <div class="card">
-        <form method="post">
-            <div class="form-row"><label>Name / Title</label><input name="name" placeholder="Nhập tên hoặc tiêu đề"></div>
-            <div class="form-row"><label>Status</label><select name="status"><option>ACTIVE</option><option>INACTIVE</option><option>PENDING</option></select></div>
-            <div class="form-row"><label>Description</label><textarea name="description" rows="4"></textarea></div>
+        <h3>Loyalty Point Settings</h3>
+        <form method="post" action="${pageContext.request.contextPath}/configuration/business">
+            <div class="form-row">
+                <label>Amount per Point (VND)</label>
+                <input type="number" name="amountPerPoint"
+                       value="<fmt:formatNumber value="${loyaltySetting.amountPerPoint}" type="number" groupingUsed="false"/>"
+                       min="1" step="1000" required/>
+                <small>How much spending (in VND) earns 1 loyalty point. Default: 100,000 VND</small>
+            </div>
             <button class="btn" type="submit">Save</button>
-            <a class="btn secondary" href="javascript:history.back()">Back</a>
         </form>
     </div>
-
 </main>
 <jsp:include page="/views/common/footer.jsp" />

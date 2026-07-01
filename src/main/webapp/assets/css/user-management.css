@@ -101,13 +101,18 @@
 
 .user-page .overview-card {
     background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    padding: 18px;
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-lg);
+    padding: 20px;
     display: flex;
     align-items: center;
-    gap: 14px;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    gap: 16px;
+    box-shadow: var(--shadow-sm);
+    transition: transform .2s, box-shadow .2s;
+}
+.user-page .overview-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .user-page .overview-icon {
@@ -125,6 +130,10 @@
 .user-page .overview-icon .material-symbols-outlined {
     font-size: 26px;
 }
+.user-page .overview-icon-revenue{background:#dcfce7;color:#166534}
+.user-page .overview-icon-orders{background:#dbeafe;color:#1e40af}
+.user-page .overview-icon-users{background:#f3e8ff;color:#6b21a8}
+.user-page .overview-icon-warning{background:#fef3c7;color:#92400e}
 
 .user-page .overview-info p {
     margin: 0;
@@ -307,11 +316,27 @@
     color: #166534;
     border: 1px solid #bbf7d0;
 }
+.user-page .status-badge.active::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #166534;
+    display: inline-block;
+}
 
 .user-page .status-badge.locked {
     background: var(--error-container);
     color: var(--on-error-container);
     border: 1px solid rgba(186, 26, 26, 0.18);
+}
+.user-page .status-badge.locked::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--error);
+    display: inline-block;
 }
 
 .user-page .table-actions {
@@ -349,7 +374,28 @@
 .user-page .empty-row {
     text-align: center;
     color: var(--secondary);
-    padding: 42px !important;
+    padding: 60px 18px !important;
+}
+.user-page .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--secondary);
+}
+.user-page .empty-state .material-symbols-outlined {
+    font-size: 56px;
+    color: var(--primary);
+    opacity: .4;
+    margin-bottom: 8px;
+}
+.user-page .empty-state h4 {
+    margin: 8px 0 4px;
+    color: var(--on-surface);
+    font-size: 18px;
+}
+.user-page .empty-state p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--secondary);
 }
 
 /* =========================

@@ -25,34 +25,39 @@ public class EmployeeSalesReportDAO {
             EMPLOYEE_FROM +
             "WHERE (r.role_name IS NULL OR r.role_name NOT IN ('Admin', 'Owner')) ";
 
+    private static final String REPORT_SELECT =
+            "SELECT " +
+            "    e.emp_id, " +
+            "    e.fullName, " +
+            "    b.branch_name AS BranchName, " +
+            "    r.role_name AS RoleName, " +
+            "    COUNT(o.order_id) AS TotalOrders, " +
+            "    COALESCE(SUM(o.total_amount), 0) AS TotalRevenue, " +
+            "    COALESCE(AVG(o.total_amount), 0) AS AverageOrderValue, " +
+            "    COUNT(CASE WHEN o.status = 'COMPLETED' THEN 1 END) AS CompletedOrders, " +
+            "    COUNT(CASE WHEN o.status = 'CANCELLED' THEN 1 END) AS CancelledOrders ";
+
+    private static final String REPORT_FROM =
+            EMPLOYEE_FROM +
+            "LEFT JOIN [Order] o ON e.emp_id = o.emp_id " +
+            "    AND (? IS NULL OR CAST(o.created_at AS DATE) >= ?) " +
+            "    AND (? IS NULL OR CAST(o.created_at AS DATE) <= ?) " +
+            "WHERE (r.role_name IS NULL OR r.role_name NOT IN ('Admin', 'Owner')) " +
+            "AND (? IS NULL OR e.fullName LIKE ? OR e.email LIKE ? OR e.phone LIKE ?) " +
+            "AND (? IS NULL OR e.branch_id = ?) " +
+            "GROUP BY e.emp_id, e.fullName, b.branch_name, r.role_name";
+
     public List<EmployeeSalesSummary> getEmployeeSalesReport(String keyword,
-                                                             String branchFilter,
-                                                             LocalDate dateFrom,
-                                                             LocalDate dateTo,
-                                                             int page,
-                                                             int pageSize) {
+                                                              String branchFilter,
+                                                              LocalDate dateFrom,
+                                                              LocalDate dateTo,
+                                                              int page,
+                                                              int pageSize) {
         List<EmployeeSalesSummary> list = new ArrayList<>();
 
-        String sql =
-                "SELECT * FROM ( " +
-                "    SELECT " +
-                "        e.emp_id, " +
-                "        e.fullName, " +
-                "        b.branch_name AS BranchName, " +
-                "        r.role_name AS RoleName, " +
-                "        COUNT(o.order_id) AS TotalOrders, " +
-                "        COALESCE(SUM(o.total_amount), 0) AS TotalRevenue, " +
-                "        COALESCE(AVG(o.total_amount), 0) AS AverageOrderValue " +
-                EMPLOYEE_FROM +
-                "    LEFT JOIN [Order] o ON e.emp_id = o.emp_id " +
-                "        AND (? IS NULL OR CAST(o.created_at AS DATE) >= ?) " +
-                "        AND (? IS NULL OR CAST(o.created_at AS DATE) <= ?) " +
-                "    WHERE (r.role_name IS NULL OR r.role_name NOT IN ('Admin', 'Owner')) " +
-                "    AND (? IS NULL OR e.fullName LIKE ? OR e.email LIKE ? OR e.phone LIKE ?) " +
-                "    AND (? IS NULL OR e.branch_id = ?) " +
-                "    GROUP BY e.emp_id, e.fullName, b.branch_name, r.role_name " +
-                ") AS SalesReport " +
-                "ORDER BY TotalRevenue DESC, fullName ASC " +
+        String sql = REPORT_SELECT +
+                REPORT_FROM +
+                " ORDER BY TotalRevenue DESC, fullName ASC " +
                 "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         try (Connection connection = DBContext.getConnection();
@@ -73,6 +78,30 @@ public class EmployeeSalesReportDAO {
             e.printStackTrace();
         }
 
+        return list;
+    }
+
+    public List<EmployeeSalesSummary> getAllEmployeeSalesReport(String keyword,
+                                                                 String branchFilter,
+                                                                 LocalDate dateFrom,
+                                                                 LocalDate dateTo) {
+        List<EmployeeSalesSummary> list = new ArrayList<>();
+        String sql = REPORT_SELECT + REPORT_FROM +
+                " ORDER BY TotalRevenue DESC, fullName ASC";
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            bindDateRange(ps, 1, dateFrom, dateTo);
+            bindSearchAndBranch(ps, 5, keyword, branchFilter);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapSummary(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return list;
     }
 
@@ -175,11 +204,11 @@ public class EmployeeSalesReportDAO {
     }
 
     private void loadTopEmployee(EmployeeOverview overview,
-                                 String keyword,
-                                 String branchFilter,
-                                 LocalDate dateFrom,
-                                 LocalDate dateTo) {
-        String sql =
+                                  String keyword,
+                                  String branchFilter,
+                                  LocalDate dateFrom,
+                                  LocalDate dateTo) {
+        String topSql =
                 "SELECT TOP 1 " +
                 "    e.fullName, " +
                 "    COALESCE(SUM(o.total_amount), 0) AS EmployeeRevenue " +
@@ -194,7 +223,7 @@ public class EmployeeSalesReportDAO {
                 "ORDER BY EmployeeRevenue DESC, e.fullName ASC";
 
         try (Connection connection = DBContext.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)) {
+             PreparedStatement ps = connection.prepareStatement(topSql)) {
             bindDateRange(ps, 1, dateFrom, dateTo);
             bindSearchAndBranch(ps, 5, keyword, branchFilter);
 
@@ -203,6 +232,37 @@ public class EmployeeSalesReportDAO {
                     overview.setTopEmployeeName(rs.getString("FullName"));
                     BigDecimal revenue = rs.getBigDecimal("EmployeeRevenue");
                     overview.setTopEmployeeRevenue(revenue == null ? BigDecimal.ZERO : revenue);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        String lowestSql =
+                "SELECT TOP 1 " +
+                "    e.fullName, " +
+                "    COALESCE(SUM(o.total_amount), 0) AS EmployeeRevenue " +
+                EMPLOYEE_FROM +
+                "LEFT JOIN [Order] o ON e.emp_id = o.emp_id " +
+                "    AND (? IS NULL OR CAST(o.created_at AS DATE) >= ?) " +
+                "    AND (? IS NULL OR CAST(o.created_at AS DATE) <= ?) " +
+                "WHERE (r.role_name IS NULL OR r.role_name NOT IN ('Admin', 'Owner')) " +
+                "AND (? IS NULL OR e.fullName LIKE ? OR e.email LIKE ? OR e.phone LIKE ?) " +
+                "AND (? IS NULL OR e.branch_id = ?) " +
+                "GROUP BY e.emp_id, e.fullName " +
+                "HAVING COALESCE(SUM(o.total_amount), 0) > 0 " +
+                "ORDER BY EmployeeRevenue ASC, e.fullName ASC";
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(lowestSql)) {
+            bindDateRange(ps, 1, dateFrom, dateTo);
+            bindSearchAndBranch(ps, 5, keyword, branchFilter);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    overview.setLowestEmployeeName(rs.getString("FullName"));
+                    BigDecimal revenue = rs.getBigDecimal("EmployeeRevenue");
+                    overview.setLowestEmployeeRevenue(revenue == null ? BigDecimal.ZERO : revenue);
                 }
             }
         } catch (SQLException e) {
@@ -265,6 +325,9 @@ public class EmployeeSalesReportDAO {
 
         BigDecimal average = rs.getBigDecimal("AverageOrderValue");
         summary.setAverageOrderValue(average == null ? BigDecimal.ZERO : average);
+
+        summary.setCompletedOrders(rs.getInt("CompletedOrders"));
+        summary.setCancelledOrders(rs.getInt("CancelledOrders"));
 
         return summary;
     }

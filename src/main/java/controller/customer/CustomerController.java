@@ -547,12 +547,9 @@ public class CustomerController extends HttpServlet {
             }
         }
 
-        // Only Admin, Owner, Store Manager can access dashboard flows
+        // Only Owner, Store Manager can access customer management UI
         if (!"Owner".equalsIgnoreCase(roleName)
-                && !"Admin".equalsIgnoreCase(roleName)
-                && !"StoreManager".equalsIgnoreCase(roleName)
-                && !"Store Manager".equalsIgnoreCase(roleName)
-                && !"Manager".equalsIgnoreCase(roleName)) {
+                && !"StoreManager".equalsIgnoreCase(roleName)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
             return false;
         }

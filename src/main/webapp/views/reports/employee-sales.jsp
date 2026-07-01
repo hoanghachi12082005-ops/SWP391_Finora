@@ -35,7 +35,7 @@
             <c:if test="${not empty reportOverview}">
                 <section class="overview-grid">
                     <div class="overview-card">
-                        <div class="overview-icon">
+                        <div class="overview-icon overview-icon-users">
                             <span class="material-symbols-outlined">groups</span>
                         </div>
                         <div class="overview-info">
@@ -45,7 +45,7 @@
                     </div>
 
                     <div class="overview-card">
-                        <div class="overview-icon">
+                        <div class="overview-icon overview-icon-users">
                             <span class="material-symbols-outlined">verified_user</span>
                         </div>
                         <div class="overview-info">
@@ -55,7 +55,7 @@
                     </div>
 
                     <div class="overview-card">
-                        <div class="overview-icon">
+                        <div class="overview-icon overview-icon-orders">
                             <span class="material-symbols-outlined">receipt_long</span>
                         </div>
                         <div class="overview-info">
@@ -65,7 +65,7 @@
                     </div>
 
                     <div class="overview-card">
-                        <div class="overview-icon">
+                        <div class="overview-icon overview-icon-revenue">
                             <span class="material-symbols-outlined">payments</span>
                         </div>
                         <div class="overview-info">
@@ -77,7 +77,7 @@
                     </div>
 
                     <div class="overview-card">
-                        <div class="overview-icon">
+                        <div class="overview-icon overview-icon-warning">
                             <span class="material-symbols-outlined">emoji_events</span>
                         </div>
                         <div class="overview-info">
@@ -142,6 +142,10 @@
 
                     <div class="filter-actions">
                         <button class="btn-primary" type="submit">Apply</button>
+                        <a class="btn-primary" href="${pageContext.request.contextPath}/reports/employee-sales-preview?keyword=${empty keyword ? '' : keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}&dateFrom=${empty dateFrom ? '' : dateFrom}&dateTo=${empty dateTo ? '' : dateTo}"
+                           style="background:#0f3460;text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+                            <span class="material-symbols-outlined" style="font-size:18px">visibility</span> Preview
+                        </a>
                         <a class="btn-secondary" href="${baseUrl}">Reset</a>
                     </div>
                 </div>
@@ -165,7 +169,13 @@
                         <c:choose>
                             <c:when test="${empty salesReports}">
                                 <tr>
-                                    <td colspan="7" class="empty-row">No employee sales data found.</td>
+                                        <td colspan="7" class="empty-row">
+                                            <div class="empty-state">
+                                                <span class="material-symbols-outlined">bar_chart</span>
+                                                <h4>No sales data found</h4>
+                                                <p>Try adjusting your filters or date range.</p>
+                                            </div>
+                                        </td>
                                 </tr>
                             </c:when>
                             <c:otherwise>

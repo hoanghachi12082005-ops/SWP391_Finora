@@ -1,6 +1,6 @@
 .role-page {
     min-height: 100vh;
-    background: #f8f9fa;
+    background: var(--background, #f8f9fa);
     padding: 60px 0;
 }
 
@@ -15,25 +15,27 @@
 }
 
 .welcome-section p {
-    color: #6c757d;
+    color: var(--secondary, #6c757d);
     font-size: 16px;
 }
 
 .module-card {
     width: 100%;
     height: 100%;
-    border: none;
-    border-radius: 18px;
-    background: #fff;
+    border: 1px solid var(--outline-variant, #e5e7eb);
+    border-radius: var(--radius-xl, 20px);
+    background: var(--surface-container-lowest, #fff);
     padding: 35px 25px;
     text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    box-shadow: var(--shadow-sm, 0 4px 12px rgba(0,0,0,.08));
     transition: all .3s ease;
+    cursor: pointer;
 }
 
 .module-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 28px rgba(0,0,0,.15);
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg, 0 24px 80px rgba(0,0,0,.15));
+    border-color: var(--primary-fixed, #ffdadb);
 }
 
 .module-card h5 {
@@ -43,7 +45,7 @@
 }
 
 .module-card p {
-    color: #6c757d;
+    color: var(--secondary, #6c757d);
     font-size: 14px;
     margin-bottom: 0;
 }

@@ -65,7 +65,7 @@
 
             // Admin, Owner và Store Manager được vào /manager/**
             if (path.startsWith("/manager/")) {
-                if (!role.equals("admin") && !role.equals("owner") && !role.equals("store manager")) {
+                if (!role.equals("admin") && !role.equals("owner") && !role.equals("storemanager") && !role.equals("store manager")) {
                     resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied. Manager only.");
                     return;
                 }
@@ -76,18 +76,7 @@
                     || path.equals("/activity-log")
                     || path.equals("/notifications")
                     || path.startsWith("/configuration/")) {
-                if (!role.equals("admin") && !role.equals("owner") && !role.equals("store manager")) {
-                    resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
-                    return;
-                }
-            }
-
-            // Admin, Owner, Store Manager, Warehouse Staff được vào /management/**
-            if (path.startsWith("/management/")) {
-                if (!role.equals("admin")
-                        && !role.equals("owner")
-                        && !role.equals("store manager")
-                        && !role.equals("warehouse staff")) {
+                if (!role.equals("admin") && !role.equals("owner") && !role.equals("storemanager") && !role.equals("store manager")) {
                     resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
                     return;
                 }
@@ -97,7 +86,9 @@
             if (path.startsWith("/pos/")) {
                 if (!role.equals("admin")
                         && !role.equals("owner")
+                        && !role.equals("storemanager")
                         && !role.equals("store manager")
+                        && !role.equals("salesstaff")
                         && !role.equals("sales staff")) {
                     resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
                     return;
@@ -108,8 +99,32 @@
             if (path.startsWith("/warehouse/")) {
                 if (!role.equals("admin")
                         && !role.equals("owner")
+                        && !role.equals("storemanager")
                         && !role.equals("store manager")
+                        && !role.equals("warehousestaff")
                         && !role.equals("warehouse staff")) {
+                    resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
+                    return;
+                }
+            }
+
+            // Owner, Store Manager được vào /customers (Sales Staff chỉ dùng API → controller check)
+            if (path.startsWith("/customers")) {
+                if (!role.equals("owner")
+                        && !role.equals("storemanager")
+                        && !role.equals("store manager")
+                        && !role.equals("admin")) {
+                    resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
+                    return;
+                }
+            }
+
+            // Owner, Store Manager, Admin được vào /reports/ (fine-grained per report at controller level)
+            if (path.startsWith("/reports/")) {
+                if (!role.equals("admin")
+                        && !role.equals("owner")
+                        && !role.equals("storemanager")
+                        && !role.equals("store manager")) {
                     resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
                     return;
                 }

@@ -9,57 +9,33 @@ public class EmployeeOverview {
     private BigDecimal totalRevenue;
     private String topEmployeeName;
     private BigDecimal topEmployeeRevenue;
+    private String lowestEmployeeName;
+    private BigDecimal lowestEmployeeRevenue;
 
     public EmployeeOverview() {
         totalRevenue = BigDecimal.ZERO;
         topEmployeeRevenue = BigDecimal.ZERO;
+        lowestEmployeeRevenue = BigDecimal.ZERO;
     }
 
-    public int getTotalEmployees() {
-        return totalEmployees;
-    }
-
-    public void setTotalEmployees(int totalEmployees) {
-        this.totalEmployees = totalEmployees;
-    }
-
-    public int getActiveEmployees() {
-        return activeEmployees;
-    }
-
-    public void setActiveEmployees(int activeEmployees) {
-        this.activeEmployees = activeEmployees;
-    }
-
-    public int getTotalOrders() {
-        return totalOrders;
-    }
-
-    public void setTotalOrders(int totalOrders) {
-        this.totalOrders = totalOrders;
-    }
-
-    public BigDecimal getTotalRevenue() {
-        return totalRevenue;
-    }
-
-    public void setTotalRevenue(BigDecimal totalRevenue) {
-        this.totalRevenue = totalRevenue;
-    }
-
-    public String getTopEmployeeName() {
-        return topEmployeeName;
-    }
-
-    public void setTopEmployeeName(String topEmployeeName) {
-        this.topEmployeeName = topEmployeeName;
-    }
-
-    public BigDecimal getTopEmployeeRevenue() {
-        return topEmployeeRevenue;
-    }
-
-    public void setTopEmployeeRevenue(BigDecimal topEmployeeRevenue) {
-        this.topEmployeeRevenue = topEmployeeRevenue;
+    public int getTotalEmployees() { return totalEmployees; }
+    public void setTotalEmployees(int totalEmployees) { this.totalEmployees = totalEmployees; }
+    public int getActiveEmployees() { return activeEmployees; }
+    public void setActiveEmployees(int activeEmployees) { this.activeEmployees = activeEmployees; }
+    public int getTotalOrders() { return totalOrders; }
+    public void setTotalOrders(int totalOrders) { this.totalOrders = totalOrders; }
+    public BigDecimal getTotalRevenue() { return totalRevenue; }
+    public void setTotalRevenue(BigDecimal totalRevenue) { this.totalRevenue = totalRevenue; }
+    public String getTopEmployeeName() { return topEmployeeName; }
+    public void setTopEmployeeName(String topEmployeeName) { this.topEmployeeName = topEmployeeName; }
+    public BigDecimal getTopEmployeeRevenue() { return topEmployeeRevenue; }
+    public void setTopEmployeeRevenue(BigDecimal topEmployeeRevenue) { this.topEmployeeRevenue = topEmployeeRevenue; }
+    public String getLowestEmployeeName() { return lowestEmployeeName; }
+    public void setLowestEmployeeName(String lowestEmployeeName) { this.lowestEmployeeName = lowestEmployeeName; }
+    public BigDecimal getLowestEmployeeRevenue() { return lowestEmployeeRevenue; }
+    public void setLowestEmployeeRevenue(BigDecimal lowestEmployeeRevenue) { this.lowestEmployeeRevenue = lowestEmployeeRevenue; }
+    public BigDecimal getAvgRevenuePerEmployee() {
+        if (totalEmployees == 0) return BigDecimal.ZERO;
+        return totalRevenue.divide(BigDecimal.valueOf(totalEmployees), 2, java.math.RoundingMode.HALF_UP);
     }
 }
