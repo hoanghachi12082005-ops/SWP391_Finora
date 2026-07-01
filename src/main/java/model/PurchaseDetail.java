@@ -1,19 +1,34 @@
 package model;
 
-    public class PurchaseDetail extends BaseModel {
-    private int purchaseOrderId;
-private int productId;
-private int quantity;
-private double unitPrice;
+import java.math.BigDecimal;
 
-        public PurchaseDetail() {}
+public class PurchaseDetail {
+    private int orderDetailId;
+    private int orderId;
+    private int productId;
+    private int quantity;
+    private BigDecimal unitPrice;
+    private BigDecimal totalPrice;
 
-    public int getPurchaseOrderId() { return purchaseOrderId; }
-public void setPurchaseOrderId(int purchaseOrderId) { this.purchaseOrderId = purchaseOrderId; }
-public int getProductId() { return productId; }
-public void setProductId(int productId) { this.productId = productId; }
-public int getQuantity() { return quantity; }
-public void setQuantity(int quantity) { this.quantity = quantity; }
-public double getUnitPrice() { return unitPrice; }
-public void setUnitPrice(double unitPrice) { this.unitPrice = unitPrice; }
+    private String productName;
+
+    public PurchaseDetail() {
+        this.unitPrice = BigDecimal.ZERO;
+        this.totalPrice = BigDecimal.ZERO;
     }
+
+    public int getOrderDetailId() { return orderDetailId; }
+    public void setOrderDetailId(int orderDetailId) { this.orderDetailId = orderDetailId; }
+    public int getOrderId() { return orderId; }
+    public void setOrderId(int orderId) { this.orderId = orderId; }
+    public int getProductId() { return productId; }
+    public void setProductId(int productId) { this.productId = productId; }
+    public int getQuantity() { return quantity; }
+    public void setQuantity(int quantity) { this.quantity = quantity; }
+    public BigDecimal getUnitPrice() { return unitPrice; }
+    public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
+    public BigDecimal getTotalPrice() { return totalPrice; }
+    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
+    public String getProductName() { return productName; }
+    public void setProductName(String productName) { this.productName = productName; }
+}

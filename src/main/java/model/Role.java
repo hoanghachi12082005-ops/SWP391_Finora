@@ -1,18 +1,24 @@
 package model;
 
+import java.sql.Timestamp;
+
 public class Role {
 
     private int roleID;
-    private String name;
-    private String description;
+    private String roleName;
+    private String discription;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
 
     public Role() {
     }
 
-    public Role(int roleID, String name, String description) {
+    public Role(int roleID, String roleName, String discription, Timestamp createdAt, Timestamp updatedAt) {
         this.roleID = roleID;
-        this.name = name;
-        this.description = description;
+        this.roleName = roleName;
+        this.discription = discription;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public int getRoleID() {
@@ -23,7 +29,39 @@ public class Role {
         this.roleID = roleID;
     }
 
-    // Alias để nếu code gọi getRoleId/setRoleId vẫn chạy được
+    public String getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
+
+    public String getDiscription() {
+        return discription;
+    }
+
+    public void setDiscription(String discription) {
+        this.discription = discription;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    // Backward compat aliases
     public int getRoleId() {
         return roleID;
     }
@@ -33,18 +71,18 @@ public class Role {
     }
 
     public String getName() {
-        return name;
+        return roleName;
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.roleName = name;
     }
 
     public String getDescription() {
-        return description;
+        return discription;
     }
 
     public void setDescription(String description) {
-        this.description = description;
+        this.discription = description;
     }
 }

@@ -207,7 +207,7 @@
                 </div>
                 <div class="col-md-6">
                     <img src="https://via.placeholder.com/600x400/93000b/ffffff?text=KiotRetail+Dashboard"
-                         alt="Dashboard" class="img-fluid rounded shadow">
+                         alt="Tổng quan" class="img-fluid rounded shadow">
                 </div>
             </div>
         </div>
