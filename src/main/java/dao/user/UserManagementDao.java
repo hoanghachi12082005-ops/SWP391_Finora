@@ -568,6 +568,64 @@ public class UserManagementDao {
     }
 
     // =====================================================
+    // ADMIN: any role (no Owner/Admin exclusion)
+    // =====================================================
+
+    public boolean updateEmployeeByAdmin(Employee employee) {
+        String sql =
+                "UPDATE Employee SET role_id = ?, branch_id = ?, fullName = ?, email = ?, phone = ?, status = ? " +
+                "WHERE emp_id = ?";
+        try (Connection connection = DBContext.getConnection()) {
+            connection.setAutoCommit(false);
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setInt(1, employee.getRoleID());
+                setNullableInt(ps, 2, employee.getBranchID());
+                ps.setString(3, employee.getFullName());
+                ps.setString(4, employee.getEmail());
+                ps.setString(5, employee.getPhone());
+                ps.setString(6, employee.getStatus());
+                ps.setInt(7, employee.getEmployeeID());
+                int updated = ps.executeUpdate();
+                if (updated == 0) { connection.rollback(); return false; }
+                connection.commit();
+                return true;
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean updateEmployeeStatusByAdmin(int employeeId, String status) {
+        String sql = "UPDATE Employee SET status = ? WHERE emp_id = ?";
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, employeeId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean resetPasswordByAdmin(int employeeId, String hashedPassword) {
+        String sql = "UPDATE Employee SET passwordHash = ? WHERE emp_id = ?";
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, hashedPassword);
+            ps.setInt(2, employeeId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // =====================================================
     // ALL EMPLOYEES (Admin view - includes all roles)
     // =====================================================
 
@@ -666,7 +724,9 @@ public class UserManagementDao {
                 "    COUNT(o.order_id) AS TotalOrders, " +
                 "    COALESCE(SUM(o.total_amount), 0) AS TotalRevenue " +
                 "FROM Employee e " +
-                "LEFT JOIN [Order] o ON e.emp_id = o.emp_id";
+                "LEFT JOIN [Order] o ON e.emp_id = o.emp_id " +
+                "LEFT JOIN [Role] r ON e.role_id = r.role_id " +
+                "WHERE (r.role_name IS NULL OR r.role_name NOT IN ('Admin'))";
 
         try (Connection connection = DBContext.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql);
@@ -695,6 +755,25 @@ public class UserManagementDao {
                 "WHERE role_name IN ('StoreManager', 'SalesStaff', 'WarehouseStaff') " +
                 "ORDER BY role_id";
 
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Role role = new Role();
+                role.setRoleID(rs.getInt("role_id"));
+                role.setName(rs.getString("role_name"));
+                role.setDescription(rs.getString("discription"));
+                list.add(role);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<Role> getAllRoles() {
+        List<Role> list = new ArrayList<>();
+        String sql = "SELECT role_id, role_name, discription FROM [Role] ORDER BY role_id";
         try (Connection connection = DBContext.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
