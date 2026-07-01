@@ -6,9 +6,12 @@ public class EmployeeSalesSummary {
     private int employeeId;
     private String fullName;
     private String branchName;
+    private String roleName;
     private int totalOrders;
     private BigDecimal totalRevenue;
     private BigDecimal averageOrderValue;
+    private int completedOrders;
+    private int cancelledOrders;
 
     public EmployeeSalesSummary() {
         this.totalRevenue = BigDecimal.ZERO;
@@ -38,6 +41,15 @@ public class EmployeeSalesSummary {
     public void setBranchName(String branchName) {
         this.branchName = branchName;
     }
+
+    public String getRoleName() { return roleName; }
+    public void setRoleName(String roleName) { this.roleName = roleName; }
+
+    public int getCompletedOrders() { return completedOrders; }
+    public void setCompletedOrders(int completedOrders) { this.completedOrders = completedOrders; }
+
+    public int getCancelledOrders() { return cancelledOrders; }
+    public void setCancelledOrders(int cancelledOrders) { this.cancelledOrders = cancelledOrders; }
 
     public int getTotalOrders() {
         return totalOrders;

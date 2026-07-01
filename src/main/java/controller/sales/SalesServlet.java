@@ -133,7 +133,7 @@ public class SalesServlet extends HttpServlet {
             c.setBod(req.getParameter("bod"));
             c.setGender(req.getParameter("gender"));
             c.setAddress(req.getParameter("address"));
-            c.setCusType(model.Customer.CustomerType.REGULAR);
+            c.setCusType("REGULAR");
 
             int cusId = customerDao.insert(c);
             if (cusId > 0) {

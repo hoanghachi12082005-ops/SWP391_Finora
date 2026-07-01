@@ -84,16 +84,10 @@ public class CustomerDAO {
         c.setEmail(rs.getString("email"));
         c.setPhone(rs.getString("phone"));
         c.setPasswordHash(null);
-        c.setStatus(Customer.CustomerStatus.ACTIVE);
+        c.setStatus("active");
         
         String typeStr = rs.getString("cus_type");
-        if (typeStr != null) {
-            try {
-                c.setCusType(Customer.CustomerType.valueOf(typeStr.toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                c.setCusType(Customer.CustomerType.REGULAR);
-            }
-        }
+        c.setCusType(typeStr != null ? typeStr : "REGULAR");
         
         c.setTotalSpent(rs.getDouble("total_spent"));
         c.setCreatedAt(rs.getString("created_at"));
@@ -131,7 +125,7 @@ public class CustomerDAO {
             ps.setString(4, c.getAddress());
             ps.setString(5, c.getEmail());
             ps.setString(6, c.getPhone());
-            ps.setString(7, c.getCusType() != null ? c.getCusType().name() : "REGULAR");
+            ps.setString(7, c.getCusType() != null ? c.getCusType() : "REGULAR");
             if (ps.executeUpdate() > 0) {
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (keys.next()) return keys.getInt(1);

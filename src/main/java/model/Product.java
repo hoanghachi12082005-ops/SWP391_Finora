@@ -24,9 +24,6 @@ public class Product {
     // Transient: URL đến ảnh sản phẩm (không lưu trong DB, đọc từ /asset/product/)
     private String imageUrl;
 
-    // Transient compatibility: quantity in stock for POS
-    private int quantity;
-
     public Product() {
     }
 
@@ -102,8 +99,6 @@ public class Product {
     public String getProductCodebar() { return productCodebar; }
     public void setProductCodebar(String productCodebar) { this.productCodebar = productCodebar; }
 
-    public int getQuantity() { return quantity; }
-    public void setQuantity(int quantity) { this.quantity = quantity; }
     public int getQuantityInStock() { return quantity; }
     public void setQuantityInStock(int quantityInStock) { this.quantity = quantityInStock; }
 

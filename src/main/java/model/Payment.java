@@ -2,7 +2,10 @@ package model;
 
 import java.sql.Timestamp;
 
-public class Payment extends BaseModel {
+public class Payment {
+    private int id;
+    private String name;
+    private String status;
     private Integer orderId;
     private double amount;
     private String method; // CASH, BANKING, CARD, etc.
@@ -15,6 +18,15 @@ public class Payment extends BaseModel {
     private Timestamp paymentDate;
 
     public Payment() {}
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public Integer getOrderId() {
         return orderId;

@@ -761,15 +761,15 @@ public class CustomerDAO {
         customer.setCustomerId(rs.getInt("cus_id"));
         customer.setFullName(rs.getString("full_name"));
         customer.setGender(rs.getString("gender"));
-        LocalDate bod = rs.getObject("bod", LocalDate.class);
+        java.time.LocalDate bod = rs.getObject("bod", java.time.LocalDate.class);
         customer.setDateOfBirth(bod);
         customer.setAddress(rs.getString("address"));
         customer.setEmail(rs.getString("email"));
         customer.setPhone(rs.getString("phone"));
         customer.setTotalSpent(rs.getBigDecimal("total_spent"));
         customer.setStatus(rs.getString("status"));
-        customer.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
-        customer.setUpdatedAt(rs.getObject("updated_at", LocalDateTime.class));
+        customer.setCreatedAt(rs.getObject("created_at", java.time.LocalDateTime.class));
+        customer.setUpdatedAt(rs.getObject("updated_at", java.time.LocalDateTime.class));
         customer.setLoyaltyPoint(rs.getInt("current_points"));
         customer.setLifetimePoints(rs.getInt("lifetime_points"));
 

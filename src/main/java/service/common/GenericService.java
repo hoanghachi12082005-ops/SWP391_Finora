@@ -1,18 +1,17 @@
 package service.common;
 
-import dao.common.ICrudDAO;
 import java.util.List;
 
 public class GenericService<T> {
-    protected ICrudDAO<T> dao;
+    protected Object dao;
 
-    public GenericService(ICrudDAO<T> dao) {
+    public GenericService(Object dao) {
         this.dao = dao;
     }
 
-    public List<T> findAll() { return dao.findAll(); }
-    public T findById(int id) { return dao.findById(id); }
-    public boolean insert(T item) { return dao.insert(item); }
-    public boolean update(T item) { return dao.update(item); }
-    public boolean delete(int id) { return dao.delete(id); }
+    public List<T> findAll() { throw new UnsupportedOperationException("Not implemented"); }
+    public T findById(int id) { throw new UnsupportedOperationException("Not implemented"); }
+    public boolean insert(T item) { throw new UnsupportedOperationException("Not implemented"); }
+    public boolean update(T item) { throw new UnsupportedOperationException("Not implemented"); }
+    public boolean delete(int id) { throw new UnsupportedOperationException("Not implemented"); }
 }

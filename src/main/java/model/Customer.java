@@ -1,132 +1,95 @@
 package model;
 
-/**
- * Model đại diện cho Khách hàng trong hệ thống Finora.
- * Khớp hoàn toàn với sơ đồ ERD.
- *
- * @author Finora Team
- */
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 public class Customer {
 
-    /**
-     * Phân loại khách hàng dựa trên tổng chi tiêu.
-     */
-    public enum CustomerType {
-        REGULAR("Thường"),
-        SILVER("Bạc"),
-        GOLD("Vàng"),
-        VIP("VIP");
-
-        private final String displayName;
-        CustomerType(String displayName) { this.displayName = displayName; }
-        public String getDisplayName() { return displayName; }
-    }
-
-    /**
-     * Trạng thái tài khoản khách hàng.
-     */
-    public enum CustomerStatus {
-        ACTIVE("Hoạt động"),
-        INACTIVE("Ngừng hoạt động"),
-        BLOCKED("Đã khóa");
-
-        private final String displayName;
-        CustomerStatus(String displayName) { this.displayName = displayName; }
-        public String getDisplayName() { return displayName; }
-    }
-
-    private int            cusId;
-    private String         fullName;
-    private String         gender;          // "Nam" / "Nữ" / "Khác"
-    private String         bod;             // Date of Birth (yyyy-MM-dd)
-    private String         address;
-    private String         email;
-    private String         phone;
-    private String         passwordHash;    // Mật khẩu đã hash (tùy chọn)
-    private CustomerType   cusType;
-    private CustomerStatus status;
-    private double         totalSpent;      // Tổng tiền đã chi tiêu
-    private String         createdAt;       // yyyy-MM-dd HH:mm:ss
-    private String         updatedAt;       // yyyy-MM-dd HH:mm:ss
-
-    // ── Constructors ─────────────────────────────────────────
+    private int customerId;
+    private String fullName;
+    private String gender;
+    private LocalDate dateOfBirth;
+    private String address;
+    private String email;
+    private String phone;
+    private String passwordHash;
+    private String cusType;
+    private String status;
+    private BigDecimal totalSpent;
+    private int loyaltyPoint;
+    private int lifetimePoints;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public Customer() {}
 
-    /** Constructor đầy đủ dùng khi map từ DB */
-    public Customer(int cusId, String fullName, String gender, String bod,
-                    String address, String email, String phone, String passwordHash,
-                    CustomerType cusType, CustomerStatus status,
-                    double totalSpent, String createdAt, String updatedAt) {
-        this.cusId        = cusId;
-        this.fullName     = fullName;
-        this.gender       = gender;
-        this.bod          = bod;
-        this.address      = address;
-        this.email        = email;
-        this.phone        = phone;
-        this.passwordHash = passwordHash;
-        this.cusType      = cusType;
-        this.status       = status;
-        this.totalSpent   = totalSpent;
-        this.createdAt    = createdAt;
-        this.updatedAt    = updatedAt;
-    }
+    public int getCustomerId() { return customerId; }
+    public void setCustomerId(int customerId) { this.customerId = customerId; }
 
-    // ── Getters & Setters ─────────────────────────────────────
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public int getCusId()                { return cusId; }
-    public void setCusId(int cusId)      { this.cusId = cusId; }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
 
-    public String getFullName()                  { return fullName; }
-    public void setFullName(String fullName)     { this.fullName = fullName; }
+    public LocalDate getDateOfBirth() { return dateOfBirth; }
+    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
 
-    public String getGender()                    { return gender; }
-    public void setGender(String gender)         { this.gender = gender; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 
-    public String getBod()                       { return bod; }
-    public void setBod(String bod)               { this.bod = bod; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public String getAddress()                   { return address; }
-    public void setAddress(String address)       { this.address = address; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 
-    public String getEmail()                     { return email; }
-    public void setEmail(String email)           { this.email = email; }
-
-    public String getPhone()                     { return phone; }
-    public void setPhone(String phone)           { this.phone = phone; }
-
-    public String getPasswordHash()              { return passwordHash; }
+    public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
 
-    public CustomerType getCusType()             { return cusType; }
-    public void setCusType(CustomerType cusType) { this.cusType = cusType; }
+    public String getCusType() { return cusType; }
+    public void setCusType(String cusType) { this.cusType = cusType; }
 
-    public CustomerStatus getStatus()            { return status; }
-    public void setStatus(CustomerStatus status) { this.status = status; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public double getTotalSpent()                { return totalSpent; }
-    public void setTotalSpent(double totalSpent) { this.totalSpent = totalSpent; }
+    public BigDecimal getTotalSpent() { return totalSpent; }
+    public void setTotalSpent(BigDecimal totalSpent) { this.totalSpent = totalSpent; }
 
-    public String getCreatedAt()                 { return createdAt; }
-    public void setCreatedAt(String createdAt)   { this.createdAt = createdAt; }
+    public int getLoyaltyPoint() { return loyaltyPoint; }
+    public void setLoyaltyPoint(int loyaltyPoint) { this.loyaltyPoint = loyaltyPoint; }
 
-    public String getUpdatedAt()                 { return updatedAt; }
-    public void setUpdatedAt(String updatedAt)   { this.updatedAt = updatedAt; }
+    public int getLifetimePoints() { return lifetimePoints; }
+    public void setLifetimePoints(int lifetimePoints) { this.lifetimePoints = lifetimePoints; }
 
-    // ── Backward Compatibility Aliases ────────────────────────
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public int getCusID() { return getCusId(); }
-    public void setCusID(int cusID) { setCusId(cusID); }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public String getBoD() { return getBod(); }
-    public void setBoD(String BoD) { setBod(BoD); }
+    // Backward compatibility aliases for sales DAO
 
-    public String getCreatedDate() { return getCreatedAt(); }
-    public void setCreatedDate(String createdDate) { setCreatedAt(createdDate); }
+    public int getCusId() { return customerId; }
+    public void setCusId(int cusId) { this.customerId = cusId; }
+
+    public String getBod() { return dateOfBirth != null ? dateOfBirth.toString() : null; }
+    public void setBod(String bod) { this.dateOfBirth = bod != null && !bod.isBlank() ? LocalDate.parse(bod) : null; }
+
+    public double getTotalSpentAsDouble() { return totalSpent != null ? totalSpent.doubleValue() : 0.0; }
+    public void setTotalSpent(double totalSpent) { this.totalSpent = BigDecimal.valueOf(totalSpent); }
+
+    public String getCreatedAtAsString() { return createdAt != null ? createdAt.toString() : null; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt != null && !createdAt.isBlank() ? LocalDateTime.parse(createdAt.replace(" ", "T")) : null; }
+
+    public String getUpdatedAtAsString() { return updatedAt != null ? updatedAt.toString() : null; }
+    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt != null && !updatedAt.isBlank() ? LocalDateTime.parse(updatedAt.replace(" ", "T")) : null; }
+
+    public void setStatus(Enum<?> status) { this.status = status != null ? status.name().toLowerCase() : null; }
 
     @Override
     public String toString() {
-        return "Customer{cusId=" + cusId + ", fullName='" + fullName + "', cusType=" + cusType + "}";
+        return "Customer{customerId=" + customerId + ", fullName='" + fullName + "'}";
     }
 }

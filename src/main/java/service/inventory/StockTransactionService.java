@@ -9,8 +9,20 @@ import java.util.List;
 public class StockTransactionService {
     private final StockTransactionDAO dao = new StockTransactionDAO();
 
-    public List<StockTransaction> findByWarehouseId(int warehouseId) { return dao.findByWarehouseId(warehouseId); }
+    public List<StockTransaction> findByReference(String referenceType, int referenceId) throws SQLException {
+        return dao.findByReference(referenceType, referenceId);
+    }
     public void insert(int warehouseId, int productId, String refType, Integer refId, String txType, int quantity, int beforeQty, int afterQty, Integer createdBy, Connection conn) throws SQLException {
-        dao.insert(warehouseId, productId, refType, refId, txType, quantity, beforeQty, afterQty, createdBy, conn);
+        StockTransaction tx = new StockTransaction();
+        tx.setWarehouseId(warehouseId);
+        tx.setProductId(productId);
+        tx.setReferenceType(refType);
+        tx.setReferenceId(refId);
+        tx.setTransactionType(txType);
+        tx.setQuantity(quantity);
+        tx.setBeforeQuantity(beforeQty);
+        tx.setAfterQuantity(afterQty);
+        tx.setCreatedBy(createdBy);
+        dao.insert(tx);
     }
 }
