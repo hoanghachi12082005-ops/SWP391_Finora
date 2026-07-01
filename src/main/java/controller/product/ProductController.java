@@ -29,7 +29,7 @@ import java.util.List;
 
 @WebServlet(name = "ProductController", urlPatterns = {"/products"})
 @MultipartConfig(
-        fileSizeThreshold = 1024 * 1024,
+        fileSizeThreshold = 3 * 1024 * 1024,
         maxFileSize = 5 * 1024 * 1024,
         maxRequestSize = 10 * 1024 * 1024
 )
