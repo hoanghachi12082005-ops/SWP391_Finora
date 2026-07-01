@@ -150,13 +150,20 @@ public class ProductController extends BaseController {
                     return;
                 }
 
+                // Lấy dữ liệu cũ trước khi update để ghi audit log
+                String oldData = null;
+                try {
+                    Product oldProduct = productDAO.findById(productID);
+                    if (oldProduct != null) oldData = oldProduct.toString();
+                } catch (Exception ignored) {}
+
                 productDAO.update(p);
                 // audit log
                 try {
                     ActivityLogDAO logDao = new ActivityLogDAO();
                     Employee currentUser = (Employee) session.getAttribute("currentUser");
                     Integer empId = currentUser != null ? currentUser.getEmployeeId() : null;
-                    logDao.insertLog(empId, "UPDATE", "product", productID, null, p.toString());
+                    logDao.insertLog(empId, "UPDATE", "product", productID, oldData, p.toString());
                 } catch (Exception e) { /* ignore */ }
 
                 if (imagePart != null && imagePart.getSize() > 0) {

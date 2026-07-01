@@ -221,13 +221,15 @@
                 <dl class="row mb-0">
                     <dt class="col-sm-3">Thời gian</dt><dd class="col-sm-9" id="vTime"></dd>
                     <dt class="col-sm-3">Nhân viên</dt><dd class="col-sm-9" id="vActor"></dd>
+                    <dt class="col-sm-3">Mã NV</dt><dd class="col-sm-9" id="vEmpId"></dd>
+                    <dt class="col-sm-3">Chi nhánh</dt><dd class="col-sm-9" id="vBranch"></dd>
                     <dt class="col-sm-3">Thao tác</dt><dd class="col-sm-9" id="vAction"></dd>
                     <dt class="col-sm-3">Đối tượng</dt><dd class="col-sm-9" id="vEntity"></dd>
                     <dt class="col-sm-3">Mã đối tượng</dt><dd class="col-sm-9" id="vCode"></dd>
                     <dt class="col-sm-3">Dữ liệu trước</dt>
-                    <dd class="col-sm-9"><pre class="bg-light p-2 rounded small mb-0" id="vOld" style="max-height: 200px; overflow:auto;"></pre></dd>
+                    <dd class="col-sm-9"><div class="bg-light p-2 rounded small mb-0" id="vOld" style="max-height: 250px; overflow:auto;"></div></dd>
                     <dt class="col-sm-3">Dữ liệu sau</dt>
-                    <dd class="col-sm-9"><pre class="bg-light p-2 rounded small mb-0" id="vNew" style="max-height: 200px; overflow:auto;"></pre></dd>
+                    <dd class="col-sm-9"><div class="bg-light p-2 rounded small mb-0" id="vNew" style="max-height: 250px; overflow:auto;"></div></dd>
                 </dl>
             </div>
             <div class="modal-footer">
@@ -238,6 +240,42 @@
 </div>
 
 <script>
+function formatDataTable(raw) {
+    if (!raw || raw === '(trống)') return '<span class="text-muted fst-italic">(trống)</span>';
+    
+    // Parse format: ClassName{key=value, key2='value2', key3=123.00}
+    var match = raw.match(/\w+\{(.+)\}$/);
+    var body = match ? match[1] : raw.trim();
+    
+    // Split by comma, but respect single-quoted strings (quoted values may contain commas)
+    var pairs = [];
+    var current = '';
+    var inQuote = false;
+    for (var i = 0; i < body.length; i++) {
+        var ch = body[i];
+        if (ch === "'") inQuote = !inQuote;
+        if (ch === ',' && !inQuote) { pairs.push(current); current = ''; continue; }
+        current += ch;
+    }
+    if (current.trim()) pairs.push(current);
+    
+    var html = '<table class="table table-sm table-borderless mb-0" style="font-size:13px;">';
+    pairs.forEach(function(p) {
+        var eqIdx = p.indexOf('=');
+        if (eqIdx < 0) return;
+        var key = p.substring(0, eqIdx).trim();
+        var val = p.substring(eqIdx + 1).trim();
+        // Strip surrounding quotes
+        if ((val.startsWith("'") && val.endsWith("'")) || (val.startsWith('"') && val.endsWith('"'))) {
+            val = val.substring(1, val.length - 1);
+        }
+        html += '<tr><td class="text-muted pe-3" style="width:1%;white-space:nowrap;vertical-align:top;">'
+              + key + '</td><td style="vertical-align:top;">' + val + '</td></tr>';
+    });
+    html += '</table>';
+    return html;
+}
+
 function viewLog(time, actor, action, entity, code, summary, oldData, newData, branch, empId) {
     document.getElementById('vSummary').innerText = summary;
     document.getElementById('vTime').innerText = time;
@@ -247,8 +285,8 @@ function viewLog(time, actor, action, entity, code, summary, oldData, newData, b
     document.getElementById('vAction').innerText = action;
     document.getElementById('vEntity').innerText = entity;
     document.getElementById('vCode').innerText = code || '—';
-    document.getElementById('vOld').innerText = oldData || '(trống)';
-    document.getElementById('vNew').innerText = newData || '(trống)';
+    document.getElementById('vOld').innerHTML = formatDataTable(oldData);
+    document.getElementById('vNew').innerHTML = formatDataTable(newData);
     new bootstrap.Modal(document.getElementById('viewModal')).show();
 }
 </script>

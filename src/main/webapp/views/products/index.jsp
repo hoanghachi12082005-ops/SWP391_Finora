@@ -201,6 +201,7 @@
         <form action="<%= ctx %>/products" method="post" id="product-form" enctype="multipart/form-data">
             <input type="hidden" name="action" id="modal-action" value="add">
             <input type="hidden" name="productID" id="modal-id">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="keyword" value="<%= keyword != null ? keyword : "" %>">
             <input type="hidden" name="filterStatus" value="<%= filterStatus != null ? filterStatus : "" %>">
             <input type="hidden" name="filterCategoryID" value="<%= filterCategoryID != null ? filterCategoryID : "" %>">
@@ -262,6 +263,7 @@
 <form id="deleteProductForm" action="<%= ctx %>/products" method="post" style="display:none;">
     <input type="hidden" name="action" value="delete">
     <input type="hidden" name="id" id="delete-id">
+    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
     <input type="hidden" name="page" value="<%= currentPage %>">
     <input type="hidden" name="keyword" value="<%= keyword != null ? keyword : "" %>">
     <input type="hidden" name="filterStatus" value="<%= filterStatus != null ? filterStatus : "" %>">
