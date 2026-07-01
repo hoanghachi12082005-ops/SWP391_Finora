@@ -391,28 +391,16 @@ public class InventoryController extends BaseController {
                     break;
                 }
                 case "saveTransfer": {
-                    try {
-                        java.nio.file.Files.write(java.nio.file.Paths.get("C:\\Users\\letha\\.gemini\\antigravity\\brain\\caedb396-2995-4c01-9fae-3278c8eb5c2b\\debug.txt"), "saveTransfer called\n".getBytes(), java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
-                    } catch(Exception ignored){}
                     String[] productIds = request.getParameterValues("productId[]");
                     String[] partnerWarehouseIds = request.getParameterValues("partnerWarehouseId[]");
                     String[] actionTypes = request.getParameterValues("actionType[]");
                     String[] quantities = request.getParameterValues("quantity[]");
                     
-                    System.out.println("DEBUG: productIds=" + (productIds==null?"null":productIds.length));
-                    try {
-                        java.nio.file.Files.write(java.nio.file.Paths.get("C:\\Users\\letha\\.gemini\\antigravity\\brain\\caedb396-2995-4c01-9fae-3278c8eb5c2b\\debug.txt"), ("productIds=" + (productIds==null?"null":productIds.length) + "\n").getBytes(), java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
-                    } catch(Exception ignored){}
-                    
                     int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     if (currentUser == null) {
-                        try {
-                            java.nio.file.Files.write(java.nio.file.Paths.get("C:\\Users\\letha\\.gemini\\antigravity\\brain\\caedb396-2995-4c01-9fae-3278c8eb5c2b\\debug.txt"), "Mocking currentUser!\n".getBytes(), java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
-                        } catch(Exception ignored){}
-                        currentUser = new Employee();
-                        currentUser.setEmployeeId(1);
-                        currentUser.setRoleName("Admin");
+                        redirect(response, request.getContextPath() + "/login");
+                        return;
                     }
 
                     if (productIds != null && productIds.length > 0) {
@@ -423,8 +411,6 @@ public class InventoryController extends BaseController {
                             int partnerWId = Integer.parseInt(partnerWarehouseIds[i]);
                             String aType = actionTypes[i];
                             int qty = Integer.parseInt(quantities[i]);
-                            
-                            System.out.println("DEBUG: Item i=" + i + ", pId=" + pId + ", partner=" + partnerWId + ", type=" + aType + ", qty=" + qty);
                             
                             model.InventoryTicketDetail detail = new model.InventoryTicketDetail();
                             detail.setProductId(pId);
@@ -451,10 +437,6 @@ public class InventoryController extends BaseController {
                             // Lưu tất cả detail vào phiếu này
                             ticketDAO.createExchangeTicket(requestTicket, allDetails);
                         }
-                    } else {
-                        try {
-                            java.nio.file.Files.write(java.nio.file.Paths.get("C:\\Users\\letha\\.gemini\\antigravity\\brain\\caedb396-2995-4c01-9fae-3278c8eb5c2b\\debug.txt"), "productIds is null or empty!\n".getBytes(), java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
-                        } catch(Exception ignored){}
                     }
 
                     request.getSession().setAttribute("message", "Đã tạo phiếu chuyển kho thành công.");

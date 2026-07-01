@@ -12,7 +12,9 @@
               ? 'Thêm chi nhánh'
               : 'Cập nhật chi nhánh'}
         </title>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/common.css">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/branch.css">
     </head>
 
@@ -363,5 +365,6 @@
                 });
             });
         </script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>

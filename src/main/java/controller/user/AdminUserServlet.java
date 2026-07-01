@@ -107,11 +107,11 @@ public class AdminUserServlet extends HttpServlet {
                 break;
 
             case "lock":
-                updateStatus(request, "locked");
+                updateStatus(request, "INACTIVE");
                 break;
 
             case "unlock":
-                updateStatus(request, "active");
+                updateStatus(request, "ACTIVE");
                 break;
 
             case "resetPassword":

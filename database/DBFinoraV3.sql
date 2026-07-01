@@ -50,12 +50,13 @@ CREATE TABLE Employee (
     address       NVARCHAR(300),
     email         NVARCHAR(150) UNIQUE,
     phone         NVARCHAR(20)  UNIQUE,
-    passwordHash  NVARCHAR(255),
-    image_URL     NVARCHAR(255),
-    status        NVARCHAR(20)  DEFAULT 'ACTIVE'
-                                CHECK (status IN ('ACTIVE','INACTIVE')),
-    created_at    DATETIME      DEFAULT GETDATE(),
-    update_at     DATETIME      DEFAULT GETDATE(),
+    passwordHash      NVARCHAR(255),
+    image_URL         NVARCHAR(255),
+    status            NVARCHAR(20)  DEFAULT 'ACTIVE'
+                                    CHECK (status IN ('ACTIVE','INACTIVE')),
+    failed_login_count INT          NOT NULL DEFAULT 0,
+    created_at        DATETIME      DEFAULT GETDATE(),
+    update_at         DATETIME      DEFAULT GETDATE(),
 
     CONSTRAINT FK_Employee_Branch
         FOREIGN KEY (branch_id) REFERENCES Branch(branch_id),

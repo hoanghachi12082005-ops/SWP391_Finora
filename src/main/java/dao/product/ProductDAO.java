@@ -34,19 +34,14 @@ public class ProductDAO {
             "LEFT JOIN category c ON p.category_id = c.category_id " +
             "LEFT JOIN unit u ON p.unit_id = u.unit_id "
         );
-        if (supplierID != null) {
-            sql.append(" JOIN SupplierProduct sp ON p.product_id = sp.ProductID");
-        }
         sql.append(" WHERE 1=1");
         String cleanedKeyword = null;
         if (keyword != null && !keyword.isBlank()) {
             cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
             sql.append(" AND p.product_name LIKE ?");
         }
-        if (status != null && !status.isBlank())  sql.append(" AND 'active' = ?");
         if (categoryID != null) sql.append(" AND p.category_id = ?");
         if (unitID != null) sql.append(" AND p.unit_id = ?");
-        if (supplierID != null) sql.append(" AND sp.SupplierID = ?");
         sql.append(" ORDER BY p.product_id ASC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
         try (Connection conn = DBContext.getConnection();
@@ -55,10 +50,8 @@ public class ProductDAO {
             if (cleanedKeyword != null && !cleanedKeyword.isBlank()) {
                 stmt.setString(idx++, "%" + cleanedKeyword + "%");
             }
-            if (status != null && !status.isBlank()) stmt.setString(idx++, status);
             if (categoryID != null) stmt.setInt(idx++, categoryID);
             if (unitID != null) stmt.setInt(idx++, unitID);
-            if (supplierID != null) stmt.setInt(idx++, supplierID);
             stmt.setInt(idx++, offset);
             stmt.setInt(idx, limit);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -77,20 +70,14 @@ public class ProductDAO {
     }
 
     public int getTotalCount(String keyword, String status, Integer categoryID, Integer unitID, Integer supplierID) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM product p");
-        if (supplierID != null) {
-            sql.append(" JOIN SupplierProduct sp ON p.product_id = sp.ProductID");
-        }
-        sql.append(" WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM product p WHERE 1=1");
         String cleanedKeyword = null;
         if (keyword != null && !keyword.isBlank()) {
             cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
             sql.append(" AND p.product_name LIKE ?");
         }
-        if (status != null && !status.isBlank())  sql.append(" AND 'active' = ?");
         if (categoryID != null) sql.append(" AND p.category_id = ?");
         if (unitID != null) sql.append(" AND p.unit_id = ?");
-        if (supplierID != null) sql.append(" AND sp.SupplierID = ?");
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
@@ -98,10 +85,8 @@ public class ProductDAO {
             if (cleanedKeyword != null && !cleanedKeyword.isBlank()) {
                 stmt.setString(idx++, "%" + cleanedKeyword + "%");
             }
-            if (status != null && !status.isBlank()) stmt.setString(idx++, status);
             if (categoryID != null) stmt.setInt(idx++, categoryID);
             if (unitID != null) stmt.setInt(idx++, unitID);
-            if (supplierID != null) stmt.setInt(idx++, supplierID);
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : 0;
             }
@@ -164,6 +149,7 @@ public class ProductDAO {
             stmt.setObject(2, product.getCategoryID() > 0 ? product.getCategoryID() : null, java.sql.Types.INTEGER);
             stmt.setObject(3, product.getUnitID() > 0 ? product.getUnitID() : null, java.sql.Types.INTEGER);
             stmt.setBigDecimal(4, product.getSellingPrice());
+            stmt.setInt(5, product.getProductID());
             stmt.executeUpdate();
 
             // Cập nhật số lượng trong kho 1
@@ -186,19 +172,15 @@ public class ProductDAO {
         try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Inventory WHERE ProductID = ?")) {
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM inventory WHERE product_id = ?")) {
                     stmt.setInt(1, id);
                     stmt.executeUpdate();
                 }
-                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM StockTransaction WHERE ProductID = ?")) {
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM stock_transaction WHERE product_id = ?")) {
                     stmt.setInt(1, id);
                     stmt.executeUpdate();
                 }
-                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM inventory_ticket_detail WHERE product_id = ?")) {
-                    stmt.setInt(1, id);
-                    stmt.executeUpdate();
-                }
-                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM OrderDetail WHERE ProductID = ?")) {
+                try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM order_detail WHERE product_id = ?")) {
                     stmt.setInt(1, id);
                     stmt.executeUpdate();
                 }
@@ -250,13 +232,6 @@ public class ProductDAO {
         item.setUnitID(rs.getInt("UnitID"));
         item.setUnitName(rs.getString("UnitName"));
         
-        try {
-            item.setSupplierIDs(rs.getString("SupplierIDs"));
-            item.setImportPrice(rs.getBigDecimal("ImportPrice"));
-        } catch (SQLException e) {
-            // ignore if columns are not selected or don't exist yet
-        }
-
         item.setSellingPrice(rs.getBigDecimal("SellingPrice"));
         item.setStatus(rs.getString("Status"));
         Timestamp ct = rs.getTimestamp("CreatedAt");

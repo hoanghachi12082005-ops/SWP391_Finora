@@ -1,10 +1,10 @@
 package controller.sales;
 
 import dao.sales.OrderDAO;
-import dao.system.AuditLogDAO;
+import dao.sales.InventoryDAO;
+import dao.sales.CustomerPointDAO;
 import model.Order;
 import model.OrderDetail;
-import model.AuditLog;
 import model.Employee;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -14,13 +14,17 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
+import util.database.DBContext;
 
 @WebServlet(urlPatterns = {"/orders", "/orders/detail", "/orders/refund"})
 public class OrdersServlet extends HttpServlet {
 
     private final OrderDAO orderDao = new OrderDAO();
-    private final AuditLogDAO auditLogDao = new AuditLogDAO();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -155,28 +159,106 @@ public class OrdersServlet extends HttpServlet {
             return;
         }
 
-        if (order.getStatus() == Order.OrderStatus.COMPLETED) {
-        } else {
+        if (order.getStatus() != Order.OrderStatus.COMPLETED) {
             out.write("{\"status\":\"error\",\"message\":\"Chỉ có thể hoàn trả đơn hàng đã hoàn thành.\"}");
             return;
         }
 
-        // Update status to CANCELLED
-        boolean success = orderDao.updateStatus(orderId, "CANCELLED");
-        if (success) {
-            // Log to audit_log
-            AuditLog log = new AuditLog();
-            log.setEmpId(emp.getEmpId());
-            log.setActionName("REFUND");
-            log.setTableName("order");
-            log.setRecordId(orderId);
-            log.setOldData("status=COMPLETED");
-            log.setNewData("status=CANCELLED");
-            auditLogDao.insert(log);
+        List<OrderDetail> details = orderDao.getOrderDetailById(orderId);
+        InventoryDAO inventoryDao = new InventoryDAO();
+        CustomerPointDAO pointDao = new CustomerPointDAO();
 
-            out.write("{\"status\":\"success\",\"message\":\"Hoàn trả đơn hàng thành công.\"}");
-        } else {
-            out.write("{\"status\":\"error\",\"message\":\"Không thể cập nhật trạng thái đơn hàng.\"}");
+        Connection conn = null;
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. Hoàn lại tồn kho
+            for (OrderDetail d : details) {
+                int beforeQty = inventoryDao.getStockInTransaction(conn, d.getProductId(), order.getWarehouseId());
+                String restoreSql = "UPDATE inventory SET quantity_in_stock = quantity_in_stock + ?, updated_at = GETDATE() WHERE warehouse_id = ? AND product_id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(restoreSql)) {
+                    ps.setInt(1, d.getQuantity());
+                    ps.setInt(2, order.getWarehouseId());
+                    ps.setInt(3, d.getProductId());
+                    ps.executeUpdate();
+                }
+                String txSql = "INSERT INTO stock_transaction (warehouse_id, product_id, reference_type, reference_id, transaction_type, quantity, before_quantity, after_quantity, note, created_by, created_at) VALUES (?, ?, 'ORDER', ?, 'REFUND', ?, ?, ?, N'Hoàn trả đơn hàng', ?, GETDATE())";
+                try (PreparedStatement ps = conn.prepareStatement(txSql)) {
+                    ps.setInt(1, order.getWarehouseId());
+                    ps.setInt(2, d.getProductId());
+                    ps.setInt(3, orderId);
+                    ps.setInt(4, d.getQuantity());
+                    ps.setInt(5, beforeQty);
+                    ps.setInt(6, beforeQty + d.getQuantity());
+                    ps.setInt(7, emp.getEmpId());
+                    ps.executeUpdate();
+                }
+            }
+
+            // 2. Hoàn điểm cho khách hàng
+            if (order.getCustomerId() != null && order.getCustomerId() > 0) {
+                int pointsEarned = (int) (order.getTotalAmount() / 100_000);
+                if (pointsEarned > 0) {
+                    String selectSql = "SELECT cus_point_id, current_points FROM customer_point WHERE cus_id = ?";
+                    int cusPointId = -1;
+                    int beforePoints = 0;
+                    try (PreparedStatement ps = conn.prepareStatement(selectSql)) {
+                        ps.setInt(1, order.getCustomerId());
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (rs.next()) {
+                                cusPointId = rs.getInt("cus_point_id");
+                                beforePoints = rs.getInt("current_points");
+                            }
+                        }
+                    }
+                    if (cusPointId != -1) {
+                        String updateSql = "UPDATE customer_point SET current_points = current_points - ?, lifetime_points = lifetime_points - ?, updated_at = GETDATE() WHERE cus_point_id = ?";
+                        try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                            ps.setInt(1, pointsEarned);
+                            ps.setInt(2, pointsEarned);
+                            ps.setInt(3, cusPointId);
+                            ps.executeUpdate();
+                        }
+                        String logSql = "INSERT INTO point_transaction (cus_point_id, order_id, before_points, after_points, description, created_at) VALUES (?, ?, ?, ?, N'Hoàn điểm hoàn trả đơn hàng', GETDATE())";
+                        try (PreparedStatement ps = conn.prepareStatement(logSql)) {
+                            ps.setInt(1, cusPointId);
+                            ps.setInt(2, orderId);
+                            ps.setInt(3, beforePoints);
+                            ps.setInt(4, Math.max(0, beforePoints - pointsEarned));
+                            ps.executeUpdate();
+                        }
+                    }
+                }
+            }
+
+            // 3. Cập nhật trạng thái đơn hàng
+            orderDao.updateStatus(conn, orderId, "CANCELLED");
+
+            // 4. Ghi audit log
+            String auditSql = "INSERT INTO audit_log (emp_id, action_name, table_name, record_id, old_data, new_data, created_at) VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
+            try (PreparedStatement ps = conn.prepareStatement(auditSql)) {
+                ps.setInt(1, emp.getEmpId());
+                ps.setString(2, "REFUND");
+                ps.setString(3, "order");
+                ps.setInt(4, orderId);
+                ps.setString(5, "status=COMPLETED");
+                ps.setString(6, "status=CANCELLED");
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            out.write("{\"status\":\"success\",\"message\":\"Hoàn trả đơn hàng thành công. Đã hoàn tồn kho và điểm.\"}");
+        } catch (Exception e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
+            e.printStackTrace();
+            out.write("{\"status\":\"error\",\"message\":\"Lỗi hoàn trả: " + escJson(e.getMessage()) + "\"}");
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
+            }
         }
     }
 

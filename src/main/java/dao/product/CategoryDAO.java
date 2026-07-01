@@ -14,13 +14,13 @@ public class CategoryDAO {
 
     public List<Category> getAllCategories() {
         List<Category> categories = new ArrayList<>();
-        String sql = "SELECT c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, " +
-                "p.Name AS ParentName, COUNT(pr.ProductID) AS ProductCount " +
-                "FROM Category c " +
-                "LEFT JOIN Category p ON c.ParentCategoryID = p.CategoryID " +
-                "LEFT JOIN Product pr ON c.CategoryID = pr.CategoryID " +
-                "GROUP BY c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, p.Name " +
-                "ORDER BY c.CategoryID ASC";
+        String sql = "SELECT c.category_id AS CategoryID, c.category_name AS Name, c.description AS Description, c.parent_category_id AS ParentCategoryID, c.status AS Status, " +
+                "p.category_name AS ParentName, COUNT(pr.product_id) AS ProductCount " +
+                "FROM category c " +
+                "LEFT JOIN category p ON c.parent_category_id = p.category_id " +
+                "LEFT JOIN product pr ON c.category_id = pr.category_id " +
+                "GROUP BY c.category_id, c.category_name, c.description, c.parent_category_id, c.status, p.category_name " +
+                "ORDER BY c.category_id ASC";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -37,14 +37,14 @@ public class CategoryDAO {
 
     public List<Category> getActiveCategories() {
         List<Category> categories = new ArrayList<>();
-        String sql = "SELECT c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, " +
-                "p.Name AS ParentName, COUNT(pr.ProductID) AS ProductCount " +
-                "FROM Category c " +
-                "LEFT JOIN Category p ON c.ParentCategoryID = p.CategoryID " +
-                "LEFT JOIN Product pr ON c.CategoryID = pr.CategoryID " +
-                "WHERE c.Status = 'active' " +
-                "GROUP BY c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, p.Name " +
-                "ORDER BY c.CategoryID ASC";
+        String sql = "SELECT c.category_id AS CategoryID, c.category_name AS Name, c.description AS Description, c.parent_category_id AS ParentCategoryID, c.status AS Status, " +
+                "p.category_name AS ParentName, COUNT(pr.product_id) AS ProductCount " +
+                "FROM category c " +
+                "LEFT JOIN category p ON c.parent_category_id = p.category_id " +
+                "LEFT JOIN product pr ON c.category_id = pr.category_id " +
+                "WHERE c.status = 'active' " +
+                "GROUP BY c.category_id, c.category_name, c.description, c.parent_category_id, c.status, p.category_name " +
+                "ORDER BY c.category_id ASC";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -60,13 +60,13 @@ public class CategoryDAO {
     }
 
     public Category getCategoryById(int categoryId) {
-        String sql = "SELECT c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, " +
-                "p.Name AS ParentName, COUNT(pr.ProductID) AS ProductCount " +
-                "FROM Category c " +
-                "LEFT JOIN Category p ON c.ParentCategoryID = p.CategoryID " +
-                "LEFT JOIN Product pr ON c.CategoryID = pr.CategoryID " +
-                "WHERE c.CategoryID = ? " +
-                "GROUP BY c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, p.Name";
+        String sql = "SELECT c.category_id AS CategoryID, c.category_name AS Name, c.description AS Description, c.parent_category_id AS ParentCategoryID, c.status AS Status, " +
+                "p.category_name AS ParentName, COUNT(pr.product_id) AS ProductCount " +
+                "FROM category c " +
+                "LEFT JOIN category p ON c.parent_category_id = p.category_id " +
+                "LEFT JOIN product pr ON c.category_id = pr.category_id " +
+                "WHERE c.category_id = ? " +
+                "GROUP BY c.category_id, c.category_name, c.description, c.parent_category_id, c.status, p.category_name";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -83,7 +83,7 @@ public class CategoryDAO {
     }
 
     public boolean deleteCategory(int id) {
-        String sql = "DELETE FROM Category WHERE CategoryID = ?";
+        String sql = "DELETE FROM category WHERE category_id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
@@ -95,7 +95,7 @@ public class CategoryDAO {
     }
 
     public boolean addCategory(Category category) {
-        String sql = "INSERT INTO Category (Name, Description, ParentCategoryID, Status) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO category (category_name, description, parent_category_id, status) VALUES (?, ?, ?, ?)";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, category.getName());
@@ -110,7 +110,7 @@ public class CategoryDAO {
     }
 
     public boolean updateCategory(Category category) {
-        String sql = "UPDATE Category SET Name = ?, Description = ?, ParentCategoryID = ?, Status = ? WHERE CategoryID = ?";
+        String sql = "UPDATE category SET category_name = ?, description = ?, parent_category_id = ?, status = ?, update_at = GETDATE() WHERE category_id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, category.getName());
@@ -126,7 +126,7 @@ public class CategoryDAO {
     }
 
     public boolean existsById(int categoryId) {
-        String sql = "SELECT CategoryID FROM Category WHERE CategoryID = ?";
+        String sql = "SELECT category_id FROM category WHERE category_id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, categoryId);
@@ -140,9 +140,9 @@ public class CategoryDAO {
     }
 
     public boolean isCategoryNameExists(String name, Integer excludeCategoryId) {
-        StringBuilder sql = new StringBuilder("SELECT CategoryID FROM Category WHERE LOWER(LTRIM(RTRIM(Name))) = LOWER(LTRIM(RTRIM(?)))");
+        StringBuilder sql = new StringBuilder("SELECT category_id FROM category WHERE LOWER(LTRIM(RTRIM(category_name))) = LOWER(LTRIM(RTRIM(?)))");
         if (excludeCategoryId != null) {
-            sql.append(" AND CategoryID <> ?");
+            sql.append(" AND category_id <> ?");
         }
 
         try (Connection conn = DBContext.getConnection();
@@ -161,7 +161,7 @@ public class CategoryDAO {
     }
 
     public Integer getCategoryIdByName(String name) {
-        String sql = "SELECT CategoryID FROM Category WHERE LOWER(LTRIM(RTRIM(Name))) = LOWER(LTRIM(RTRIM(?)))";
+        String sql = "SELECT category_id AS CategoryID FROM category WHERE LOWER(LTRIM(RTRIM(category_name))) = LOWER(LTRIM(RTRIM(?)))";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, name);
@@ -178,11 +178,11 @@ public class CategoryDAO {
 
     public boolean isDescendant(int categoryId, int candidateParentId) {
         String sql = "WITH CategoryTree AS (" +
-                " SELECT CategoryID, ParentCategoryID FROM Category WHERE ParentCategoryID = ?" +
+                " SELECT category_id, parent_category_id FROM category WHERE parent_category_id = ?" +
                 " UNION ALL" +
-                " SELECT c.CategoryID, c.ParentCategoryID FROM Category c" +
-                " INNER JOIN CategoryTree ct ON c.ParentCategoryID = ct.CategoryID" +
-                ") SELECT CategoryID FROM CategoryTree WHERE CategoryID = ?";
+                " SELECT c.category_id, c.parent_category_id FROM category c" +
+                " INNER JOIN CategoryTree ct ON c.parent_category_id = ct.category_id" +
+                ") SELECT category_id FROM CategoryTree WHERE category_id = ?";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -202,18 +202,18 @@ public class CategoryDAO {
         
         StringBuilder sql = new StringBuilder(
                 "WITH CategoryStats AS (" +
-                " SELECT c.CategoryID, c.ParentCategoryID, c.Status, c.Name, c.Description, p.Name AS ParentName, " +
-                " COUNT(pr.ProductID) AS ProductCount " +
-                " FROM Category c " +
-                " LEFT JOIN Category p ON c.ParentCategoryID = p.CategoryID " +
-                " LEFT JOIN Product pr ON c.CategoryID = pr.CategoryID " +
+                " SELECT c.category_id, c.parent_category_id AS ParentCategoryID, c.status, c.category_name, c.description, p.category_name AS ParentName, " +
+                " COUNT(pr.product_id) AS ProductCount " +
+                " FROM category c " +
+                " LEFT JOIN category p ON c.parent_category_id = p.category_id " +
+                " LEFT JOIN product pr ON c.category_id = pr.category_id " +
                 " WHERE 1=1"
         );
 
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND (LOWER(c.Name) LIKE ? OR LOWER(c.Description) LIKE ? OR LOWER(p.Name) LIKE ?)");
+            sql.append(" AND (LOWER(c.category_name) LIKE ? OR LOWER(c.description) LIKE ? OR LOWER(p.category_name) LIKE ?)");
             String kwPattern = "%" + keyword.trim().toLowerCase() + "%";
             params.add(kwPattern);
             params.add(kwPattern);
@@ -221,11 +221,11 @@ public class CategoryDAO {
         }
 
         if (status != null && !status.trim().isEmpty()) {
-            sql.append(" AND c.Status = ?");
+            sql.append(" AND c.status = ?");
             params.add(status.trim());
         }
 
-        sql.append(" GROUP BY c.CategoryID, c.ParentCategoryID, c.Status, c.Name, c.Description, p.Name");
+        sql.append(" GROUP BY c.category_id, c.parent_category_id, c.status, c.category_name, c.description, p.category_name");
         sql.append(") " +
                    "SELECT " +
                    " COUNT(*) AS TotalItems, " +
@@ -255,18 +255,18 @@ public class CategoryDAO {
         List<Category> categories = new ArrayList<>();
         
         StringBuilder sql = new StringBuilder(
-                "SELECT c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, " +
-                "p.Name AS ParentName, COUNT(pr.ProductID) AS ProductCount " +
-                "FROM Category c " +
-                "LEFT JOIN Category p ON c.ParentCategoryID = p.CategoryID " +
-                "LEFT JOIN Product pr ON c.CategoryID = pr.CategoryID " +
+                "SELECT c.category_id AS CategoryID, c.category_name AS Name, c.description AS Description, c.parent_category_id AS ParentCategoryID, c.status AS Status, " +
+                "p.category_name AS ParentName, COUNT(pr.product_id) AS ProductCount " +
+                "FROM category c " +
+                "LEFT JOIN category p ON c.parent_category_id = p.category_id " +
+                "LEFT JOIN product pr ON c.category_id = pr.category_id " +
                 "WHERE 1=1"
         );
 
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND (LOWER(c.Name) LIKE ? OR LOWER(c.Description) LIKE ? OR LOWER(p.Name) LIKE ?)");
+            sql.append(" AND (LOWER(c.category_name) LIKE ? OR LOWER(c.description) LIKE ? OR LOWER(p.category_name) LIKE ?)");
             String kwPattern = "%" + keyword.trim().toLowerCase() + "%";
             params.add(kwPattern);
             params.add(kwPattern);
@@ -274,12 +274,12 @@ public class CategoryDAO {
         }
 
         if (status != null && !status.trim().isEmpty()) {
-            sql.append(" AND c.Status = ?");
+            sql.append(" AND c.status = ?");
             params.add(status.trim());
         }
 
-        sql.append(" GROUP BY c.CategoryID, c.Name, c.Description, c.ParentCategoryID, c.Status, p.Name ");
-        sql.append(" ORDER BY c.CategoryID DESC "); // DESC in SQL to avoid reversing later
+        sql.append(" GROUP BY c.category_id, c.category_name, c.description, c.parent_category_id, c.status, p.category_name ");
+        sql.append(" ORDER BY c.category_id DESC "); // DESC in SQL to avoid reversing later
         sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
         
         params.add(offset);

@@ -19,21 +19,21 @@ public class ProfileDao extends DBContext {
     public Employee getProfileById(int employeeID) {
         String sql =
                 "SELECT DISTINCT " +
-                "    e.EmployeeID, " +
-                "    e.RoleID, " +
-                "    e.BranchID, " +
+                "    e.emp_id AS EmployeeID, " +
+                "    e.role_id AS RoleID, " +
+                "    e.branch_id AS BranchID, " +
                 "    e.FullName, " +
                 "    e.Email, " +
                 "    e.Phone, " +
-                "    e.AvatarUrl, " +
+                "    e.image_URL AS AvatarUrl, " +
                 "    e.Status, " +
-                "    e.CreatedAt, " +
-                "    b.Name AS BranchName, " +
-                "    r.Name AS RoleNames " +
+                "    e.created_at AS CreatedAt, " +
+                "    b.branch_name AS BranchName, " +
+                "    r.role_name AS RoleNames " +
                 "FROM Employee e " +
-                "LEFT JOIN Branch b ON e.BranchID = b.BranchID " +
-                "LEFT JOIN Role r ON e.RoleID = r.RoleID " +
-                "WHERE e.EmployeeID = ?";
+                "LEFT JOIN Branch b ON e.branch_id = b.branch_id " +
+                "LEFT JOIN Role r ON e.role_id = r.role_id " +
+                "WHERE e.emp_id = ?";
 
         try {Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql);
@@ -65,13 +65,13 @@ public class ProfileDao extends DBContext {
         if (avatarUrl == null || avatarUrl.trim().isEmpty()) {
             sql =
                     "UPDATE Employee " +
-                    "SET FullName = ?, Email = ?, Phone = ? " +
-                    "WHERE EmployeeID = ?";
+                    "SET FullName = ?, Email = ?, Phone = ?, update_at = GETDATE() " +
+                    "WHERE emp_id = ?";
         } else {
             sql =
                     "UPDATE Employee " +
-                    "SET FullName = ?, Email = ?, Phone = ?, AvatarUrl = ? " +
-                    "WHERE EmployeeID = ?";
+                    "SET FullName = ?, Email = ?, Phone = ?, image_URL = ?, update_at = GETDATE() " +
+                    "WHERE emp_id = ?";
         }
 
         try (Connection connection = DBContext.getConnection(); 
@@ -100,7 +100,7 @@ public class ProfileDao extends DBContext {
                 "SELECT COUNT(*) AS Total " +
                 "FROM Employee " +
                 "WHERE Email = ? " +
-                "AND EmployeeID <> ?";
+                "AND emp_id <> ?";
 
         try {Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql);
@@ -132,7 +132,7 @@ public class ProfileDao extends DBContext {
         String sql =
                 "SELECT PasswordHash " +
                 "FROM Employee " +
-                "WHERE EmployeeID = ?";
+                "WHERE emp_id = ?";
 
         try {Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql);
@@ -161,8 +161,8 @@ public class ProfileDao extends DBContext {
     public boolean updatePasswordHash(int employeeID, String newPasswordHash) {
         String sql =
                 "UPDATE Employee " +
-                "SET PasswordHash = ? " +
-                "WHERE EmployeeID = ?";
+                "SET PasswordHash = ?, update_at = GETDATE() " +
+                "WHERE emp_id = ?";
 
         try {Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql);
@@ -184,17 +184,17 @@ public class ProfileDao extends DBContext {
     public EmployeeSalesSummary getEmployeeSalesSummary(int employeeId) {
         String sql =
                 "SELECT " +
-                "    e.EmployeeID, " +
+                "    e.emp_id AS EmployeeID, " +
                 "    e.FullName, " +
-                "    b.Name AS BranchName, " +
-                "    COUNT(o.OrderID) AS TotalOrders, " +
-                "    COALESCE(SUM(o.TotalAmount), 0) AS TotalRevenue, " +
-                "    COALESCE(AVG(o.TotalAmount), 0) AS AverageOrderValue " +
+                "    b.branch_name AS BranchName, " +
+                "    COUNT(o.order_id) AS TotalOrders, " +
+                "    COALESCE(SUM(o.total_amount), 0) AS TotalRevenue, " +
+                "    COALESCE(AVG(o.total_amount), 0) AS AverageOrderValue " +
                 "FROM Employee e " +
-                "LEFT JOIN Branch b ON e.BranchID = b.BranchID " +
-                "LEFT JOIN [Order] o ON e.EmployeeID = o.EmployeeID " +
-                "WHERE e.EmployeeID = ? " +
-                "GROUP BY e.EmployeeID, e.FullName, b.Name";
+                "LEFT JOIN Branch b ON e.branch_id = b.branch_id " +
+                "LEFT JOIN [Order] o ON e.emp_id = o.emp_id " +
+                "WHERE e.emp_id = ? " +
+                "GROUP BY e.emp_id, e.FullName, b.branch_name";
 
         try (Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql);) {
@@ -223,18 +223,18 @@ public class ProfileDao extends DBContext {
     public EmployeeSalesSummary getEmployeeSalesSummaryInBranch(int employeeId, int branchId) {
         String sql =
                 "SELECT " +
-                "    e.EmployeeID, " +
+                "    e.emp_id AS EmployeeID, " +
                 "    e.FullName, " +
-                "    b.Name AS BranchName, " +
-                "    COUNT(o.OrderID) AS TotalOrders, " +
-                "    COALESCE(SUM(o.TotalAmount), 0) AS TotalRevenue, " +
-                "    COALESCE(AVG(o.TotalAmount), 0) AS AverageOrderValue " +
+                "    b.branch_name AS BranchName, " +
+                "    COUNT(o.order_id) AS TotalOrders, " +
+                "    COALESCE(SUM(o.total_amount), 0) AS TotalRevenue, " +
+                "    COALESCE(AVG(o.total_amount), 0) AS AverageOrderValue " +
                 "FROM Employee e " +
-                "LEFT JOIN Branch b ON e.BranchID = b.BranchID " +
-                "LEFT JOIN [Order] o ON e.EmployeeID = o.EmployeeID AND o.BranchID = ? " +
-                "WHERE e.EmployeeID = ? " +
-                "AND e.BranchID = ? " +
-                "GROUP BY e.EmployeeID, e.FullName, b.Name";
+                "LEFT JOIN Branch b ON e.branch_id = b.branch_id " +
+                "LEFT JOIN [Order] o ON e.emp_id = o.emp_id AND o.branch_id = ? " +
+                "WHERE e.emp_id = ? " +
+                "AND e.branch_id = ? " +
+                "GROUP BY e.emp_id, e.FullName, b.branch_name";
 
         try (Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql);) {
