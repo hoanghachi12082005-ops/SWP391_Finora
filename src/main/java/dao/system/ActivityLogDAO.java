@@ -13,13 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DAO cho Activity Log (bảng audit_log).
+ * DAO cho Activity Log (bảng AuditLog trong DB V3).
  * READ-ONLY: chỉ truy vấn. Không có insert/update/delete vì audit log
  * là immutable theo nguyên tắc bảo toàn dấu vết hệ thống.
- * Việc ghi log do trigger DB / service nội bộ phụ trách, không qua DAO này.
  */
 public class ActivityLogDAO {
 
+    // DB V3: audit_log(audit_log_id, emp_id, action_name, table_name, record_id, old_data, new_data, created_at)
+    // Employee: employee(emp_id, fullName, ...)
     private static final String BASE_SELECT =
             "SELECT a.audit_log_id, a.emp_id, a.action_name, a.table_name, a.record_id, a.old_data, a.new_data, a.created_at, "
           + "       e.fullName AS emp_name, e.branch_id, b.branch_name "
@@ -205,7 +206,7 @@ public class ActivityLogDAO {
         if (!rs.wasNull()) log.setRecordId(recordId);
         log.setOldData(rs.getString("old_data"));
         log.setNewData(rs.getString("new_data"));
-        Timestamp ts = rs.getTimestamp("created_at");
+        java.sql.Timestamp ts = rs.getTimestamp("created_at");
         if (ts != null) log.setCreatedAt(ts.toLocalDateTime());
         return log;
     }

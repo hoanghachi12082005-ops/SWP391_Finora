@@ -19,15 +19,37 @@ public class AuthService {
             throw new RuntimeException("Email/số điện thoại không tồn tại");
         }
 
+        // ─── DEBUG: Log thông tin password ─────────────────────────
+        String dbHash = employee.getPasswordHash();
+        System.out.println("[DEBUG AUTH] ===== BẮT ĐẦU SO SÁNH MẬT KHẨU =====");
+        System.out.println("[DEBUG AUTH] Password người dùng nhập: [" + password + "]");
+        System.out.println("[DEBUG AUTH] PasswordHash từ DB    : [" + dbHash + "]");
+        System.out.println("[DEBUG AUTH] Độ dài hash DB        : " + (dbHash != null ? dbHash.length() : 0) + " ký tự");
+        System.out.println("[DEBUG AUTH] Có phải BCrypt hash?  : " + PasswordUtil.isHashed(dbHash));
+        // ─────────────────────────────────────────────────────────────
+
         if (!"ACTIVE".equalsIgnoreCase(employee.getStatus())) {
             throw new RuntimeException("Tài khoản của bạn đã bị khóa hoặc chưa được kích hoạt");
         }
 
-        boolean verify = PasswordUtil.verify(password, employee.getPasswordHash());
+        boolean verify = PasswordUtil.verify(password, dbHash);
+
+        // ─── DEBUG: Kết quả verify ──────────────────────────────────
+        System.out.println("[DEBUG AUTH] Kết quả verify(password, dbHash): " + verify);
+        System.out.println("[DEBUG AUTH] ===== KẾT THÚC SO SÁNH MẬT KHẨU =====\n");
+        // ─────────────────────────────────────────────────────────────
 
         if (!verify) {
-            throw new RuntimeException("Mật khẩu không chính xác");
+            int failedAttempts = employeeDAO.incrementFailedAttempts(employee.getEmployeeId());
+            int remaining = Employee.MAX_FAILED_LOGIN - failedAttempts;
+            if (remaining <= 0) {
+                throw new RuntimeException("Tài khoản của bạn đã bị khóa do đăng nhập sai quá 5 lần.");
+            } else {
+                throw new RuntimeException("Mật khẩu không chính xác. Bạn còn " + remaining + " lần nhập lại.");
+            }
         }
+
+        employeeDAO.resetFailedAttempts(employee.getEmployeeId());
 
         return employee;
     }
