@@ -2,6 +2,12 @@ package util.branch;
 
 import model.Branch;
 
+import jakarta.servlet.http.Part;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.Set;
+import javax.imageio.ImageIO;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,7 +31,72 @@ public final class BranchValidator {
     public static Map<String, String> validateForUpdate(Branch b, int branchId, CodeDuplicateChecker duplicateChecker) {
         return validate(b, branchId, duplicateChecker, true);
     }
+    
+    private static final Set<String> ALLOWED_TYPES = Set.of(
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp"
+    );
 
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".webp"
+    );
+
+    private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+
+    public static String validateImage(Part imagePart) {
+
+        if (imagePart == null || imagePart.getSize() == 0) {
+            return null; // Không chọn ảnh cũng không báo lỗi
+        }
+
+        if (imagePart.getSize() > MAX_IMAGE_SIZE) {
+            return "Kích thước ảnh không được vượt quá 5MB.";
+        }
+
+        String fileName = imagePart.getSubmittedFileName();
+
+        if (fileName == null || fileName.isBlank()) {
+            return "Tên file không hợp lệ.";
+        }
+
+        int dotIndex = fileName.lastIndexOf(".");
+
+        if (dotIndex == -1) {
+            return "File phải có phần mở rộng.";
+        }
+
+        String extension = fileName.substring(dotIndex).toLowerCase();
+
+        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+            return "Chỉ chấp nhận JPG, JPEG, PNG, GIF hoặc WEBP.";
+        }
+
+        String contentType = imagePart.getContentType();
+
+        if (contentType == null || !ALLOWED_TYPES.contains(contentType.toLowerCase())) {
+            return "Định dạng hình ảnh không hợp lệ.";
+        }
+
+        try {
+            BufferedImage image = ImageIO.read(imagePart.getInputStream());
+
+            if (image == null) {
+                return "File tải lên không phải hình ảnh hợp lệ.";
+            }
+
+        } catch (IOException ex) {
+            return "Không thể đọc file hình ảnh.";
+        }
+
+        return null;
+    }
+    
     static Map<String, String> validate(Branch b, int excludeBranchId, 
                                         CodeDuplicateChecker duplicateChecker, boolean isUpdate) {
         Map<String, String> errors = new HashMap<>();
