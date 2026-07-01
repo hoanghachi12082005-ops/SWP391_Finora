@@ -101,7 +101,7 @@ public class ProductDAO {
         }
     }
 
-    public void insert(Product product) throws SQLException {
+    public int insert(Product product) throws SQLException {
         String sql = "INSERT INTO product (product_name, category_id, unit_id, selling_price, created_at, update_at) VALUES (?, ?, ?, ?, GETDATE(), GETDATE())";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -122,6 +122,7 @@ public class ProductDAO {
                         invStmt.setInt(2, product.getQuantity());
                         invStmt.executeUpdate();
                     }
+                    return newProdId;
                 }
             }
         }

@@ -13,7 +13,7 @@ public class ProductDAO {
         String sql = "SELECT * FROM Product WHERE status = 'ACTIVE' ORDER BY product_id DESC";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapRow(rs));
             }
@@ -40,7 +40,7 @@ public class ProductDAO {
     }
 
     public Product findByCode(String code) {
-        String sql = "SELECT * FROM Product WHERE product_code = ? AND status = 'ACTIVE'";
+        String sql = "SELECT * FROM Product WHERE product_codebar = ? AND status = 'ACTIVE'";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, code);
@@ -57,7 +57,7 @@ public class ProductDAO {
 
     public List<Product> searchActive(String keyword) {
         List<Product> list = new ArrayList<>();
-        String sql = "SELECT * FROM Product WHERE status = 'ACTIVE' AND (product_name LIKE ? OR product_code LIKE ?) ORDER BY product_id DESC";
+        String sql = "SELECT * FROM Product WHERE status = 'ACTIVE' AND (product_name LIKE ? OR product_codebar LIKE ?) ORDER BY product_id DESC";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             String pattern = "%" + keyword + "%";
@@ -81,9 +81,16 @@ public class ProductDAO {
         p.setProductCode(rs.getString("product_codebar"));
         p.setCategoryId(rs.getInt("category_id"));
         p.setUnitId(rs.getInt("unit_id"));
-        p.setSellingPrice(rs.getDouble("selling_price"));
-        p.setCreatedAt(rs.getString("created_at"));
-        p.setUpdateAt(rs.getString("update_at"));
+        
+        java.math.BigDecimal sp = rs.getBigDecimal("selling_price");
+        p.setSellingPrice(sp != null ? sp : java.math.BigDecimal.ZERO);
+        
+        Timestamp ct = rs.getTimestamp("created_at");
+        if (ct != null) p.setCreatedAt(ct.toLocalDateTime());
+        
+        Timestamp ut = rs.getTimestamp("update_at");
+        if (ut != null) p.setUpdatedAt(ut.toLocalDateTime());
+        
         return p;
     }
 
@@ -174,4 +181,3 @@ public class ProductDAO {
         return null;
     }
 }
-

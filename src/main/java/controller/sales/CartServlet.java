@@ -241,7 +241,7 @@ public class CartServlet extends HttpServlet {
                 product.getProductId(),
                 product.getProductName(),
                 product.getProductCode(),
-                product.getSellingPrice(),
+                product.getSellingPrice() != null ? product.getSellingPrice().doubleValue() : 0.0,
                 qty,
                 stock
             );

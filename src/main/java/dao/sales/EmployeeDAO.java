@@ -1,7 +1,6 @@
 package dao.sales;
 
 import model.Employee;
-import model.Employee.EmployeeStatus;
 import util.database.DBContext;
 
 import java.sql.*;
@@ -68,25 +67,26 @@ public class EmployeeDAO {
 
     private Employee mapRow(ResultSet rs) throws SQLException {
         Employee e = new Employee();
-        e.setEmpId(rs.getInt("emp_id"));
-        e.setBranchId(rs.getInt("branch_id"));
+        e.setEmployeeID(rs.getInt("emp_id"));
+        e.setBranchID(rs.getInt("branch_id"));
+        e.setRoleID(rs.getInt("role_id"));
         e.setFullName(rs.getString("fullName"));
         e.setGender(rs.getString("gender"));
-        e.setBod(rs.getString("bod"));
+        
+        Date dobDate = rs.getDate("bod");
+        if (dobDate != null) e.setDob(new java.sql.Timestamp(dobDate.getTime()));
+        
         e.setAddress(rs.getString("address"));
         e.setEmail(rs.getString("email"));
         e.setPhone(rs.getString("phone"));
         e.setPasswordHash(rs.getString("passwordHash"));
-        String statusStr = rs.getString("status");
-        if (statusStr != null) {
-            try {
-                e.setStatus(EmployeeStatus.valueOf(statusStr.toUpperCase()));
-            } catch (IllegalArgumentException ex) {
-                e.setStatus(EmployeeStatus.ACTIVE);
-            }
-        }
-        e.setCreatedAt(rs.getString("created_at"));
-        e.setUpdateAt(rs.getString("update_at"));
+        e.setStatus(rs.getString("status"));
+        
+        Timestamp createdAt = rs.getTimestamp("created_at");
+        if (createdAt != null) e.setCreatedAt(createdAt);
+        
+        Timestamp updatedAt = rs.getTimestamp("update_at");
+        if (updatedAt != null) e.setUpdatedAt(updatedAt);
         return e;
     }
 
@@ -155,7 +155,7 @@ public class EmployeeDAO {
             ps.setString(7, emp.getEmail());
             ps.setString(8, emp.getPhone());
             ps.setString(9, emp.getPasswordHash());
-            ps.setString(10, emp.getStatus() != null ? emp.getStatus().name() : "ACTIVE");
+            ps.setString(10, emp.getStatus() != null ? emp.getStatus() : "ACTIVE");
             if (ps.executeUpdate() > 0) {
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (keys.next()) return keys.getInt(1);
@@ -177,7 +177,7 @@ public class EmployeeDAO {
             ps.setString(6, emp.getAddress());
             ps.setString(7, emp.getEmail());
             ps.setString(8, emp.getPhone());
-            ps.setString(9, emp.getStatus() != null ? emp.getStatus().name() : "ACTIVE");
+            ps.setString(9, emp.getStatus() != null ? emp.getStatus() : "ACTIVE");
             ps.setInt(10, emp.getEmpId());
             return ps.executeUpdate() > 0;
         }
@@ -203,21 +203,21 @@ public class EmployeeDAO {
     }
 
     /** Cập nhật trạng thái nhân viên. */
-    public boolean updateStatus(int empId, EmployeeStatus status) throws SQLException {
+    public boolean updateStatus(int empId, Employee.EmployeeStatus status) throws SQLException {
         try (Connection con = DBContext.getConnection();
              PreparedStatement ps = con.prepareStatement(UPDATE_STATUS)) {
-            ps.setString(1, status.name());
+            ps.setString(1, status != null ? status.name() : "ACTIVE");
             ps.setInt(2, empId);
             return ps.executeUpdate() > 0;
         }
     }
 
     /** Lấy danh sách nhân viên theo trạng thái. */
-    public List<Employee> getByStatus(EmployeeStatus status) throws SQLException {
+    public List<Employee> getByStatus(Employee.EmployeeStatus status) throws SQLException {
         List<Employee> list = new ArrayList<>();
         try (Connection con = DBContext.getConnection();
              PreparedStatement ps = con.prepareStatement(SELECT_BY_STATUS)) {
-            ps.setString(1, status.name());
+            ps.setString(1, status != null ? status.name() : "ACTIVE");
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
             }

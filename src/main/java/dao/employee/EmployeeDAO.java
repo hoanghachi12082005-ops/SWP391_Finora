@@ -3,6 +3,8 @@ package dao.employee;
 import model.Employee;
 import util.database.DBContext;
 import java.sql.*;
+import java.util.List;
+import java.util.ArrayList;
 
 public class EmployeeDAO {
 
@@ -203,6 +205,73 @@ public class EmployeeDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // PHƯƠNG THỨC COMPATIBILITY CHO BRANCH CONTROLLER
+    // ─────────────────────────────────────────────────────────
+
+    public int count() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM employee";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        }
+        return 0;
+    }
+
+    public int countByBranch(int branchId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM employee WHERE branch_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public List<Employee> getByBranch(int branchId) throws SQLException {
+        List<Employee> list = new ArrayList<>();
+        String sql = "SELECT e.emp_id AS EmployeeID, e.role_id AS RoleID, e.branch_id AS BranchID, "
+                   + "e.fullName AS FullName, e.email AS Email, e.phone AS Phone, e.passwordHash AS PasswordHash, "
+                   + "e.status AS Status, e.failed_login_count AS FailedLoginCount, r.role_name AS RoleName, "
+                   + "b.branch_name AS BranchName "
+                   + "FROM employee e "
+                   + "JOIN Role r ON e.role_id = r.role_id "
+                   + "LEFT JOIN Branch b ON e.branch_id = b.branch_id "
+                   + "WHERE e.branch_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        }
+        return list;
+    }
+
+    public List<Employee> getAll() throws SQLException {
+        List<Employee> list = new ArrayList<>();
+        String sql = "SELECT e.emp_id AS EmployeeID, e.role_id AS RoleID, e.branch_id AS BranchID, "
+                   + "e.fullName AS FullName, e.email AS Email, e.phone AS Phone, e.passwordHash AS PasswordHash, "
+                   + "e.status AS Status, e.failed_login_count AS FailedLoginCount, r.role_name AS RoleName, "
+                   + "b.branch_name AS BranchName "
+                   + "FROM employee e "
+                   + "JOIN Role r ON e.role_id = r.role_id "
+                   + "LEFT JOIN Branch b ON e.branch_id = b.branch_id";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRow(rs));
+            }
+        }
+        return list;
     }
 
     // ─────────────────────────────────────────────────────────

@@ -95,4 +95,32 @@ public class Payment extends BaseModel {
     public void setPaymentDate(Timestamp paymentDate) {
         this.paymentDate = paymentDate;
     }
+
+    // =========================================================
+    // Backward Compatibility Getters & Setters for Sales
+    // =========================================================
+
+    public double getPaymentAmount() {
+        return getAmount();
+    }
+
+    public void setPaymentAmount(double amount) {
+        setAmount(amount);
+    }
+
+    public String getPaymentStatus() {
+        return getStatus();
+    }
+
+    public void setPaymentStatus(String status) {
+        setStatus(status);
+    }
+
+    public String getTransactionCode() {
+        return getName();
+    }
+
+    public void setTransactionCode(String transactionCode) {
+        setName(transactionCode);
+    }
 }

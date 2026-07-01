@@ -21,6 +21,9 @@ public class Product {
     // Transient: URL đến ảnh sản phẩm (không lưu trong DB, đọc từ /asset/product/)
     private String imageUrl;
 
+    // Transient compatibility: quantity in stock for POS
+    private int quantity;
+
     public Product() {
     }
 
@@ -67,6 +70,33 @@ public class Product {
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    // =========================================================
+    // Backward Compatibility Aliases for POS & Sales Modules
+    // =========================================================
+
+    public int getProductId() { return productID; }
+    public void setProductId(int productId) { this.productID = productId; }
+
+    public String getProductName() { return name; }
+    public void setProductName(String productName) { this.name = productName; }
+
+    private String productCodebar;
+    public String getProductCode() { return productCodebar; }
+    public void setProductCode(String productCode) { this.productCodebar = productCode; }
+    public String getProductCodebar() { return productCodebar; }
+    public void setProductCodebar(String productCodebar) { this.productCodebar = productCodebar; }
+
+    public int getQuantity() { return quantity; }
+    public void setQuantity(int quantity) { this.quantity = quantity; }
+    public int getQuantityInStock() { return quantity; }
+    public void setQuantityInStock(int quantityInStock) { this.quantity = quantityInStock; }
+
+    public int getCategoryId() { return categoryID; }
+    public void setCategoryId(int categoryId) { this.categoryID = categoryId; }
+
+    public int getUnitId() { return unitID; }
+    public void setUnitId(int unitId) { this.unitID = unitId; }
 
     @Override
     public String toString() {
