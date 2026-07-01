@@ -33,7 +33,7 @@
 <div class="flex h-screen">
 
 <!-- ═══════════════ SIDEBAR (80px) ═══════════════ -->
-<jsp:include page="/common/sidebar.jsp" />
+<jsp:include page="/views/common/sidebar.jsp" />
 
 
 <!-- ═══════════════ MAIN AREA ═══════════════ -->

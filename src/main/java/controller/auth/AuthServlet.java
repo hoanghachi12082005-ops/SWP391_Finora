@@ -202,7 +202,7 @@ public class AuthServlet extends HttpServlet {
                     redirectUrl = "/inventory/dashboard";
                     break;
                 case "salesstaff":
-                    redirectUrl = "/orders/create";
+                    redirectUrl = "/sales";
                     break;
             }
         }

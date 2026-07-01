@@ -26,7 +26,7 @@
 <div class="flex h-screen w-screen">
 
     <!-- Include Sidebar -->
-    <jsp:include page="/common/sidebar.jsp" />
+    <jsp:include page="/views/common/sidebar.jsp" />
 
     <!-- Main Workspace -->
     <div class="flex-1 flex flex-col min-w-0 h-screen relative">

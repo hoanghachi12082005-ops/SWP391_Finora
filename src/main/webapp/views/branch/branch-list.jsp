@@ -24,7 +24,7 @@
 
     <body>
 
-        <jsp:include page="sidebar.jsp"/>
+        <jsp:include page="/views/common/sidebar.jsp"/>
 
         <div class="main-content">
 
