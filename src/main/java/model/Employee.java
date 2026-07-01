@@ -23,6 +23,7 @@ public class Employee {
 
     private int    empId;
     private int    branchId;        // FK → Branch.branchId
+    private int    roleId;          // FK → Role.roleId
     private String fullName;
     private String gender;          // "Nam" / "Nữ" / "Khác"
     private String bod;             // Date of Birth (yyyy-MM-dd)
@@ -38,12 +39,12 @@ public class Employee {
 
     public Employee() {}
 
-    /** Constructor đầy đủ dùng khi map từ DB */
-    public Employee(int empId, int branchId, String fullName, String gender, String bod,
+    public Employee(int empId, int branchId, int roleId, String fullName, String gender, String bod,
                     String address, String email, String phone, String passwordHash,
                     EmployeeStatus status, String createdAt, String updateAt) {
         this.empId        = empId;
         this.branchId     = branchId;
+        this.roleId       = roleId;
         this.fullName     = fullName;
         this.gender       = gender;
         this.bod          = bod;
@@ -63,6 +64,9 @@ public class Employee {
 
     public int getBranchId()            { return branchId; }
     public void setBranchId(int branchId) { this.branchId = branchId; }
+
+    public int getRoleId()              { return roleId; }
+    public void setRoleId(int roleId)   { this.roleId = roleId; }
 
     public String getFullName()                  { return fullName; }
     public void setFullName(String fullName)     { this.fullName = fullName; }
