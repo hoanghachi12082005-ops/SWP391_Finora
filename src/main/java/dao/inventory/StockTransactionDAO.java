@@ -15,13 +15,13 @@ public class StockTransactionDAO {
         List<StockTransaction> transactions = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
             "SELECT st.*, " +
-            "p.Name as product_name, '' as product_codebar, " +
-            "e.FullName as created_by_name, " +
+            "p.product_name, p.product_codebar, " +
+            "e.fullName as created_by_name, " +
             "w.warehouse_name " +
             "FROM stock_transaction st " +
-            "JOIN Product p ON st.product_id = p.ProductID " +
+            "JOIN product p ON st.product_id = p.product_id " +
             "JOIN warehouse w ON st.warehouse_id = w.warehouse_id " +
-            "LEFT JOIN Employee e ON st.created_by = e.EmployeeID " +
+            "LEFT JOIN Employee e ON st.created_by = e.emp_id " +
             "WHERE 1=1"
         );
 
@@ -30,8 +30,7 @@ public class StockTransactionDAO {
         } else if (allowedWarehouseIds != null && !allowedWarehouseIds.isEmpty()) {
             sql.append(" AND st.warehouse_id IN (");
             for (int i = 0; i < allowedWarehouseIds.size(); i++) {
-                sql.append(allowedWarehouseIds.get(i));
-                if (i < allowedWarehouseIds.size() - 1) sql.append(",");
+                sql.append(i > 0 ? ",?" : "?");
             }
             sql.append(")");
         } else {
@@ -54,6 +53,9 @@ public class StockTransactionDAO {
             
             int idx = 1;
             if (warehouseId > 0) stmt.setInt(idx++, warehouseId);
+            if (allowedWarehouseIds != null && !allowedWarehouseIds.isEmpty()) {
+                for (Integer wid : allowedWarehouseIds) stmt.setInt(idx++, wid);
+            }
             if (typeFilter != null && !typeFilter.trim().isEmpty()) stmt.setString(idx++, typeFilter);
             stmt.setInt(idx++, offset);
             stmt.setInt(idx, limit);
@@ -68,12 +70,12 @@ public class StockTransactionDAO {
     }
     public List<StockTransaction> findByReference(String referenceType, int referenceId) throws SQLException {
         List<StockTransaction> transactions = new ArrayList<>();
-        String sql = "SELECT st.*, p.Name as product_name, '' as product_codebar, " +
-                     "e.FullName as created_by_name, w.warehouse_name " +
+        String sql = "SELECT st.*, p.product_name, p.product_codebar, " +
+                     "e.fullName as created_by_name, w.warehouse_name " +
                      "FROM stock_transaction st " +
-                     "JOIN Product p ON st.product_id = p.ProductID " +
+                     "JOIN product p ON st.product_id = p.product_id " +
                      "JOIN warehouse w ON st.warehouse_id = w.warehouse_id " +
-                     "LEFT JOIN Employee e ON st.created_by = e.EmployeeID " +
+                     "LEFT JOIN Employee e ON st.created_by = e.emp_id " +
                      "WHERE st.reference_type = ? AND st.reference_id = ?";
                      
         try (Connection conn = DBContext.getConnection();

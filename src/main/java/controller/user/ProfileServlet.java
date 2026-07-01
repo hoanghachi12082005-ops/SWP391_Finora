@@ -209,9 +209,8 @@ public class ProfileServlet extends HttpServlet {
         }
 
         String currentHash = profileDao.getPasswordHash(employeeID);
-        String oldPasswordHash = PasswordUtil.hash(oldPassword);
 
-        if (currentHash == null || !currentHash.equals(oldPasswordHash)) {
+        if (currentHash == null || !PasswordUtil.verify(oldPassword, currentHash)) {
             setFlash(request, "errorMessage", "Old password is incorrect.");
             return;
         }

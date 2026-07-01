@@ -142,11 +142,24 @@
 
         <!-- Reports -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
-            <a href="${pageContext.request.contextPath}/reports/export" 
-               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/reports/') ? 'active' : ''}">
+            <c:set var="isReportsActive" value="${originalUri.contains('/reports/') || originalUri.contains('/reports/employee-sales')}" />
+            <a href="#reportsCollapse" data-bs-toggle="collapse" role="button" aria-expanded="${isReportsActive ? 'true' : 'false'}" aria-controls="reportsCollapse"
+               class="sidebar-menu-item ${isReportsActive ? 'active' : ''} d-flex align-items-center">
                 <span class="material-icons">bar_chart</span>
                 <span>Báo cáo</span>
+                <span class="material-icons ms-auto transition-icon" style="font-size: 1.2rem;">expand_more</span>
             </a>
+            <div class="collapse ${isReportsActive ? 'show' : ''}" id="reportsCollapse">
+                <div class="sidebar-submenu">
+                    <a href="${pageContext.request.contextPath}/reports/export" class="sidebar-submenu-item ${originalUri.contains('/reports/export') ? 'active' : ''}">
+                        Xuất báo cáo
+                    </a>
+                    <a href="${pageContext.request.contextPath}/reports/employee-sales" class="sidebar-submenu-item ${originalUri.contains('/reports/employee-sales') ? 'active' : ''}">
+                        <span class="material-icons" style="font-size: 1rem; margin-right: 4px;">bar_chart</span>
+                        Doanh thu nhân viên
+                    </a>
+                </div>
+            </div>
         </c:if>
 
         <!-- Configuration -->

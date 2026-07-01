@@ -1,8 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-<c:if test="${not empty sessionScope.employee}">
-    <c:redirect url="/admin/dashboard"/>
+<c:if test="${not empty sessionScope.currentUser}">
+    <c:redirect url="${pageContext.request.contextPath}/dashboard/owner"/>
 </c:if>
 
 <!DOCTYPE html>

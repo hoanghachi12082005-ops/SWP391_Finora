@@ -175,7 +175,7 @@ public class BranchDAO {
             SELECT ISNULL(SUM(total_amount), 0)
             FROM [order]
             WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)
-              AND UPPER(status) = 'PAID'
+              AND UPPER(status) = 'COMPLETED'
             """;
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
@@ -197,7 +197,7 @@ public class BranchDAO {
             FROM branch b
             INNER JOIN [order] o ON b.branch_id = o.branch_id
               AND CAST(o.created_at AS DATE) = CAST(GETDATE() AS DATE)
-              AND UPPER(o.status) = 'PAID'
+              AND UPPER(o.status) = 'COMPLETED'
             GROUP BY b.branch_id, b.branch_name
             ORDER BY SUM(o.total_amount) DESC
             """;
@@ -236,7 +236,7 @@ public class BranchDAO {
             WHERE branch_id = ?
               AND MONTH(created_at) = MONTH(GETDATE())
               AND YEAR(created_at) = YEAR(GETDATE())
-              AND UPPER(status) = 'PAID'
+              AND UPPER(status) = 'COMPLETED'
             """;
         return queryDouble(sql, branchId);
     }
@@ -251,7 +251,7 @@ public class BranchDAO {
             WHERE branch_id = ?
               AND MONTH(created_at) = MONTH(GETDATE())
               AND YEAR(created_at) = YEAR(GETDATE())
-              AND UPPER(status) = 'PAID'
+              AND UPPER(status) = 'COMPLETED'
             """;
         return queryInt(sql, branchId);
     }
@@ -266,7 +266,7 @@ public class BranchDAO {
             WHERE branch_id = ?
               AND MONTH(created_at) = MONTH(GETDATE())
               AND YEAR(created_at) = YEAR(GETDATE())
-              AND UPPER(status) = 'PAID'
+              AND UPPER(status) = 'COMPLETED'
             """;
         return queryDouble(sql, branchId);
     }

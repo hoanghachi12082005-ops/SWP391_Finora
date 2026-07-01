@@ -514,8 +514,8 @@ public class UserManagementDao extends DBContext {
 
         String insertEmployeeSql =
                 "INSERT INTO Employee " +
-                "(role_id, branch_id, fullName, email, phone, passwordHash, status) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                "(role_id, branch_id, fullName, email, phone, passwordHash, status, created_at, update_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())";
 
         try {Connection connection = DBContext.getConnection(); 
             connection.setAutoCommit(false);
@@ -532,7 +532,8 @@ public class UserManagementDao extends DBContext {
                 ps.setString(4, employee.getEmail());
                 ps.setString(5, employee.getPhone());
                 ps.setString(6, hashedPassword);
-                ps.setString(7, normalize(employee.getStatus()) == null ? "active" : employee.getStatus());
+                String rawStatus = normalize(employee.getStatus());
+                ps.setString(7, rawStatus == null ? "ACTIVE" : rawStatus.toUpperCase());
 
                 int affectedRows = ps.executeUpdate();
 
@@ -573,6 +574,7 @@ public class UserManagementDao extends DBContext {
                 "    email = ?, " +
                 "    phone = ?, " +
                 "    status = ?, " +
+                "    update_at = GETDATE(), " +
                 "    failed_login_count = CASE WHEN UPPER(?) = 'ACTIVE' THEN 0 ELSE failed_login_count END " +
                 "WHERE emp_id = ? " +
                 "AND NOT EXISTS (SELECT 1 FROM Role rr WHERE rr.role_id = Employee.role_id AND rr.role_name IN ('Admin', 'Owner'))";
@@ -621,6 +623,7 @@ public class UserManagementDao extends DBContext {
         String sql =
                 "UPDATE Employee " +
                 "SET status = ?, " +
+                "    update_at = GETDATE(), " +
                 "    failed_login_count = CASE WHEN UPPER(?) = 'ACTIVE' THEN 0 ELSE failed_login_count END " +
                 "WHERE emp_id = ? " +
                 "AND NOT EXISTS (SELECT 1 FROM Role rr WHERE rr.role_id = Employee.role_id AND rr.role_name IN ('Admin', 'Owner'))";
@@ -642,7 +645,7 @@ public class UserManagementDao extends DBContext {
     public boolean resetEmployeePassword(int employeeId, String hashedPassword) {
         String sql =
                 "UPDATE Employee " +
-                "SET passwordHash = ? " +
+                "SET passwordHash = ?, update_at = GETDATE() " +
                 "WHERE emp_id = ? " +
                 "AND NOT EXISTS (SELECT 1 FROM Role rr WHERE rr.role_id = Employee.role_id AND rr.role_name IN ('Admin', 'Owner'))";
 

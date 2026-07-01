@@ -30,7 +30,7 @@
         <!-- Action Button based on Role -->
         <c:choose>
             <c:when test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'SalesStaff'}">
-                <a href="${pageContext.request.contextPath}/orders/create" class="btn-sales-primary">
+                <a href="${pageContext.request.contextPath}/pos/sale" class="btn-sales-primary">
                     <span class="material-icons">shopping_cart</span>
                     <span>Bán hàng</span>
                 </a>
