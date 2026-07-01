@@ -12,6 +12,6 @@ public class ReportsServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setAttribute("activePage", "reports");
-        req.getRequestDispatcher("/WEB-INF/views/placeholder.jsp").forward(req, resp);
+        req.getRequestDispatcher("/views/sales/placeholder.jsp").forward(req, resp);
     }
 }

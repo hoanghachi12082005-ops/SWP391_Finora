@@ -60,7 +60,7 @@ public class OrdersServlet extends HttpServlet {
         req.setAttribute("orders", orders);
         req.setAttribute("keyword", keyword);
 
-        req.getRequestDispatcher("/WEB-INF/views/orders.jsp").forward(req, resp);
+        req.getRequestDispatcher("/views/sales/orders.jsp").forward(req, resp);
     }
 
     @Override

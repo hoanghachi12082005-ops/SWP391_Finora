@@ -116,6 +116,6 @@ public class RevenueServlet extends HttpServlet {
         req.setAttribute("topProducts", topProducts);
         req.setAttribute("recentTransactions", recentTransactions);
 
-        req.getRequestDispatcher("/WEB-INF/views/revenue.jsp").forward(req, resp);
+        req.getRequestDispatcher("/views/sales/revenue.jsp").forward(req, resp);
     }
 }

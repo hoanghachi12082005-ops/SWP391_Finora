@@ -113,7 +113,7 @@ public class SalesServlet extends HttpServlet {
         req.setAttribute("productList", productList);
         req.setAttribute("customerList", customerDao.getAll());
         req.setAttribute("warehouseId", warehouseId);
-        req.getRequestDispatcher("/WEB-INF/views/sales/sales.jsp").forward(req, resp);
+        req.getRequestDispatcher("/views/sales/sales.jsp").forward(req, resp);
     }
 
     @Override

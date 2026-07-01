@@ -57,7 +57,7 @@ public class ShiftServlet extends HttpServlet {
             req.setAttribute("shiftHistory", history);
         }
 
-        req.getRequestDispatcher("/WEB-INF/views/shift.jsp").forward(req, resp);
+        req.getRequestDispatcher("/views/sales/shift.jsp").forward(req, resp);
     }
 
     @Override

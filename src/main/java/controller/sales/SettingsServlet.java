@@ -12,6 +12,6 @@ public class SettingsServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setAttribute("activePage", "settings");
-        req.getRequestDispatcher("/WEB-INF/views/placeholder.jsp").forward(req, resp);
+        req.getRequestDispatcher("/views/sales/placeholder.jsp").forward(req, resp);
     }
 }
