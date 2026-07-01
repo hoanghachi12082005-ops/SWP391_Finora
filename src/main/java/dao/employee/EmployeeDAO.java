@@ -16,11 +16,22 @@ public class EmployeeDAO {
      * Tìm nhân viên theo email hoặc số điện thoại, bao gồm FailedLoginCount.
      */
     public Employee findByEmailOrPhone(String username) {
-        String sql = "SELECT e.*, r.Name AS RoleName, b.Name AS BranchName "
+        String sql = "SELECT "
+                + "  e.emp_id AS EmployeeID, "
+                + "  e.role_id AS RoleID, "
+                + "  e.branch_id AS BranchID, "
+                + "  e.fullName AS FullName, "
+                + "  e.email AS Email, "
+                + "  e.phone AS Phone, "
+                + "  e.passwordHash AS PasswordHash, "
+                + "  e.status AS Status, "
+                + "  e.failed_login_count AS FailedLoginCount, "
+                + "  r.role_name AS RoleName, "
+                + "  b.branch_name AS BranchName "
                 + "FROM Employee e "
-                + "JOIN Role r ON e.RoleID = r.RoleID "
-                + "LEFT JOIN Branch b ON e.BranchID = b.BranchID "
-                + "WHERE e.Email = ? OR e.Phone = ?";
+                + "JOIN Role r ON e.role_id = r.role_id "
+                + "LEFT JOIN Branch b ON e.branch_id = b.branch_id "
+                + "WHERE e.email = ? OR e.phone = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username);
@@ -56,13 +67,13 @@ public class EmployeeDAO {
         if (newCount >= MAX_FAILED) {
             // Đủ 5 lần → khoá tài khoản (chuyển INACTIVE)
             sql = "UPDATE Employee "
-                + "SET FailedLoginCount = ?, Status = 'INACTIVE', UpdatedAt = CURRENT_TIMESTAMP "
-                + "WHERE EmployeeID = ?";
+                + "SET failed_login_count = ?, status = 'INACTIVE', update_at = CURRENT_TIMESTAMP "
+                + "WHERE emp_id = ?";
         } else {
             // Chưa đủ → chỉ tăng đếm
             sql = "UPDATE Employee "
-                + "SET FailedLoginCount = ?, UpdatedAt = CURRENT_TIMESTAMP "
-                + "WHERE EmployeeID = ?";
+                + "SET failed_login_count = ?, update_at = CURRENT_TIMESTAMP "
+                + "WHERE emp_id = ?";
         }
 
         try (Connection conn = DBContext.getConnection();
@@ -82,8 +93,8 @@ public class EmployeeDAO {
      */
     public void resetFailedAttempts(int employeeId) {
         String sql = "UPDATE Employee "
-                   + "SET FailedLoginCount = 0, UpdatedAt = CURRENT_TIMESTAMP "
-                   + "WHERE EmployeeID = ?";
+                   + "SET failed_login_count = 0, update_at = CURRENT_TIMESTAMP "
+                   + "WHERE emp_id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, employeeId);
@@ -98,7 +109,7 @@ public class EmployeeDAO {
      * Lấy số lần đăng nhập sai hiện tại của tài khoản.
      */
     private int getFailedLoginCount(int employeeId) {
-        String sql = "SELECT FailedLoginCount FROM Employee WHERE EmployeeID = ?";
+        String sql = "SELECT failed_login_count AS FailedLoginCount FROM Employee WHERE emp_id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, employeeId);
@@ -119,7 +130,7 @@ public class EmployeeDAO {
     // ─────────────────────────────────────────────────────────
 
     public boolean existsByEmail(String email, Object ignore) {
-        String sql = "SELECT COUNT(*) FROM Employee WHERE LOWER(Email) = LOWER(?)";
+        String sql = "SELECT COUNT(*) FROM Employee WHERE LOWER(email) = LOWER(?)";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email);
@@ -134,11 +145,11 @@ public class EmployeeDAO {
     }
 
     /**
-     * Insert nhân viên mới vào DB (dùng cho Register).
+     * Insert nhân viên mới vào DB 
      */
     public boolean insert(Employee employee) {
         String sql = "INSERT INTO Employee "
-                   + "(RoleID, BranchID, FullName, Email, Phone, PasswordHash, Status, CreatedAt, UpdatedAt) "
+                   + "(role_id, branch_id, fullName, email, phone, passwordHash, status, created_at, update_at) "
                    + "VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -163,7 +174,7 @@ public class EmployeeDAO {
 
     public boolean checkFullNameAndEmailMatch(String fullName, String email) {
         String sql = "SELECT COUNT(*) FROM Employee "
-                   + "WHERE LOWER(FullName) = LOWER(?) AND LOWER(Email) = LOWER(?)";
+                   + "WHERE LOWER(fullName) = LOWER(?) AND LOWER(email) = LOWER(?)";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, fullName);
@@ -180,8 +191,8 @@ public class EmployeeDAO {
 
     public boolean updatePasswordByEmail(String email, String newPasswordHash) {
         String sql = "UPDATE Employee "
-                   + "SET PasswordHash = ?, UpdatedAt = CURRENT_TIMESTAMP "
-                   + "WHERE LOWER(Email) = LOWER(?)";
+                   + "SET passwordHash = ?, update_at = CURRENT_TIMESTAMP "
+                   + "WHERE LOWER(email) = LOWER(?)";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, newPasswordHash);
@@ -216,7 +227,6 @@ public class EmployeeDAO {
         try {
             e.setFailedLoginCount(rs.getInt("FailedLoginCount"));
         } catch (SQLException ex) {
-            // Cột chưa được migration → mặc định 0
             e.setFailedLoginCount(0);
         }
         return e;

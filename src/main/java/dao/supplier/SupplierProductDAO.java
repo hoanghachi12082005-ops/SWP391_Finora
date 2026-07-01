@@ -15,7 +15,7 @@ public class SupplierProductDAO {
      */
     public Map<Integer, Map<Integer, Double>> getSupplierProductMap() {
         Map<Integer, Map<Integer, Double>> map = new HashMap<>();
-        String sql = "SELECT SupplierID, ProductID, ImportPrice FROM SupplierProduct";
+        String sql = "SELECT supplier_id AS SupplierID, product_id AS ProductID, import_price AS ImportPrice FROM supplier_product";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -41,7 +41,7 @@ public class SupplierProductDAO {
      */
     public List<Integer> getLinkedProductIds(int supplierId) {
         List<Integer> list = new ArrayList<>();
-        String sql = "SELECT ProductID FROM SupplierProduct WHERE SupplierID = ?";
+        String sql = "SELECT product_id AS ProductID FROM supplier_product WHERE supplier_id = ?";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -65,7 +65,7 @@ public class SupplierProductDAO {
      */
     public Map<Integer, Double> getLinkedProductsWithPrices(int supplierId) {
         Map<Integer, Double> map = new HashMap<>();
-        String sql = "SELECT ProductID, ImportPrice FROM SupplierProduct WHERE SupplierID = ?";
+        String sql = "SELECT product_id AS ProductID, import_price AS ImportPrice FROM supplier_product WHERE supplier_id = ?";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -88,8 +88,8 @@ public class SupplierProductDAO {
      * Ghi nhận các liên kết sản phẩm và giá đàm phán của nhà cung cấp (Sử dụng Transaction)
      */
     public boolean saveAssociations(int supplierId, List<Integer> productIds, List<Double> prices) {
-        String deleteSql = "DELETE FROM SupplierProduct WHERE SupplierID = ?";
-        String insertSql = "INSERT INTO SupplierProduct (SupplierID, ProductID, ImportPrice) VALUES (?, ?, ?)";
+        String deleteSql = "DELETE FROM supplier_product WHERE supplier_id = ?";
+        String insertSql = "INSERT INTO supplier_product (supplier_id, product_id, import_price) VALUES (?, ?, ?)";
 
         Connection conn = null;
         try {

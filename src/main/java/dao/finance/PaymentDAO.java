@@ -24,34 +24,47 @@ public class PaymentDAO {
 
         List<Payment> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
-            SELECT p.*, e.FullName AS CreatorName, b.Name AS BranchName
-            FROM Payment p
-            LEFT JOIN Employee e ON p.EmployeeID = e.EmployeeID
-            LEFT JOIN Branch b ON p.BranchID = b.BranchID
+            SELECT 
+                p.payment_id AS PaymentID,
+                p.order_id AS OrderID,
+                p.payment_amount AS PaymentAmount,
+                p.payment_date AS PaymentDate,
+                p.payment_status AS PaymentStatus,
+                p.transaction_code AS TransactionCode,
+                p.payment_type AS PaymentType,
+                p.description AS Description,
+                p.emp_id AS EmployeeID,
+                p.branch_id AS BranchID,
+                p.payment_method AS PaymentMethod,
+                e.fullName AS CreatorName,
+                b.branch_name AS BranchName
+            FROM payment p
+            LEFT JOIN Employee e ON p.emp_id = e.emp_id
+            LEFT JOIN Branch b ON p.branch_id = b.branch_id
             WHERE 1=1
         """);
 
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (p.TransactionCode LIKE ? OR p.Description LIKE ?) ");
+            sql.append(" AND (p.transaction_code LIKE ? OR p.description LIKE ?) ");
             params.add("%" + keyword.trim() + "%");
             params.add("%" + keyword.trim() + "%");
         }
 
         if (type != null && !type.isBlank()) {
-            sql.append(" AND p.PaymentType = ? ");
+            sql.append(" AND p.payment_type = ? ");
             params.add(type);
         }
 
         if (paymentMethod != null && !paymentMethod.isBlank()) {
-            sql.append(" AND p.PaymentMethod = ? ");
+            sql.append(" AND p.payment_method = ? ");
             params.add(paymentMethod);
         }
 
         applyTimeRangeFilter(sql, timeRange);
 
-        sql.append(" ORDER BY p.PaymentDate DESC, p.PaymentID DESC ");
+        sql.append(" ORDER BY p.payment_date DESC, p.payment_id DESC ");
         sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
 
         try (Connection conn = DBContext.getConnection();
@@ -88,25 +101,25 @@ public class PaymentDAO {
 
         StringBuilder sql = new StringBuilder("""
             SELECT COUNT(*)
-            FROM Payment p
+            FROM payment p
             WHERE 1=1
         """);
 
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (p.TransactionCode LIKE ? OR p.Description LIKE ?) ");
+            sql.append(" AND (p.transaction_code LIKE ? OR p.description LIKE ?) ");
             params.add("%" + keyword.trim() + "%");
             params.add("%" + keyword.trim() + "%");
         }
 
         if (type != null && !type.isBlank()) {
-            sql.append(" AND p.PaymentType = ? ");
+            sql.append(" AND p.payment_type = ? ");
             params.add(type);
         }
 
         if (paymentMethod != null && !paymentMethod.isBlank()) {
-            sql.append(" AND p.PaymentMethod = ? ");
+            sql.append(" AND p.payment_method = ? ");
             params.add(paymentMethod);
         }
 
@@ -138,9 +151,9 @@ public class PaymentDAO {
      */
     public double getTotalCashBalance() {
         String sql = """
-            SELECT SUM(CASE WHEN PaymentType = 'INCOME' THEN PaymentAmount ELSE -PaymentAmount END)
-            FROM Payment
-            WHERE PaymentMethod = 'CASH'
+            SELECT SUM(CASE WHEN payment_type = 'INCOME' THEN payment_amount ELSE -payment_amount END)
+            FROM payment
+            WHERE payment_method = 'CASH'
         """;
         return getDoubleScalar(sql);
     }
@@ -150,9 +163,9 @@ public class PaymentDAO {
      */
     public double getTotalBankBalance() {
         String sql = """
-            SELECT SUM(CASE WHEN PaymentType = 'INCOME' THEN PaymentAmount ELSE -PaymentAmount END)
-            FROM Payment
-            WHERE PaymentMethod = 'BANK_TRANSFER'
+            SELECT SUM(CASE WHEN payment_type = 'INCOME' THEN payment_amount ELSE -payment_amount END)
+            FROM payment
+            WHERE payment_method = 'BANK_TRANSFER'
         """;
         return getDoubleScalar(sql);
     }
@@ -162,9 +175,9 @@ public class PaymentDAO {
      */
     public double getSumIncome(String paymentMethod) {
         String sql = """
-            SELECT SUM(PaymentAmount)
-            FROM Payment
-            WHERE PaymentType = 'INCOME' AND PaymentMethod = ?
+            SELECT SUM(payment_amount)
+            FROM payment
+            WHERE payment_type = 'INCOME' AND payment_method = ?
         """;
         return getDoubleScalarWithParam(sql, paymentMethod);
     }
@@ -174,9 +187,9 @@ public class PaymentDAO {
      */
     public double getSumExpense(String paymentMethod) {
         String sql = """
-            SELECT SUM(PaymentAmount)
-            FROM Payment
-            WHERE PaymentType = 'EXPENSE' AND PaymentMethod = ?
+            SELECT SUM(payment_amount)
+            FROM payment
+            WHERE payment_type = 'EXPENSE' AND payment_method = ?
         """;
         return getDoubleScalarWithParam(sql, paymentMethod);
     }
@@ -188,12 +201,12 @@ public class PaymentDAO {
         List<Map<String, Object>> list = new ArrayList<>();
         String sql = """
             SELECT 
-                DATEPART(week, PaymentDate) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, PaymentDate), 0)) + 1 AS WeekNum,
-                SUM(CASE WHEN PaymentType = 'INCOME' THEN PaymentAmount ELSE 0 END) AS TotalIncome,
-                SUM(CASE WHEN PaymentType = 'EXPENSE' THEN PaymentAmount ELSE 0 END) AS TotalExpense
-            FROM Payment
-            WHERE MONTH(PaymentDate) = MONTH(GETDATE()) AND YEAR(PaymentDate) = YEAR(GETDATE())
-            GROUP BY DATEPART(week, PaymentDate) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, PaymentDate), 0)) + 1
+                DATEPART(week, payment_date) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, payment_date), 0)) + 1 AS WeekNum,
+                SUM(CASE WHEN payment_type = 'INCOME' THEN payment_amount ELSE 0 END) AS TotalIncome,
+                SUM(CASE WHEN payment_type = 'EXPENSE' THEN payment_amount ELSE 0 END) AS TotalExpense
+            FROM payment
+            WHERE MONTH(payment_date) = MONTH(GETDATE()) AND YEAR(payment_date) = YEAR(GETDATE())
+            GROUP BY DATEPART(week, payment_date) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, payment_date), 0)) + 1
             ORDER BY WeekNum
         """;
 
@@ -230,10 +243,10 @@ public class PaymentDAO {
         payment.setName(autoCode); // BaseModel.name maps to TransactionCode
 
         String sql = """
-            INSERT INTO Payment (
-                OrderID, PaymentMethod, PaymentAmount, PaymentDate, 
-                PaymentStatus, TransactionCode, PaymentType, Description, 
-                EmployeeID, BranchID
+            INSERT INTO payment (
+                order_id, payment_method, payment_amount, payment_date, 
+                payment_status, transaction_code, payment_type, description, 
+                emp_id, branch_id
             )
             VALUES (?, ?, ?, GETDATE(), 'PAID', ?, ?, ?, ?, ?)
         """;
@@ -278,7 +291,7 @@ public class PaymentDAO {
      * Sinh mã giao dịch tăng tự động (ví dụ: PT00001, PC00001)
      */
     private String generateTransactionCode(String type, String prefix) {
-        String sql = "SELECT MAX(TransactionCode) FROM Payment WHERE PaymentType = ? AND TransactionCode LIKE ?";
+        String sql = "SELECT MAX(transaction_code) FROM payment WHERE payment_type = ? AND transaction_code LIKE ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -340,17 +353,17 @@ public class PaymentDAO {
 
         switch (timeRange.toLowerCase()) {
             case "today":
-                sql.append(" AND CAST(p.PaymentDate AS DATE) = CAST(GETDATE() AS DATE) ");
+                sql.append(" AND CAST(p.payment_date AS DATE) = CAST(GETDATE() AS DATE) ");
                 break;
             case "yesterday":
-                sql.append(" AND CAST(p.PaymentDate AS DATE) = CAST(DATEADD(day, -1, GETDATE()) AS DATE) ");
+                sql.append(" AND CAST(p.payment_date AS DATE) = CAST(DATEADD(day, -1, GETDATE()) AS DATE) ");
                 break;
             case "this_month":
-                sql.append(" AND MONTH(p.PaymentDate) = MONTH(GETDATE()) AND YEAR(p.PaymentDate) = YEAR(GETDATE()) ");
+                sql.append(" AND MONTH(p.payment_date) = MONTH(GETDATE()) AND YEAR(p.payment_date) = YEAR(GETDATE()) ");
                 break;
             case "last_month":
-                sql.append(" AND p.PaymentDate >= DATEADD(month, DATEDIFF(month, 0, GETDATE()) - 1, 0) ")
-                   .append(" AND p.PaymentDate < DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) ");
+                sql.append(" AND p.payment_date >= DATEADD(month, DATEDIFF(month, 0, GETDATE()) - 1, 0) ")
+                   .append(" AND p.payment_date < DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) ");
                 break;
         }
     }
