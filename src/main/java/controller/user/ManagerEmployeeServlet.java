@@ -57,8 +57,8 @@ public class ManagerEmployeeServlet extends HttpServlet {
 
         loadPageData(request, branchID);
 
-        request.setAttribute("pageTitle", "Branch Employee List");
-        request.setAttribute("pageSubtitle", "Store Manager views employee accounts in the assigned branch");
+        request.setAttribute("pageTitle", "Danh sách nhân viên chi nhánh");
+        request.setAttribute("pageSubtitle", "Quản lý cửa hàng xem tài khoản nhân viên trong chi nhánh được phân công");
         request.setAttribute("addButtonText", "");
         request.setAttribute("baseUrl", request.getContextPath() + "/manager/emp");
 
@@ -148,7 +148,7 @@ public class ManagerEmployeeServlet extends HttpServlet {
         int employeeID = parseInt(request.getParameter("id"), -1);
 
         if (employeeID <= 0) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid employee ID.");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID nhân viên không hợp lệ.");
             return;
         }
 
@@ -171,8 +171,8 @@ public class ManagerEmployeeServlet extends HttpServlet {
         request.setAttribute("showSalesSection", isSalesStaff);
 
         request.setAttribute("readOnlyProfile", true);
-        request.setAttribute("profileTitle", "Employee Profile");
-        request.setAttribute("profileSubtitle", "Store Manager views employee information and sales performance");
+        request.setAttribute("profileTitle", "Hồ sơ nhân viên");
+        request.setAttribute("profileSubtitle", "Quản lý cửa hàng xem thông tin và hiệu suất bán hàng của nhân viên");
         request.setAttribute("backUrl", request.getContextPath() + "/manager/emp");
 
         // FIX: Đường dẫn đúng: /views/profile/ (có chữ 's', không phải /view/)

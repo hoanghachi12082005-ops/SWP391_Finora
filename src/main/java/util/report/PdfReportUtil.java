@@ -131,7 +131,7 @@ public final class PdfReportUtil {
     }
 
     private static void addHeader(Document document, String companyName, String generatedBy) throws DocumentException {
-        Paragraph title = new Paragraph("Employee Sales Report", TITLE_FONT);
+        Paragraph title = new Paragraph("Báo cáo doanh số nhân viên", TITLE_FONT);
         title.setAlignment(Element.ALIGN_CENTER);
         title.setSpacingAfter(4);
         document.add(title);

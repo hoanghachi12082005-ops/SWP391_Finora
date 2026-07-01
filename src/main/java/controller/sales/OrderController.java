@@ -98,7 +98,7 @@ public class OrderController extends HttpServlet {
             return;
         }
 
-        request.setAttribute("message", "Received data. Connect Service/DAO for processing.");
+        request.setAttribute("message", "Đã nhận dữ liệu. Hãy kết nối Service/DAO để xử lý thật.");
         doGet(request, response);
     }
 
@@ -118,7 +118,7 @@ public class OrderController extends HttpServlet {
                 return;
             }
             if (total == null || total.compareTo(BigDecimal.ZERO) <= 0) {
-                sendJson(response, "{\"status\":\"error\",\"message\":\"Invalid total amount.\"}");
+                sendJson(response, "{\"status\":\"error\",\"message\":\"Tổng tiền không hợp lệ.\"}");
                 return;
             }
 

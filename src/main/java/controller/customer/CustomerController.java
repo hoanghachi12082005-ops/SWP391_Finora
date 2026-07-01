@@ -73,9 +73,9 @@ public class CustomerController extends HttpServlet {
 
         loadPageData(request);
 
-        request.setAttribute("pageTitle", "Customer Management");
-        request.setAttribute("pageSubtitle", "Manage customer information, loyalty points and purchase history");
-        request.setAttribute("addButtonText", "Add Customer");
+        request.setAttribute("pageTitle", "Quản lý khách hàng");
+        request.setAttribute("pageSubtitle", "Quản lý thông tin khách hàng, điểm tích lũy và lịch sử mua hàng");
+        request.setAttribute("addButtonText", "Thêm khách hàng");
         request.setAttribute("baseUrl", request.getContextPath() + "/customers");
 
         // Permissions for UI
@@ -128,7 +128,7 @@ public class CustomerController extends HttpServlet {
                 break;
 
             default:
-                setFlash(request, "errorMessage", "Invalid action.");
+                setFlash(request, "errorMessage", "Thao tác không hợp lệ.");
                 break;
         }
 
@@ -181,7 +181,7 @@ public class CustomerController extends HttpServlet {
         }
 
         if (customerDAO.isEmailOrPhoneExists(email, phone, null)) {
-            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Email or phone already exists.\"}");
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Email hoặc số điện thoại đã tồn tại.\"}");
             return;
         }
 
@@ -210,10 +210,10 @@ public class CustomerController extends HttpServlet {
                     created.getLoyaltyPoint()
                 ));
             } else {
-                sendJsonResponse(response, "{\"status\":\"success\",\"message\":\"Customer created successfully.\"}");
+                sendJsonResponse(response, "{\"status\":\"success\",\"message\":\"Tạo khách hàng thành công.\"}");
             }
         } else {
-            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Cannot create customer.\"}");
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Không thể tạo khách hàng.\"}");
         }
     }
 
@@ -223,18 +223,18 @@ public class CustomerController extends HttpServlet {
         String email = trim(request.getParameter("email"));
 
         if (customerId <= 0 || isBlank(phone)) {
-            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Invalid customer data.\"}");
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Dữ liệu khách hàng không hợp lệ.\"}");
             return;
         }
 
         if (customerDAO.isEmailOrPhoneExists(email, phone, customerId)) {
-            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Email or phone already exists.\"}");
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Email hoặc số điện thoại đã tồn tại.\"}");
             return;
         }
 
         Customer existing = customerDAO.findById(customerId);
         if (existing == null) {
-            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Customer not found.\"}");
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Không tìm thấy khách hàng.\"}");
             return;
         }
 
@@ -249,9 +249,9 @@ public class CustomerController extends HttpServlet {
             if (ok) {
                 Employee user2 = getLoggedInUser(request);
                 if (user2 != null) activityLogService.log(user2.getEmployeeID(), "UPDATE", "Customer", customerId, null, phone);
-                sendJsonResponse(response, "{\"status\":\"success\",\"message\":\"Customer updated successfully (Phone and Email only).\"}");
+                sendJsonResponse(response, "{\"status\":\"success\",\"message\":\"Cập nhật khách hàng thành công (Chỉ điện thoại và email).\"}");
             } else {
-                sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Cannot update customer.\"}");
+                sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Không thể cập nhật khách hàng.\"}");
             }
         } else {
             // Admin, Owner, Manager can edit everything in update-api too
@@ -265,9 +265,9 @@ public class CustomerController extends HttpServlet {
             if (ok) {
                 Employee user2 = getLoggedInUser(request);
                 if (user2 != null) activityLogService.log(user2.getEmployeeID(), "UPDATE", "Customer", customerId, null, phone);
-                sendJsonResponse(response, "{\"status\":\"success\",\"message\":\"Customer updated successfully.\"}");
+                sendJsonResponse(response, "{\"status\":\"success\",\"message\":\"Cập nhật khách hàng thành công.\"}");
             } else {
-                sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Cannot update customer.\"}");
+                sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Không thể cập nhật khách hàng.\"}");
             }
         }
     }
@@ -380,18 +380,18 @@ public class CustomerController extends HttpServlet {
         String dateOfBirthStr = trim(request.getParameter("dateOfBirth"));
 
         if (isUpdate && customerId <= 0) {
-            setFlash(request, "errorMessage", "Invalid customer ID.");
+            setFlash(request, "errorMessage", "ID khách hàng không hợp lệ.");
             return;
         }
 
         if (isBlank(fullName) || isBlank(phone)) {
-            setFlash(request, "errorMessage", "Please enter full name and phone number.");
+            setFlash(request, "errorMessage", "Vui lòng nhập họ tên và số điện thoại.");
             return;
         }
 
         Integer excludeCustomerId = isUpdate ? customerId : null;
         if (customerDAO.isEmailOrPhoneExists(email, phone, excludeCustomerId)) {
-            setFlash(request, "errorMessage", "Email or phone already exists.");
+            setFlash(request, "errorMessage", "Email hoặc số điện thoại đã tồn tại.");
             return;
         }
 
@@ -441,8 +441,8 @@ public class CustomerController extends HttpServlet {
                 request,
                 success ? "successMessage" : "errorMessage",
                 success
-                        ? (isUpdate ? "Customer updated successfully." : "Customer created successfully.")
-                        : (isUpdate ? "Cannot update customer." : "Cannot create customer.")
+                        ? (isUpdate ? "Cập nhật khách hàng thành công." : "Tạo khách hàng thành công.")
+                        : (isUpdate ? "Không thể cập nhật khách hàng." : "Không thể tạo khách hàng.")
         );
     }
 
@@ -453,7 +453,7 @@ public class CustomerController extends HttpServlet {
     private void deleteCustomer(HttpServletRequest request) {
         int customerId = parseInt(request.getParameter("customerId"), -1);
         if (customerId <= 0) {
-            setFlash(request, "errorMessage", "Invalid customer ID.");
+            setFlash(request, "errorMessage", "ID khách hàng không hợp lệ.");
             return;
         }
 
@@ -465,7 +465,7 @@ public class CustomerController extends HttpServlet {
         setFlash(
                 request,
                 success ? "successMessage" : "errorMessage",
-                success ? "Customer deleted successfully (Soft Delete)." : "Cannot delete customer."
+                success ? "Xóa khách hàng thành công." : "Không thể xóa khách hàng."
         );
     }
 
@@ -476,12 +476,12 @@ public class CustomerController extends HttpServlet {
     private void syncLoyalty(HttpServletRequest request) {
         int customerId = parseInt(request.getParameter("customerId"), -1);
         if (customerId <= 0) {
-            setFlash(request, "errorMessage", "Invalid customer ID.");
+            setFlash(request, "errorMessage", "ID khách hàng không hợp lệ.");
             return;
         }
 
         customerDAO.syncLoyaltyFromPaidOrders(customerId);
-        setFlash(request, "successMessage", "Loyalty points synced from paid orders.");
+        setFlash(request, "successMessage", "Đã đồng bộ điểm từ đơn hàng đã thanh toán.");
     }
 
     private void redeemPoints(HttpServletRequest request) {
@@ -489,7 +489,7 @@ public class CustomerController extends HttpServlet {
         int redeemPointsValue = parseInt(request.getParameter("redeemPoints"), 0);
 
         if (customerId <= 0) {
-            setFlash(request, "errorMessage", "Invalid customer ID.");
+            setFlash(request, "errorMessage", "ID khách hàng không hợp lệ.");
             return;
         }
 

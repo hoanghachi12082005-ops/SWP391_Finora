@@ -134,10 +134,10 @@ public class ReportController extends BaseController {
         );
         request.setAttribute("branches", userManagementDao.getAllBranches());
 
-        request.setAttribute("pageTitle", "Employee Sales Report");
+        request.setAttribute("pageTitle", "Báo cáo doanh số nhân viên");
         request.setAttribute(
                 "pageSubtitle",
-                "View sales performance metrics for employees"
+                "Xem chỉ số hiệu suất bán hàng của nhân viên"
         );
         request.setAttribute("baseUrl", request.getContextPath() + "/reports/employee-sales");
 
@@ -191,7 +191,7 @@ public class ReportController extends BaseController {
         request.setAttribute("branchFilter", finalBranchId);
         request.setAttribute("dateFrom", dateFromRaw);
         request.setAttribute("dateTo", dateToRaw);
-        request.setAttribute("pageTitle", "Employee Sales Report Preview");
+        request.setAttribute("pageTitle", "Xem trước báo cáo doanh số nhân viên");
     }
 
     private void exportEmployeeSalesPdf(HttpServletRequest request, HttpServletResponse response)

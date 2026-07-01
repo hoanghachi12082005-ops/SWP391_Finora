@@ -50,20 +50,20 @@ public class SystemController extends BaseController {
             response.sendRedirect(request.getContextPath() + "/configuration/business");
             return;
         }
-        request.setAttribute("message", "Received data. Connect Service/DAO for actual processing.");
+        request.setAttribute("message", "Đã nhận dữ liệu. Hãy kết nối Service/DAO để xử lý thật.");
         doGet(request, response);
     }
 
     private void updateLoyaltySetting(HttpServletRequest request) {
         String amountStr = request.getParameter("amountPerPoint");
         if (amountStr == null || amountStr.trim().isEmpty()) {
-            request.getSession().setAttribute("errorMessage", "Amount per point is required.");
+            request.getSession().setAttribute("errorMessage", "Vui lòng nhập số tiền trên mỗi điểm.");
             return;
         }
         try {
             BigDecimal amountPerPoint = new BigDecimal(amountStr.trim());
             if (amountPerPoint.compareTo(BigDecimal.ZERO) <= 0) {
-                request.getSession().setAttribute("errorMessage", "Amount per point must be positive.");
+                request.getSession().setAttribute("errorMessage", "Số tiền trên mỗi điểm phải lớn hơn 0.");
                 return;
             }
             LoyaltyPointSetting setting = loyaltyDAO.getSetting();
@@ -84,12 +84,12 @@ public class SystemController extends BaseController {
                         activityLogService.log(user.getEmployeeID(), "UPDATE", "LoyaltyPointSetting", setting.getSettingId(), null, amountPerPoint.toString());
                     }
                 }
-                request.getSession().setAttribute("successMessage", "Loyalty point setting updated.");
+                request.getSession().setAttribute("successMessage", "Đã cập nhật cài đặt điểm tích lũy.");
             } else {
-                request.getSession().setAttribute("errorMessage", "Cannot update setting.");
+                request.getSession().setAttribute("errorMessage", "Không thể cập nhật cài đặt.");
             }
         } catch (NumberFormatException e) {
-            request.getSession().setAttribute("errorMessage", "Invalid number format.");
+            request.getSession().setAttribute("errorMessage", "Định dạng số không hợp lệ.");
         }
     }
 }

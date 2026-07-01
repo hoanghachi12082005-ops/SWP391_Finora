@@ -78,9 +78,9 @@ public class AdminUserServlet extends HttpServlet {
 
         loadPageData(request);
 
-        request.setAttribute("pageTitle", "Employee Management");
-        request.setAttribute("pageSubtitle", "Admin views and manages all employee accounts across branches");
-        request.setAttribute("addButtonText", "Add Employee");
+        request.setAttribute("pageTitle", "Quản lý nhân viên");
+        request.setAttribute("pageSubtitle", "Quản trị viên xem và quản lý tất cả tài khoản nhân viên trên toàn hệ thống");
+        request.setAttribute("addButtonText", "Thêm nhân viên");
         request.setAttribute("baseUrl", request.getContextPath() + "/admin/user");
 
         request.setAttribute("showBranch", true);
@@ -123,7 +123,7 @@ public class AdminUserServlet extends HttpServlet {
                 break;
 
             default:
-                setFlash(request, "errorMessage", "Invalid action.");
+                setFlash(request, "errorMessage", "Thao tác không hợp lệ.");
                 break;
         }
 
@@ -226,19 +226,19 @@ public class AdminUserServlet extends HttpServlet {
         int roleId = parseInt(request.getParameter("roleId"), -1);
 
         if (isUpdate && employeeId <= 0) {
-            setFlash(request, "errorMessage", "Invalid employee ID.");
+            setFlash(request, "errorMessage", "ID nhân viên không hợp lệ.");
             return;
         }
 
         if (isBlank(fullName) || isBlank(email) || branchId <= 0 || roleId <= 0) {
-            setFlash(request, "errorMessage", "Please enter full name, email, branch and a role.");
+            setFlash(request, "errorMessage", "Vui lòng nhập họ tên, email, chi nhánh và vai trò.");
             return;
         }
 
         Integer excludeEmployeeId = isUpdate ? employeeId : null;
 
         if (adminUserDao.isEmailExists(email, phone, excludeEmployeeId)) {
-            setFlash(request, "errorMessage", "Email/Phone already exists.");
+            setFlash(request, "errorMessage", "Email/Số điện thoại đã tồn tại.");
             return;
         }
 
@@ -291,8 +291,8 @@ public class AdminUserServlet extends HttpServlet {
                 request,
                 success ? "successMessage" : "errorMessage",
                 success
-                        ? (isUpdate ? "Employee account updated successfully." : "Employee account created successfully.")
-                        : (isUpdate ? "Cannot update employee account." : "Cannot create employee account.")
+                        ? (isUpdate ? "Cập nhật tài khoản nhân viên thành công." : "Tạo tài khoản nhân viên thành công.")
+                        : (isUpdate ? "Không thể cập nhật tài khoản nhân viên." : "Không thể tạo tài khoản nhân viên.")
         );
     }
     
@@ -302,14 +302,14 @@ public class AdminUserServlet extends HttpServlet {
         int employeeId = parseInt(request.getParameter("id"), -1);
 
         if (employeeId <= 0) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid employee ID.");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID nhân viên không hợp lệ.");
             return;
         }
 
         Employee profile = adminUserDao.getEmployeeByIdAllRoles(employeeId);
 
         if (profile == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Employee not found.");
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Không tìm thấy nhân viên.");
             return;
         }
 
@@ -323,8 +323,8 @@ public class AdminUserServlet extends HttpServlet {
         request.setAttribute("showSalesSection", isSalesStaff);
 
         request.setAttribute("readOnlyProfile", true);
-        request.setAttribute("profileTitle", "Employee Profile");
-        request.setAttribute("profileSubtitle", "Admin views employee information");
+        request.setAttribute("profileTitle", "Hồ sơ nhân viên");
+        request.setAttribute("profileSubtitle", "Quản trị viên xem thông tin nhân viên");
         request.setAttribute("backUrl", request.getContextPath() + "/admin/user");
 
         request.getRequestDispatcher("/views/profile/profile.jsp")
@@ -335,7 +335,7 @@ public class AdminUserServlet extends HttpServlet {
         int employeeId = parseInt(request.getParameter("employeeId"), -1);
 
         if (employeeId <= 0) {
-            setFlash(request, "errorMessage", "Invalid employee ID.");
+            setFlash(request, "errorMessage", "ID nhân viên không hợp lệ.");
             return;
         }
 
@@ -349,7 +349,7 @@ public class AdminUserServlet extends HttpServlet {
         setFlash(
                 request,
                 success ? "successMessage" : "errorMessage",
-                success ? "Account status updated successfully." : "Cannot update account status."
+                success ? "Cập nhật trạng thái tài khoản thành công." : "Không thể cập nhật trạng thái tài khoản."
         );
     }
 
@@ -357,14 +357,14 @@ public class AdminUserServlet extends HttpServlet {
         int employeeId = parseInt(request.getParameter("employeeId"), -1);
 
         if (employeeId <= 0) {
-            setFlash(request, "errorMessage", "Invalid reset password data.");
+            setFlash(request, "errorMessage", "Dữ liệu đặt lại mật khẩu không hợp lệ.");
             return;
         }
 
         Employee employee = adminUserDao.getEmployeeByIdAllRoles(employeeId);
 
         if (employee == null) {
-            setFlash(request, "errorMessage", "Employee not found or you are not allowed to reset this account.");
+            setFlash(request, "errorMessage", "Không tìm thấy nhân viên hoặc bạn không có quyền đặt lại mật khẩu này.");
             return;
         }
 

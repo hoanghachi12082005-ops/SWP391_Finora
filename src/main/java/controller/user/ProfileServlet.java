@@ -71,7 +71,7 @@ public class ProfileServlet extends HttpServlet {
         } else if ("changePassword".equals(action)) {
             changePassword(request);
         } else {
-            setFlash(request, "errorMessage", "Invalid action.");
+            setFlash(request, "errorMessage", "Thao tác không hợp lệ.");
         }
 
         response.sendRedirect(request.getContextPath() + "/profile");
@@ -91,8 +91,8 @@ public class ProfileServlet extends HttpServlet {
         }
 
         request.setAttribute("readOnlyProfile", false);
-        request.setAttribute("profileTitle", "My Profile");
-        request.setAttribute("profileSubtitle", "View your personal information and sales performance");
+        request.setAttribute("profileTitle", "Hồ sơ của tôi");
+        request.setAttribute("profileSubtitle", "Xem thông tin cá nhân và hiệu suất bán hàng");
     }
 
     private void updateProfile(HttpServletRequest request) {
@@ -108,7 +108,7 @@ public class ProfileServlet extends HttpServlet {
         }
 
         if (profileDao.isEmailExists(email, employeeID)) {
-            setFlash(request, "errorMessage", "Email already exists.");
+            setFlash(request, "errorMessage", "Email đã tồn tại.");
             return;
         }
 
@@ -157,7 +157,7 @@ public class ProfileServlet extends HttpServlet {
         setFlash(
                 request,
                 success ? "successMessage" : "errorMessage",
-                success ? "Profile updated successfully." : "Cannot update profile."
+                success ? "Cập nhật hồ sơ thành công." : "Không thể cập nhật hồ sơ."
         );
     }
     private String saveAvatarFile(HttpServletRequest request, Part avatarPart, int employeeID)
