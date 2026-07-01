@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Activity Center - Audit Log (immutable, read-only).
+ * Trung tâm hoạt động - Audit Log (immutable, read-only).
  * - Chỉ GET; doPost trả 405.
  * - Chỉ Owner mới được truy cập; chưa login → /login; không phải Owner → 403.
  *

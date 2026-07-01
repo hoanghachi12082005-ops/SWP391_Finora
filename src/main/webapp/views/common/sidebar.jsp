@@ -118,7 +118,7 @@
                 <a href="${pageContext.request.contextPath}/activity-log"
                    class="sidebar-menu-item ${originalUri.contains('/activity-log') ? 'active' : ''}">
                     <span class="material-icons">history</span>
-                    <span>Activity Center</span>
+                    <span>Trung tâm hoạt động</span>
                 </a>
             </c:if>
             <a href="${pageContext.request.contextPath}/configuration/business" 

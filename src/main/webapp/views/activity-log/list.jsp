@@ -32,18 +32,6 @@
                         Tổng <strong><%= totalCount != null ? totalCount : 0 %></strong> hoạt động
                     </small>
                 </div>
-                <span class="badge bg-secondary d-flex align-items-center gap-1" style="padding: 8px 12px;">
-                    <span class="material-icons" style="font-size:16px;">lock</span>
-                    Chỉ xem &middot; Quyền Chủ chuỗi
-                </span>
-            </div>
-
-            <div class="alert alert-info d-flex align-items-start" role="alert">
-                <span class="material-icons me-2">info</span>
-                <div>
-                    Mọi thao tác bán hàng, nhập xuất, chỉnh sửa của nhân viên đều được tự động ghi lại tại đây.
-                    Nhật ký này <strong>không thể chỉnh sửa hoặc xóa</strong> để bảo toàn dấu vết kiểm toán nội bộ.
-                </div>
             </div>
 
             <!-- Bộ lọc nghiệp vụ -->
@@ -235,10 +223,6 @@
                     <dt class="col-sm-3">Dữ liệu sau</dt>
                     <dd class="col-sm-9"><pre class="bg-light p-2 rounded small mb-0" id="vNew" style="max-height: 200px; overflow:auto;"></pre></dd>
                 </dl>
-                <div class="alert alert-secondary small mt-3 mb-0">
-                    Thông tin "Dữ liệu trước / sau" được lưu dưới dạng JSON kỹ thuật để phục vụ kiểm toán.
-                    Nếu cần dịch ra ngôn ngữ nghiệp vụ chi tiết, hãy liên hệ phòng IT.
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
