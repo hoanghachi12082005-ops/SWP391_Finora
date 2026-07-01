@@ -61,12 +61,41 @@
             </div>
         </c:if>
 
-        <!-- Create Order (SalesStaff, StoreManager, Admin, Owner) -->
+        <!-- POS Sales Menu -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'SalesStaff'}">
-            <a href="${pageContext.request.contextPath}/orders/create" 
-               class="sidebar-menu-item ${pageContext.request.requestURI.contains('/orders/') ? 'active' : ''}">
+            <c:set var="isSalesActive" value="${originalUri.contains('/sales') || originalUri.contains('/orders') || originalUri.contains('/shift') || originalUri.contains('/revenue')}" />
+            <a href="#salesCollapse" data-bs-toggle="collapse" role="button" aria-expanded="${isSalesActive ? 'true' : 'false'}" aria-controls="salesCollapse"
+               class="sidebar-menu-item ${isSalesActive ? 'active' : ''} d-flex align-items-center">
                 <span class="material-icons">point_of_sale</span>
-                <span>Bán hàng (POS)</span>
+                <span>Giao dịch</span>
+                <span class="material-icons ms-auto transition-icon" style="font-size: 1.2rem;">expand_more</span>
+            </a>
+            <div class="collapse ${isSalesActive ? 'show' : ''}" id="salesCollapse">
+                <div class="sidebar-submenu">
+                    <a href="${pageContext.request.contextPath}/sales" class="sidebar-submenu-item ${originalUri.contains('/sales') ? 'active' : ''}">
+                        Bán hàng (POS)
+                    </a>
+                    <a href="${pageContext.request.contextPath}/orders" class="sidebar-submenu-item ${originalUri.contains('/orders') ? 'active' : ''}">
+                        Lịch sử đơn hàng
+                    </a>
+                    <a href="${pageContext.request.contextPath}/shift" class="sidebar-submenu-item ${originalUri.contains('/shift') ? 'active' : ''}">
+                        Ca làm việc
+                    </a>
+                    <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+                        <a href="${pageContext.request.contextPath}/revenue" class="sidebar-submenu-item ${originalUri.contains('/revenue') ? 'active' : ''}">
+                            Báo cáo doanh thu
+                        </a>
+                    </c:if>
+                </div>
+            </div>
+        </c:if>
+
+        <!-- Cashbook (Sổ Quỹ) (Admin, Owner, StoreManager) -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+            <a href="${pageContext.request.contextPath}/cashbook" 
+               class="sidebar-menu-item ${originalUri.contains('/cashbook') ? 'active' : ''}">
+                <span class="material-icons">account_balance_wallet</span>
+                <span>Sổ Quỹ</span>
             </a>
         </c:if>
 
@@ -76,6 +105,15 @@
                class="sidebar-menu-item ${pageContext.request.requestURI.contains('/suppliers') ? 'active' : ''}">
                 <span class="material-icons">handshake</span>
                 <span>Đối tác</span>
+            </a>
+        </c:if>
+
+        <!-- Branch / Store Management (Admin, Owner) -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
+            <a href="${pageContext.request.contextPath}/branch" 
+               class="sidebar-menu-item ${originalUri.contains('/branch') ? 'active' : ''}">
+                <span class="material-icons">storefront</span>
+                <span>Chi nhánh</span>
             </a>
         </c:if>
 

@@ -14,8 +14,7 @@
 
         <div class="card-body">
 
-            <form method="post"
-                  action="suppliers">
+            <form method="post" action="suppliers">
 
                 <input type="hidden"
                        name="action"
