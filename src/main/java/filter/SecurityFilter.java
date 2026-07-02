@@ -91,7 +91,7 @@ public class SecurityFilter implements Filter {
         resp.setHeader("Referrer-Policy", "same-origin");
 
         // 5. Ensure CSRF token exists in session (generated on first GET or login)
-        if ("GET".equalsIgnoreCase(req.getMethod()) && session.getAttribute("csrfToken") == null) {
+        if (session.getAttribute("csrfToken") == null) {
             byte[] csrfBytes = new byte[32];
             new SecureRandom().nextBytes(csrfBytes);
             session.setAttribute("csrfToken", Base64.getEncoder().encodeToString(csrfBytes));
@@ -109,6 +109,12 @@ public class SecurityFilter implements Filter {
         // 7. CSRF check for state-changing methods
         if ("POST".equalsIgnoreCase(req.getMethod()) && !isCsrfExempt(path)) {
             String csrfToken = req.getParameter("csrfToken");
+            if (csrfToken == null) {
+                csrfToken = req.getHeader("X-CSRF-Token");
+            }
+            if (csrfToken == null) {
+                csrfToken = req.getHeader("X-Csrf-Token");
+            }
             String sessionToken = (String) req.getSession().getAttribute("csrfToken");
             if (csrfToken == null || !csrfToken.equals(sessionToken)) {
                 resp.sendError(403, "CSRF token không hợp lệ. Vui lòng tải lại trang.");
