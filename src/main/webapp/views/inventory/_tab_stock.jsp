@@ -203,6 +203,7 @@ function selectWarehouse(id) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form action="${pageContext.request.contextPath}/inventory" method="POST" id="importStockForm">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="action" value="saveImport">
                 <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">
                 
@@ -308,17 +309,18 @@ function selectWarehouse(id) {
                         item.className = 'import-search-item';
                         item.style.cursor = 'default';
                         
-                        // Format currency
-                        const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.importPrice || 0);
-                        
                         let optionsHtml = '';
+                        let defaultPrice = 0;
                         if (p.suppliers && p.suppliers.length > 0) {
+                            defaultPrice = p.suppliers[0].importPrice || 0;
                             p.suppliers.forEach(sup => {
-                                optionsHtml += `<option value="\${sup.supplierId}">\${sup.supplierName}</option>`;
+                                optionsHtml += `<option value="\${sup.supplierId}" data-price="\${sup.importPrice || 0}">\${sup.supplierName}</option>`;
                             });
                         } else {
                             optionsHtml = `<option value="">-- Chưa gắn Nhà Cung Cấp --</option>`;
                         }
+
+                        const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 
                         item.innerHTML = `
                             <div>
@@ -328,6 +330,7 @@ function selectWarehouse(id) {
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
+                                <div class="text-primary fw-medium small i-price-display" style="width: 100px; text-align: right;">\${formatCurrency(defaultPrice)}</div>
                                 <select class="form-select form-select-sm i-supplier-select" style="width: 200px; font-size: 13px; cursor: pointer;">
                                     \${optionsHtml}
                                 </select>
@@ -336,7 +339,16 @@ function selectWarehouse(id) {
                         `;
                         
                         const selectEl = item.querySelector('.i-supplier-select');
+                        const priceDisplay = item.querySelector('.i-price-display');
                         const addBtn = item.querySelector('.i-add-btn');
+
+                        if (selectEl) {
+                            selectEl.onchange = (e) => {
+                                const selectedOption = e.target.options[e.target.selectedIndex];
+                                const pVal = selectedOption.getAttribute('data-price') || 0;
+                                priceDisplay.innerText = formatCurrency(pVal);
+                            };
+                        }
                         
                         addBtn.onclick = () => {
                             if (!selectEl.value) {
@@ -346,8 +358,9 @@ function selectWarehouse(id) {
                             
                             const selectedId = parseInt(selectEl.value);
                             const sup = p.suppliers.find(s => s.supplierId === selectedId);
+                            const finalPrice = selectEl.options[selectEl.selectedIndex].getAttribute('data-price') || 0;
                             
-                            addImportRow(p, formattedPrice, sup, p.suppliers);
+                            addImportRow(p, formatCurrency(finalPrice), sup, p.suppliers);
                             iSearchActive = false;
                             iSearchResults.style.display = 'none';
                             iSearchInput.value = '';
@@ -404,7 +417,7 @@ function selectWarehouse(id) {
         let supplierOptions = '';
         allSuppliers.forEach(s => {
             const selected = s.supplierId === selectedSupplier.supplierId ? 'selected' : '';
-            supplierOptions += `<option value="\${s.supplierId}" \${selected}>\${s.supplierName}</option>`;
+            supplierOptions += `<option value="\${s.supplierId}" data-price="\${s.importPrice || 0}" \${selected}>\${s.supplierName}</option>`;
         });
 
         const tr = document.createElement('tr');
@@ -414,11 +427,11 @@ function selectWarehouse(id) {
                 <input type="hidden" name="productId[]" value="\${product.productId}">
             </td>
             <td>
-                <select name="supplierId[]" class="form-select form-select-sm" style="font-size: 13px; background-color: #f8fafc; font-weight: 500;">
+                <select name="supplierId[]" class="form-select form-select-sm i-row-supplier-select" style="font-size: 13px; background-color: #f8fafc; font-weight: 500;">
                     \${supplierOptions}
                 </select>
             </td>
-            <td class="text-primary fw-medium small">\${formattedPrice}</td>
+            <td class="text-primary fw-medium small i-row-price">\${formattedPrice}</td>
             <td>
                 <input type="number" name="quantity[]" class="form-control form-control-sm text-center fw-bold i-qty-input" required value="1" min="1">
             </td>
@@ -428,6 +441,13 @@ function selectWarehouse(id) {
                 </button>
             </td>
         `;
+        
+        tr.querySelector('.i-row-supplier-select').onchange = (e) => {
+            const opt = e.target.options[e.target.selectedIndex];
+            const pVal = opt.getAttribute('data-price') || 0;
+            tr.querySelector('.i-row-price').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(pVal);
+        };
+        
         iTableBody.appendChild(tr);
     }
 

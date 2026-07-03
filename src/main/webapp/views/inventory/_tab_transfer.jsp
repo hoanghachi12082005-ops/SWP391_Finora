@@ -75,12 +75,14 @@
                                                 <c:choose>
                                                     <c:when test="${empty selectedWarehouseId || selectedWarehouseId == tx.toWarehouseId}">
                                                         <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+                                                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                             <input type="hidden" name="action" value="confirmExport">
                                                             <input type="hidden" name="transferId" value="${tx.ticketId}">
                                                             <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
                                                             <button type="submit" class="btn btn-sm btn-outline-success">Phê Duyệt</button>
                                                         </form>
                                                         <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;" onsubmit="return confirm('Bạn có chắc muốn từ chối phiếu này không?');">
+                                                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                             <input type="hidden" name="action" value="rejectTransfer">
                                                             <input type="hidden" name="transferId" value="${tx.ticketId}">
                                                             <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
@@ -89,6 +91,7 @@
                                                     </c:when>
                                                     <c:when test="${selectedWarehouseId == tx.fromWarehouseId}">
                                                         <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;" onsubmit="return confirm('Bạn có chắc muốn hủy lệnh này không?');">
+                                                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                             <input type="hidden" name="action" value="cancelTransfer">
                                                             <input type="hidden" name="transferId" value="${tx.ticketId}">
                                                             <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">

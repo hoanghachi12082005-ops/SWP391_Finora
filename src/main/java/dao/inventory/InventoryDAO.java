@@ -252,24 +252,26 @@ public class InventoryDAO {
     }
 
     public List<dto.inventory.ImportProductDTO> searchImportProducts(int warehouseId, String keyword) throws SQLException {
-        List<dto.inventory.ImportProductDTO> list = new ArrayList<>();
+        java.util.Map<Integer, dto.inventory.ImportProductDTO> map = new java.util.LinkedHashMap<>();
         
-        // ponytail: supplier map removed — SupplierIDs column doesn't exist in V3 schema
         StringBuilder sql = new StringBuilder(
-"SELECT p.product_id as ProductID, p.product_name as ProductName, " +
-"COALESCE(i.quantity_in_stock, 0) as MyStock " +
-"FROM product p "
+            "SELECT p.product_id as ProductID, p.product_name as ProductName, " +
+            "COALESCE(i.quantity_in_stock, 0) as MyStock, " +
+            "sp.SupplierID, s.Name as SupplierName, sp.ImportPrice " +
+            "FROM product p "
         );
 
         if (keyword == null || keyword.trim().isEmpty()) {
-            // Suggestion mode: only suggest products that exist in THIS warehouse's inventory and are running low
             sql.append("INNER JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? ");
+            sql.append("LEFT JOIN SupplierProduct sp ON p.product_id = sp.ProductID ");
+            sql.append("LEFT JOIN Supplier s ON sp.SupplierID = s.SupplierID ");
             sql.append("WHERE 1=1 ");
             sql.append("AND i.quantity_in_stock <= 10 ");
         } else {
-            // Search mode: allow searching all active products, even those never imported to this warehouse
             sql.append("LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? ");
             sql.append("LEFT JOIN category c ON p.category_id = c.category_id ");
+            sql.append("LEFT JOIN SupplierProduct sp ON p.product_id = sp.ProductID ");
+            sql.append("LEFT JOIN Supplier s ON sp.SupplierID = s.SupplierID ");
             sql.append("WHERE 1=1 ");
             sql.append("AND (p.product_name LIKE ? OR c.category_name LIKE ?) ");
         }
@@ -287,16 +289,27 @@ public class InventoryDAO {
             
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    dto.inventory.ImportProductDTO dto = new dto.inventory.ImportProductDTO();
-                    dto.setProductId(rs.getInt("ProductID"));
-                    dto.setProductName(rs.getString("ProductName"));
-                    dto.setMyStock(rs.getInt("MyStock"));
-                    // ponytail: removed setImportPrice and supplier parsing — columns don't exist in V3 schema
-                    list.add(dto);
+                    int productId = rs.getInt("ProductID");
+                    dto.inventory.ImportProductDTO dto = map.get(productId);
+                    if (dto == null) {
+                        dto = new dto.inventory.ImportProductDTO();
+                        dto.setProductId(productId);
+                        dto.setProductName(rs.getString("ProductName"));
+                        dto.setMyStock(rs.getInt("MyStock"));
+                        dto.setSuppliers(new ArrayList<>());
+                        map.put(productId, dto);
+                    }
+                    
+                    int supplierId = rs.getInt("SupplierID");
+                    if (!rs.wasNull()) {
+                        String supplierName = rs.getString("SupplierName");
+                        java.math.BigDecimal importPrice = rs.getBigDecimal("ImportPrice");
+                        dto.getSuppliers().add(new dto.inventory.ImportProductDTO.SupplierInfo(supplierId, supplierName, importPrice));
+                    }
                 }
             }
         }
-        return list;
+        return new ArrayList<>(map.values());
     }
 
     public int getInventoryId(int warehouseId, int productId) throws SQLException {
