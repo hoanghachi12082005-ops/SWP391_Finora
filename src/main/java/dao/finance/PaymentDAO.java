@@ -30,16 +30,36 @@ public class PaymentDAO {
                 p.payment_amount AS PaymentAmount,
                 p.payment_date AS PaymentDate,
                 p.payment_status AS PaymentStatus,
-                p.transaction_code AS TransactionCode
+                p.transaction_code AS TransactionCode,
+                p.payment_type AS PaymentType,
+                p.description AS Description,
+                p.emp_id AS EmployeeID,
+                p.branch_id AS BranchID,
+                p.payment_method AS PaymentMethod,
+                e.fullName AS CreatorName,
+                b.branch_name AS BranchName
             FROM payment p
+            LEFT JOIN Employee e ON p.emp_id = e.emp_id
+            LEFT JOIN Branch b ON p.branch_id = b.branch_id
             WHERE 1=1
         """);
 
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND p.transaction_code LIKE ? ");
+            sql.append(" AND (p.transaction_code LIKE ? OR p.description LIKE ?) ");
             params.add("%" + keyword.trim() + "%");
+            params.add("%" + keyword.trim() + "%");
+        }
+
+        if (type != null && !type.isBlank()) {
+            sql.append(" AND p.payment_type = ? ");
+            params.add(type);
+        }
+
+        if (paymentMethod != null && !paymentMethod.isBlank()) {
+            sql.append(" AND p.payment_method = ? ");
+            params.add(paymentMethod);
         }
 
         applyTimeRangeFilter(sql, timeRange);
@@ -88,8 +108,19 @@ public class PaymentDAO {
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND p.transaction_code LIKE ? ");
+            sql.append(" AND (p.transaction_code LIKE ? OR p.description LIKE ?) ");
             params.add("%" + keyword.trim() + "%");
+            params.add("%" + keyword.trim() + "%");
+        }
+
+        if (type != null && !type.isBlank()) {
+            sql.append(" AND p.payment_type = ? ");
+            params.add(type);
+        }
+
+        if (paymentMethod != null && !paymentMethod.isBlank()) {
+            sql.append(" AND p.payment_method = ? ");
+            params.add(paymentMethod);
         }
 
         applyTimeRangeFilter(sql, timeRange);
@@ -119,28 +150,48 @@ public class PaymentDAO {
      * Tính tổng số dư quỹ tiền mặt (Thu - Chi bằng CASH)
      */
     public double getTotalCashBalance() {
-        return 0.0;
+        String sql = """
+            SELECT SUM(CASE WHEN payment_type = 'INCOME' THEN payment_amount ELSE -payment_amount END)
+            FROM payment
+            WHERE payment_method = 'CASH'
+        """;
+        return getDoubleScalar(sql);
     }
 
     /**
      * Tính tổng số dư quỹ ngân hàng (Thu - Chi bằng BANK_TRANSFER)
      */
     public double getTotalBankBalance() {
-        return 0.0;
+        String sql = """
+            SELECT SUM(CASE WHEN payment_type = 'INCOME' THEN payment_amount ELSE -payment_amount END)
+            FROM payment
+            WHERE payment_method = 'BANK_TRANSFER'
+        """;
+        return getDoubleScalar(sql);
     }
 
     /**
      * Tính tổng thu theo phương thức
      */
     public double getSumIncome(String paymentMethod) {
-        return 0.0;
+        String sql = """
+            SELECT SUM(payment_amount)
+            FROM payment
+            WHERE payment_type = 'INCOME' AND payment_method = ?
+        """;
+        return getDoubleScalarWithParam(sql, paymentMethod);
     }
 
     /**
      * Tính tổng chi theo phương thức
      */
     public double getSumExpense(String paymentMethod) {
-        return 0.0;
+        String sql = """
+            SELECT SUM(payment_amount)
+            FROM payment
+            WHERE payment_type = 'EXPENSE' AND payment_method = ?
+        """;
+        return getDoubleScalarWithParam(sql, paymentMethod);
     }
 
     /**
@@ -151,8 +202,8 @@ public class PaymentDAO {
         String sql = """
             SELECT 
                 DATEPART(week, payment_date) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, payment_date), 0)) + 1 AS WeekNum,
-                SUM(payment_amount) AS TotalIncome,
-                0 AS TotalExpense
+                SUM(CASE WHEN payment_type = 'INCOME' THEN payment_amount ELSE 0 END) AS TotalIncome,
+                SUM(CASE WHEN payment_type = 'EXPENSE' THEN payment_amount ELSE 0 END) AS TotalExpense
             FROM payment
             WHERE MONTH(payment_date) = MONTH(GETDATE()) AND YEAR(payment_date) = YEAR(GETDATE())
             GROUP BY DATEPART(week, payment_date) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, payment_date), 0)) + 1
@@ -193,10 +244,11 @@ public class PaymentDAO {
 
         String sql = """
             INSERT INTO payment (
-                order_id, payment_amount, payment_date, 
-                payment_status, transaction_code
+                order_id, payment_method, payment_amount, payment_date, 
+                payment_status, transaction_code, payment_type, description, 
+                emp_id, branch_id
             )
-            VALUES (?, ?, GETDATE(), 'PAID', ?)
+            VALUES (?, ?, ?, GETDATE(), 'PAID', ?, ?, ?, ?, ?)
         """;
 
         try (Connection conn = DBContext.getConnection();
@@ -208,8 +260,23 @@ public class PaymentDAO {
                 ps.setInt(1, payment.getOrderId());
             }
 
-            ps.setDouble(2, payment.getAmount());
-            ps.setString(3, payment.getName());
+            ps.setString(2, payment.getMethod());
+            ps.setDouble(3, payment.getAmount());
+            ps.setString(4, payment.getName());
+            ps.setString(5, payment.getPaymentType());
+            ps.setString(6, payment.getDescription());
+
+            if (payment.getEmployeeId() == null) {
+                ps.setNull(7, Types.INTEGER);
+            } else {
+                ps.setInt(7, payment.getEmployeeId());
+            }
+
+            if (payment.getBranchId() == null) {
+                ps.setNull(8, Types.INTEGER);
+            } else {
+                ps.setInt(8, payment.getBranchId());
+            }
 
             return ps.executeUpdate() > 0;
 
@@ -224,11 +291,12 @@ public class PaymentDAO {
      * Sinh mã giao dịch tăng tự động (ví dụ: PT00001, PC00001)
      */
     private String generateTransactionCode(String type, String prefix) {
-        String sql = "SELECT MAX(transaction_code) FROM payment WHERE transaction_code LIKE ?";
+        String sql = "SELECT MAX(transaction_code) FROM payment WHERE payment_type = ? AND transaction_code LIKE ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, prefix + "%");
+            ps.setString(1, type);
+            ps.setString(2, prefix + "%");
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -303,16 +371,21 @@ public class PaymentDAO {
     private Payment extractPayment(ResultSet rs) throws SQLException {
         Payment p = new Payment();
         p.setId(rs.getInt("PaymentID"));
-        p.setName(rs.getString("TransactionCode"));
+        p.setName(rs.getString("TransactionCode")); // BaseModel.name maps to TransactionCode
         p.setOrderId(rs.getObject("OrderID") != null ? rs.getInt("OrderID") : null);
+        p.setMethod(rs.getString("PaymentMethod"));
         p.setAmount(rs.getDouble("PaymentAmount"));
         p.setPaymentDate(rs.getTimestamp("PaymentDate"));
         p.setStatus(rs.getString("PaymentStatus"));
-
+        p.setPaymentType(rs.getString("PaymentType"));
+        p.setDescription(rs.getString("Description"));
+        p.setEmployeeId(rs.getObject("EmployeeID") != null ? rs.getInt("EmployeeID") : null);
+        p.setBranchId(rs.getObject("BranchID") != null ? rs.getInt("BranchID") : null);
+        
         try {
             p.setCreatorName(rs.getString("CreatorName"));
         } catch (SQLException ignored) {}
-
+        
         try {
             p.setBranchName(rs.getString("BranchName"));
         } catch (SQLException ignored) {}

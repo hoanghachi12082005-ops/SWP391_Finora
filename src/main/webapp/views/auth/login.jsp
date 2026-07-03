@@ -52,6 +52,7 @@
                 </c:if>
 
                 <form method="post" action="${pageContext.request.contextPath}/login" autocomplete="off">
+                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 
                     <!-- Username -->
                     <div class="mb-3">

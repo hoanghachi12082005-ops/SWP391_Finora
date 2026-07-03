@@ -109,6 +109,7 @@
                         </c:if>
 
                         <form method="post" action="${pageContext.request.contextPath}/forgot-password">
+                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 
                             <input type="hidden" name="action" value="send-otp">
 
