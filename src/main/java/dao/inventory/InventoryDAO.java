@@ -28,7 +28,7 @@ public class InventoryDAO {
         String cleanedKeyword = null;
         if (keyword != null && !keyword.trim().isEmpty()) {
             cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
-            sql.append(" AND p.product_name LIKE ?");
+            sql.append(" AND (p.product_name LIKE ? OR c.category_name LIKE ?)");
         }
         if (status != null && !status.trim().isEmpty()) {
             if ("LOW_STOCK".equals(status)) {
@@ -63,6 +63,7 @@ public class InventoryDAO {
             int idx = 1;
             if (cleanedKeyword != null && !cleanedKeyword.isEmpty()) {
                 stmt.setString(idx++, "%" + cleanedKeyword + "%");
+                stmt.setString(idx++, "%" + cleanedKeyword + "%");
             }
             if (status != null && !status.trim().isEmpty() && !"LOW_STOCK".equals(status) && !"OUT_OF_STOCK".equals(status)) {
                 stmt.setString(idx++, status);
@@ -87,13 +88,14 @@ public class InventoryDAO {
         StringBuilder sql = new StringBuilder(
             "SELECT COUNT(*) FROM inventory i " +
             "JOIN product p ON i.product_id = p.product_id " +
+            "LEFT JOIN category c ON p.category_id = c.category_id " +
             "WHERE 1=1"
         );
 
         String cleanedKeyword = null;
         if (keyword != null && !keyword.trim().isEmpty()) {
             cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
-            sql.append(" AND p.product_name LIKE ?");
+            sql.append(" AND (p.product_name LIKE ? OR c.category_name LIKE ?)");
         }
         if (status != null && !status.trim().isEmpty()) {
             if ("LOW_STOCK".equals(status)) {
@@ -113,6 +115,7 @@ public class InventoryDAO {
             
             int idx = 1;
             if (cleanedKeyword != null && !cleanedKeyword.isEmpty()) {
+                stmt.setString(idx++, "%" + cleanedKeyword + "%");
                 stmt.setString(idx++, "%" + cleanedKeyword + "%");
             }
             if (status != null && !status.trim().isEmpty() && !"LOW_STOCK".equals(status) && !"OUT_OF_STOCK".equals(status)) {
@@ -206,6 +209,7 @@ public class InventoryDAO {
 "w.warehouse_id as PartnerWarehouseId, w.warehouse_name as PartnerWarehouseName, " +
 "i2.quantity_in_stock as PartnerStock " +
 "FROM product p " +
+"LEFT JOIN category c ON p.category_id = c.category_id " +
 "LEFT JOIN inventory i1 ON p.product_id = i1.product_id AND i1.warehouse_id = ? " +
 "JOIN inventory i2 ON p.product_id = i2.product_id AND i2.warehouse_id != ? " +
 "JOIN warehouse w ON i2.warehouse_id = w.warehouse_id " +
@@ -215,7 +219,7 @@ public class InventoryDAO {
         if (keyword == null || keyword.trim().isEmpty()) {
             sql.append("AND COALESCE(i1.quantity_in_stock, 0) <= 10 AND i2.quantity_in_stock > 0 ");
         } else {
-            sql.append("AND (p.product_name LIKE ? OR w.warehouse_name LIKE ?) ");
+            sql.append("AND (p.product_name LIKE ? OR c.category_name LIKE ? OR w.warehouse_name LIKE ?) ");
         }
 
         sql.append("ORDER BY p.product_name ASC, w.warehouse_name ASC");
@@ -228,6 +232,7 @@ public class InventoryDAO {
             if (keyword != null && !keyword.trim().isEmpty()) {
                 stmt.setString(3, "%" + keyword + "%");
                 stmt.setString(4, "%" + keyword + "%");
+                stmt.setString(5, "%" + keyword + "%");
             }
             
             try (ResultSet rs = stmt.executeQuery()) {
@@ -264,8 +269,9 @@ public class InventoryDAO {
         } else {
             // Search mode: allow searching all active products, even those never imported to this warehouse
             sql.append("LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? ");
+            sql.append("LEFT JOIN category c ON p.category_id = c.category_id ");
             sql.append("WHERE 1=1 ");
-            sql.append("AND p.product_name LIKE ? ");
+            sql.append("AND (p.product_name LIKE ? OR c.category_name LIKE ?) ");
         }
 
         sql.append("ORDER BY p.product_name ASC");
@@ -276,6 +282,7 @@ public class InventoryDAO {
             stmt.setInt(1, warehouseId);
             if (keyword != null && !keyword.trim().isEmpty()) {
                 stmt.setString(2, "%" + keyword + "%");
+                stmt.setString(3, "%" + keyword + "%");
             }
             
             try (ResultSet rs = stmt.executeQuery()) {

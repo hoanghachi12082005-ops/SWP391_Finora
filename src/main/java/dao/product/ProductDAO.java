@@ -38,7 +38,7 @@ public class ProductDAO {
         String cleanedKeyword = null;
         if (keyword != null && !keyword.isBlank()) {
             cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
-            sql.append(" AND p.product_name LIKE ?");
+            sql.append(" AND (p.product_name LIKE ? OR c.category_name LIKE ?)");
         }
         if (categoryID != null) sql.append(" AND p.category_id = ?");
         if (unitID != null) sql.append(" AND p.unit_id = ?");
@@ -48,6 +48,7 @@ public class ProductDAO {
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             int idx = 1;
             if (cleanedKeyword != null && !cleanedKeyword.isBlank()) {
+                stmt.setString(idx++, "%" + cleanedKeyword + "%");
                 stmt.setString(idx++, "%" + cleanedKeyword + "%");
             }
             if (categoryID != null) stmt.setInt(idx++, categoryID);
@@ -70,11 +71,11 @@ public class ProductDAO {
     }
 
     public int getTotalCount(String keyword, String status, Integer categoryID, Integer unitID, Integer supplierID) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM product p WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM product p LEFT JOIN category c ON p.category_id = c.category_id WHERE 1=1");
         String cleanedKeyword = null;
         if (keyword != null && !keyword.isBlank()) {
             cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
-            sql.append(" AND p.product_name LIKE ?");
+            sql.append(" AND (p.product_name LIKE ? OR c.category_name LIKE ?)");
         }
         if (categoryID != null) sql.append(" AND p.category_id = ?");
         if (unitID != null) sql.append(" AND p.unit_id = ?");
@@ -83,6 +84,7 @@ public class ProductDAO {
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             int idx = 1;
             if (cleanedKeyword != null && !cleanedKeyword.isBlank()) {
+                stmt.setString(idx++, "%" + cleanedKeyword + "%");
                 stmt.setString(idx++, "%" + cleanedKeyword + "%");
             }
             if (categoryID != null) stmt.setInt(idx++, categoryID);
