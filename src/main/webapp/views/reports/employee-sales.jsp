@@ -10,9 +10,7 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>${pageTitle} - Finora</title>
 
-    <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/base.css?v=20260528"/>
-    <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/layout.css?v=20260528"/>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/employee-sales-report.css?v=1">
+    <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/base.css?v=20260601"/>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
@@ -72,7 +70,7 @@
                         <div class="overview-info">
                             <p>Total Revenue</p>
                             <h3>
-                                <fmt:formatNumber value="${reportOverview.totalRevenue}" type="number" groupingUsed="true"/> Γé½
+                                <fmt:formatNumber value="${reportOverview.totalRevenue}" type="number" groupingUsed="true"/> ₫
                             </h3>
                         </div>
                     </div>
@@ -83,10 +81,10 @@
                         </div>
                         <div class="overview-info">
                             <p>Top Employee</p>
-                            <h3>${empty reportOverview.topEmployeeName ? 'ΓÇö' : reportOverview.topEmployeeName}</h3>
+                            <h3>${empty reportOverview.topEmployeeName ? '—' : reportOverview.topEmployeeName}</h3>
                             <small>
                                 Revenue:
-                                <fmt:formatNumber value="${reportOverview.topEmployeeRevenue}" type="number" groupingUsed="true"/> Γé½
+                                <fmt:formatNumber value="${reportOverview.topEmployeeRevenue}" type="number" groupingUsed="true"/> ₫
                             </small>
                         </div>
                     </div>
@@ -133,8 +131,8 @@
                     <div class="form-group">
                         <label>Page Size</label>
                         <select name="pageSize">
-                            <option value="5" ${pageSizeOption == '5' ? 'selected' : ''}>5 records/page</option>
-                            <option value="10" ${empty pageSizeOption || pageSizeOption == '10' ? 'selected' : ''}>10 records/page</option>
+                            <option value="5" ${empty pageSizeOption || pageSizeOption == '5' ? 'selected' : ''}>5 records/page</option>
+                            <option value="10" ${pageSizeOption == '10' ? 'selected' : ''}>10 records/page</option>
                             <option value="20" ${pageSizeOption == '20' ? 'selected' : ''}>20 records/page</option>
                             <option value="30p" ${pageSizeOption == '30p' ? 'selected' : ''}>30% records/page</option>
                             <option value="50p" ${pageSizeOption == '50p' ? 'selected' : ''}>50% records/page</option>
@@ -143,9 +141,8 @@
 
                     <div class="filter-actions">
                         <button class="btn-primary" type="submit">Apply</button>
-                        <a class="btn-primary" href="${pageContext.request.contextPath}/reports/employee-sales-preview?keyword=${empty keyword ? '' : keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}&dateFrom=${empty dateFrom ? '' : dateFrom}&dateTo=${empty dateTo ? '' : dateTo}"
-                           style="background:#0f3460;text-decoration:none;display:inline-flex;align-items:center;gap:6px">
-                            <span class="material-symbols-outlined" style="font-size:18px">visibility</span> Preview
+                        <a class="btn-secondary" href="${pageContext.request.contextPath}/reports/employee-sales-preview?keyword=${empty keyword ? '' : keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}&dateFrom=${empty dateFrom ? '' : dateFrom}&dateTo=${empty dateTo ? '' : dateTo}">
+                            <span class="material-symbols-outlined">visibility</span> Preview
                         </a>
                         <a class="btn-secondary" href="${baseUrl}">Reset</a>
                     </div>
@@ -198,16 +195,16 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>${empty row.branchName ? 'ΓÇö' : row.branchName}</td>
+                                        <td>${empty row.branchName ? '—' : row.branchName}</td>
                                         <td>
-                                            <span class="role-badge">${empty row.roleName ? 'ΓÇö' : row.roleName}</span>
+                                            <span class="role-badge">${empty row.roleName ? '—' : row.roleName}</span>
                                         </td>
                                         <td class="text-right">${row.totalOrders}</td>
                                         <td class="text-right">
-                                            <fmt:formatNumber value="${row.totalRevenue}" type="number" groupingUsed="true"/> Γé½
+                                            <fmt:formatNumber value="${row.totalRevenue}" type="number" groupingUsed="true"/> ₫
                                         </td>
                                         <td class="text-right">
-                                            <fmt:formatNumber value="${row.averageOrderValue}" type="number" groupingUsed="true"/> Γé½
+                                            <fmt:formatNumber value="${row.averageOrderValue}" type="number" groupingUsed="true"/> ₫
                                         </td>
                                     </tr>
                                 </c:forEach>

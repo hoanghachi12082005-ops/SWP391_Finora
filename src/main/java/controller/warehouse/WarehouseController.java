@@ -41,7 +41,6 @@ public class WarehouseController extends BaseController {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // TODO: Kết nối Service/DAO để xử lý nhập/xuất kho
         request.setAttribute("message", "Đã nhận dữ liệu Kho. Hãy kết nối Service/DAO để xử lý thật.");
         doGet(request, response);
     }

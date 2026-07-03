@@ -229,9 +229,9 @@
 
         <div class="filter-info">
             <strong>Date Range:</strong>
-            ${empty param.dateFrom ? 'Earliest' : param.dateFrom} ΓÇö ${empty param.dateTo ? 'Latest' : param.dateTo}
+            ${empty param.dateFrom ? 'Earliest' : param.dateFrom} — ${empty param.dateTo ? 'Latest' : param.dateTo}
             &nbsp;|&nbsp; <strong>Branch:</strong> ${empty reportBranchName ? 'All Branches' : reportBranchName}
-            &nbsp;|&nbsp; <strong>Period:</strong> ${empty param.dateFrom ? 'ΓÇö' : param.dateFrom} to ${empty param.dateTo ? 'ΓÇö' : param.dateTo}
+            &nbsp;|&nbsp; <strong>Period:</strong> ${empty param.dateFrom ? '—' : param.dateFrom} to ${empty param.dateTo ? '—' : param.dateTo}
         </div>
 
         <table>
@@ -250,11 +250,11 @@
                 <c:forEach var="row" items="${allSalesReports}">
                     <tr>
                         <td>${row.fullName}</td>
-                        <td>${empty row.branchName ? 'ΓÇö' : row.branchName}</td>
-                        <td>${empty row.roleName ? 'ΓÇö' : row.roleName}</td>
+                        <td>${empty row.branchName ? '—' : row.branchName}</td>
+                        <td>${empty row.roleName ? '—' : row.roleName}</td>
                         <td>${row.totalOrders}</td>
-                        <td class="text-right"><fmt:formatNumber value="${row.totalRevenue}" type="number" groupingUsed="true"/> Γé½</td>
-                        <td class="text-right"><fmt:formatNumber value="${row.averageOrderValue}" type="number" groupingUsed="true"/> Γé½</td>
+                        <td class="text-right"><fmt:formatNumber value="${row.totalRevenue}" type="number" groupingUsed="true"/> ₫</td>
+                        <td class="text-right"><fmt:formatNumber value="${row.averageOrderValue}" type="number" groupingUsed="true"/> ₫</td>
                         <td>${row.completedOrders}</td>
                     </tr>
                 </c:forEach>
@@ -269,20 +269,20 @@
                 <span class="label">Total Orders</span>
                 <span class="value">${reportOverview.totalOrders}</span>
                 <span class="label">Total Revenue</span>
-                <span class="value"><fmt:formatNumber value="${reportOverview.totalRevenue}" type="number" groupingUsed="true"/> Γé½</span>
+                <span class="value"><fmt:formatNumber value="${reportOverview.totalRevenue}" type="number" groupingUsed="true"/> ₫</span>
                 <span class="label">Avg Revenue / Employee</span>
-                <span class="value"><fmt:formatNumber value="${reportOverview.avgRevenuePerEmployee}" type="number" groupingUsed="true"/> Γé½</span>
+                <span class="value"><fmt:formatNumber value="${reportOverview.avgRevenuePerEmployee}" type="number" groupingUsed="true"/> ₫</span>
                 <c:if test="${not empty reportOverview.topEmployeeName}">
                     <span class="label">Top Employee</span>
                     <span class="value">${reportOverview.topEmployeeName}</span>
                     <span class="label">Highest Revenue</span>
-                    <span class="value"><fmt:formatNumber value="${reportOverview.topEmployeeRevenue}" type="number" groupingUsed="true"/> Γé½</span>
+                    <span class="value"><fmt:formatNumber value="${reportOverview.topEmployeeRevenue}" type="number" groupingUsed="true"/> ₫</span>
                 </c:if>
                 <c:if test="${not empty reportOverview.lowestEmployeeName}">
                     <span class="label">Lowest Employee</span>
                     <span class="value">${reportOverview.lowestEmployeeName}</span>
                     <span class="label">Lowest Revenue</span>
-                    <span class="value"><fmt:formatNumber value="${reportOverview.lowestEmployeeRevenue}" type="number" groupingUsed="true"/> Γé½</span>
+                    <span class="value"><fmt:formatNumber value="${reportOverview.lowestEmployeeRevenue}" type="number" groupingUsed="true"/> ₫</span>
                 </c:if>
             </div>
         </div>

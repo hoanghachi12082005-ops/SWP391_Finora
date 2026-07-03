@@ -35,23 +35,15 @@ public class ProfileDao extends DBContext {
                 "LEFT JOIN Role r ON e.role_id = r.role_id " +
                 "WHERE e.emp_id = ?";
 
-        try {Connection connection = DBContext.getConnection(); 
-            PreparedStatement ps = connection.prepareStatement(sql);
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, employeeID);
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                Employee employee = mapEmployee(rs);
-
-                rs.close();
-                ps.close();
-
-                return employee;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapEmployee(rs);
+                }
             }
-
-            rs.close();
-            ps.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -102,25 +94,17 @@ public class ProfileDao extends DBContext {
                 "WHERE Email = ? " +
                 "AND emp_id <> ?";
 
-        try {Connection connection = DBContext.getConnection(); 
-            PreparedStatement ps = connection.prepareStatement(sql);
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setString(1, email);
             ps.setInt(2, excludeEmployeeID);
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                boolean exists = rs.getInt("Total") > 0;
-
-                rs.close();
-                ps.close();
-
-                return exists;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("Total") > 0;
+                }
             }
-
-            rs.close();
-            ps.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -134,23 +118,15 @@ public class ProfileDao extends DBContext {
                 "FROM Employee " +
                 "WHERE emp_id = ?";
 
-        try {Connection connection = DBContext.getConnection(); 
-            PreparedStatement ps = connection.prepareStatement(sql);
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, employeeID);
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                String passwordHash = rs.getString("PasswordHash");
-
-                rs.close();
-                ps.close();
-
-                return passwordHash;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("PasswordHash");
+                }
             }
-
-            rs.close();
-            ps.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }

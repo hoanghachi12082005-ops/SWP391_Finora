@@ -19,8 +19,8 @@
         ${empty profileTitle ? 'My Profile' : profileTitle} - FinoraRetail
     </title>
 
-    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/base.css?v=20260528"/>
-    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/profile.css?v=1"/>
+    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/base.css?v=20260601"/>
+    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/profile.css?v=2"/>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
@@ -110,7 +110,7 @@
 
                             <p>
                                 <span class="material-symbols-outlined">call</span>
-                                ${empty profile.phone ? 'ΓÇö' : profile.phone}
+                                ${empty profile.phone ? '—' : profile.phone}
                             </p>
 
                             <div class="profile-badges">
@@ -150,7 +150,7 @@
 
                                 <div class="detail-item">
                                     <span>Phone</span>
-                                    <strong>${empty profile.phone ? 'ΓÇö' : profile.phone}</strong>
+                                    <strong>${empty profile.phone ? '—' : profile.phone}</strong>
                                 </div>
 
                                 <div class="detail-item">
@@ -160,7 +160,7 @@
 
                                 <div class="detail-item">
                                     <span>Branch</span>
-                                    <strong>${empty profile.branchName ? 'ΓÇö' : profile.branchName}</strong>
+                                    <strong>${empty profile.branchName ? '—' : profile.branchName}</strong>
                                 </div>
 
                                 <div class="detail-item">
@@ -196,7 +196,7 @@
                                         <h4>
                                             <fmt:formatNumber value="${empty salesSummary ? 0 : salesSummary.totalRevenue}"
                                                               type="number"
-                                                              groupingUsed="true"/> Γé½
+                                                              groupingUsed="true"/> ₫
                                         </h4>
                                     </div>
 
@@ -206,7 +206,7 @@
                                         <h4>
                                             <fmt:formatNumber value="${empty salesSummary ? 0 : salesSummary.averageOrderValue}"
                                                               type="number"
-                                                              groupingUsed="true"/> Γé½
+                                                              groupingUsed="true"/> ₫
                                         </h4>
                                     </div>
                                 </div>
@@ -220,7 +220,7 @@
 
                                 <c:choose>
                                     <c:when test="${empty orderHistory}">
-                                        <p style="color:var(--secondary);font-size:13px;">No orders found.</p>
+                                        <p class="text-muted">No orders found.</p>
                                     </c:when>
                                     <c:otherwise>
                                         <div class="profile-order-table-wrap">
@@ -239,8 +239,8 @@
                                                     <c:forEach var="ord" items="${orderHistory}">
                                                         <tr>
                                                             <td>${ord.orderCode}</td>
-                                                            <td>${empty ord.customerName ? 'ΓÇö' : ord.customerName}</td>
-                                                            <td class="amount"><fmt:formatNumber value="${ord.totalAmount}" type="number" groupingUsed="true"/> Γé½</td>
+                                                            <td>${empty ord.customerName ? '—' : ord.customerName}</td>
+                                                            <td class="amount"><fmt:formatNumber value="${ord.totalAmount}" type="number" groupingUsed="true"/> ₫</td>
                                                             <td class="payment">${ord.paymentMethod}</td>
                                                             <td><span class="status-badge ${ord.status == 'COMPLETED' ? 'active' : 'locked'}">${ord.status}</span></td>
                                                             <td class="date"><fmt:formatDate value="${ord.createdAt}" pattern="dd/MM/yy HH:mm"/></td>

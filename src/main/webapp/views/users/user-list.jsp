@@ -16,10 +16,7 @@
         <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
         <title>${pageTitle} - Finora</title>
 
-        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/base.css?v=20260528"/>
-        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/layout.css?v=20260528"/>
-        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/form-modal.css?v=20260528"/>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-management.css?v=6">
+        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/base.css?v=20260601"/>
 
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
@@ -108,7 +105,7 @@
                             </div>
                             <div class="overview-info">
                                 <p>Top Employee</p>
-                                <h3>${empty employeeOverview.topEmployeeName ? 'ΓÇö' : employeeOverview.topEmployeeName}</h3>
+                                <h3>${empty employeeOverview.topEmployeeName ? '—' : employeeOverview.topEmployeeName}</h3>
                                 <small>
                                     Revenue:
                                     <fmt:formatNumber value="${employeeOverview.topEmployeeRevenue}" type="number" groupingUsed="true"/> ₫
@@ -255,7 +252,7 @@
                                                 </div>
                                             </td>
 
-                                            <td>${empty user.phone ? 'ΓÇö' : user.phone}</td>
+                                            <td>${empty user.phone ? '—' : user.phone}</td>
 
                                             <td>
                                                 <span class="role-badge">
@@ -264,7 +261,7 @@
                                             </td>
 
                                             <c:if test="${showBranch}">
-                                                <td>${empty user.branchName ? 'ΓÇö' : user.branchName}</td>
+                                                <td>${empty user.branchName ? '—' : user.branchName}</td>
                                             </c:if>
 
                                             <td>
@@ -596,7 +593,7 @@
                     <p><strong>Role:</strong> ${detailUser.roleName}</p>
 
                     <c:if test="${showBranch}">
-                        <p><strong>Branch:</strong> ${empty detailUser.branchName ? 'ΓÇö' : detailUser.branchName}</p>
+                        <p><strong>Branch:</strong> ${empty detailUser.branchName ? '—' : detailUser.branchName}</p>
                     </c:if>
 
                     <p><strong>Status:</strong> ${detailUser.status}</p>

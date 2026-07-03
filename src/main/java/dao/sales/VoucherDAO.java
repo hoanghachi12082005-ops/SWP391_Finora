@@ -16,7 +16,7 @@ public class VoucherDAO {
      */
     public Voucher getValidByCode(String code) {
         String sql = "SELECT * FROM voucher "
-                   + "WHERE voucher_code = ? AND status = 'active' "
+                    + "WHERE voucher_code = ? AND status = 'ACTIVE' "
                    + "AND CAST(GETDATE() AS DATE) BETWEEN start_date AND end_date";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -49,7 +49,7 @@ public class VoucherDAO {
     public java.util.List<Voucher> getAllValidVouchers() {
         java.util.List<Voucher> list = new java.util.ArrayList<>();
         String sql = "SELECT * FROM voucher "
-                   + "WHERE status = 'active' "
+                   + "WHERE status = 'ACTIVE' "
                    + "AND CAST(GETDATE() AS DATE) BETWEEN start_date AND end_date "
                    + "ORDER BY voucher_code";
         try (Connection conn = DBContext.getConnection();
