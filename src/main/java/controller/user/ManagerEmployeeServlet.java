@@ -188,7 +188,7 @@ public class ManagerEmployeeServlet extends HttpServlet {
         String roleName = currentUser.getRoleName();
 
         // FIX: So sánh đúng tên role ("Store Manager" trong DB, không phải "StoreManager")
-        if (!"Store Manager".equalsIgnoreCase(roleName)
+        if (!"StoreManager".equalsIgnoreCase(roleName)
                 && !"Admin".equalsIgnoreCase(roleName)
                 && !"Owner".equalsIgnoreCase(roleName)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied. StoreManager only.");

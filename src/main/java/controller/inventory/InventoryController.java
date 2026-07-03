@@ -482,8 +482,16 @@ public class InventoryController extends BaseController {
                             
                             ticketDAO.createExchangeTicket(importTicket, importDetails);
                             
+                            // Calculate total import cost
+                            dao.supplier.SupplierProductDAO spDao = new dao.supplier.SupplierProductDAO();
+                            java.util.Map<Integer, Double> pricesMap = spDao.getLinkedProductsWithPrices(sId);
+                            double totalImportCost = 0.0;
+                            
                             for (model.InventoryTicketDetail d : importDetails) {
                                 inventoryDAO.increaseStock(currentWarehouseId, d.getProductId(), d.getQuantity());
+                                
+                                double price = pricesMap.getOrDefault(d.getProductId(), 0.0);
+                                totalImportCost += d.getQuantity() * price;
                                 
                                 StockTransaction tx = new StockTransaction();
                                 tx.setWarehouseId(currentWarehouseId);
@@ -494,6 +502,30 @@ public class InventoryController extends BaseController {
                                 tx.setReferenceId(0); // Cannot easily get ticketId here without DAO changes
                                 tx.setCreatedBy(currentUser.getEmployeeId());
                                 transactionDAO.insert(tx);
+                            }
+                            
+                            // Record payment expense in cash book
+                            if (totalImportCost > 0) {
+                                model.Payment payment = new model.Payment();
+                                payment.setPaymentAmount(totalImportCost);
+                                payment.setPaymentType("EXPENSE");
+                                payment.setMethod("CASH");
+                                payment.setPaymentStatus("PAID");
+                                
+                                dao.supplier.SupplierDAO sDao = new dao.supplier.SupplierDAO();
+                                model.Supplier supplier = sDao.getById(sId);
+                                String supplierName = (supplier != null) ? supplier.getName() : ("ID " + sId);
+                                
+                                payment.setDescription("Nhập hàng từ nhà cung cấp: " + supplierName + " (Phiếu: " + importTicket.getTicketCode() + ")");
+                                payment.setTransactionCode("IMP-" + System.currentTimeMillis() + "-" + sId);
+                                
+                                if (currentUser != null) {
+                                    payment.setEmployeeId(currentUser.getEmployeeId());
+                                    payment.setBranchId(currentUser.getBranchId());
+                                }
+                                
+                                service.finance.PaymentService paymentService = new service.finance.PaymentService();
+                                paymentService.insert(payment);
                             }
                         }
                     }

@@ -147,6 +147,11 @@ public class CheckoutServlet extends HttpServlet {
             payment.setPaymentAmount(totalAmount);
             payment.setPaymentStatus("PAID");
             payment.setTransactionCode(paymentMethod.equals("CASH") ? "CASH-" + orderId : "BANK-" + orderId);
+            payment.setPaymentType("INCOME");
+            payment.setMethod(paymentMethod);
+            payment.setDescription("Thanh toán đơn hàng " + orderCode);
+            payment.setEmployeeId(emp.getEmpId());
+            payment.setBranchId(emp.getBranchId());
             paymentDao.insert(conn, payment);
 
             // 5. Trừ kho + log stock_transaction

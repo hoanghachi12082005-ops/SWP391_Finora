@@ -28,10 +28,7 @@
                     <h2>Quản lý chuỗi cửa hàng</h2>
                     <p>Tổng hợp kết quả kinh doanh và quản lý toàn bộ chi nhánh</p>
                 </div>
-                <a href="${pageContext.request.contextPath}/stores/add" class="page-action-btn" style="text-decoration:none;">
-                    <span class="material-icons">add</span>
-                    <span>Thêm cửa hàng</span>
-                </a>
+                
             </div>
 
             <c:if test="${not empty overviewError}">
