@@ -254,7 +254,7 @@
                         <td>${empty row.roleName ? '—' : row.roleName}</td>
                         <td>${row.totalOrders}</td>
                         <td class="text-right"><fmt:formatNumber value="${row.totalRevenue}" type="number" groupingUsed="true"/> ₫</td>
-                        <td class="text-right"><fmt:formatNumber value="${row.averageOrderValue}" type="number" groupingUsed="true"/> ₫</td>
+                        <td class="text-right"><fmt:formatNumber value="${row.averageOrderValue}" type="number" groupingUsed="true" maxFractionDigits="0"/> ₫</td>
                         <td>${row.completedOrders}</td>
                     </tr>
                 </c:forEach>

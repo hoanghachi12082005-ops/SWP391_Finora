@@ -35,6 +35,7 @@ public class UserManagementDao extends DBContext {
             "    e.phone AS Phone, " +
             "    e.status AS Status, " +
             "    e.created_at AS CreatedAt, " +
+            "    e.image_URL AS AvatarUrl, " +
             "    r.role_name AS RoleName, " +
             "    b.branch_name AS BranchName, " +
             "    r.role_name AS RoleNames " +
@@ -601,7 +602,7 @@ public class UserManagementDao extends DBContext {
                 "(role_id, branch_id, fullName, email, phone, passwordHash, status, created_at, update_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())";
 
-        try {Connection connection = DBContext.getConnection(); 
+        try (Connection connection = DBContext.getConnection()) {
             connection.setAutoCommit(false);
 
             int newEmployeeId;
@@ -639,11 +640,8 @@ public class UserManagementDao extends DBContext {
             connection.commit();
             return true;
         } catch (SQLException e) {
-            rollbackQuietly();
             e.printStackTrace();
             return false;
-        } finally {
-            setAutoCommitTrueQuietly();
         }
     }
 
@@ -663,10 +661,7 @@ public class UserManagementDao extends DBContext {
                 "WHERE emp_id = ? " +
                 "AND NOT EXISTS (SELECT 1 FROM Role rr WHERE rr.role_id = Employee.role_id AND rr.role_name IN ('Admin', 'Owner'))";
 
-        String deleteRoleSql =
-                "SELECT 1 WHERE ? = 0";
-
-        try {Connection connection = DBContext.getConnection(); 
+        try (Connection connection = DBContext.getConnection()) {
             connection.setAutoCommit(false);
 
             try (PreparedStatement ps = connection.prepareStatement(updateEmployeeSql)) {
@@ -687,19 +682,11 @@ public class UserManagementDao extends DBContext {
                 }
             }
 
-            try (PreparedStatement deletePs = connection.prepareStatement(deleteRoleSql)) {
-                deletePs.setInt(1, employee.getEmployeeID());
-                deletePs.executeUpdate();
-            }
-
             connection.commit();
             return true;
         } catch (SQLException e) {
-            rollbackQuietly();
             e.printStackTrace();
             return false;
-        } finally {
-            setAutoCommitTrueQuietly();
         }
     }
 
@@ -1144,6 +1131,7 @@ public class UserManagementDao extends DBContext {
         employee.setPhone(rs.getString("Phone"));
         employee.setStatus(rs.getString("Status"));
         employee.setCreatedAt(rs.getTimestamp("CreatedAt"));
+        employee.setAvatarUrl(rs.getString("AvatarUrl"));
 
         employee.setRoleName(rs.getString("RoleName"));
         employee.setRoleNames(rs.getString("RoleNames"));
@@ -1189,17 +1177,5 @@ public class UserManagementDao extends DBContext {
         }
     }
 
-    private void rollbackQuietly() {
-        try {Connection connection = DBContext.getConnection(); 
-            connection.rollback();
-        } catch (SQLException ignored) {
-        }
-    }
 
-    private void setAutoCommitTrueQuietly() {
-        try {Connection connection = DBContext.getConnection(); 
-            connection.setAutoCommit(true);
-        } catch (SQLException ignored) {
-        }
-    }
 }

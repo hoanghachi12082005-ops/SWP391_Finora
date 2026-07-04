@@ -313,12 +313,8 @@ public class AdminUserServlet extends HttpServlet {
 
         request.setAttribute("profile", profile);
         request.setAttribute("salesSummary", profileDao.getEmployeeSalesSummary(employeeId));
-
-        boolean isSalesStaff = profile.getRoleID() == 4 || (profile.getRoleName() != null && profile.getRoleName().toLowerCase().contains("sales"));
-        if (isSalesStaff) {
-            request.setAttribute("orderHistory", new OrderDAO().findByEmployeeId(employeeId));
-        }
-        request.setAttribute("showSalesSection", isSalesStaff);
+        request.setAttribute("orderHistory", new OrderDAO().findByEmployeeId(employeeId));
+        request.setAttribute("showSalesSection", true);
 
         request.setAttribute("readOnlyProfile", true);
         request.setAttribute("profileTitle", "Hồ sơ nhân viên");

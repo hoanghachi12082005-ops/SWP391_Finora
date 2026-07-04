@@ -204,7 +204,7 @@
                                             <fmt:formatNumber value="${row.totalRevenue}" type="number" groupingUsed="true"/> ₫
                                         </td>
                                         <td class="text-right">
-                                            <fmt:formatNumber value="${row.averageOrderValue}" type="number" groupingUsed="true"/> ₫
+                                            <fmt:formatNumber value="${row.averageOrderValue}" type="number" groupingUsed="true" maxFractionDigits="0"/> ₫
                                         </td>
                                     </tr>
                                 </c:forEach>

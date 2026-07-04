@@ -188,6 +188,7 @@ public final class PdfReportUtil {
 
         NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
         nf.setGroupingUsed(true);
+        nf.setMaximumFractionDigits(0);
 
         if (rows == null || rows.isEmpty()) {
             PdfPCell emptyCell = new PdfPCell(new Phrase("No report data available.", TABLE_CELL_FONT));
@@ -245,6 +246,7 @@ public final class PdfReportUtil {
 
         NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
         nf.setGroupingUsed(true);
+        nf.setMaximumFractionDigits(0);
 
         PdfPTable summaryTable = new PdfPTable(2);
         summaryTable.setWidthPercentage(60);

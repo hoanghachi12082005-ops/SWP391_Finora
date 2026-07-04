@@ -140,17 +140,13 @@ public class ProfileDao extends DBContext {
                 "SET PasswordHash = ?, update_at = GETDATE() " +
                 "WHERE emp_id = ?";
 
-        try {Connection connection = DBContext.getConnection(); 
-            PreparedStatement ps = connection.prepareStatement(sql);
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
 
             ps.setString(1, newPasswordHash);   
             ps.setInt(2, employeeID);
 
-            boolean success = ps.executeUpdate() > 0;
-
-            ps.close();
-
-            return success;
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -257,6 +253,7 @@ public class ProfileDao extends DBContext {
         employee.setAvatarUrl(rs.getString("AvatarUrl"));
         employee.setCreatedAt(rs.getTimestamp("CreatedAt"));
         employee.setBranchName(rs.getString("BranchName"));
+        employee.setRoleName(rs.getString("RoleNames"));
         employee.setRoleNames(rs.getString("RoleNames"));
 
         return employee;

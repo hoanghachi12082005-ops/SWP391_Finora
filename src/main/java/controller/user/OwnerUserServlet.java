@@ -14,9 +14,12 @@
      *
      * @author PCQN
      */
+    import dao.sales.OrderDAO;
     import dao.user.UserManagementDao;
     import dao.user.ProfileDao;
     import jakarta.servlet.http.HttpSession;
+    import java.util.List;
+    import model.Order;
     import model.Employee;
 
     @WebServlet(name = "OwnerUserServlet", urlPatterns = {"/owner/emp"})
@@ -162,6 +165,8 @@
 
             request.setAttribute("profile", profile);
             request.setAttribute("salesSummary", profileDao.getEmployeeSalesSummary(employeeId));
+            request.setAttribute("orderHistory", new OrderDAO().findByEmployeeId(employeeId));
+            request.setAttribute("showSalesSection", true);
 
             request.setAttribute("readOnlyProfile", true);
             request.setAttribute("profileTitle", "Employee Profile");

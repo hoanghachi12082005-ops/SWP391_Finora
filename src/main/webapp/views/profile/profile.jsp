@@ -171,7 +171,10 @@
                                 <div class="detail-item">
                                     <span>Created At</span>
                                     <strong>
-                                        <fmt:formatDate value="${profile.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                        <c:if test="${not empty profile.createdAt}">
+                                            <fmt:formatDate value="${profile.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                        </c:if>
+                                        <c:if test="${empty profile.createdAt}">—</c:if>
                                     </strong>
                                 </div>
                             </div>
@@ -243,7 +246,7 @@
                                                             <td class="amount"><fmt:formatNumber value="${ord.totalAmount}" type="number" groupingUsed="true"/> ₫</td>
                                                             <td class="payment">${ord.paymentMethod}</td>
                                                             <td><span class="status-badge ${ord.status == 'COMPLETED' ? 'active' : 'locked'}">${ord.status}</span></td>
-                                                            <td class="date"><fmt:formatDate value="${ord.createdAt}" pattern="dd/MM/yy HH:mm"/></td>
+                                                            <td class="date">${ord.createdAt}</td>
                                                         </tr>
                                                     </c:forEach>
                                                 </tbody>

@@ -600,7 +600,10 @@
 
                     <p>
                         <strong>Created At:</strong>
-                        <fmt:formatDate value="${detailUser.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                        <c:if test="${not empty detailUser.createdAt}">
+                            <fmt:formatDate value="${detailUser.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                        </c:if>
+                        <c:if test="${empty detailUser.createdAt}">—</c:if>
                     </p>
                 </div>
 
