@@ -32,7 +32,7 @@
 
                 <div>
                     <a href="#" class="btn btn-outline-danger me-2">
-                        <i class="fa fa-download"></i> Xuất file
+                        <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">file_download</span> Xuất file
                     </a>
 
                     <button type="button" class="btn btn-danger" onclick="openSupplierModal('create')">+ Thêm nhà cung cấp</button>
@@ -247,7 +247,7 @@
         </div>
         <c:if test="${not empty sessionScope.modalAction and sessionScope.messageType eq 'danger'}">
             <div class="alert alert-danger w-100 py-2 px-3 mt-2 mb-0" role="alert" style="font-size: 14px;">
-                <i class="fa fa-exclamation-circle me-1"></i> ${sessionScope.message}
+                <span class="material-icons me-1" style="font-size: 1.2rem; vertical-align: middle;">info</span> ${sessionScope.message}
             </div>
         </c:if>
       </div>

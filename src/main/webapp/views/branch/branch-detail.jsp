@@ -3,30 +3,18 @@
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 
-<!DOCTYPE html>
-<html>
-    <head>
+<jsp:include page="/views/common/header.jsp">
+    <jsp:param name="title" value="Chi tiết chi nhánh"/>
+    <jsp:param name="additionalCSS" value="branch.css"/>
+</jsp:include>
 
-        <meta charset="UTF-8">
+<div class="app-container">
+    <jsp:include page="/views/common/sidebar.jsp"/>
 
-        <title>Chi tiết chi nhánh</title>
-
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
-        <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/assets/css/branch.css">
-
-    </head>
-
-    <body>
-
-        <jsp:include page="/views/common/sidebar.jsp"/>
-
-        <div class="main-content">
-
-            <jsp:include page="header.jsp"/> 
+    <main class="main-content">
+        <jsp:include page="/views/common/topbar.jsp"/>
+        
+        <div class="container-fluid py-4"> 
             <c:if test="${param.success == 'add'}">
                 <div style="background-color: #dcfce7; color: #15803d; padding: 15px; margin-bottom: 20px; border-radius: 8px; font-weight: 600;">
                     ✅ Thêm chi nhánh thành công!
@@ -216,6 +204,7 @@
                         </table>
                     </div>
                 </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-            </body>
-        </html>
+        </div>
+    </main>
+</div>
+<jsp:include page="/views/common/footer.jsp"/>

@@ -355,7 +355,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .kpi-card-info p {
@@ -439,7 +439,7 @@
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
     margin-bottom: 24px;
 }
 
@@ -473,7 +473,8 @@
     transition: all 0.2s ease;
 }
 
-.filter-tab.active, .filter-tab:hover {
+.filter-tab.active,
+.filter-tab:hover {
     background-color: var(--primary-light);
     color: var(--primary-color);
 }
@@ -716,9 +717,17 @@
     border-radius: 3px;
 }
 
-.legend-color.primary { background-color: var(--primary-color); }
-.legend-color.secondary { background-color: #cbd5e1; }
-.legend-color.highlight { background-color: #fca5a5; }
+.legend-color.primary {
+    background-color: var(--primary-color);
+}
+
+.legend-color.secondary {
+    background-color: #cbd5e1;
+}
+
+.legend-color.highlight {
+    background-color: #fca5a5;
+}
 
 /* ── Utilities & Pagination (Restored from Thắng's branch) ── */
 .d-flex {
@@ -729,8 +738,13 @@
     flex-grow: 1 !important;
 }
 
-.gap-2 { gap: 0.5rem !important; }
-.gap-3 { gap: 1rem !important; }
+.gap-2 {
+    gap: 0.5rem !important;
+}
+
+.gap-3 {
+    gap: 1rem !important;
+}
 
 /* ── Pagination overrides for Bootstrap ── */
 .pagination {
@@ -775,6 +789,7 @@
     gap: 4px;
     margin-top: 4px;
 }
+
 .sidebar-submenu-item {
     display: flex;
     align-items: center;
@@ -785,10 +800,12 @@
     font-size: 0.9rem;
     transition: all 0.2s;
 }
+
 .sidebar-submenu-item:hover {
     background-color: #ffebee;
     color: var(--primary-color);
 }
+
 .sidebar-submenu-item.active {
     color: var(--primary-color);
     font-weight: 600;
@@ -932,7 +949,8 @@
 }
 
 /* Dũng's CSS Variables Mapping */
-.user-page, .profile-page {
+.user-page,
+.profile-page {
     --primary: var(--primary-color);
     --primary-hover: #74000a;
     --primary-fixed: #ffdadb;

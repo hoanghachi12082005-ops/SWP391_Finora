@@ -28,8 +28,8 @@
 <body class="bg-background text-on-surface overflow-hidden h-screen">
 <div class="flex h-screen w-screen pl-[var(--sidebar-width,260px)] pr-6">
 
-    <!-- Include Sidebar -->
-    <jsp:include page="/views/common/sidebar.jsp" />
+    <!-- Include POS Sidebar -->
+    <jsp:include page="/views/common/sidebar-pos.jsp" />
 
     <!-- Main Workspace -->
     <div class="flex-1 flex flex-col min-w-0 h-screen relative">
@@ -81,6 +81,18 @@
 
         <!-- Scrollable Dashboard / Form Content -->
         <div class="flex-1 overflow-y-auto p-6 scrollbar-thin space-y-6">
+
+            <%--
+            <c:if test="${param.error == 'need_open_shift'}">
+                <div class="bg-error-container text-on-error-container px-6 py-4 rounded-xl shadow-sm border border-red-200 flex items-center gap-3 animate-fadeIn">
+                    <span class="material-symbols-outlined text-[24px]">warning</span>
+                    <div>
+                        <div class="font-bold text-sm">Chưa mở ca làm việc!</div>
+                        <div class="text-xs opacity-90 mt-0.5">Bạn bắt buộc phải mở ca làm việc mới có thể sử dụng và truy cập chức năng máy POS.</div>
+                    </div>
+                </div>
+            </c:if>
+            --%>
 
             <c:choose>
                 <c:when test="${not empty activeShift}">
