@@ -173,6 +173,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
             <form action="${pageContext.request.contextPath}/inventory" method="POST">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="action" value="updateWarehouse">
                 <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
                 
@@ -218,6 +219,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
             <form action="${pageContext.request.contextPath}/inventory" method="POST">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="action" value="rejectDispatch">
                 <input type="hidden" name="transferId" id="rejectTransferId">
                 <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">

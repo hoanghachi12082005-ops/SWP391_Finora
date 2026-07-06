@@ -82,6 +82,7 @@
         <p>Chào mừng bạn đến với module Quản lý Kho! Hãy khởi tạo kho hàng đầu tiên để bắt đầu lưu trữ sản phẩm.</p>
         
         <form action="${pageContext.request.contextPath}/inventory" method="POST">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="action" value="setupWarehouse">
             
             <div class="mb-3 text-start">

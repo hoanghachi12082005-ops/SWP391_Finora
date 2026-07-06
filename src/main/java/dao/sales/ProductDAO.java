@@ -10,7 +10,7 @@ public class ProductDAO {
 
     public List<Product> findAllActive() {
         List<Product> list = new ArrayList<>();
-        String sql = "SELECT * FROM Product WHERE status = 'ACTIVE' ORDER BY product_id DESC";
+        String sql = "SELECT p.*, c.category_name FROM Product p LEFT JOIN Category c ON p.category_id = c.category_id WHERE p.status = 'ACTIVE' ORDER BY p.product_id DESC";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
               ResultSet rs = ps.executeQuery()) {
@@ -24,7 +24,7 @@ public class ProductDAO {
     }
 
     public Product findById(int id) {
-        String sql = "SELECT * FROM Product WHERE product_id = ?";
+        String sql = "SELECT p.*, c.category_name FROM Product p LEFT JOIN Category c ON p.category_id = c.category_id WHERE p.product_id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -40,7 +40,7 @@ public class ProductDAO {
     }
 
     public Product findByCode(String code) {
-        String sql = "SELECT * FROM Product WHERE product_codebar = ? AND status = 'ACTIVE'";
+        String sql = "SELECT p.*, c.category_name FROM Product p LEFT JOIN Category c ON p.category_id = c.category_id WHERE p.product_codebar = ? AND p.status = 'ACTIVE'";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, code);
@@ -57,12 +57,13 @@ public class ProductDAO {
 
     public List<Product> searchActive(String keyword) {
         List<Product> list = new ArrayList<>();
-        String sql = "SELECT * FROM Product WHERE status = 'ACTIVE' AND (product_name LIKE ? OR product_codebar LIKE ?) ORDER BY product_id DESC";
+        String sql = "SELECT p.*, c.category_name FROM Product p LEFT JOIN Category c ON p.category_id = c.category_id WHERE p.status = 'ACTIVE' AND (p.product_name LIKE ? OR c.category_name LIKE ? OR p.product_codebar LIKE ?) ORDER BY p.product_id DESC";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             String pattern = "%" + keyword + "%";
             ps.setString(1, pattern);
             ps.setString(2, pattern);
+            ps.setString(3, pattern);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapRow(rs));
@@ -91,6 +92,10 @@ public class ProductDAO {
         Timestamp ut = rs.getTimestamp("update_at");
         if (ut != null) p.setUpdatedAt(ut.toLocalDateTime());
         
+        try {
+            p.setCategoryName(rs.getString("category_name"));
+        } catch (SQLException ignored) {}
+        
         return p;
     }
 
@@ -101,10 +106,11 @@ public class ProductDAO {
      */
     public List<Product> getAllActiveByWarehouse(int warehouseId) {
         List<Product> list = new ArrayList<>();
-        String sql = "SELECT p.product_id, p.product_codebar, p.product_name, p.category_id, "
+        String sql = "SELECT p.product_id, p.product_codebar, p.product_name, p.category_id, c.category_name, "
                    + "p.unit_id, p.selling_price, p.created_at, p.update_at, "
                    + "ISNULL(i.quantity_in_stock, 0) AS quantity_in_stock "
                    + "FROM product p "
+                   + "LEFT JOIN category c ON p.category_id = c.category_id "
                    + "LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? "
                    + "ORDER BY p.product_name";
         try (Connection conn = DBContext.getConnection();
@@ -128,12 +134,13 @@ public class ProductDAO {
      */
     public List<Product> searchByKeyword(String keyword, int warehouseId) {
         List<Product> list = new ArrayList<>();
-        String sql = "SELECT p.product_id, p.product_codebar, p.product_name, p.category_id, "
+        String sql = "SELECT p.product_id, p.product_codebar, p.product_name, p.category_id, c.category_name, "
                    + "p.unit_id, p.selling_price, p.created_at, p.update_at, "
                    + "ISNULL(i.quantity_in_stock, 0) AS quantity_in_stock "
                    + "FROM product p "
+                   + "LEFT JOIN category c ON p.category_id = c.category_id "
                    + "LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? "
-                   + "WHERE p.product_name LIKE ? OR p.product_codebar LIKE ? "
+                   + "WHERE p.product_name LIKE ? OR c.category_name LIKE ? OR p.product_codebar LIKE ? "
                    + "ORDER BY p.product_name";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -141,6 +148,7 @@ public class ProductDAO {
             String pattern = "%" + keyword + "%";
             ps.setString(2, pattern);
             ps.setString(3, pattern);
+            ps.setString(4, pattern);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Product p = mapRow(rs);
@@ -158,10 +166,11 @@ public class ProductDAO {
      * Tìm sản phẩm theo mã barcode chính xác kèm tồn kho.
      */
     public Product findByCodebar(String codebar, int warehouseId) {
-        String sql = "SELECT p.product_id, p.product_codebar, p.product_name, p.category_id, "
+        String sql = "SELECT p.product_id, p.product_codebar, p.product_name, p.category_id, c.category_name, "
                    + "p.unit_id, p.selling_price, p.created_at, p.update_at, "
                    + "ISNULL(i.quantity_in_stock, 0) AS quantity_in_stock "
                    + "FROM product p "
+                   + "LEFT JOIN category c ON p.category_id = c.category_id "
                    + "LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? "
                    + "WHERE p.product_codebar = ?";
         try (Connection conn = DBContext.getConnection();

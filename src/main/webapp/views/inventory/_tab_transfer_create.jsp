@@ -40,6 +40,7 @@
 
         <!-- Form Section -->
         <form action="${pageContext.request.contextPath}/inventory" method="POST" id="transferForm">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="action" value="saveTransfer">
             <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">
 
