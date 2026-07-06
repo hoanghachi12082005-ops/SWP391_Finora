@@ -131,6 +131,39 @@ public class OrderDAO {
         return null;
     }
 
+    public List<Order> findByEmployeeId(int empId) {
+        List<Order> list = new ArrayList<>();
+        String sql = """
+            SELECT o.*,
+                   c.full_name AS customerName,
+                   c.phone AS customerPhone,
+                   e.fullName AS employeeName,
+                   b.branch_name AS branchName
+            FROM [order] o
+            LEFT JOIN Customer c ON o.customer_id = c.cus_id
+            JOIN Employee e ON o.emp_id = e.emp_id
+            JOIN Branch b ON o.branch_id = b.branch_id
+            WHERE o.emp_id = ?
+            ORDER BY o.created_at DESC
+            """;
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, empId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Order o = mapRow(rs);
+                    o.setCustomerName(rs.getString("customerName"));
+                    o.setEmployeeName(rs.getString("employeeName"));
+                    o.setBranchName(rs.getString("branchName"));
+                    list.add(o);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public boolean updateStatus(int orderId, String status) {
         String sql = "UPDATE [order] SET status = ? WHERE order_id = ?";
         try (Connection conn = DBContext.getConnection();

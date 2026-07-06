@@ -64,7 +64,7 @@ public class DBContext {
 
     public static void main(String[] args) {
         if (testConnection()) {
-            System.out.println("Chúc mừng! Kết nối tới cơ sở dữ liệu SQL Server thành công.");
+            System.out.println("Connection to SQL Server successful.");
         } else {
             System.err.println("Kết nối tới SQL Server thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu hoặc cổng 1433!");
         }

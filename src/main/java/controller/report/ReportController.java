@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -168,6 +170,13 @@ public class ReportController extends BaseController {
                 keyword, branchId, dateFrom, dateTo);
         EmployeeOverview overview = employeeSalesReportDAO.getReportOverview(
                 keyword, branchId, dateFrom, dateTo);
+
+        int ec = overview.getTotalEmployees();
+        if (ec > 0) {
+            overview.setAvgRevenuePerEmployee(
+                overview.getTotalRevenue().divide(BigDecimal.valueOf(ec), 2, RoundingMode.HALF_UP)
+            );
+        }
 
         request.setAttribute("allSalesReports", allData);
         request.setAttribute("reportOverview", overview);

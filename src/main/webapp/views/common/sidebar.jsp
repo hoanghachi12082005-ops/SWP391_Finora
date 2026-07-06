@@ -90,6 +90,15 @@
             </div>
         </c:if>
 
+        <!-- Customer Management (Owner, StoreManager) -->
+        <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
+            <a href="${pageContext.request.contextPath}/customers" 
+               class="sidebar-menu-item ${originalUri.contains('/customers') ? 'active' : ''}">
+                <span class="material-icons">people</span>
+                <span>Khách hàng</span>
+            </a>
+        </c:if>
+
         <!-- Cashbook (Sổ Quỹ) (Admin, Owner, StoreManager) -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
             <a href="${pageContext.request.contextPath}/cashbook" 

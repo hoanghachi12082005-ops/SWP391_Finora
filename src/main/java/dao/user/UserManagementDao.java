@@ -35,6 +35,7 @@ public class UserManagementDao extends DBContext {
             "    e.phone AS Phone, " +
             "    e.status AS Status, " +
             "    e.created_at AS CreatedAt, " +
+            "    e.image_URL AS AvatarUrl, " +
             "    r.role_name AS RoleName, " +
             "    b.branch_name AS BranchName, " +
             "    r.role_name AS RoleNames " +
@@ -47,220 +48,304 @@ public class UserManagementDao extends DBContext {
     // Admin view/add/edit/lock/unlock/reset Owner
     // =====================================================
 
-//    public List<Employee> getOwners(String keyword, String statusFilter) {
-//        List<Employee> list = new ArrayList<Employee>();
-//
-//        String sql =
-//                USER_SELECT +
-//                "WHERE EXISTS ( " +
-//                "    SELECT 1 " +
-//                "    FROM EmployeeRole er " +
-//                "    JOIN Role rr ON er.RoleID = rr.RoleID " +
-//                "    WHERE er.EmployeeID = e.EmployeeID " +
-//                "      AND rr.Name = 'Owner' " +
-//                ") " +
-//                "AND ( " +
-//                "    ? IS NULL " +
-//                "    OR e.FullName LIKE ? " +
-//                "    OR e.Email LIKE ? " +
-//                "    OR e.Phone LIKE ? " +
-//                ") " +
-//                "AND (? IS NULL OR e.Status = ?) " +
-//                "ORDER BY e.EmployeeID DESC";
-//
-//        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-//            String searchValue = normalizeLike(keyword);
-//            String statusValue = normalize(statusFilter);
-//
-//            ps.setString(1, searchValue);
-//            ps.setString(2, searchValue);
-//            ps.setString(3, searchValue);
-//            ps.setString(4, searchValue);
-//            ps.setString(5, statusValue);
-//            ps.setString(6, statusValue);
-//
-//            try (ResultSet rs = ps.executeQuery()) {
-//                while (rs.next()) {
-//                    list.add(mapEmployee(rs));
-//                }
-//            }
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//
-//        return list;
-//    }
 
-//    public Employee getOwnerById(int employeeId) {
-//        String sql =
-//                USER_SELECT +
-//                "WHERE e.EmployeeID = ? " +
-//                "AND EXISTS ( " +
-//                "    SELECT 1 " +
-//                "    FROM EmployeeRole er " +
-//                "    JOIN Role rr ON er.RoleID = rr.RoleID " +
-//                "    WHERE er.EmployeeID = e.EmployeeID " +
-//                "      AND rr.Name = 'Owner' " +
-//                ")";
+
+
 //
-//        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-//            ps.setInt(1, employeeId);
+
 //
-//            try (ResultSet rs = ps.executeQuery()) {
-//                if (rs.next()) {
-//                    return mapEmployee(rs);
-//                }
-//            }
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
+
 //
-//        return null;
-//    }
+
 //
-//    public boolean createOwner(Employee owner, String hashedPassword) {
-//        int ownerRoleId = getRoleIdByName("Owner");
-//
-//        if (ownerRoleId <= 0) {
-//            throw new IllegalStateException("Role Owner does not exist in database.");
-//        }
-//
-//        String insertEmployeeSql =
-//                "INSERT INTO Employee " +
-//                "(RoleID, BranchID, FullName, Email, Phone, PasswordHash, Status) " +
-//                "VALUES (?, NULL, ?, ?, ?, ?, ?)";
-//
-//        String insertEmployeeRoleSql =
-//                "INSERT INTO EmployeeRole (EmployeeID, RoleID) " +
-//                "VALUES (?, ?)";
-//
-//        try {
-//            connection.setAutoCommit(false);
-//
-//            int newEmployeeId;
-//
-//            try (PreparedStatement ps = connection.prepareStatement(
-//                    insertEmployeeSql,
-//                    Statement.RETURN_GENERATED_KEYS
-//            )) {
-//                ps.setInt(1, ownerRoleId);
-//                ps.setString(2, owner.getFullName());
-//                ps.setString(3, owner.getEmail());
-//                ps.setString(4, owner.getPhone());
-//                ps.setString(5, hashedPassword);
-//                ps.setString(6, normalize(owner.getStatus()) == null ? "active" : owner.getStatus());
-//
-//                int affectedRows = ps.executeUpdate();
-//
-//                if (affectedRows == 0) {
-//                    connection.rollback();
-//                    return false;
-//                }
-//
-//                try (ResultSet keys = ps.getGeneratedKeys()) {
-//                    if (!keys.next()) {
-//                        connection.rollback();
-//                        return false;
-//                    }
-//
-//                    newEmployeeId = keys.getInt(1);
-//                }
-//            }
-//
-//            try (PreparedStatement psRole = connection.prepareStatement(insertEmployeeRoleSql)) {
-//                psRole.setInt(1, newEmployeeId);
-//                psRole.setInt(2, ownerRoleId);
-//                psRole.executeUpdate();
-//            }
-//
-//            connection.commit();
-//            return true;
-//        } catch (SQLException e) {
-//            rollbackQuietly();
-//            e.printStackTrace();
-//            return false;
-//        } finally {
-//            setAutoCommitTrueQuietly();
-//        }
-//    }
-//
-//    public boolean updateOwner(Employee owner) {
-//        String sql =
-//                "UPDATE Employee " +
-//                "SET FullName = ?, Email = ?, Phone = ?, Status = ? " +
-//                "WHERE EmployeeID = ? " +
-//                "AND EXISTS ( " +
-//                "    SELECT 1 " +
-//                "    FROM EmployeeRole er " +
-//                "    JOIN Role rr ON er.RoleID = rr.RoleID " +
-//                "    WHERE er.EmployeeID = Employee.EmployeeID " +
-//                "      AND rr.Name = 'Owner' " +
-//                ")";
-//
-//        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-//            ps.setString(1, owner.getFullName());
-//            ps.setString(2, owner.getEmail());
-//            ps.setString(3, owner.getPhone());
-//            ps.setString(4, owner.getStatus());
-//            ps.setInt(5, owner.getEmployeeId());
-//
-//            return ps.executeUpdate() > 0;
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//
-//        return false;
-//    }
-//
-//    public boolean updateOwnerStatus(int employeeId, String status) {
-//        String sql =
-//                "UPDATE Employee " +
-//                "SET Status = ? " +
-//                "WHERE EmployeeID = ? " +
-//                "AND EXISTS ( " +
-//                "    SELECT 1 " +
-//                "    FROM EmployeeRole er " +
-//                "    JOIN Role rr ON er.RoleID = rr.RoleID " +
-//                "    WHERE er.EmployeeID = Employee.EmployeeID " +
-//                "      AND rr.Name = 'Owner' " +
-//                ")";
-//
-//        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-//            ps.setString(1, status);
-//            ps.setInt(2, employeeId);
-//
-//            return ps.executeUpdate() > 0;
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//
-//        return false;
-//    }
-//
-//    public boolean resetOwnerPassword(int employeeId, String hashedPassword) {
-//        String sql =
-//                "UPDATE Employee " +
-//                "SET PasswordHash = ? " +
-//                "WHERE EmployeeID = ? " +
-//                "AND EXISTS ( " +
-//                "    SELECT 1 " +
-//                "    FROM EmployeeRole er " +
-//                "    JOIN Role rr ON er.RoleID = rr.RoleID " +
-//                "    WHERE er.EmployeeID = Employee.EmployeeID " +
-//                "      AND rr.Name = 'Owner' " +
-//                ")";
-//
-//        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-//            ps.setString(1, hashedPassword);
-//            ps.setInt(2, employeeId);
-//
-//            return ps.executeUpdate() > 0;
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//
-//        return false;
-//    }
+
+
+    // =====================================================
+    // ADMIN: Owner Management
+    // =====================================================
+
+    public List<Employee> getOwners(String keyword, String statusFilter) {
+        List<Employee> list = new ArrayList<>();
+        String sql =
+                USER_SELECT +
+                "WHERE r.role_name = 'Owner' " +
+                "AND (? IS NULL OR e.fullName LIKE ? OR e.email LIKE ? OR e.phone LIKE ?) " +
+                "AND (? IS NULL OR e.status = ?) " +
+                "ORDER BY e.emp_id DESC";
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            String searchValue = normalizeLike(keyword);
+            String statusValue = normalize(statusFilter);
+
+            ps.setString(1, searchValue);
+            ps.setString(2, searchValue);
+            ps.setString(3, searchValue);
+            ps.setString(4, searchValue);
+            ps.setString(5, statusValue);
+            ps.setString(6, statusValue);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapEmployee(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public Employee getOwnerById(int employeeId) {
+        String sql = USER_SELECT + "WHERE e.emp_id = ? AND r.role_name = 'Owner'";
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, employeeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapEmployee(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean updateOwner(Employee employee) {
+        String sql =
+                "UPDATE Employee SET role_id = ?, branch_id = ?, fullName = ?, email = ?, phone = ?, status = ?, update_at = GETDATE() " +
+                "WHERE emp_id = ? " +
+                "AND EXISTS (SELECT 1 FROM Role rr WHERE rr.role_id = Employee.role_id AND rr.role_name = 'Owner')";
+
+        try (Connection connection = DBContext.getConnection()) {
+            connection.setAutoCommit(false);
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setInt(1, employee.getRoleID());
+                setNullableInt(ps, 2, employee.getBranchID());
+                ps.setString(3, employee.getFullName());
+                ps.setString(4, employee.getEmail());
+                ps.setString(5, employee.getPhone());
+                ps.setString(6, employee.getStatus());
+                ps.setInt(7, employee.getEmployeeID());
+                int updated = ps.executeUpdate();
+                if (updated == 0) { connection.rollback(); return false; }
+                connection.commit();
+                return true;
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean updateOwnerStatus(int employeeId, String status) {
+        String sql =
+                "UPDATE Employee SET status = ?, update_at = GETDATE() WHERE emp_id = ? " +
+                "AND EXISTS (SELECT 1 FROM Role rr WHERE rr.role_id = Employee.role_id AND rr.role_name = 'Owner')";
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, employeeId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean resetOwnerPassword(int employeeId, String hashedPassword) {
+        String sql =
+                "UPDATE Employee SET passwordHash = ?, update_at = GETDATE() WHERE emp_id = ? " +
+                "AND EXISTS (SELECT 1 FROM Role rr WHERE rr.role_id = Employee.role_id AND rr.role_name = 'Owner')";
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, hashedPassword);
+            ps.setInt(2, employeeId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // =====================================================
+    // ADMIN: any role (no Owner/Admin exclusion)
+    // =====================================================
+
+    public boolean updateEmployeeByAdmin(Employee employee) {
+        String sql =
+                "UPDATE Employee SET role_id = ?, branch_id = ?, fullName = ?, email = ?, phone = ?, status = ?, update_at = GETDATE() " +
+                "WHERE emp_id = ?";
+        try (Connection connection = DBContext.getConnection()) {
+            connection.setAutoCommit(false);
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setInt(1, employee.getRoleID());
+                setNullableInt(ps, 2, employee.getBranchID());
+                ps.setString(3, employee.getFullName());
+                ps.setString(4, employee.getEmail());
+                ps.setString(5, employee.getPhone());
+                ps.setString(6, employee.getStatus());
+                ps.setInt(7, employee.getEmployeeID());
+                int updated = ps.executeUpdate();
+                if (updated == 0) { connection.rollback(); return false; }
+                connection.commit();
+                return true;
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean updateEmployeeStatusByAdmin(int employeeId, String status) {
+        String sql = "UPDATE Employee SET status = ?, update_at = GETDATE() WHERE emp_id = ?";
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, employeeId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean resetPasswordByAdmin(int employeeId, String hashedPassword) {
+        String sql = "UPDATE Employee SET passwordHash = ?, update_at = GETDATE() WHERE emp_id = ?";
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, hashedPassword);
+            ps.setInt(2, employeeId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // =====================================================
+    // ALL EMPLOYEES (Admin view - includes all roles)
+    // =====================================================
+
+    public List<Employee> getAllEmployees(String keyword,
+                                          String branchFilter,
+                                          String roleFilter,
+                                          String statusFilter,
+                                          int page,
+                                          int pageSize) {
+        List<Employee> list = new ArrayList<>();
+        String sql =
+                USER_SELECT +
+                "WHERE (? IS NULL OR e.fullName LIKE ? OR e.email LIKE ? OR e.phone LIKE ?) " +
+                "AND (? IS NULL OR e.branch_id = ?) " +
+                "AND (? IS NULL OR e.role_id = ?) " +
+                "AND (? IS NULL OR e.status = ?) " +
+                "ORDER BY e.emp_id DESC " +
+                "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            String searchValue = normalizeLike(keyword);
+            Integer branchId = parseInteger(branchFilter);
+            Integer roleId = parseInteger(roleFilter);
+            String statusValue = normalize(statusFilter);
+            int offset = (page - 1) * pageSize;
+
+            ps.setString(1, searchValue);
+            ps.setString(2, searchValue);
+            ps.setString(3, searchValue);
+            ps.setString(4, searchValue);
+            setNullableInt(ps, 5, branchId);
+            setNullableInt(ps, 6, branchId);
+            setNullableInt(ps, 7, roleId);
+            setNullableInt(ps, 8, roleId);
+            ps.setString(9, statusValue);
+            ps.setString(10, statusValue);
+            ps.setInt(11, offset);
+            ps.setInt(12, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapEmployee(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int countAllEmployees(String keyword,
+                                 String branchFilter,
+                                 String roleFilter,
+                                 String statusFilter) {
+        String sql =
+                "SELECT COUNT(DISTINCT e.emp_id) AS Total " +
+                "FROM Employee e " +
+                "LEFT JOIN Role r ON e.role_id = r.role_id " +
+                "WHERE (? IS NULL OR e.fullName LIKE ? OR e.email LIKE ? OR e.phone LIKE ?) " +
+                "AND (? IS NULL OR e.branch_id = ?) " +
+                "AND (? IS NULL OR e.role_id = ?) " +
+                "AND (? IS NULL OR e.status = ?)";
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            String searchValue = normalizeLike(keyword);
+            Integer branchId = parseInteger(branchFilter);
+            Integer roleId = parseInteger(roleFilter);
+            String statusValue = normalize(statusFilter);
+
+            ps.setString(1, searchValue);
+            ps.setString(2, searchValue);
+            ps.setString(3, searchValue);
+            ps.setString(4, searchValue);
+            setNullableInt(ps, 5, branchId);
+            setNullableInt(ps, 6, branchId);
+            setNullableInt(ps, 7, roleId);
+            setNullableInt(ps, 8, roleId);
+            ps.setString(9, statusValue);
+            ps.setString(10, statusValue);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt("Total");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public EmployeeOverview getAllEmployeesOverview() {
+        EmployeeOverview overview = new EmployeeOverview();
+        String sql =
+                "SELECT " +
+                "    COUNT(DISTINCT e.emp_id) AS TotalEmployees, " +
+                "    COUNT(DISTINCT CASE WHEN e.status = 'active' THEN e.emp_id END) AS ActiveEmployees, " +
+                "    COUNT(o.order_id) AS TotalOrders, " +
+                "    COALESCE(SUM(o.total_amount), 0) AS TotalRevenue " +
+                "FROM Employee e " +
+                "LEFT JOIN [order] o ON e.emp_id = o.emp_id " +
+                "LEFT JOIN Role r ON e.role_id = r.role_id " +
+                "WHERE (r.role_name IS NULL OR r.role_name NOT IN ('Admin'))";
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                overview.setTotalEmployees(rs.getInt("TotalEmployees"));
+                overview.setActiveEmployees(rs.getInt("ActiveEmployees"));
+                overview.setTotalOrders(rs.getInt("TotalOrders"));
+                BigDecimal revenue = rs.getBigDecimal("TotalRevenue");
+                overview.setTotalRevenue(revenue == null ? BigDecimal.ZERO : revenue);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return overview;
+    }
 
     // =====================================================
     // OWNER SIDE
@@ -517,7 +602,7 @@ public class UserManagementDao extends DBContext {
                 "(role_id, branch_id, fullName, email, phone, passwordHash, status, created_at, update_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())";
 
-        try {Connection connection = DBContext.getConnection(); 
+        try (Connection connection = DBContext.getConnection()) {
             connection.setAutoCommit(false);
 
             int newEmployeeId;
@@ -555,11 +640,8 @@ public class UserManagementDao extends DBContext {
             connection.commit();
             return true;
         } catch (SQLException e) {
-            rollbackQuietly();
             e.printStackTrace();
             return false;
-        } finally {
-            setAutoCommitTrueQuietly();
         }
     }
 
@@ -579,10 +661,7 @@ public class UserManagementDao extends DBContext {
                 "WHERE emp_id = ? " +
                 "AND NOT EXISTS (SELECT 1 FROM Role rr WHERE rr.role_id = Employee.role_id AND rr.role_name IN ('Admin', 'Owner'))";
 
-        String deleteRoleSql =
-                "SELECT 1 WHERE ? = 0";
-
-        try {Connection connection = DBContext.getConnection(); 
+        try (Connection connection = DBContext.getConnection()) {
             connection.setAutoCommit(false);
 
             try (PreparedStatement ps = connection.prepareStatement(updateEmployeeSql)) {
@@ -603,19 +682,11 @@ public class UserManagementDao extends DBContext {
                 }
             }
 
-            try (PreparedStatement deletePs = connection.prepareStatement(deleteRoleSql)) {
-                deletePs.setInt(1, employee.getEmployeeID());
-                deletePs.executeUpdate();
-            }
-
             connection.commit();
             return true;
         } catch (SQLException e) {
-            rollbackQuietly();
             e.printStackTrace();
             return false;
-        } finally {
-            setAutoCommitTrueQuietly();
         }
     }
 
@@ -845,6 +916,39 @@ public class UserManagementDao extends DBContext {
     // COMMON DATA FOR USER MANAGEMENT PAGE
     // =====================================================
 
+    public List<Role> getAllRoles() {
+        List<Role> list = new ArrayList<>();
+        String sql = "SELECT role_id AS RoleID, role_name AS Name, discription AS Description FROM Role ORDER BY role_id";
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Role role = new Role();
+                role.setRoleID(rs.getInt("RoleID"));
+                role.setName(rs.getString("Name"));
+                role.setDescription(rs.getString("Description"));
+                list.add(role);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public Employee getEmployeeByIdAllRoles(int id) {
+        String sql = USER_SELECT + "WHERE e.emp_id = ?";
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapEmployee(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public List<Role> getEmployeeRoles() {
         List<Role> list = new ArrayList<Role>();
 
@@ -1027,6 +1131,7 @@ public class UserManagementDao extends DBContext {
         employee.setPhone(rs.getString("Phone"));
         employee.setStatus(rs.getString("Status"));
         employee.setCreatedAt(rs.getTimestamp("CreatedAt"));
+        employee.setAvatarUrl(rs.getString("AvatarUrl"));
 
         employee.setRoleName(rs.getString("RoleName"));
         employee.setRoleNames(rs.getString("RoleNames"));
@@ -1072,17 +1177,5 @@ public class UserManagementDao extends DBContext {
         }
     }
 
-    private void rollbackQuietly() {
-        try {Connection connection = DBContext.getConnection(); 
-            connection.rollback();
-        } catch (SQLException ignored) {
-        }
-    }
 
-    private void setAutoCommitTrueQuietly() {
-        try {Connection connection = DBContext.getConnection(); 
-            connection.setAutoCommit(true);
-        } catch (SQLException ignored) {
-        }
-    }
 }

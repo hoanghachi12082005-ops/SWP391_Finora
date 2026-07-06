@@ -29,7 +29,6 @@
     --sidebar-width: 260px;
     --header-height: 70px;
     --font-main: 'Inter', sans-serif;
-    --font-heading: 'Manrope', sans-serif;
 }
 
 * {
@@ -48,7 +47,7 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-heading);
+    font-family: var(--font-main);
     font-weight: 700;
     color: #0f172a;
 }

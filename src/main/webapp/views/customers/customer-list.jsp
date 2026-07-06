@@ -17,12 +17,10 @@
         <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
         <title>${pageTitle} - Finora</title>
 
-        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/base.css?v=20260528"/>
-        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/layout.css?v=20260528"/>
-        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/form-modal.css?v=20260528"/>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/customer-management.css?v=2">
+        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/base.css?v=20260601"/>
 
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     </head>
 
@@ -90,7 +88,7 @@
                             <div class="overview-info">
                                 <p>Total Spent</p>
                                 <h3>
-                                    <fmt:formatNumber value="${customerOverview.totalSpent}" type="number" groupingUsed="true"/> Γé½
+                                    <fmt:formatNumber value="${customerOverview.totalSpent}" type="number" groupingUsed="true"/> ₫
                                 </h3>
                             </div>
                         </div>
@@ -101,7 +99,7 @@
                             </div>
                             <div class="overview-info">
                                 <p>Top Current Points</p>
-                                <h3>${empty customerOverview.topCustomerName ? 'ΓÇö' : customerOverview.topCustomerName}</h3>
+                                <h3>${empty customerOverview.topCustomerName ? '—' : customerOverview.topCustomerName}</h3>
                                 <small>
                                     Points: ${customerOverview.topCustomerPoints}
                                 </small>
@@ -209,7 +207,7 @@
                                     <c:forEach var="cust" items="${customers}">
                                         <tr>
                                             <td>
-                                                <div class="customer-cell">
+                                                <div class="user-cell">
                                                     <div class="avatar-text">
                                                         <c:choose>
                                                             <c:when test="${not empty cust.fullName}">
@@ -226,7 +224,7 @@
                                                 </div>
                                             </td>
 
-                                            <td>${empty cust.phone ? 'ΓÇö' : cust.phone}</td>
+                                            <td>${empty cust.phone ? '—' : cust.phone}</td>
 
                                             <td>${cust.loyaltyPoint}</td>
 
@@ -244,10 +242,10 @@
                                                     </c:if>
 
                                                     <c:if test="${sessionScope.currentUser.roleName == 'Admin' || sessionScope.currentUser.roleName == 'Owner' || sessionScope.currentUser.roleName == 'Store Manager' || sessionScope.currentUser.roleName == 'StoreManager' || sessionScope.currentUser.roleName == 'Manager'}">
-                                                        <form method="post" action="${baseUrl}" style="display:inline;" onsubmit="return confirm('Soft delete this customer?')">
+                                                        <form method="post" action="${baseUrl}" onsubmit="return confirm('Soft delete this customer?')">
                                                             <input type="hidden" name="action" value="delete"/>
                                                             <input type="hidden" name="customerId" value="${cust.customerId}"/>
-                                                            <button type="submit" style="background:none; border:none; color:var(--secondary); cursor:pointer; padding:0; display:inline-flex; align-items:center; vertical-align: middle;">
+                                                            <button type="submit" title="Delete">
                                                                 <span class="material-symbols-outlined">delete</span>
                                                             </button>
                                                         </form>
@@ -275,10 +273,13 @@
                             </c:if>
                         </div>
 
+                        <c:set var="paginationBaseUrl"
+                               value="${fn:replace(baseUrl, pageContext.request.contextPath, '')}"/>
+
                         <c:if test="${totalPages > 1}">
                             <div class="pagination">
 
-                                <c:url var="prevUrl" value="/customers">
+                                <c:url var="prevUrl" value="${paginationBaseUrl}">
                                     <c:param name="page" value="${currentPage - 1}"/>
                                     <c:param name="keyword" value="${keyword}"/>
                                     <c:param name="branchId" value="${branchFilter == -1 ? '' : branchFilter}"/>
@@ -295,7 +296,7 @@
                                 </c:choose>
 
                                 <c:forEach begin="1" end="${totalPages}" var="i">
-                                    <c:url var="pageUrl" value="/customers">
+                                    <c:url var="pageUrl" value="${paginationBaseUrl}">
                                         <c:param name="page" value="${i}"/>
                                         <c:param name="keyword" value="${keyword}"/>
                                         <c:param name="branchId" value="${branchFilter == -1 ? '' : branchFilter}"/>
@@ -312,7 +313,7 @@
                                     </c:choose>
                                 </c:forEach>
 
-                                <c:url var="nextUrl" value="/customers">
+                                <c:url var="nextUrl" value="${paginationBaseUrl}">
                                     <c:param name="page" value="${currentPage + 1}"/>
                                     <c:param name="keyword" value="${keyword}"/>
                                     <c:param name="branchId" value="${branchFilter == -1 ? '' : branchFilter}"/>
@@ -488,15 +489,15 @@
                     <div class="form-row">
                         <div>
                             <p><strong>Full Name:</strong> ${detailCustomer.fullName}</p>
-                            <p><strong>Phone:</strong> ${empty detailCustomer.phone ? 'ΓÇö' : detailCustomer.phone}</p>
-                            <p><strong>Email:</strong> ${empty detailCustomer.email ? 'ΓÇö' : detailCustomer.email}</p>
-                            <p><strong>Gender:</strong> ${empty detailCustomer.gender ? 'ΓÇö' : detailCustomer.gender}</p>
-                            <p><strong>Date of Birth:</strong> ${empty detailCustomer.dateOfBirth ? 'ΓÇö' : detailCustomer.dateOfBirth}</p>
+                            <p><strong>Phone:</strong> ${empty detailCustomer.phone ? '—' : detailCustomer.phone}</p>
+                            <p><strong>Email:</strong> ${empty detailCustomer.email ? '—' : detailCustomer.email}</p>
+                            <p><strong>Gender:</strong> ${empty detailCustomer.gender ? '—' : detailCustomer.gender}</p>
+                            <p><strong>Date of Birth:</strong> ${empty detailCustomer.dateOfBirth ? '—' : detailCustomer.dateOfBirth}</p>
                         </div>
                         <div>
-                            <p><strong>Address:</strong> ${empty detailCustomer.address ? 'ΓÇö' : detailCustomer.address}</p>
+                            <p><strong>Address:</strong> ${empty detailCustomer.address ? '—' : detailCustomer.address}</p>
                             <p><strong>Total Spent:</strong>
-                                <fmt:formatNumber value="${detailCustomer.totalSpent}" type="number" groupingUsed="true"/> Γé½
+                                <fmt:formatNumber value="${detailCustomer.totalSpent}" type="number" groupingUsed="true"/> ₫
                             </p>
                         </div>
                     </div>
@@ -563,7 +564,7 @@
                                             <td><fmt:formatDate value="${ord.createdAt}" pattern="dd/MM/yyyy HH:mm"/></td>
                                             <td>${ord.orderCode}</td>
                                             <td>${ord.orderType}</td>
-                                            <td><fmt:formatNumber value="${ord.totalAmount}" type="number" groupingUsed="true"/> Γé½</td>
+                                            <td><fmt:formatNumber value="${ord.totalAmount}" type="number" groupingUsed="true"/> ₫</td>
                                             <td>${ord.status}</td>
                                             <td>${ord.branchName}</td>
                                         </tr>
