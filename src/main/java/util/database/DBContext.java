@@ -21,7 +21,6 @@ public class DBContext {
 
     private static final String JDBC_URL = envOr("DB_URL", DEFAULT_URL);
     private static final String DB_USER = envOr("DB_USER", "sa"); // Tài khoản SQL Server Authentication
-<<<<<<< HEAD
     private static final String DB_SECRET = envOr("DB_PASSWORD", "123"); // Mật khẩu của tài khoản sa
 
     static {
