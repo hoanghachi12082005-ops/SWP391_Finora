@@ -3,33 +3,20 @@
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 
-<!DOCTYPE html>
-<html>
-    <head>
+<jsp:include page="/views/common/header.jsp">
+    <jsp:param name="title" value="Danh sách chi nhánh"/>
+    <jsp:param name="additionalCSS" value="branch.css"/>
+</jsp:include>
 
-        <meta charset="UTF-8">
 
-        <title>Danh sách chi nhánh</title>
 
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<div class="app-container">
+    <jsp:include page="/views/common/sidebar.jsp"/>
 
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
-        <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/assets/css/branch.css">
-
-        <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/assets/fontawesome/css/all.min.css">
-
-    </head>
-
-    <body>
-
-        <jsp:include page="/views/common/sidebar.jsp"/>
-
-        <div class="main-content">
-
-            <jsp:include page="header.jsp"/>
+    <main class="main-content">
+        <jsp:include page="/views/common/topbar.jsp"/>
+        
+        <div class="container-fluid py-4">
 
             <div class="page-header">
 
@@ -52,28 +39,93 @@
 
             </div>
 
-            <div class="stats">
-
-                <div class="stat-card">
-                    <h3 class="stat-label">TỔNG CỬA HÀNG</h3>
-                    <p class="stat-value">${totalBranch}</p>
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-card-info">
+                        <p>Tổng cửa hàng</p>
+                        <h3>${totalBranch}</h3>
+                    </div>
+                    <div class="kpi-card-icon red">
+                        <span class="material-icons">storefront</span>
+                    </div>
                 </div>
 
-                <div class="stat-card">
-                    <h3 class="stat-label">DOANH THU HÔM NAY</h3>
-                    <p class="stat-value">${todayRevenue}</p>
+                <div class="kpi-card">
+                    <div class="kpi-card-info">
+                        <p>Doanh thu hôm nay</p>
+                        <h3>${todayRevenue}</h3>
+                    </div>
+                    <div class="kpi-card-icon orange">
+                        <span class="material-icons">payments</span>
+                    </div>
                 </div>
 
-                <div class="stat-card">
-                    <h3 class="stat-label">TỔNG NHÂN VIÊN</h3>
-                    <p class="stat-value">${totalEmployee}</p>
+                <div class="kpi-card">
+                    <div class="kpi-card-info">
+                        <p>Tổng nhân viên</p>
+                        <h3>${totalEmployee}</h3>
+                    </div>
+                    <div class="kpi-card-icon green">
+                        <span class="material-icons">group</span>
+                    </div>
                 </div>
 
-                <div class="stat-card">
-                    <h3 class="stat-label">CỬA HÀNG TỐT NHẤT</h3>
-                    <p class="stat-value stat-value--name">${bestBranch}</p>
+                <div class="kpi-card">
+                    <div class="kpi-card-info">
+                        <p>Cửa hàng tốt nhất</p>
+                        <h3>${bestBranch}</h3>
+                    </div>
+                    <div class="kpi-card-icon blue">
+                        <span class="material-icons">star</span>
+                    </div>
                 </div>
+            </div>
 
+            <!-- Search & Filter Card -->
+            <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px;">
+                <div class="card-body p-4">
+                    <form method="GET" action="${pageContext.request.contextPath}/branch" class="row g-3 align-items-center">
+                        <input type="hidden" name="action" value="list">
+                        
+                        <!-- Keyword Search -->
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <span class="material-icons text-muted">search</span>
+                                </span>
+                                <input type="text" class="form-control border-start-0" name="keyword" value="${param.keyword}" placeholder="Tìm kiếm cửa hàng, mã số...">
+                            </div>
+                        </div>
+                        
+                        <!-- Status Filter -->
+                        <div class="col-md-3">
+                            <select class="form-select" name="status">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="ACTIVE" ${selectedStatus == 'ACTIVE' ? 'selected' : ''}>Hoạt động</option>
+                                <option value="locked" ${selectedStatus == 'locked' ? 'selected' : ''}>Ngừng hoạt động</option>
+                            </select>
+                        </div>
+                        
+                        <!-- City Filter -->
+                        <div class="col-md-3">
+                            <select class="form-select" name="city">
+                                <option value="">Tất cả thành phố</option>
+                                <c:forEach items="${cityList}" var="city">
+                                    <option value="${city}" ${city == selectedCity ? 'selected' : ''}>${city}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                        
+                        <!-- Submit & Reset Buttons -->
+                        <div class="col-md-2 d-flex gap-2">
+                            <button type="submit" class="btn btn-danger flex-grow-1" style="background-color: var(--primary-color); border-color: var(--primary-color);">Lọc</button>
+                            <a href="${pageContext.request.contextPath}/branch?action=list" class="btn btn-outline-secondary" title="Xóa bộ lọc">
+                                <span class="material-icons" style="font-size: 18px; line-height: 1.5;">refresh</span>
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <div class="table-card">
@@ -81,58 +133,21 @@
                 <div class="table-header">
 
                     <h3>Danh sách chi nhánh</h3>
-                    <div>
-                        <!-- ---------------------- Cấu hình Filter ---------------------- -->
-                        <form method="GET" action="branch" class="filter-branch">
-                            <input type="hidden" name="action" value="list">
-                            <select class="filter-branch-select" name="status">
-                                <option value="">Tất cả trạng thái</option>
-                                <option value="ACTIVE"
-                                        ${selectedStatus == 'ACTIVE' ? 'selected' : ''}>
-                                    Hoạt động
-                                </option>
-
-                                <option value="locked"
-                                        ${selectedStatus == 'locked' ? 'selected' : ''}>
-                                    Ngừng hoạt động
-                                </option>
-                            </select>
-
-                            <select class="filter-branch-select" name="city">
-
-                                <option value="">
-                                    Tất cả thành phố
-                                </option>
-
-                                <c:forEach items="${cityList}" var="city">
-
-                                    <option value="${city}" ${city == selectedCity ? 'selected' : ''}>
-                                        ${city}
-                                    </option>
-
-                                </c:forEach>
-
-                            </select>
-                            <button type="submit" class="btn-filter">
-                                <p>Lọc</p>
-                            </button>
-                        </form>
-                    </div>
 
                 </div>
                 <table class="table branch-table">
                     <thead>
                         <tr> 
-                            <th>Mã</th>
-                            <th>Tên chi nhánh</th>
-                            <th>Địa chỉ</th>
-                            <th>Điện thoại</th>
-                            <th>Quản lý</th>
+                            <th class="col-code">Mã</th>
+                            <th class="col-name">Tên chi nhánh</th>
+                            <th class="col-address">Địa chỉ</th>
+                            <th class="col-phone">Điện thoại</th>
+                            <th class="col-manager">Quản lý</th>
                                 <c:if test="${showEmployeeColumn}">
-                                <th>Nhân viên</th>
+                                <th class="col-employee">Nhân viên</th>
                                 </c:if>
-                            <th>Trạng thái</th>
-                            <th>Thao tác</th>
+                            <th class="col-status">Trạng thái</th>
+                            <th class="col-actions">Thao tác</th>
                         </tr>
                     </thead>
 
@@ -152,7 +167,7 @@
 
                                             <c:otherwise>
                                                 <div class="branch-avatar-placeholder">
-                                                    <i class="fa-solid fa-store"></i>
+                                                    <span class="material-icons">store</span>
                                                 </div>
                                             </c:otherwise>
                                         </c:choose>
@@ -161,12 +176,16 @@
 
                                     </div>
                                 </td>
-                                <td>${b.branchName}</td>
-                                <td>${b.fullAddress}</td>
+                                <td class="col-name">
+                                    <span class="branch-name" title="${fn:escapeXml(b.branchName)}">${b.branchName}</span>
+                                </td>
+                                <td class="col-address">
+                                    <span class="branch-address">${b.fullAddress}</span>
+                                </td>
                                 <td>${b.phone}</td>
                                 <td>${empty b.managerName ? 'Chưa phân công' : b.managerName}</td>
                                 <c:if test="${showEmployeeColumn}">
-                                    <td>${branch.employeeCount}</td>
+                                    <td>${b.employeeCount}</td>
                                 </c:if>
                                 <td>
                                     <c:set var="branchStatus" value="${fn:toLowerCase(b.status)}"/>
@@ -181,12 +200,12 @@
                                         <div class="action-group">
                                             <a class="btn-view"
                                                href="branch?action=detail&id=${b.branchId}">
-                                                <i class="fa-regular fa-eye" style="color: rgb(24, 49, 83);"></i>
+                                                <span class="material-icons" style="color: rgb(24, 49, 83); font-size: 1.0rem; vertical-align: middle;">visibility</span>
                                             </a>
 
                                             <a class="btn-edit"
                                                href="branch?action=edit&id=${b.branchId}">
-                                                <i class="fa-solid fa-pen" style="color: rgb(24, 49, 83);"></i>
+                                                <span class="material-icons" style="color: rgb(24, 49, 83); font-size: 1.0rem; vertical-align: middle;">edit</span>
                                             </a>
 
                                             <button type="button"
@@ -194,7 +213,7 @@
                                                     data-id="${b.branchId}"
                                                     data-name="${fn:escapeXml(b.branchName)}"
                                                     onclick="openDeleteModal(this)">
-                                                <i class="fa-solid fa-trash-can" style="color: rgb(24, 49, 83);"></i>
+                                                <span class="material-icons" style="color: rgb(24, 49, 83); font-size: 1.0rem; vertical-align: middle;">delete</span>
                                             </button>
                                         </div>
                                     </td>
@@ -213,23 +232,23 @@
                             <input type="hidden" name="city" value="${selectedCity}">
 
                             <select name="sizeValue" onchange="this.form.submit()"> 
-                                <option value="30"
-                                        ${sizeValue == 30 ? "selected" : ""}>
+                                <option value="30" ${sizeValue == 30 or (sizeValue == 50 and option50 == option30) or (sizeValue == 70 and option70 == option30) ? "selected" : ""}>
                                     ${option30}
                                 </option>
 
-                                <option value="50"
-                                        ${sizeValue == 50 ? "selected" : ""}>
-                                    ${option50}
-                                </option>
+                                <c:if test="${option50 != option30}">
+                                    <option value="50" ${sizeValue == 50 or (sizeValue == 70 and option70 == option50) ? "selected" : ""}>
+                                        ${option50}
+                                    </option>
+                                </c:if>
 
-                                <option value="70"
-                                        ${sizeValue == 70 ? "selected" : ""}>
-                                    ${option70}
-                                </option>
+                                <c:if test="${option70 != option50 and option70 != option30 and option70 != option100}">
+                                    <option value="70" ${sizeValue == 70 ? "selected" : ""}>
+                                        ${option70}
+                                    </option>
+                                </c:if>
 
-                                <option value="100"
-                                        ${sizeValue == 100 ? "selected" : ""}>
+                                <option value="100" ${sizeValue == 100 or (sizeValue == 70 and option70 == option100) or (sizeValue == 50 and option50 == option100) ? "selected" : ""}>
                                     Tất cả
                                 </option>
                             </select>
@@ -249,7 +268,7 @@
                     <div class="pagination">
 
                         <c:if test="${currentPage > 1}">
-                            <a href="branch?action=list&page=${currentPage - 1}&mode=${mode}&pageSize=${pageSize}&status=${selectedStatus}&city=${selectedCity}">
+                            <a href="branch?action=list&page=${currentPage - 1}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}">
                                 <<
                             </a>
                         </c:if>
@@ -259,7 +278,7 @@
                             <%-- Nếu <= 5 trang thì hiện tất cả --%>
                             <c:when test="${totalPages <= 5}">
                                 <c:forEach begin="1" end="${totalPages}" var="i">
-                                    <a href="branch?action=list&page=${i}&mode=${mode}&pageSize=${pageSize}&status=${selectedStatus}&city=${selectedCity}"
+                                    <a href="branch?action=list&page=${i}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}"
                                        class="${i == currentPage ? 'active-page' : ''}">
                                         ${i}
                                     </a>
@@ -270,7 +289,7 @@
                             <c:otherwise>
 
                                 <%-- Trang đầu --%>
-                                <a href="branch?action=list&page=1&mode=${mode}&pageSize=${pageSize}&status=${selectedStatus}&city=${selectedCity}"
+                                <a href="branch?action=list&page=1&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}"
                                    class="${currentPage == 1 ? 'active-page' : ''}">
                                     1
                                 </a>
@@ -286,7 +305,7 @@
                                     end="${currentPage + 1 > totalPages - 1 ? totalPages - 1 : currentPage + 1}"
                                     var="i">
 
-                                    <a href="branch?action=list&page=${i}&mode=${mode}&pageSize=${pageSize}&status=${selectedStatus}&city=${selectedCity}"
+                                    <a href="branch?action=list&page=${i}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}"
                                        class="${i == currentPage ? 'active-page' : ''}">
                                         ${i}
                                     </a>
@@ -299,7 +318,7 @@
                                 </c:if>
 
                                 <%-- Trang cuối --%>
-                                <a href="branch?action=list&page=${totalPages}&mode=${mode}&pageSize=${pageSize}&status=${selectedStatus}&city=${selectedCity}"
+                                <a href="branch?action=list&page=${totalPages}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}"
                                    class="${currentPage == totalPages ? 'active-page' : ''}">
                                     ${totalPages}
                                 </a>
@@ -309,7 +328,7 @@
                         </c:choose>
 
                         <c:if test="${currentPage < totalPages}">
-                            <a href="branch?action=list&page=${currentPage + 1}&mode=${mode}&pageSize=${pageSize}&status=${selectedStatus}&city=${selectedCity}">
+                            <a href="branch?action=list&page=${currentPage + 1}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}">
                                 >>
                             </a>
                         </c:if>
@@ -388,6 +407,7 @@
                     });
                 })();
             </script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-        </body>
-    </html>
+        </div>
+    </main>
+</div>
+<jsp:include page="/views/common/footer.jsp"/>

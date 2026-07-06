@@ -3,25 +3,18 @@
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>
-            ${branch == null
-              ? 'Thêm chi nhánh'
-              : 'Cập nhật chi nhánh'}
-        </title>
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/branch.css">
-    </head>
+<jsp:include page="/views/common/header.jsp">
+    <jsp:param name="title" value="${branch == null ? 'Thêm chi nhánh' : 'Cập nhật chi nhánh'}"/>
+    <jsp:param name="additionalCSS" value="branch.css"/>
+</jsp:include>
 
-    <body>
-        <jsp:include page="/views/common/sidebar.jsp"/>
-        <div class="main-content">
-            <jsp:include page="header.jsp"/>
+<div class="app-container">
+    <jsp:include page="/views/common/sidebar.jsp"/>
+
+    <main class="main-content">
+        <jsp:include page="/views/common/topbar.jsp"/>
+        
+        <div class="container-fluid py-4">
             <div class="page-header">
                 <div class="page-title">
                     <h1>
@@ -365,6 +358,7 @@
                 });
             });
         </script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
-</html>
+        </div>
+    </main>
+</div>
+<jsp:include page="/views/common/footer.jsp"/>
