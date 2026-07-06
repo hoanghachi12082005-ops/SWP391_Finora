@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
@@ -11,6 +11,8 @@
     <title>${pageTitle} - Finora</title>
 
     <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/base.css?v=20260601"/>
+    <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/components.css?v=20260601"/>
+    <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/employee-sales-report.css?v=20260601"/>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>

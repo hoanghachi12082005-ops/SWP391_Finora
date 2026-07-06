@@ -1,4 +1,4 @@
-﻿<%-- 
+<%-- 
     Document   : profile
     Created on : 2026
     Author     : PCQN
@@ -20,6 +20,7 @@
     </title>
 
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/base.css?v=20260601"/>
+    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/components.css?v=20260601"/>
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/profile.css?v=2"/>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>

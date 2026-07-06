@@ -1,4 +1,4 @@
-﻿<%-- 
+<%-- 
     Document   : customer-list
     Created on : 27 Jun 2026
     Author     : Dzung
@@ -18,6 +18,8 @@
         <title>${pageTitle} - Finora</title>
 
         <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/base.css?v=20260601"/>
+        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/components.css?v=20260601"/>
+        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/customer-management.css?v=20260601"/>
 
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>

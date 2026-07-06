@@ -1,4 +1,4 @@
-﻿<%-- 
+<%-- 
     Document   : user-list
     Created on : 27 May 2026, 21:16:05
     Author     : PCQN
@@ -17,6 +17,8 @@
         <title>${pageTitle} - Finora</title>
 
         <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/base.css?v=20260601"/>
+        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/components.css?v=20260601"/>
+        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/user-management.css?v=20260601"/>
 
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
