@@ -2,9 +2,7 @@ package controller.product;
 
 import controller.common.BaseController;
 import dao.product.ProductDAO;
-import dao.system.ActivityLogDAO;
 import model.Product;
-import model.Employee;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -116,13 +114,6 @@ public class ProductController extends BaseController {
                 }
 
                 int newId = productDAO.insert(p);
-                // audit log
-                try {
-                    ActivityLogDAO logDao = new ActivityLogDAO();
-                    Employee currentUser = (Employee) session.getAttribute("currentUser");
-                    Integer empId = currentUser != null ? currentUser.getEmployeeId() : null;
-                    logDao.insertLog(empId, "INSERT", "product", newId, null, p.toString());
-                } catch (Exception e) { /* ignore log failures */ }
 
                 if (newId > 0 && imagePart != null && imagePart.getSize() > 0) {
                     try { saveProductImage(request, imagePart, newId); }
@@ -150,21 +141,8 @@ public class ProductController extends BaseController {
                     return;
                 }
 
-                // Lấy dữ liệu cũ trước khi update để ghi audit log
-                String oldData = null;
-                try {
-                    Product oldProduct = productDAO.findById(productID);
-                    if (oldProduct != null) oldData = oldProduct.toString();
-                } catch (Exception ignored) {}
-
                 productDAO.update(p);
-                // audit log
-                try {
-                    ActivityLogDAO logDao = new ActivityLogDAO();
-                    Employee currentUser = (Employee) session.getAttribute("currentUser");
-                    Integer empId = currentUser != null ? currentUser.getEmployeeId() : null;
-                    logDao.insertLog(empId, "UPDATE", "product", productID, oldData, p.toString());
-                } catch (Exception e) { /* ignore */ }
+
 
                 if (imagePart != null && imagePart.getSize() > 0) {
                     try {
@@ -183,13 +161,6 @@ public class ProductController extends BaseController {
                 try {
                     int id = Integer.parseInt(request.getParameter("id"));
                     productDAO.delete(id);
-                    // audit log
-                    try {
-                        ActivityLogDAO logDao = new ActivityLogDAO();
-                        Employee currentUser = (Employee) session.getAttribute("currentUser");
-                        Integer empId = currentUser != null ? currentUser.getEmployeeId() : null;
-                        logDao.insertLog(empId, "DELETE", "product", id, null, null);
-                    } catch (Exception e) { /* ignore */ }
                     deleteProductImage(request, id);
                     session.setAttribute("message", "Xóa sản phẩm thành công!");
                     session.setAttribute("messageType", "success");
