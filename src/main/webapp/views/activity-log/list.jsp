@@ -136,12 +136,12 @@
                     default:       badge = "bg-primary"; break;
                 }
                 String safeDesc   = desc != null ? desc.replace("'", "\\'") : "";
-                String safeActor  = actor != null ? actor.replace("'", "\\'") : "";
-                String safeAction = actLabel != null ? actLabel.replace("'", "\\'") : "";
-                String safeEntity = entity != null ? entity.replace("'", "\\'") : "";
-                String safeCode   = code != null ? code.replace("'", "\\'") : "";
-                String safeOld    = log.getOldData() != null ? log.getOldData().replace("'", "\\'").replace("\n"," ").replace("\r"," ") : "";
-                String safeNew    = log.getNewData() != null ? log.getNewData().replace("'", "\\'").replace("\n"," ").replace("\r"," ") : "";
+                String safeActor  = actor != null ? actor.replace("'", "\\'").replace("\"", "&quot;") : "";
+                String safeAction = actLabel != null ? actLabel.replace("'", "\\'").replace("\"", "&quot;") : "";
+                String safeEntity = entity != null ? entity.replace("'", "\\'").replace("\"", "&quot;") : "";
+                String safeCode   = code != null ? code.replace("'", "\\'").replace("\"", "&quot;") : "";
+                String safeOld    = log.getOldData() != null ? log.getOldData().replace("\"", "&quot;").replace("\n"," ").replace("\r"," ") : "";
+                String safeNew    = log.getNewData() != null ? log.getNewData().replace("\"", "&quot;").replace("\n"," ").replace("\r"," ") : "";
 %>
                                 <tr>
                                     <td><small class="text-muted"><%= when %></small></td>
@@ -162,8 +162,17 @@
                                     <td><%= entity %></td>
                                     <td><code><%= (code != null && !code.isEmpty()) ? code : "—" %></code></td>
                                     <td class="text-end">
-                                        <button class="btn btn-sm btn-outline-primary"
-                                                onclick="viewLog('<%= when %>','<%= safeActor %>','<%= safeAction %>','<%= safeEntity %>','<%= safeCode %>','<%= safeDesc %>','<%= safeOld %>','<%= safeNew %>','<%= branch %>','<%= empIdStr %>')">
+                                        <button class="btn btn-sm btn-outline-primary view-log-btn"
+                                                data-time="<%= when %>"
+                                                data-actor="<%= safeActor %>"
+                                                data-action="<%= safeAction %>"
+                                                data-entity="<%= safeEntity %>"
+                                                data-code="<%= safeCode %>"
+                                                data-summary="<%= safeDesc %>"
+                                                data-old="<%= safeOld %>"
+                                                data-new="<%= safeNew %>"
+                                                data-branch="<%= branch %>"
+                                                data-empid="<%= empIdStr %>">
                                             Xem nội dung
                                         </button>
                                     </td>
@@ -242,12 +251,29 @@
 <script>
 function formatDataTable(raw) {
     if (!raw || raw === '(trống)') return '<span class="text-muted fst-italic">(trống)</span>';
-    
-    // Parse format: ClassName{key=value, key2='value2', key3=123.00}
+
+    // Try JSON format: {"key":"value", "key2":"value2"}
+    if (raw.trim().startsWith('{')) {
+        try {
+            var obj = JSON.parse(raw);
+            var html = '<table class="table table-sm table-borderless mb-0" style="font-size:13px;">';
+            for (var key in obj) {
+                var val = obj[key] != null ? obj[key] : '';
+                html += '<tr><td class="text-muted pe-3" style="width:1%;white-space:nowrap;vertical-align:top;">'
+                      + key + '</td><td style="vertical-align:top;">' + val + '</td></tr>';
+            }
+            html += '</table>';
+            return html;
+        } catch (e) {
+            // fallthrough to legacy parser
+        }
+    }
+
+    // Legacy format: ClassName{key=value, key2='value2', key3=123.00}
     var match = raw.match(/\w+\{(.+)\}$/);
     var body = match ? match[1] : raw.trim();
-    
-    // Split by comma, but respect single-quoted strings (quoted values may contain commas)
+
+    // Split by comma, but respect single-quoted strings
     var pairs = [];
     var current = '';
     var inQuote = false;
@@ -258,14 +284,13 @@ function formatDataTable(raw) {
         current += ch;
     }
     if (current.trim()) pairs.push(current);
-    
+
     var html = '<table class="table table-sm table-borderless mb-0" style="font-size:13px;">';
     pairs.forEach(function(p) {
         var eqIdx = p.indexOf('=');
         if (eqIdx < 0) return;
         var key = p.substring(0, eqIdx).trim();
         var val = p.substring(eqIdx + 1).trim();
-        // Strip surrounding quotes
         if ((val.startsWith("'") && val.endsWith("'")) || (val.startsWith('"') && val.endsWith('"'))) {
             val = val.substring(1, val.length - 1);
         }
@@ -276,19 +301,25 @@ function formatDataTable(raw) {
     return html;
 }
 
-function viewLog(time, actor, action, entity, code, summary, oldData, newData, branch, empId) {
-    document.getElementById('vSummary').innerText = summary;
-    document.getElementById('vTime').innerText = time;
-    document.getElementById('vActor').innerText = actor;
-    document.getElementById('vEmpId').innerText = empId || '—';
-    document.getElementById('vBranch').innerText = branch || '—';
-    document.getElementById('vAction').innerText = action;
-    document.getElementById('vEntity').innerText = entity;
-    document.getElementById('vCode').innerText = code || '—';
-    document.getElementById('vOld').innerHTML = formatDataTable(oldData);
-    document.getElementById('vNew').innerHTML = formatDataTable(newData);
-    new bootstrap.Modal(document.getElementById('viewModal')).show();
-}
+// Click handler cho buttons xem log (dung data-* attributes thay vi onclick)
+document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.view-log-btn');
+    if (!btn) return;
+
+    document.getElementById('vSummary').innerText = btn.dataset.summary;
+    document.getElementById('vTime').innerText = btn.dataset.time;
+    document.getElementById('vActor').innerText = btn.dataset.actor;
+    document.getElementById('vEmpId').innerText = btn.dataset.empid || '—';
+    document.getElementById('vBranch').innerText = btn.dataset.branch || '—';
+    document.getElementById('vAction').innerText = btn.dataset.action;
+    document.getElementById('vEntity').innerText = btn.dataset.entity;
+    document.getElementById('vCode').innerText = btn.dataset.code || '—';
+    document.getElementById('vOld').innerHTML = formatDataTable(btn.dataset.old);
+    document.getElementById('vNew').innerHTML = formatDataTable(btn.dataset.new);
+
+    var modal = new bootstrap.Modal(document.getElementById('viewModal'));
+    modal.show();
+});
 </script>
 
 <jsp:include page="../common/footer.jsp"/>
