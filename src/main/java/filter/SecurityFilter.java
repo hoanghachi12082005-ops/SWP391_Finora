@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.Employee;
+import util.database.DBContext;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
@@ -106,23 +107,33 @@ public class SecurityFilter implements Filter {
             return;
         }
 
-        // 7. CSRF check for state-changing methods
-        if ("POST".equalsIgnoreCase(req.getMethod()) && !isCsrfExempt(path)) {
-            String csrfToken = req.getParameter("csrfToken");
-            if (csrfToken == null) {
-                csrfToken = req.getHeader("X-CSRF-Token");
-            }
-            if (csrfToken == null) {
-                csrfToken = req.getHeader("X-Csrf-Token");
-            }
-            String sessionToken = (String) req.getSession().getAttribute("csrfToken");
-            if (csrfToken == null || !csrfToken.equals(sessionToken)) {
-                resp.sendError(403, "CSRF token không hợp lệ. Vui lòng tải lại trang.");
-                return;
-            }
+        // 7. Set employee context cho trigger audit log
+        Integer empId = employee.getEmployeeId();
+        if (empId != null) {
+            DBContext.setCurrentEmployeeId(empId);
         }
 
-        chain.doFilter(request, response);
+        try {
+            // 8. CSRF check for state-changing methods
+            if ("POST".equalsIgnoreCase(req.getMethod()) && !isCsrfExempt(path)) {
+                String csrfToken = req.getParameter("csrfToken");
+                if (csrfToken == null) {
+                    csrfToken = req.getHeader("X-CSRF-Token");
+                }
+                if (csrfToken == null) {
+                    csrfToken = req.getHeader("X-Csrf-Token");
+                }
+                String sessionToken = (String) req.getSession().getAttribute("csrfToken");
+                if (csrfToken == null || !csrfToken.equals(sessionToken)) {
+                    resp.sendError(403, "CSRF token không hợp lệ. Vui lòng tải lại trang.");
+                    return;
+                }
+            }
+
+            chain.doFilter(request, response);
+        } finally {
+            DBContext.clearCurrentEmployeeId();
+        }
     }
 
     private boolean isPublicPath(String path) {
