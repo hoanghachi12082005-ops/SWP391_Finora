@@ -200,7 +200,7 @@ BEGIN
     BEGIN
         INSERT INTO audit_log (emp_id, action_name, table_name, record_id, old_data, new_data, created_at)
         SELECT @emp_id, 'INSERT', 'category', i.category_id, NULL,
-               (SELECT i.category_id, i.category_name, i.description, i.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+               (SELECT i.category_id, i.category_name, i.description, i.parent_category_id, i.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
                GETDATE() FROM inserted i;
     END
 
@@ -208,7 +208,7 @@ BEGIN
     BEGIN
         INSERT INTO audit_log (emp_id, action_name, table_name, record_id, old_data, new_data, created_at)
         SELECT @emp_id, 'DELETE', 'category', d.category_id,
-               (SELECT d.category_id, d.category_name, d.description, d.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+               (SELECT d.category_id, d.category_name, d.description, d.parent_category_id, d.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
                NULL, GETDATE() FROM deleted d;
     END
 
@@ -216,13 +216,13 @@ BEGIN
     BEGIN
         INSERT INTO audit_log (emp_id, action_name, table_name, record_id, old_data, new_data, created_at)
         SELECT @emp_id, 'UPDATE', 'category', i.category_id,
-               (SELECT d.category_name, d.description, d.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
-               (SELECT i.category_name, i.description, i.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+               (SELECT d.category_name, d.description, d.parent_category_id, d.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+               (SELECT i.category_name, i.description, i.parent_category_id, i.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
                GETDATE()
         FROM inserted i INNER JOIN deleted d ON i.category_id = d.category_id
         WHERE dbo.fn_has_changes(
-            (SELECT d.category_name, d.description, d.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
-            (SELECT i.category_name, i.description, i.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
+            (SELECT d.category_name, d.description, d.parent_category_id, d.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+            (SELECT i.category_name, i.description, i.parent_category_id, i.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
         ) = 1;
     END
 END;
