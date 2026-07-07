@@ -21,7 +21,8 @@ public class SecurityFilter implements Filter {
 
     private static final Set<String> PUBLIC_PATHS = Set.of(
         "/login", "/logout", "/forgot-password", "/register", "/role-selection",
-        "/assets/", "/css/", "/js/", "/static/"
+        "/assets/", "/css/", "/js/", "/static/",
+        "/vnpay/ipn", "/vnpay/return", "/order/status"
     );
 
     private static final Map<String, Set<String>> ROLE_MAP = new LinkedHashMap<>();
