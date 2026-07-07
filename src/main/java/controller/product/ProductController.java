@@ -309,7 +309,6 @@ public class ProductController extends BaseController {
         File dir = ensureImageDir(request);
         String ext = resolveExtension(imagePart);
         File target = new File(dir, "product_" + productId + "." + ext);
-        // Đảm bảo chỉ tồn tại đúng 1 file ảnh cho sản phẩm này: xoá biến thể đuôi khác trước
         deleteProductImageFiles(dir, productId);
         try (InputStream in = imagePart.getInputStream()) {
             Files.copy(in, target.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -336,9 +335,7 @@ public class ProductController extends BaseController {
         }
     }
 
-    /**
-     * Gắn imageUrl cho mỗi product dựa trên file thực tế trong /asset/product/.
-     */
+
     private void attachImageUrls(HttpServletRequest request, List<Product> products) {
         if (products == null || products.isEmpty()) return;
         File dir = ensureImageDir(request);
