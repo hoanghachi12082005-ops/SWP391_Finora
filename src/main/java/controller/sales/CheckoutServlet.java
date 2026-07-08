@@ -1,6 +1,8 @@
 package controller.sales;
 
 import dao.sales.*;
+import dao.inventory.InventoryDAO;
+import dao.finance.PaymentDAO;
 import model.*;
 import util.database.DBContext;
 import jakarta.servlet.annotation.WebServlet;
@@ -17,13 +19,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Xử lý thanh toán POS — thực hiện toàn bộ logic trong 1 TRANSACTION.
- * POST /checkout
+ * Xử lý thanh toán POS — thực hiện toàn bộ logic trong 1 TRANSACTION. POST
+ * /checkout
  */
 @WebServlet("/checkout")
 public class CheckoutServlet extends HttpServlet {
 
     private static final String CART_ATTR = "cart";
+    private static final String ACTIVE_TAB_ATTR = "activeTab";
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -46,7 +49,8 @@ public class CheckoutServlet extends HttpServlet {
             if (tabIdStr != null && !tabIdStr.isBlank()) {
                 tabId = Integer.parseInt(tabIdStr);
             }
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) {
+        }
 
         @SuppressWarnings("unchecked")
         Map<Integer, OrderTab> tabs = (Map<Integer, OrderTab>) session.getAttribute("cartTabs");
@@ -64,7 +68,9 @@ public class CheckoutServlet extends HttpServlet {
 
         // Parse parameters
         String paymentMethod = req.getParameter("paymentMethod");
-        if (paymentMethod == null || paymentMethod.isBlank()) paymentMethod = "CASH";
+        if (paymentMethod == null || paymentMethod.isBlank()) {
+            paymentMethod = "CASH";
+        }
         if (!paymentMethod.equals("CASH") && !paymentMethod.equals("BANK_TRANSFER")) {
             paymentMethod = "CASH";
         }
@@ -72,7 +78,10 @@ public class CheckoutServlet extends HttpServlet {
         String cashReceivedStr = req.getParameter("cashReceived");
         double cashReceived = 0;
         if (cashReceivedStr != null && !cashReceivedStr.isBlank()) {
-            try { cashReceived = Double.parseDouble(cashReceivedStr); } catch (NumberFormatException ignored) {}
+            try {
+                cashReceived = Double.parseDouble(cashReceivedStr);
+            } catch (NumberFormatException ignored) {
+            }
         }
 
         int warehouseId = getWarehouseId(emp.getBranchId());
@@ -242,14 +251,15 @@ public class CheckoutServlet extends HttpServlet {
             tabs.remove(tabId);
             if (tabs.isEmpty()) {
                 tabs.put(1, new OrderTab(1));
-                String ACTIVE_TAB_ATTR = null;
                 session.setAttribute(ACTIVE_TAB_ATTR, 1);
             } else {
                 // Chuyển active tab sang tab còn lại đầu tiên
                 int remainingActiveTabId = tabs.keySet().iterator().next();
-                String ACTIVE_TAB_ATTR = null;
                 session.setAttribute(ACTIVE_TAB_ATTR, remainingActiveTabId);
             }
+
+// Lưu lại cartTabs vào session
+            session.setAttribute("cartTabs", tabs);
 
             // Trả kết quả thành công
             out.write("{\"status\":\"success\",");
@@ -264,29 +274,42 @@ public class CheckoutServlet extends HttpServlet {
         } catch (SQLException e) {
             e.printStackTrace();
             if (conn != null) {
-                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             }
             out.write("{\"status\":\"error\",\"message\":\"Lỗi hệ thống khi thanh toán: " + escJson(e.getMessage()) + "\"}");
         } finally {
             if (conn != null) {
-                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException ignored) {
+                }
             }
         }
     }
 
     private int getWarehouseId(int branchId) {
-        try (var conn = DBContext.getConnection();
-             var ps = conn.prepareStatement("SELECT TOP 1 warehouse_id FROM warehouse WHERE branch_id = ?")) {
+        try (var conn = DBContext.getConnection(); var ps = conn.prepareStatement("SELECT TOP 1 warehouse_id FROM warehouse WHERE branch_id = ?")) {
             ps.setInt(1, branchId);
             try (var rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt("warehouse_id");
+                if (rs.next()) {
+                    return rs.getInt("warehouse_id");
+                }
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return branchId;
     }
 
     private String escJson(String s) {
-        if (s == null) return "";
+        if (s == null) {
+            return "";
+        }
         return s.replace("\\", "\\\\").replace("\"", "\\\"")
                 .replace("\n", "\\n").replace("\r", "\\r");
     }

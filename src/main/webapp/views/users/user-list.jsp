@@ -1,4 +1,4 @@
-﻿<%-- 
+<%-- 
     Document   : user-list
     Created on : 27 May 2026, 21:16:05
     Author     : PCQN
@@ -16,10 +16,9 @@
         <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
         <title>${pageTitle} - Finora</title>
 
-        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/base.css?v=20260528"/>
-        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/layout.css?v=20260528"/>
-        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/form-modal.css?v=20260528"/>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-management.css?v=6">
+        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/base.css?v=20260601"/>
+        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/components.css?v=20260601"/>
+        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/user-management.css?v=20260601"/>
 
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
@@ -108,7 +107,7 @@
                             </div>
                             <div class="overview-info">
                                 <p>Top Employee</p>
-                                <h3>${empty employeeOverview.topEmployeeName ? 'ΓÇö' : employeeOverview.topEmployeeName}</h3>
+                                <h3>${empty employeeOverview.topEmployeeName ? '—' : employeeOverview.topEmployeeName}</h3>
                                 <small>
                                     Revenue:
                                     <fmt:formatNumber value="${employeeOverview.topEmployeeRevenue}" type="number" groupingUsed="true"/> ₫
@@ -255,7 +254,7 @@
                                                 </div>
                                             </td>
 
-                                            <td>${empty user.phone ? 'ΓÇö' : user.phone}</td>
+                                            <td>${empty user.phone ? '—' : user.phone}</td>
 
                                             <td>
                                                 <span class="role-badge">
@@ -264,7 +263,7 @@
                                             </td>
 
                                             <c:if test="${showBranch}">
-                                                <td>${empty user.branchName ? 'ΓÇö' : user.branchName}</td>
+                                                <td>${empty user.branchName ? '—' : user.branchName}</td>
                                             </c:if>
 
                                             <td>
@@ -290,7 +289,6 @@
                                                             <span class="material-symbols-outlined">edit</span>
                                                         </a>
                                                     </c:if>
-
                                                     <c:if test="${canResetPassword}">
                                                         <a href="${baseUrl}?action=reset&id=${user.employeeID}" title="Reset Password">
                                                             <span class="material-symbols-outlined">key</span>
@@ -299,6 +297,7 @@
 
                                                     <c:if test="${canLock}">
                                                         <form method="post" action="${baseUrl}">
+                                                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"/>
                                                             <input type="hidden" name="employeeID" value="${user.employeeID}"/>
 
                                                             <c:choose>
@@ -422,6 +421,7 @@
 
         <div class="modal-overlay">
             <form class="modal-box" method="post" action="${baseUrl}">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"/>
 
                 <input type="hidden"
                        name="action"
@@ -538,6 +538,7 @@
     <c:if test="${formMode == 'reset' && not empty resetUser}">
         <div class="modal-overlay">
             <form class="modal-box small-modal" method="post" action="${baseUrl}">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"/>
                 <input type="hidden" name="action" value="resetPassword"/>
                 <input type="hidden" name="employeeID" value="${resetUser.employeeID}"/>
 
@@ -596,14 +597,17 @@
                     <p><strong>Role:</strong> ${detailUser.roleName}</p>
 
                     <c:if test="${showBranch}">
-                        <p><strong>Branch:</strong> ${empty detailUser.branchName ? 'ΓÇö' : detailUser.branchName}</p>
+                        <p><strong>Branch:</strong> ${empty detailUser.branchName ? '—' : detailUser.branchName}</p>
                     </c:if>
 
                     <p><strong>Status:</strong> ${detailUser.status}</p>
 
                     <p>
                         <strong>Created At:</strong>
-                        <fmt:formatDate value="${detailUser.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                        <c:if test="${not empty detailUser.createdAt}">
+                            <fmt:formatDate value="${detailUser.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                        </c:if>
+                        <c:if test="${empty detailUser.createdAt}">—</c:if>
                     </p>
                 </div>
 

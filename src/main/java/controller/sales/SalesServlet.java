@@ -1,10 +1,12 @@
 package controller.sales;
 
-import dao.sales.ProductDAO;
-import dao.sales.CustomerDAO;
+import dao.product.ProductDAO;
+import dao.customer.CustomerDAO;
 import dao.sales.VoucherDAO;
+import dao.sales.ShiftDAO;
 import model.Employee;
 import model.Product;
+import model.Shift;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -37,6 +39,16 @@ public class SalesServlet extends HttpServlet {
             emp.setFullName("Thu ngân #1");
             session.setAttribute("employee", emp);
         }
+
+        /*
+        // Bắt buộc phải mở ca làm việc mới được sử dụng máy POS
+        ShiftDAO shiftDao = new ShiftDAO();
+        Shift activeShift = shiftDao.getOpenShiftByEmp(emp.getEmpId());
+        if (activeShift == null) {
+            resp.sendRedirect(req.getContextPath() + "/shift?error=need_open_shift");
+            return;
+        }
+        */
 
         // Xác định warehouse_id từ branch_id
         int warehouseId = getWarehouseId(emp.getBranchId());
@@ -135,7 +147,7 @@ public class SalesServlet extends HttpServlet {
             c.setAddress(req.getParameter("address"));
             c.setCusType("REGULAR");
 
-            int cusId = customerDao.insert(c);
+            int cusId = customerDao.insertSales(c);
             if (cusId > 0) {
                 resp.getWriter().write("{\"cusId\":" + cusId + ",\"fullName\":\"" + escJson(c.getFullName()) + "\"}");
             } else {

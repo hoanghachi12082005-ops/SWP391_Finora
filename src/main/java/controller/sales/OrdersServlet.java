@@ -1,7 +1,7 @@
 package controller.sales;
 
 import dao.sales.OrderDAO;
-import dao.sales.InventoryDAO;
+import dao.inventory.InventoryDAO;
 import dao.sales.CustomerPointDAO;
 import model.Order;
 import model.OrderDetail;

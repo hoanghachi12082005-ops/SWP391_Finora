@@ -85,6 +85,7 @@
                                                     <!-- IN_TRANSIT: Xác nhận Xuất (Kho Gửi) -->
                                                     <c:if test="${!tx.exportedBySender && (empty selectedWarehouseId || selectedWarehouseId == tx.fromWarehouseId)}">
                                                         <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+                                                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                             <input type="hidden" name="action" value="confirmDispatch">
                                                             <input type="hidden" name="transferId" value="${tx.ticketId}">
                                                             <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
@@ -160,6 +161,7 @@
                     <c:if test="${roleName == 'WarehouseStaff' || roleName == 'Admin' || roleName == 'Owner'}">
                         <!-- Nút giả lập tạo phiếu để test UI -->
                         <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                             <input type="hidden" name="action" value="createCheck">
                             <button type="submit" class="btn btn-danger">
                                 <span class="material-icons" style="font-size:16px; vertical-align:text-bottom;">add</span>
@@ -215,6 +217,7 @@
                                             <td>
                                                 <c:if test="${c.status == 'PENDING' && (roleName == 'StoreManager' || roleName == 'Admin' || roleName == 'Owner')}">
                                                     <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+                                                        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                         <input type="hidden" name="action" value="approveCheck">
                                                         <input type="hidden" name="checkId" value="${c.ticketId}">
                                                         <button type="submit" class="btn btn-sm btn-success">Duyệt Phiếu</button>

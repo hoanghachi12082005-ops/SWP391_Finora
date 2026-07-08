@@ -38,7 +38,7 @@ public class ProductDAO {
         String cleanedKeyword = null;
         if (keyword != null && !keyword.isBlank()) {
             cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
-            sql.append(" AND p.product_name LIKE ?");
+            sql.append(" AND (p.product_name LIKE ? OR c.category_name LIKE ?)");
         }
         if (categoryID != null) sql.append(" AND p.category_id = ?");
         if (unitID != null) sql.append(" AND p.unit_id = ?");
@@ -48,6 +48,7 @@ public class ProductDAO {
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             int idx = 1;
             if (cleanedKeyword != null && !cleanedKeyword.isBlank()) {
+                stmt.setString(idx++, "%" + cleanedKeyword + "%");
                 stmt.setString(idx++, "%" + cleanedKeyword + "%");
             }
             if (categoryID != null) stmt.setInt(idx++, categoryID);
@@ -70,11 +71,11 @@ public class ProductDAO {
     }
 
     public int getTotalCount(String keyword, String status, Integer categoryID, Integer unitID, Integer supplierID) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM product p WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM product p LEFT JOIN category c ON p.category_id = c.category_id WHERE 1=1");
         String cleanedKeyword = null;
         if (keyword != null && !keyword.isBlank()) {
             cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
-            sql.append(" AND p.product_name LIKE ?");
+            sql.append(" AND (p.product_name LIKE ? OR c.category_name LIKE ?)");
         }
         if (categoryID != null) sql.append(" AND p.category_id = ?");
         if (unitID != null) sql.append(" AND p.unit_id = ?");
@@ -83,6 +84,7 @@ public class ProductDAO {
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             int idx = 1;
             if (cleanedKeyword != null && !cleanedKeyword.isBlank()) {
+                stmt.setString(idx++, "%" + cleanedKeyword + "%");
                 stmt.setString(idx++, "%" + cleanedKeyword + "%");
             }
             if (categoryID != null) stmt.setInt(idx++, categoryID);
@@ -225,6 +227,104 @@ public class ProductDAO {
         Timestamp ut = rs.getTimestamp("UpdatedAt");
         if (ut != null) item.setUpdatedAt(ut.toLocalDateTime());
         return item;
+    }
+
+    // --- Compatibility methods for sales/POS ---
+
+    private Product mapRowSales(ResultSet rs) throws SQLException {
+        Product p = new Product();
+        p.setProductId(rs.getInt("product_id"));
+        p.setProductName(rs.getString("product_name"));
+        p.setProductCode(rs.getString("product_codebar"));
+        p.setCategoryId(rs.getInt("category_id"));
+        p.setUnitId(rs.getInt("unit_id"));
+        
+        java.math.BigDecimal sp = rs.getBigDecimal("selling_price");
+        p.setSellingPrice(sp != null ? sp : java.math.BigDecimal.ZERO);
+        
+        Timestamp ct = rs.getTimestamp("created_at");
+        if (ct != null) p.setCreatedAt(ct.toLocalDateTime());
+        
+        Timestamp ut = rs.getTimestamp("update_at");
+        if (ut != null) p.setUpdatedAt(ut.toLocalDateTime());
+        
+        return p;
+    }
+
+    public List<Product> getAllActiveByWarehouse(int warehouseId) {
+        List<Product> list = new ArrayList<>();
+        String sql = "SELECT p.product_id, p.product_codebar, p.product_name, p.category_id, "
+                   + "p.unit_id, p.selling_price, p.created_at, p.update_at, "
+                   + "ISNULL(i.quantity_in_stock, 0) AS quantity_in_stock "
+                   + "FROM product p "
+                   + "LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? "
+                   + "ORDER BY p.product_name";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, warehouseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Product p = mapRowSales(rs);
+                    p.setQuantityInStock(rs.getInt("quantity_in_stock"));
+                    list.add(p);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<Product> searchByKeyword(String keyword, int warehouseId) {
+        List<Product> list = new ArrayList<>();
+        String sql = "SELECT p.product_id, p.product_codebar, p.product_name, p.category_id, "
+                   + "p.unit_id, p.selling_price, p.created_at, p.update_at, "
+                   + "ISNULL(i.quantity_in_stock, 0) AS quantity_in_stock "
+                   + "FROM product p "
+                   + "LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? "
+                   + "WHERE p.product_name LIKE ? OR p.product_codebar LIKE ? "
+                   + "ORDER BY p.product_name";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, warehouseId);
+            String pattern = "%" + keyword + "%";
+            ps.setString(2, pattern);
+            ps.setString(3, pattern);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Product p = mapRowSales(rs);
+                    p.setQuantityInStock(rs.getInt("quantity_in_stock"));
+                    list.add(p);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public Product findByCodebar(String codebar, int warehouseId) {
+        String sql = "SELECT p.product_id, p.product_codebar, p.product_name, p.category_id, "
+                   + "p.unit_id, p.selling_price, p.created_at, p.update_at, "
+                   + "ISNULL(i.quantity_in_stock, 0) AS quantity_in_stock "
+                   + "FROM product p "
+                   + "LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? "
+                   + "WHERE p.product_codebar = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, warehouseId);
+            ps.setString(2, codebar.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Product p = mapRowSales(rs);
+                    p.setQuantityInStock(rs.getInt("quantity_in_stock"));
+                    return p;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
 

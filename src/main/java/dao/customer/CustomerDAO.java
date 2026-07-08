@@ -811,4 +811,131 @@ public class CustomerDAO {
             ps.setInt(index, value);
         }
     }
+
+    // --- Compatibility methods for sales/POS ---
+
+    public List<Customer> findAllActive() {
+        List<Customer> list = new ArrayList<>();
+        String sql = "SELECT * FROM Customer WHERE status = 'ACTIVE' ORDER BY cus_id DESC";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRowSales(rs));
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi findAllActive", e);
+        }
+        return list;
+    }
+
+    public Customer findByPhone(String phone) {
+        String sql = "SELECT * FROM Customer WHERE phone = ? AND status = 'ACTIVE'";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowSales(rs);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi findByPhone", e);
+        }
+        return null;
+    }
+
+    public List<Customer> searchActive(String keyword) {
+        List<Customer> list = new ArrayList<>();
+        String sql = "SELECT * FROM Customer WHERE status = 'ACTIVE' AND (full_name LIKE ? OR phone LIKE ?) ORDER BY cus_id DESC";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            String pattern = "%" + keyword + "%";
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRowSales(rs));
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi searchActive", e);
+        }
+        return list;
+    }
+
+    public List<Customer> getAll() {
+        return findAllActive();
+    }
+
+    public List<Customer> search(String keyword) {
+        return searchActive(keyword);
+    }
+
+    public int insertSales(Customer c) {
+        String sql = "INSERT INTO customer (full_name, gender, bod, address, email, phone, total_spent, status, created_at, updated_at) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, 0, 'ACTIVE', GETDATE(), GETDATE())";
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, c.getFullName());
+                ps.setString(2, c.getGender());
+                if (c.getBod() != null && !c.getBod().isBlank()) {
+                    ps.setString(3, c.getBod());
+                } else {
+                    ps.setNull(3, Types.DATE);
+                }
+                ps.setString(4, c.getAddress());
+                ps.setString(5, c.getEmail());
+                ps.setString(6, c.getPhone());
+                if (ps.executeUpdate() > 0) {
+                    try (ResultSet keys = ps.getGeneratedKeys()) {
+                        if (keys.next()) {
+                            int customerId = keys.getInt(1);
+                            insertPointRecord(conn, customerId);
+                            conn.commit();
+                            return customerId;
+                        }
+                    }
+                }
+                conn.rollback();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi insertSales", e);
+        }
+        return -1;
+    }
+
+    private Customer mapRowSales(ResultSet rs) throws SQLException {
+        Customer c = new Customer();
+        c.setCusId(rs.getInt("cus_id"));
+        c.setFullName(rs.getString("full_name"));
+        c.setGender(rs.getString("gender"));
+        java.sql.Date bodDate = rs.getDate("bod");
+        if (bodDate != null) {
+            c.setDateOfBirth(bodDate.toLocalDate());
+        }
+        c.setAddress(rs.getString("address"));
+        c.setEmail(rs.getString("email"));
+        c.setPhone(rs.getString("phone"));
+        c.setPasswordHash(null);
+        c.setStatus(rs.getString("status"));
+        c.setCusType("REGULAR");
+        BigDecimal spent = rs.getBigDecimal("total_spent");
+        c.setTotalSpent(spent);
+        java.sql.Timestamp ca = rs.getTimestamp("created_at");
+        if (ca != null) {
+            c.setCreatedAt(ca.toLocalDateTime());
+        }
+        java.sql.Timestamp ua = rs.getTimestamp("updated_at");
+        if (ua != null) {
+            c.setUpdatedAt(ua.toLocalDateTime());
+        }
+        return c;
+    }
 }

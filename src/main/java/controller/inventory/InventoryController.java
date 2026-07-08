@@ -741,7 +741,6 @@ public class InventoryController extends BaseController {
             json.append("{");
             json.append("\"productId\":").append(p.getProductId()).append(",");
             json.append("\"productName\":\"").append(p.getProductName().replace("\"", "\\\"")).append("\",");
-            json.append("\"importPrice\":").append(p.getImportPrice() != null ? p.getImportPrice() : 0).append(",");
             json.append("\"myStock\":").append(p.getMyStock()).append(",");
             json.append("\"suppliers\":[");
             if (p.getSuppliers() != null) {
@@ -749,7 +748,8 @@ public class InventoryController extends BaseController {
                     dto.inventory.ImportProductDTO.SupplierInfo s = p.getSuppliers().get(j);
                     json.append("{");
                     json.append("\"supplierId\":").append(s.getSupplierId()).append(",");
-                    json.append("\"supplierName\":\"").append(s.getSupplierName().replace("\"", "\\\"")).append("\"");
+                    json.append("\"supplierName\":\"").append(s.getSupplierName().replace("\"", "\\\"")).append("\",");
+                    json.append("\"importPrice\":").append(s.getImportPrice() != null ? s.getImportPrice() : 0);
                     json.append("}");
                     if (j < p.getSuppliers().size() - 1) json.append(",");
                 }

@@ -18,7 +18,7 @@ public class DBContext {
 
     private static String url = DEFAULT_URL;
     private static String user = "sa";
-    private static String password = "1234";
+    private static String password = "123";
 
     /**
      * ThreadLocal giu EmployeeID cua nguoi dung hien tai (set boi SecurityFilter).
@@ -73,6 +73,13 @@ public class DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+    public static void main(String[] args) {
+        if (testConnection()) {
+            System.out.println("Connection to SQL Server successful.");
+        } else {
+            System.err.println("Kết nối tới SQL Server thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu hoặc cổng 1433!");
         }
     }
 }

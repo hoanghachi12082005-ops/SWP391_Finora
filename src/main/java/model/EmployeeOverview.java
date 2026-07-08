@@ -11,11 +11,13 @@ public class EmployeeOverview {
     private BigDecimal topEmployeeRevenue;
     private String lowestEmployeeName;
     private BigDecimal lowestEmployeeRevenue;
+    private BigDecimal avgRevenuePerEmployee;
 
     public EmployeeOverview() {
         totalRevenue = BigDecimal.ZERO;
         topEmployeeRevenue = BigDecimal.ZERO;
         lowestEmployeeRevenue = BigDecimal.ZERO;
+        avgRevenuePerEmployee = BigDecimal.ZERO;
     }
 
     public int getTotalEmployees() {
@@ -71,4 +73,7 @@ public class EmployeeOverview {
 
     public BigDecimal getLowestEmployeeRevenue() { return lowestEmployeeRevenue; }
     public void setLowestEmployeeRevenue(BigDecimal lowestEmployeeRevenue) { this.lowestEmployeeRevenue = lowestEmployeeRevenue; }
+
+    public BigDecimal getAvgRevenuePerEmployee() { return avgRevenuePerEmployee; }
+    public void setAvgRevenuePerEmployee(BigDecimal avgRevenuePerEmployee) { this.avgRevenuePerEmployee = avgRevenuePerEmployee; }
 }

@@ -38,7 +38,6 @@ public class PosController extends BaseController {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // TODO: Kết nối Service/DAO để xử lý tạo đơn hàng POS
         request.setAttribute("message", "Đã nhận dữ liệu POS. Hãy kết nối Service/DAO để xử lý thật.");
         doGet(request, response);
     }

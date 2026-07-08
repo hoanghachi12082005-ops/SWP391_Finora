@@ -27,7 +27,6 @@ public class EmployeeDAO {
                 + "  e.phone AS Phone, "
                 + "  e.passwordHash AS PasswordHash, "
                 + "  e.status AS Status, "
-                + "  e.failed_login_count AS FailedLoginCount, "
                 + "  r.role_name AS RoleName, "
                 + "  b.branch_name AS BranchName "
                 + "FROM Employee e "
@@ -55,76 +54,18 @@ public class EmployeeDAO {
     // ─────────────────────────────────────────────────────────
 
     /**
-     * Tăng FailedLoginCount lên 1.
-     * Nếu tổng số lần sai >= MAX_FAILED → tự động set Status = 'INACTIVE'.
-     *
-     * @return số lần đăng nhập sai hiện tại sau khi tăng
+     * Khoá tài khoản nhân viên (đổi status thành INACTIVE).
      */
-    public int incrementFailedAttempts(int employeeId) {
-        // Lấy giá trị hiện tại
-        int current = getFailedLoginCount(employeeId);
-        int newCount = current + 1;
-
-        String sql;
-        if (newCount >= MAX_FAILED) {
-            // Đủ 5 lần → khoá tài khoản (chuyển INACTIVE)
-            sql = "UPDATE Employee "
-                + "SET failed_login_count = ?, status = 'INACTIVE', update_at = CURRENT_TIMESTAMP "
-                + "WHERE emp_id = ?";
-        } else {
-            // Chưa đủ → chỉ tăng đếm
-            sql = "UPDATE Employee "
-                + "SET failed_login_count = ?, update_at = CURRENT_TIMESTAMP "
-                + "WHERE emp_id = ?";
-        }
-
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, newCount);
-            ps.setInt(2, employeeId);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("Lỗi incrementFailedAttempts: " + e.getMessage());
-            e.printStackTrace();
-        }
-        return newCount;
-    }
-
-    /**
-     * Reset FailedLoginCount về 0 khi người dùng đăng nhập thành công.
-     */
-    public void resetFailedAttempts(int employeeId) {
-        String sql = "UPDATE Employee "
-                   + "SET failed_login_count = 0, update_at = CURRENT_TIMESTAMP "
-                   + "WHERE emp_id = ?";
+    public void lockEmployee(int employeeId) {
+        String sql = "UPDATE Employee SET status = 'INACTIVE', update_at = CURRENT_TIMESTAMP WHERE emp_id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, employeeId);
             ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi resetFailedAttempts: " + e.getMessage());
+            System.err.println("Lỗi lockEmployee: " + e.getMessage());
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Lấy số lần đăng nhập sai hiện tại của tài khoản.
-     */
-    private int getFailedLoginCount(int employeeId) {
-        String sql = "SELECT failed_login_count AS FailedLoginCount FROM Employee WHERE emp_id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, employeeId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("FailedLoginCount");
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi getFailedLoginCount: " + e.getMessage());
-            e.printStackTrace();
-        }
-        return 0;
     }
 
     // ─────────────────────────────────────────────────────────
@@ -237,7 +178,7 @@ public class EmployeeDAO {
         List<Employee> list = new ArrayList<>();
         String sql = "SELECT e.emp_id AS EmployeeID, e.role_id AS RoleID, e.branch_id AS BranchID, "
                    + "e.fullName AS FullName, e.email AS Email, e.phone AS Phone, e.passwordHash AS PasswordHash, "
-                   + "e.status AS Status, e.failed_login_count AS FailedLoginCount, r.role_name AS RoleName, "
+                   + "e.status AS Status, r.role_name AS RoleName, "
                    + "b.branch_name AS BranchName "
                    + "FROM employee e "
                    + "JOIN Role r ON e.role_id = r.role_id "
@@ -259,7 +200,7 @@ public class EmployeeDAO {
         List<Employee> list = new ArrayList<>();
         String sql = "SELECT e.emp_id AS EmployeeID, e.role_id AS RoleID, e.branch_id AS BranchID, "
                    + "e.fullName AS FullName, e.email AS Email, e.phone AS Phone, e.passwordHash AS PasswordHash, "
-                   + "e.status AS Status, e.failed_login_count AS FailedLoginCount, r.role_name AS RoleName, "
+                   + "e.status AS Status, r.role_name AS RoleName, "
                    + "b.branch_name AS BranchName "
                    + "FROM employee e "
                    + "JOIN Role r ON e.role_id = r.role_id "
@@ -292,12 +233,6 @@ public class EmployeeDAO {
         e.setRoleName(rs.getString("RoleName"));
         e.setBranchName(rs.getString("BranchName"));
 
-        // Đọc FailedLoginCount (nếu cột tồn tại trong ResultSet)
-        try {
-            e.setFailedLoginCount(rs.getInt("FailedLoginCount"));
-        } catch (SQLException ex) {
-            e.setFailedLoginCount(0);
-        }
         return e;
     }
 }
