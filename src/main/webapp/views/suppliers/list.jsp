@@ -204,9 +204,11 @@
                                             Sửa
                                         </button>
 
-                                        <a href="suppliers?action=manage-products&id=${s.supplierID}" class="btn btn-sm btn-outline-primary">
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-info" 
+                                                onclick="showSupplierProducts(${s.supplierID}, '<c:out value="${s.name}"/>')">
                                             Sản phẩm
-                                        </a>
+                                        </button>
 
                                         <a href="suppliers?action=delete&id=${s.supplierID}&page=${page}&keyword=${keyword}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa nhà cung cấp này?')"> Xóa</a>
                                     </td>
@@ -376,6 +378,69 @@
             openSupplierModal('edit', id, name, phone, address, status);
         }
     });
+
+    function showSupplierProducts(supplierId, supplierName) {
+        document.getElementById('spModalTitle').innerText = 'Sản phẩm của: ' + supplierName;
+        const tbody = document.getElementById('spModalTableBody');
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center py-3">Đang tải dữ liệu...</td></tr>';
+        
+        const myModal = new bootstrap.Modal(document.getElementById('supplierProductsModal'));
+        myModal.show();
+        
+        fetch('suppliers?action=get-products-api&id=' + supplierId)
+            .then(res => res.json())
+            .then(data => {
+                tbody.innerHTML = '';
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">Nhà cung cấp này chưa từng phát sinh đơn nhập hàng nào.</td></tr>';
+                    return;
+                }
+                data.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="text-center fw-semibold">SP\${item.productId}</td>
+                        <td class="text-start">\${item.productName}</td>
+                        <td class="text-end fw-bold text-danger pe-3">\${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.importPrice)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-3 text-danger">Có lỗi xảy ra khi tải danh sách sản phẩm.</td></tr>';
+            });
+    }
 </script>
+
+<!-- Modal Xem danh sách sản phẩm nhà cung cấp -->
+<div class="modal fade" id="supplierProductsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="spModalTitle" style="color: #111827;">Danh sách sản phẩm</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-3">
+        <div class="table-responsive" style="border-radius: 8px; border: 1px solid #e5e7eb;">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-center" style="font-size: 13px; text-transform: uppercase; font-weight: 700;">
+              <tr>
+                <th width="100">Mã SP</th>
+                <th class="text-start">Tên Sản Phẩm</th>
+                <th width="200">Giá Nhập Gần Nhất</th>
+              </tr>
+            </thead>
+            <tbody id="spModalTableBody" style="font-size: 14px;">
+              <!-- Dynamically populated via AJAX -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer border-top-0 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 500;">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <jsp:include page="../common/footer.jsp"/>

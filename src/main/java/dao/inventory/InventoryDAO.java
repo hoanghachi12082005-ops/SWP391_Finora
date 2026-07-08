@@ -255,23 +255,33 @@ public class InventoryDAO {
         java.util.Map<Integer, dto.inventory.ImportProductDTO> map = new java.util.LinkedHashMap<>();
         
         StringBuilder sql = new StringBuilder(
+            "WITH LatestSupplierPrices AS ( " +
+            "    SELECT " +
+            "        od.product_id, " +
+            "        o.supplier_id AS SupplierID, " +
+            "        s.supplier_name AS SupplierName, " +
+            "        od.import_price AS ImportPrice, " +
+            "        ROW_NUMBER() OVER (PARTITION BY od.product_id, o.supplier_id ORDER BY o.created_at DESC) as rn " +
+            "    FROM order_detail od " +
+            "    JOIN [order] o ON od.order_id = o.order_id " +
+            "    JOIN supplier s ON o.supplier_id = s.supplier_id " +
+            "    WHERE o.order_type = 'PURCHASE' AND s.status = 'active' " +
+            ") " +
             "SELECT p.product_id as ProductID, p.product_name as ProductName, " +
             "COALESCE(i.quantity_in_stock, 0) as MyStock, " +
-            "sp.SupplierID, s.Name as SupplierName, sp.ImportPrice " +
+            "sp.SupplierID, sp.SupplierName, sp.ImportPrice " +
             "FROM product p "
         );
 
         if (keyword == null || keyword.trim().isEmpty()) {
             sql.append("INNER JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? ");
-            sql.append("LEFT JOIN SupplierProduct sp ON p.product_id = sp.ProductID ");
-            sql.append("LEFT JOIN Supplier s ON sp.SupplierID = s.SupplierID ");
+            sql.append("LEFT JOIN LatestSupplierPrices sp ON p.product_id = sp.product_id AND sp.rn = 1 ");
             sql.append("WHERE 1=1 ");
             sql.append("AND i.quantity_in_stock <= 10 ");
         } else {
             sql.append("LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? ");
             sql.append("LEFT JOIN category c ON p.category_id = c.category_id ");
-            sql.append("LEFT JOIN SupplierProduct sp ON p.product_id = sp.ProductID ");
-            sql.append("LEFT JOIN Supplier s ON sp.SupplierID = s.SupplierID ");
+            sql.append("LEFT JOIN LatestSupplierPrices sp ON p.product_id = sp.product_id AND sp.rn = 1 ");
             sql.append("WHERE 1=1 ");
             sql.append("AND (p.product_name LIKE ? OR c.category_name LIKE ?) ");
         }

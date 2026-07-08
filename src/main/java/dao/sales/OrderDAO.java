@@ -85,6 +85,7 @@ public class OrderDAO {
                     od.setQuantity(rs.getInt("quantity"));
                     od.setUnitPrice(rs.getDouble("unit_price"));
                     od.setTotalPrice(rs.getDouble("total_price"));
+                    od.setImportPrice(rs.getDouble("import_price"));
                     od.setProductName(rs.getString("product_name"));
                     od.setProductCode(rs.getString("product_codebar"));
                     list.add(od);

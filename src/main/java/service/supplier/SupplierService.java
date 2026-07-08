@@ -52,4 +52,8 @@ public class SupplierService {
     public boolean delete(int id) {
         return dao.delete(id);
     }
+
+    public List<dto.inventory.ImportProductDTO.SupplierInfo> getSupplierProductsHistory(int supplierId) {
+        return dao.getSupplierProductsHistory(supplierId);
+    }
 }

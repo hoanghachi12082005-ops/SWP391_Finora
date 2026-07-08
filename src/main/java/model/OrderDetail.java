@@ -14,6 +14,7 @@ public class OrderDetail {
     private int quantity;
     private double unitPrice;
     private double totalPrice;
+    private double importPrice; // Added import_price column field
 
     // Transient fields for join queries
     private String productName;
@@ -30,6 +31,17 @@ public class OrderDetail {
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.totalPrice = totalPrice;
+        this.importPrice = 0.0;
+    }
+
+    public OrderDetail(int orderDetailId, int orderId, int productId, int quantity, double unitPrice, double totalPrice, double importPrice) {
+        this.orderDetailId = orderDetailId;
+        this.orderId = orderId;
+        this.productId = productId;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.totalPrice = totalPrice;
+        this.importPrice = importPrice;
     }
 
     // ── Getters & Setters ─────────────────────────────────────
@@ -82,6 +94,14 @@ public class OrderDetail {
         this.totalPrice = totalPrice;
     }
 
+    public double getImportPrice() {
+        return importPrice;
+    }
+
+    public void setImportPrice(double importPrice) {
+        this.importPrice = importPrice;
+    }
+
     public String getProductName() {
         return productName;
     }
@@ -100,6 +120,6 @@ public class OrderDetail {
 
     @Override
     public String toString() {
-        return "OrderDetail{orderDetailId=" + orderDetailId + ", orderId=" + orderId + ", productId=" + productId + ", quantity=" + quantity + ", totalPrice=" + totalPrice + ", productName='" + productName + "'}";
+        return "OrderDetail{orderDetailId=" + orderDetailId + ", orderId=" + orderId + ", productId=" + productId + ", quantity=" + quantity + ", totalPrice=" + totalPrice + ", importPrice=" + importPrice + ", productName='" + productName + "'}";
     }
 }

@@ -24,13 +24,13 @@ public class WarehouseController extends BaseController {
                 forward(request, response, "warehouse/dashboard");
                 break;
             case "/warehouse/import":
-                forward(request, response, "warehouse/import");
+                forward(request, response, "inventory/import");
                 break;
             case "/warehouse/export":
-                forward(request, response, "warehouse/export");
+                forward(request, response, "inventory/export");
                 break;
             case "/warehouse/stock":
-                forward(request, response, "warehouse/stock");
+                forward(request, response, "inventory/inventory");
                 break;
             default:
                 forward(request, response, "warehouse/dashboard");

@@ -348,4 +348,44 @@ public class SupplierDAO {
 
         return 0;
     }
+
+    /**
+     * Lấy danh sách sản phẩm và giá nhập gần đây nhất của nhà cung cấp dựa trên lịch sử order_detail.
+     */
+    public List<dto.inventory.ImportProductDTO.SupplierInfo> getSupplierProductsHistory(int supplierId) {
+        List<dto.inventory.ImportProductDTO.SupplierInfo> list = new ArrayList<>();
+        String sql = """
+            WITH LatestPrices AS (
+                SELECT 
+                    od.product_id,
+                    p.product_name,
+                    od.import_price,
+                    ROW_NUMBER() OVER (PARTITION BY od.product_id ORDER BY o.created_at DESC) as rn
+                FROM order_detail od
+                JOIN [order] o ON od.order_id = o.order_id
+                JOIN product p ON od.product_id = p.product_id
+                WHERE o.order_type = 'PURCHASE' AND o.supplier_id = ?
+            )
+            SELECT product_id, product_name, import_price 
+            FROM LatestPrices 
+            WHERE rn = 1
+            ORDER BY product_name ASC
+            """;
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, supplierId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new dto.inventory.ImportProductDTO.SupplierInfo(
+                        rs.getInt("product_id"),
+                        rs.getString("product_name"),
+                        rs.getBigDecimal("import_price")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }

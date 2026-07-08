@@ -483,14 +483,16 @@ public class InventoryController extends BaseController {
                             ticketDAO.createExchangeTicket(importTicket, importDetails);
                             
                             // Calculate total import cost
-                            dao.supplier.SupplierProductDAO spDao = new dao.supplier.SupplierProductDAO();
-                            java.util.Map<Integer, Double> pricesMap = spDao.getLinkedProductsWithPrices(sId);
                             double totalImportCost = 0.0;
                             
                             for (model.InventoryTicketDetail d : importDetails) {
                                 inventoryDAO.increaseStock(currentWarehouseId, d.getProductId(), d.getQuantity());
                                 
-                                double price = pricesMap.getOrDefault(d.getProductId(), 0.0);
+                                double price = 0.0;
+                                String priceStr = request.getParameter("importPrice_" + d.getProductId());
+                                if (priceStr != null && !priceStr.isBlank()) {
+                                    price = Double.parseDouble(priceStr);
+                                }
                                 totalImportCost += d.getQuantity() * price;
                                 
                                 StockTransaction tx = new StockTransaction();
