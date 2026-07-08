@@ -13,17 +13,34 @@ public class InventoryDAO {
 
     public List<Inventory> findAll(int offset, int limit, String keyword, String status, Integer categoryId, Integer unitId, Integer warehouseId, String sortParam) throws SQLException {
         List<Inventory> items = new ArrayList<>();
-        StringBuilder sql = new StringBuilder(
-            "SELECT i.inventory_id, i.warehouse_id, i.product_id, i.quantity_in_stock, i.status, i.updated_at, " +
-            "p.product_name as product_name, '' as product_codebar, p.selling_price as selling_price, " +
-            "c.category_name as category_name, u.unit_name as unit_name, w.warehouse_name " +
-            "FROM inventory i " +
-            "JOIN product p ON i.product_id = p.product_id " +
-            "LEFT JOIN category c ON p.category_id = c.category_id " +
-            "LEFT JOIN unit u ON p.unit_id = u.unit_id " +
-            "JOIN warehouse w ON i.warehouse_id = w.warehouse_id " +
-            "WHERE 1=1"
-        );
+        StringBuilder sql = new StringBuilder();
+        sql.append("""
+            SELECT 
+                COALESCE(i.inventory_id, 0) as inventory_id,
+                COALESCE(i.warehouse_id, 0) as warehouse_id,
+                p.product_id,
+                COALESCE(i.quantity_in_stock, 0) as quantity_in_stock,
+                COALESCE(i.status, 'ACTIVE') as status,
+                i.updated_at,
+                p.product_name as product_name, 
+                '' as product_codebar, 
+                p.selling_price as selling_price,
+                c.category_name as category_name, 
+                u.unit_name as unit_name, 
+                COALESCE(w.warehouse_name, N'Mặc định') as warehouse_name
+            FROM product p
+            LEFT JOIN category c ON p.category_id = c.category_id
+            LEFT JOIN unit u ON p.unit_id = u.unit_id
+            """);
+
+        if (warehouseId != null && warehouseId > 0) {
+            sql.append("LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ").append(warehouseId).append(" ");
+            sql.append("LEFT JOIN warehouse w ON i.warehouse_id = w.warehouse_id ");
+        } else {
+            sql.append("LEFT JOIN inventory i ON p.product_id = i.product_id ");
+            sql.append("LEFT JOIN warehouse w ON i.warehouse_id = w.warehouse_id ");
+        }
+        sql.append(" WHERE 1=1");
 
         String cleanedKeyword = null;
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -32,27 +49,26 @@ public class InventoryDAO {
         }
         if (status != null && !status.trim().isEmpty()) {
             if ("LOW_STOCK".equals(status)) {
-                sql.append(" AND i.quantity_in_stock > 0 AND i.quantity_in_stock <= 10");
+                sql.append(" AND COALESCE(i.quantity_in_stock, 0) <= 10");
             } else if ("OUT_OF_STOCK".equals(status)) {
-                sql.append(" AND i.quantity_in_stock = 0");
+                sql.append(" AND COALESCE(i.quantity_in_stock, 0) = 0");
             } else {
-                sql.append(" AND i.status = ?");
+                sql.append(" AND COALESCE(i.status, 'ACTIVE') = ?");
             }
         }
         if (categoryId != null && categoryId > 0) sql.append(" AND p.category_id = ?");
         if (unitId != null && unitId > 0) sql.append(" AND p.unit_id = ?");
-        if (warehouseId != null && warehouseId > 0) sql.append(" AND i.warehouse_id = ?");
 
         // Sorting
         if ("qty_desc".equals(sortParam)) {
-            sql.append(" ORDER BY i.quantity_in_stock DESC");
+            sql.append(" ORDER BY COALESCE(i.quantity_in_stock, 0) DESC");
         } else if ("name_asc".equals(sortParam)) {
             sql.append(" ORDER BY p.product_name ASC");
         } else if ("updated_desc".equals(sortParam)) {
             sql.append(" ORDER BY i.updated_at DESC");
         } else {
             // Default sort: qty_asc (Lowest stock first)
-            sql.append(" ORDER BY i.quantity_in_stock ASC");
+            sql.append(" ORDER BY COALESCE(i.quantity_in_stock, 0) ASC");
         }
 
         sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
@@ -70,7 +86,6 @@ public class InventoryDAO {
             }
             if (categoryId != null && categoryId > 0) stmt.setInt(idx++, categoryId);
             if (unitId != null && unitId > 0) stmt.setInt(idx++, unitId);
-            if (warehouseId != null && warehouseId > 0) stmt.setInt(idx++, warehouseId);
             
             stmt.setInt(idx++, offset);
             stmt.setInt(idx, limit);
@@ -85,12 +100,18 @@ public class InventoryDAO {
     }
 
     public int getTotalCount(String keyword, String status, Integer categoryId, Integer unitId, Integer warehouseId) throws SQLException {
-        StringBuilder sql = new StringBuilder(
-            "SELECT COUNT(*) FROM inventory i " +
-            "JOIN product p ON i.product_id = p.product_id " +
-            "LEFT JOIN category c ON p.category_id = c.category_id " +
-            "WHERE 1=1"
-        );
+        StringBuilder sql = new StringBuilder();
+        sql.append("""
+            SELECT COUNT(*) 
+            FROM product p
+            LEFT JOIN category c ON p.category_id = c.category_id
+            """);
+        if (warehouseId != null && warehouseId > 0) {
+            sql.append("LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ").append(warehouseId).append(" ");
+        } else {
+            sql.append("LEFT JOIN inventory i ON p.product_id = i.product_id ");
+        }
+        sql.append(" WHERE 1=1");
 
         String cleanedKeyword = null;
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -99,16 +120,15 @@ public class InventoryDAO {
         }
         if (status != null && !status.trim().isEmpty()) {
             if ("LOW_STOCK".equals(status)) {
-                sql.append(" AND i.quantity_in_stock > 0 AND i.quantity_in_stock <= 10");
+                sql.append(" AND COALESCE(i.quantity_in_stock, 0) <= 10");
             } else if ("OUT_OF_STOCK".equals(status)) {
-                sql.append(" AND i.quantity_in_stock = 0");
+                sql.append(" AND COALESCE(i.quantity_in_stock, 0) = 0");
             } else {
-                sql.append(" AND i.status = ?");
+                sql.append(" AND COALESCE(i.status, 'ACTIVE') = ?");
             }
         }
         if (categoryId != null && categoryId > 0) sql.append(" AND p.category_id = ?");
         if (unitId != null && unitId > 0) sql.append(" AND p.unit_id = ?");
-        if (warehouseId != null && warehouseId > 0) sql.append(" AND i.warehouse_id = ?");
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
@@ -123,8 +143,7 @@ public class InventoryDAO {
             }
             if (categoryId != null && categoryId > 0) stmt.setInt(idx++, categoryId);
             if (unitId != null && unitId > 0) stmt.setInt(idx++, unitId);
-            if (warehouseId != null && warehouseId > 0) stmt.setInt(idx++, warehouseId);
-
+            
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
             }
@@ -202,6 +221,10 @@ public class InventoryDAO {
     }
 
     public List<dto.inventory.ExchangeProductDTO> searchExchangeProducts(int myWarehouseId, String keyword) throws SQLException {
+        String cleanedKeyword = null;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
+        }
         List<dto.inventory.ExchangeProductDTO> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
 "SELECT p.product_id as ProductID, p.product_name as ProductName, " +
@@ -216,7 +239,7 @@ public class InventoryDAO {
 "WHERE w.status = 'ACTIVE' "
         );
 
-        if (keyword == null || keyword.trim().isEmpty()) {
+        if (cleanedKeyword == null) {
             sql.append("AND COALESCE(i1.quantity_in_stock, 0) <= 10 AND i2.quantity_in_stock > 0 ");
         } else {
             sql.append("AND (p.product_name LIKE ? OR c.category_name LIKE ? OR w.warehouse_name LIKE ?) ");
@@ -229,10 +252,10 @@ public class InventoryDAO {
             
             stmt.setInt(1, myWarehouseId);
             stmt.setInt(2, myWarehouseId);
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                stmt.setString(3, "%" + keyword + "%");
-                stmt.setString(4, "%" + keyword + "%");
-                stmt.setString(5, "%" + keyword + "%");
+            if (cleanedKeyword != null) {
+                stmt.setString(3, "%" + cleanedKeyword + "%");
+                stmt.setString(4, "%" + cleanedKeyword + "%");
+                stmt.setString(5, "%" + cleanedKeyword + "%");
             }
             
             try (ResultSet rs = stmt.executeQuery()) {
@@ -252,28 +275,47 @@ public class InventoryDAO {
     }
 
     public List<dto.inventory.ImportProductDTO> searchImportProducts(int warehouseId, String keyword) throws SQLException {
+        String cleanedKeyword = null;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
+        }
         java.util.Map<Integer, dto.inventory.ImportProductDTO> map = new java.util.LinkedHashMap<>();
         
         StringBuilder sql = new StringBuilder(
+            "WITH LatestPurchase AS ( " +
+            "    SELECT o.supplier_id, od.product_id, od.import_price, " +
+            "           ROW_NUMBER() OVER (PARTITION BY o.supplier_id, od.product_id ORDER BY o.created_at DESC) as rn " +
+            "    FROM [order] o " +
+            "    JOIN order_detail od ON o.order_id = od.order_id " +
+            "    WHERE o.order_type = 'PURCHASE' AND o.status = 'COMPLETED' " +
+            "), " +
+            "ProductHasHistory AS ( " +
+            "    SELECT DISTINCT product_id " +
+            "    FROM LatestPurchase " +
+            ") " +
             "SELECT p.product_id as ProductID, p.product_name as ProductName, " +
             "COALESCE(i.quantity_in_stock, 0) as MyStock, " +
-            "sp.SupplierID, s.Name as SupplierName, sp.ImportPrice " +
+            "s.supplier_id AS SupplierID, s.supplier_name as SupplierName, lp.import_price as ImportPrice " +
             "FROM product p "
         );
 
-        if (keyword == null || keyword.trim().isEmpty()) {
-            sql.append("INNER JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? ");
-            sql.append("LEFT JOIN SupplierProduct sp ON p.product_id = sp.ProductID ");
-            sql.append("LEFT JOIN Supplier s ON sp.SupplierID = s.SupplierID ");
-            sql.append("WHERE 1=1 ");
-            sql.append("AND i.quantity_in_stock <= 10 ");
+        if (cleanedKeyword == null) {
+            sql.append("LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? ");
+            sql.append("CROSS JOIN supplier s ");
+            sql.append("LEFT JOIN LatestPurchase lp ON p.product_id = lp.product_id AND s.supplier_id = lp.supplier_id AND lp.rn = 1 ");
+            sql.append("LEFT JOIN ProductHasHistory phh ON p.product_id = phh.product_id ");
+            sql.append("WHERE s.status = 'ACTIVE' ");
+            sql.append("AND (i.quantity_in_stock IS NULL OR i.quantity_in_stock <= 10) ");
+            sql.append("AND ( (phh.product_id IS NOT NULL AND lp.import_price IS NOT NULL) OR (phh.product_id IS NULL) ) ");
         } else {
             sql.append("LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? ");
             sql.append("LEFT JOIN category c ON p.category_id = c.category_id ");
-            sql.append("LEFT JOIN SupplierProduct sp ON p.product_id = sp.ProductID ");
-            sql.append("LEFT JOIN Supplier s ON sp.SupplierID = s.SupplierID ");
-            sql.append("WHERE 1=1 ");
+            sql.append("CROSS JOIN supplier s ");
+            sql.append("LEFT JOIN LatestPurchase lp ON p.product_id = lp.product_id AND s.supplier_id = lp.supplier_id AND lp.rn = 1 ");
+            sql.append("LEFT JOIN ProductHasHistory phh ON p.product_id = phh.product_id ");
+            sql.append("WHERE s.status = 'ACTIVE' ");
             sql.append("AND (p.product_name LIKE ? OR c.category_name LIKE ?) ");
+            sql.append("AND ( (phh.product_id IS NOT NULL AND lp.import_price IS NOT NULL) OR (phh.product_id IS NULL) ) ");
         }
 
         sql.append("ORDER BY p.product_name ASC");
@@ -282,9 +324,9 @@ public class InventoryDAO {
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             
             stmt.setInt(1, warehouseId);
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                stmt.setString(2, "%" + keyword + "%");
-                stmt.setString(3, "%" + keyword + "%");
+            if (cleanedKeyword != null) {
+                stmt.setString(2, "%" + cleanedKeyword + "%");
+                stmt.setString(3, "%" + cleanedKeyword + "%");
             }
             
             try (ResultSet rs = stmt.executeQuery()) {
@@ -304,7 +346,10 @@ public class InventoryDAO {
                     if (!rs.wasNull()) {
                         String supplierName = rs.getString("SupplierName");
                         java.math.BigDecimal importPrice = rs.getBigDecimal("ImportPrice");
-                        dto.getSuppliers().add(new dto.inventory.ImportProductDTO.SupplierInfo(supplierId, supplierName, importPrice));
+                        // Chỉ thêm nhà cung cấp nếu có lịch sử giá nhập thực tế
+                        if (importPrice != null && importPrice.doubleValue() > 0) {
+                            dto.getSuppliers().add(new dto.inventory.ImportProductDTO.SupplierInfo(supplierId, supplierName, importPrice));
+                        }
                     }
                 }
             }

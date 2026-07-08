@@ -91,6 +91,62 @@ public class InventoryTicketDAO {
         return tickets;
     }
 
+    /**
+     * Lấy tất cả phiếu lịch sử (IMPORT + TRANSFER_REQUEST) đã hoàn tất/hủy.
+     * Hỗ trợ lọc theo type: "IN" = chỉ IMPORT, "OUT" = chỉ TRANSFER_REQUEST, null/empty = tất cả.
+     */
+    public List<InventoryTicket> findHistoryTickets(Integer warehouseId, String typeFilter) throws SQLException {
+        List<InventoryTicket> tickets = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+            "SELECT t.*, fw.warehouse_name as from_warehouse_name, " +
+            "tw.warehouse_name as to_warehouse_name, e.fullName as created_by_name, " +
+            "s.supplier_name as supplier_name " +
+            "FROM inventory_ticket t " +
+            "LEFT JOIN warehouse fw ON t.from_warehouse_id = fw.warehouse_id " +
+            "LEFT JOIN warehouse tw ON t.to_warehouse_id = tw.warehouse_id " +
+            "LEFT JOIN Employee e ON t.created_by = e.emp_id " +
+            "LEFT JOIN supplier s ON t.ticket_type = 'IMPORT' AND t.from_warehouse_id = s.supplier_id " +
+            "WHERE t.status IN ('COMPLETED', 'REJECTED', 'COMPLETED_WITH_ERROR', 'CANCELLED')"
+        );
+
+        if ("IN".equals(typeFilter)) {
+            sql.append(" AND t.ticket_type = 'IMPORT'");
+        } else if ("OUT".equals(typeFilter)) {
+            sql.append(" AND t.ticket_type = 'TRANSFER_REQUEST'");
+        } else {
+            sql.append(" AND t.ticket_type IN ('IMPORT', 'TRANSFER_REQUEST')");
+        }
+
+        if (warehouseId != null && warehouseId > 0) {
+            sql.append(" AND (t.from_warehouse_id = ? OR t.to_warehouse_id = ?)");
+        }
+        sql.append(" ORDER BY t.created_at DESC");
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            if (warehouseId != null && warehouseId > 0) {
+                stmt.setInt(idx++, warehouseId);
+                stmt.setInt(idx, warehouseId);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    InventoryTicket t = extractTicket(rs);
+                    // Với phiếu IMPORT, from_warehouse_id thực ra là supplier_id
+                    if ("IMPORT".equals(t.getTicketType())) {
+                        try {
+                            String supplierName = rs.getString("supplier_name");
+                            if (supplierName != null) {
+                                t.setFromWarehouseName("NCC: " + supplierName);
+                            }
+                        } catch (SQLException ignored) {}
+                    }
+                    tickets.add(t);
+                }
+            }
+        }
+        return tickets;
+    }
     public int getPendingCount(String ticketType, Integer warehouseId) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM inventory_ticket WHERE status = 'PENDING'");
         if (ticketType != null) {
