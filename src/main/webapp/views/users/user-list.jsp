@@ -17,8 +17,7 @@
         <title>${pageTitle} - Finora</title>
 
         <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/base.css?v=20260601"/>
-        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/components.css?v=20260601"/>
-        <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/user-management.css?v=20260601"/>
+
 
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
@@ -297,8 +296,12 @@
 
                                                     <c:if test="${canLock}">
                                                         <form method="post" action="${baseUrl}">
+<<<<<<< HEAD
                                                             <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"/>
                                                             <input type="hidden" name="employeeID" value="${user.employeeID}"/>
+=======
+                                                            <input type="hidden" name="employeeId" value="${user.employeeID}"/>
+>>>>>>> origin/main
 
                                                             <c:choose>
                                                                 <c:when test="${user.status == 'ACTIVE'}">
@@ -429,7 +432,7 @@
 
                 <c:if test="${isEdit}">
                     <input type="hidden"
-                           name="DId"
+                           name="employeeId"
                            value="${formUser.employeeID}"/>
                 </c:if>
 
@@ -540,7 +543,7 @@
             <form class="modal-box small-modal" method="post" action="${baseUrl}">
                 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"/>
                 <input type="hidden" name="action" value="resetPassword"/>
-                <input type="hidden" name="employeeID" value="${resetUser.employeeID}"/>
+                <input type="hidden" name="employeeId" value="${resetUser.employeeID}"/>
 
                 <div class="modal-header">
                     <h3>Reset Password</h3>

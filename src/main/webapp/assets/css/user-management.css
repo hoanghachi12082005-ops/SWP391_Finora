@@ -1,6 +1,8 @@
 ﻿/*
-    user-management.css
-    D├╣ng ri├¬ng cho: /view/user/user-list.jsp
+    user-management.css — DEPRECATED
+    All styles consolidated into components.css (loaded via base.css).
+    This file is kept for backward compatibility only.
+    Use: components.css (User Management Page Styles section)
 */
 
 /* =========================
