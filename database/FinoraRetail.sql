@@ -298,6 +298,7 @@ CREATE TABLE order_detail (
     quantity        INT            DEFAULT 1,
     unit_price      DECIMAL(18,2)  DEFAULT 0,
     total_price     DECIMAL(18,2)  DEFAULT 0,
+    import_price    DECIMAL(18,2)  DEFAULT 0,
 
     CONSTRAINT FK_OrderDetail_Order
         FOREIGN KEY (order_id)
@@ -547,25 +548,6 @@ CREATE TABLE inventory_ticket_detail (
         FOREIGN KEY (ticket_id) REFERENCES inventory_ticket(ticket_id),
 
     CONSTRAINT FK_InventoryTicketDetail_Product
-        FOREIGN KEY (product_id) REFERENCES [product](product_id)
-);
-GO
-
--- ============================================================
---  26. SUPPLIER_PRODUCT — Supplier-to-product pricing bridge
--- ============================================================
-CREATE TABLE supplier_product (
-    supplier_id   INT            NOT NULL,
-    product_id    INT            NOT NULL,
-    import_price  DECIMAL(18,2)  DEFAULT 0,
-
-    CONSTRAINT PK_SupplierProduct
-        PRIMARY KEY (supplier_id, product_id),
-
-    CONSTRAINT FK_SupplierProduct_Supplier
-        FOREIGN KEY (supplier_id) REFERENCES supplier(supplier_id),
-
-    CONSTRAINT FK_SupplierProduct_Product
         FOREIGN KEY (product_id) REFERENCES [product](product_id)
 );
 GO
@@ -1111,12 +1093,7 @@ SELECT 3 + (p.product_id % 3), 'UPDATE', 'Product', p.product_id,
 FROM product p WHERE p.product_id % 5 = 0;
 GO
 
--- 20. SUPPLIER PRODUCT (sample data)
-INSERT INTO supplier_product (supplier_id, product_id, import_price) VALUES
-(1, 1, 100000.00), (1, 2, 200000.00), (1, 3, 250000.00),
-(2, 4, 80000.00), (2, 8, 300000.00),
-(3, 6, 120000.00), (3, 7, 150000.00);
-GO
+
 
 PRINT N'FinoraRetail database created successfully.';
 GO

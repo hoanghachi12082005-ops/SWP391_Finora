@@ -91,8 +91,7 @@
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Nhập vào kho <span class="text-danger">*</span></label>
                                     <select name="warehouseId" class="form-select" required>
-                                        <option value="1" selected>Kho chính (Chi nhánh Hà Nội)</option>
-                                        <option value="2">Kho phụ (Chi nhánh Hà Nội)</option>
+                                        <option value="${not empty sessionScope.selectedWarehouseId ? sessionScope.selectedWarehouseId : 1}" selected>Kho hiện tại</option>
                                     </select>
                                 </div>
 

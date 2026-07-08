@@ -18,8 +18,8 @@
             </c:if>
             <select name="typeFilter" class="form-select" onchange="this.form.submit()">
                 <option value="">Tất cả loại</option>
-                <option value="IN" ${typeFilter == 'IN' ? 'selected' : ''}>Nhập kho (IN)</option>
-                <option value="OUT" ${typeFilter == 'OUT' ? 'selected' : ''}>Xuất kho (OUT)</option>
+                <option value="IN" ${typeFilter == 'IN' ? 'selected' : ''}>Nhập hàng</option>
+                <option value="OUT" ${typeFilter == 'OUT' ? 'selected' : ''}>Chuyển kho</option>
             </select>
             <select name="dateFilter" class="form-select" onchange="this.form.submit()">
                 <option value="">Toàn thời gian</option>
@@ -41,8 +41,9 @@
                             <tr>
                                 <th>Thời Gian</th>
                                 <th>Mã Phiếu</th>
-                                <th>Kho Đề Xuất</th>
-                                <th>Kho Xử Lý</th>
+                                <th>Loại</th>
+                                <th>Nguồn</th>
+                                <th>Đích</th>
                                 <th>Trạng Thái</th>
                                 <th>Người Thực Hiện</th>
                                 <th>Thao Tác</th>
@@ -59,8 +60,31 @@
                                         <strong>${tx.ticketCode}</strong>
                                     </td>
                                     <td>
+                                        <c:choose>
+                                            <c:when test="${tx.ticketType == 'IMPORT'}">
+                                                <span class="badge" style="background-color: #059669; color: #fff; font-size: 11px; padding: 4px 10px;">
+                                                    <span class="material-icons" style="font-size: 13px; vertical-align: text-bottom;">inventory</span>
+                                                    Nhập hàng
+                                                </span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span class="badge" style="background-color: #2563eb; color: #fff; font-size: 11px; padding: 4px 10px;">
+                                                    <span class="material-icons" style="font-size: 13px; vertical-align: text-bottom;">swap_horiz</span>
+                                                    Chuyển kho
+                                                </span>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td>
                                         <span style="font-weight: 500; color: #374151;">
-                                            <span class="material-icons" style="font-size: 16px; color: #6b7280; vertical-align: bottom;">storefront</span>
+                                            <c:choose>
+                                                <c:when test="${tx.ticketType == 'IMPORT'}">
+                                                    <span class="material-icons" style="font-size: 16px; color: #059669; vertical-align: bottom;">local_shipping</span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="material-icons" style="font-size: 16px; color: #6b7280; vertical-align: bottom;">storefront</span>
+                                                </c:otherwise>
+                                            </c:choose>
                                             ${tx.fromWarehouseName}
                                         </span>
                                     </td>

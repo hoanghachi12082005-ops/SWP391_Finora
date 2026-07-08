@@ -54,6 +54,6 @@
     </div>
     <div class="modal-footer border-top-0 pt-0">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 500;">Hủy</button>
-        <button type="submit" class="btn btn-success" style="border-radius: 8px; font-weight: 500;">Xác Nhận Nhập Kho</button>
+        <button type="submit" class="btn btn-import-submit" style="border-radius: 8px; font-weight: 500;">Xác Nhận Nhập Kho</button>
     </div>
 </form>
