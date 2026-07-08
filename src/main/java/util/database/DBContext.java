@@ -18,7 +18,7 @@ public class DBContext {
 
     private static String url = DEFAULT_URL;
     private static String user = "sa";
-    private static String password = "1234";
+    private static String password = "123";
 
     /**
      * ThreadLocal giu EmployeeID cua nguoi dung hien tai (set boi SecurityFilter).
