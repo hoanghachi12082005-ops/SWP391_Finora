@@ -21,36 +21,37 @@ public class DatabaseMigrationListener implements ServletContextListener {
             
             // Check if failed_login_count column exists in Employee table
             boolean failedLoginExists = false;
+            String columnName = null;
             try (ResultSet rs = metaData.getColumns(null, null, "Employee", "failed_login_count")) {
-                if (rs.next()) failedLoginExists = true;
+                if (rs.next()) { failedLoginExists = true; columnName = "failed_login_count"; }
             }
             if (!failedLoginExists) {
                 try (ResultSet rs = metaData.getColumns(null, null, "employee", "failed_login_count")) {
-                    if (rs.next()) failedLoginExists = true;
+                    if (rs.next()) { failedLoginExists = true; columnName = "failed_login_count"; }
                 }
             }
             if (!failedLoginExists) {
                 try (ResultSet rs = metaData.getColumns(null, null, "Employee", "FailedLoginCount")) {
-                    if (rs.next()) failedLoginExists = true;
+                    if (rs.next()) { failedLoginExists = true; columnName = "FailedLoginCount"; }
                 }
             }
             if (!failedLoginExists) {
                 try (ResultSet rs = metaData.getColumns(null, null, "employee", "FailedLoginCount")) {
-                    if (rs.next()) failedLoginExists = true;
+                    if (rs.next()) { failedLoginExists = true; columnName = "FailedLoginCount"; }
                 }
             }
 
-            if (!failedLoginExists) {
-                System.out.println("Column 'failed_login_count' does not exist. Altering Employee table...");
+            if (failedLoginExists) {
+                System.out.println("Column '" + columnName + "' exists. Dropping column from Employee table...");
                 try (Statement stmt = conn.createStatement()) {
-                    stmt.execute("ALTER TABLE Employee ADD failed_login_count INT NOT NULL DEFAULT 0");
-                    System.out.println("Column 'failed_login_count' added successfully to Employee table.");
+                    stmt.execute("ALTER TABLE Employee DROP COLUMN " + columnName);
+                    System.out.println("Column '" + columnName + "' dropped successfully from Employee table.");
                 } catch (SQLException ex) {
-                    System.err.println("Failed to alter Employee table: " + ex.getMessage());
+                    System.err.println("Failed to drop column '" + columnName + "' from Employee table: " + ex.getMessage());
                 }
             }
 
-            // Auto-heal dummy hashes and reset failed login attempts for local development
+            // Auto-heal dummy hashes for local development
             try {
                 String sqlUpdateHashes = "UPDATE Employee SET passwordHash = ? WHERE passwordHash = '$2a$10$dummyhashfordemo'";
                 try (PreparedStatement ps = conn.prepareStatement(sqlUpdateHashes)) {
@@ -60,15 +61,8 @@ public class DatabaseMigrationListener implements ServletContextListener {
                         System.out.println("Updated " + updated + " employees with dummy hashes to valid '123456' hashes.");
                     }
                 }
-                String sqlResetLogins = "UPDATE Employee SET failed_login_count = 0, status = 'ACTIVE' WHERE failed_login_count >= 4 OR status = 'INACTIVE'";
-                try (Statement stmt = conn.createStatement()) {
-                    int resetCount = stmt.executeUpdate(sqlResetLogins);
-                    if (resetCount > 0) {
-                        System.out.println("Reset failed login counts and unlocked " + resetCount + " accounts.");
-                    }
-                }
             } catch (SQLException ex) {
-                System.err.println("Failed to auto-heal employee password hashes/statuses: " + ex.getMessage());
+                System.err.println("Failed to auto-heal employee password hashes: " + ex.getMessage());
             }
 
             boolean shiftExists = false;

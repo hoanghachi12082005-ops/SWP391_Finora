@@ -69,7 +69,6 @@ CREATE TABLE Employee (
     image_URL         NVARCHAR(255),
     status            NVARCHAR(20)  DEFAULT 'ACTIVE'
                                     CHECK (status IN ('ACTIVE','INACTIVE')),
-    failed_login_count INT          NOT NULL DEFAULT 0,
     created_at        DATETIME      DEFAULT GETDATE(),
     update_at         DATETIME      DEFAULT GETDATE(),
 

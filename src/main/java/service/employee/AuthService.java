@@ -11,7 +11,7 @@ public class AuthService {
     /**
      * Chức năng Đăng nhập (Login)
      */
-    public Employee login(String username, String password) {
+    public Employee login(String username, String password, jakarta.servlet.http.HttpSession session) {
 
         Employee employee = employeeDAO.findByEmailOrPhone(username.trim());
 
@@ -40,17 +40,30 @@ public class AuthService {
         System.out.println("[DEBUG AUTH] ===== KẾT THÚC SO SÁNH MẬT KHẨU =====\n");
         // ─────────────────────────────────────────────────────────────
 
+        String sessionKey = "failed_attempts_" + username.trim().toLowerCase();
+
         if (!verify) {
-            int failedAttempts = employeeDAO.incrementFailedAttempts(employee.getEmployeeId());
+            int failedAttempts = 0;
+            if (session != null) {
+                Integer count = (Integer) session.getAttribute(sessionKey);
+                failedAttempts = (count != null ? count : 0) + 1;
+                session.setAttribute(sessionKey, failedAttempts);
+            }
             int remaining = Employee.MAX_FAILED_LOGIN - failedAttempts;
             if (remaining <= 0) {
+                employeeDAO.lockEmployee(employee.getEmployeeID());
+                if (session != null) {
+                    session.removeAttribute(sessionKey);
+                }
                 throw new RuntimeException("Tài khoản của bạn đã bị khóa do đăng nhập sai quá 5 lần.");
             } else {
                 throw new RuntimeException("Mật khẩu không chính xác. Bạn còn " + remaining + " lần nhập lại.");
             }
         }
 
-        employeeDAO.resetFailedAttempts(employee.getEmployeeId());
+        if (session != null) {
+            session.removeAttribute(sessionKey);
+        }
 
         return employee;
     }

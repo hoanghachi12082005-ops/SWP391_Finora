@@ -113,7 +113,7 @@ public class AuthServlet extends HttpServlet {
         }
 
         try {
-            Employee employee = authService.login(emailOrPhone.trim(), password);
+            Employee employee = authService.login(emailOrPhone.trim(), password, request.getSession(true));
 
             // Ghi nhớ đăng nhập
             String rememberMe = request.getParameter("remember-me");

@@ -289,7 +289,6 @@
                                                             <span class="material-symbols-outlined">edit</span>
                                                         </a>
                                                     </c:if>
-
                                                     <c:if test="${canResetPassword}">
                                                         <a href="${baseUrl}?action=reset&id=${user.employeeID}" title="Reset Password">
                                                             <span class="material-symbols-outlined">key</span>
@@ -298,6 +297,7 @@
 
                                                     <c:if test="${canLock}">
                                                         <form method="post" action="${baseUrl}">
+                                                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"/>
                                                             <input type="hidden" name="employeeID" value="${user.employeeID}"/>
 
                                                             <c:choose>
@@ -421,6 +421,7 @@
 
         <div class="modal-overlay">
             <form class="modal-box" method="post" action="${baseUrl}">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"/>
 
                 <input type="hidden"
                        name="action"
@@ -537,6 +538,7 @@
     <c:if test="${formMode == 'reset' && not empty resetUser}">
         <div class="modal-overlay">
             <form class="modal-box small-modal" method="post" action="${baseUrl}">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"/>
                 <input type="hidden" name="action" value="resetPassword"/>
                 <input type="hidden" name="employeeID" value="${resetUser.employeeID}"/>
 
