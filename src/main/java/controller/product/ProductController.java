@@ -35,7 +35,7 @@ public class ProductController extends BaseController {
     private ProductDAO productDAO;
     private static final int ITEMS_PER_PAGE = 5;
     private static final long MAX_IMAGE_SIZE = 3L * 1024 * 1024; // 3MB
-    private static final String IMAGE_DIR = "/asset/product/";
+    private static final String IMAGE_DIR = "/assets/images/product/";
 
     @Override
     public void init() throws ServletException {
