@@ -18,6 +18,7 @@ public class Inventory {
     private String unitName;
     private BigDecimal sellingPrice;
     private String warehouseName;
+    private String imageUrl;
 
     public Inventory() {}
 
@@ -115,5 +116,13 @@ public class Inventory {
 
     public void setWarehouseName(String warehouseName) {
         this.warehouseName = warehouseName;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }
