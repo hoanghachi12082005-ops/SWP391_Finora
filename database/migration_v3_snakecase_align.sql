@@ -7,17 +7,19 @@
 USE DBFinoraV3;
 GO
 
--- 1. Thêm cột failed_login_count vào bảng Employee nếu chưa có
-IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Employee') AND name = N'failed_login_count')
+-- 1. Xóa cột failed_login_count và FailedLoginCount khỏi bảng Employee nếu có
+IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Employee') AND name = N'failed_login_count')
 BEGIN
-    ALTER TABLE Employee ADD failed_login_count INT NOT NULL DEFAULT 0;
-    PRINT 'Đã thêm cột failed_login_count vào bảng Employee.';
+    ALTER TABLE Employee DROP COLUMN failed_login_count;
+    PRINT 'Đã xóa cột failed_login_count khỏi bảng Employee.';
 END
-ELSE
+IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Employee') AND name = N'FailedLoginCount')
 BEGIN
-    PRINT 'Cột failed_login_count đã tồn tại trong bảng Employee.';
+    ALTER TABLE Employee DROP COLUMN FailedLoginCount;
+    PRINT 'Đã xóa cột FailedLoginCount khỏi bảng Employee.';
 END
 GO
+
 
 -- 2. Cập nhật bảng payment
 -- Cho phép order_id NULL (giao dịch thu chi thủ công)

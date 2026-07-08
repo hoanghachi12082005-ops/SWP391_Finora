@@ -296,12 +296,12 @@
 
                                                     <c:if test="${canLock}">
                                                         <form method="post" action="${baseUrl}">
-<<<<<<< HEAD
+
                                                             <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"/>
                                                             <input type="hidden" name="employeeID" value="${user.employeeID}"/>
-=======
+
                                                             <input type="hidden" name="employeeId" value="${user.employeeID}"/>
->>>>>>> origin/main
+
 
                                                             <c:choose>
                                                                 <c:when test="${user.status == 'ACTIVE'}">

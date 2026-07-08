@@ -15,7 +15,7 @@ public class EmployeeDAO {
     // ─────────────────────────────────────────────────────────
 
     /**
-     * Tìm nhân viên theo email hoặc số điện thoại, bao gồm FailedLoginCount.
+     * Tìm nhân viên theo email hoặc số điện thoại.
      */
     public Employee findByEmailOrPhone(String username) {
         String sql = "SELECT "
