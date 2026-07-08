@@ -186,6 +186,62 @@ public class OrderDAO {
         }
     }
 
+    /**
+     * Tìm ID đơn hàng theo mã đơn hàng (dùng cho VNPay IPN)
+     */
+    public int findIdByCode(Connection conn, String orderCode) throws SQLException {
+        String sql = "SELECT order_id FROM [order] WHERE order_code = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, orderCode);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt("order_id");
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Tìm đơn hàng theo mã đơn hàng (dùng cho VNPay)
+     */
+    public Order findByCode(Connection conn, String orderCode) throws SQLException {
+        String sql = "SELECT * FROM [order] WHERE order_code = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, orderCode);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapRow(rs);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Lấy trạng thái đơn hàng theo ID (dùng cho VNPay IPN)
+     */
+    public String getStatus(Connection conn, int orderId) throws SQLException {
+        String sql = "SELECT status FROM [order] WHERE order_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString("status");
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Lấy trạng thái đơn hàng theo mã đơn hàng (dùng cho polling VNPAY)
+     */
+    public String getStatusByCode(Connection conn, String orderCode) throws SQLException {
+        String sql = "SELECT status FROM [order] WHERE order_code = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, orderCode);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString("status");
+            }
+        }
+        return null;
+    }
+
     public int createOrderInTransaction(Connection conn, Order order) throws SQLException {
         String sql = """
             INSERT INTO [order] 

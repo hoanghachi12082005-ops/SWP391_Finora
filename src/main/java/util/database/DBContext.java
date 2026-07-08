@@ -3,54 +3,68 @@ package util.database;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
- * Database Connection Utility - Microsoft SQL Server. Cấu hình đồng bộ hóa chạy
- * hệ thống FinoraRetail trên SQL Server.
+ * Database Connection Utility - Microsoft SQL Server.
  */
 public class DBContext {
-    
 
     private static final String DRIVER = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
     private static final String DEFAULT_URL
             = "jdbc:sqlserver://localhost:1433;"
-            + "databaseName=DBFinoraV3;" 
-            + "encrypt=true;"
-            + "trustServerCertificate=true;"
-            + "characterEncoding=UTF-8";
+            + "databaseName=DBFinoraV3;"
+            + "encrypt=false;";
 
-    private static final String JDBC_URL = envOr("DB_URL", DEFAULT_URL);
-    private static final String DB_USER = envOr("DB_USER", "sa"); // Tài khoản SQL Server Authentication
-    private static final String DB_SECRET = envOr("DB_PASSWORD", "123"); // Mật khẩu của tài khoản sa
+    private static String url = DEFAULT_URL;
+    private static String user = "sa";
+    private static String password = "1234";
+
+    /**
+     * ThreadLocal giu EmployeeID cua nguoi dung hien tai (set boi SecurityFilter).
+     * Trigger DB dung SESSION_CONTEXT(N'EmployeeID') de ghi nhan ai thao tac.
+     */
+    private static final ThreadLocal<Integer> currentEmployeeId = new ThreadLocal<>();
+
+    public static void setCurrentEmployeeId(Integer empId) {
+        currentEmployeeId.set(empId);
+    }
+
+    public static Integer getCurrentEmployeeId() {
+        return currentEmployeeId.get();
+    }
+
+    public static void clearCurrentEmployeeId() {
+        currentEmployeeId.remove();
+    }
 
     static {
         try {
             Class.forName(DRIVER);
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Microsoft SQL Server JDBC Driver không tìm thấy trong hệ thống!", e);
+            throw new RuntimeException("Khong tim thay driver SQL Server!", e);
         }
     }
 
-    private static String envOr(String key, String fallback) {
-        String v = System.getenv(key);
-        return (v == null || v.isEmpty()) ? fallback : v;
-    }
-
-    /**
-     * Tạo kết nối mới tới SQL Server mỗi lần gọi
-     */
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(JDBC_URL, DB_USER, DB_SECRET);
-    }
-
-    public static void closeConnection(Connection conn) {
-        if (conn != null) {
-            try {
-                conn.close();
+        Connection conn = DriverManager.getConnection(url, user, password);
+        // Set session context cho trigger audit log
+        Integer empId = currentEmployeeId.get();
+        if (empId != null) {
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("EXEC sp_set_session_context N'EmployeeID', " + empId);
             } catch (SQLException e) {
-                e.printStackTrace();
+                // Khong anh huong den luong chinh, chi canh bao
+                System.err.println("WARN: Khong the set session context: " + e.getMessage());
             }
         }
+        return conn;
+    }
+
+    public static void setConnection(String dbUrl, String dbUser, String dbPassword) {
+        url = dbUrl;
+        user = dbUser;
+        password = dbPassword;
     }
 
     public static boolean testConnection() {
@@ -61,6 +75,7 @@ public class DBContext {
             return false;
         }
     }
+<<<<<<< HEAD
 
     public static void main(String[] args) {
         if (testConnection()) {
@@ -69,4 +84,6 @@ public class DBContext {
             System.err.println("Kết nối tới SQL Server thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu hoặc cổng 1433!");
         }
     }
+=======
+>>>>>>> 52a303d34d1d7153f04e96902d760124986430f5
 }

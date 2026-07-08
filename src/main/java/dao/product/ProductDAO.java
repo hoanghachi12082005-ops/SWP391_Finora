@@ -153,20 +153,6 @@ public class ProductDAO {
             stmt.setBigDecimal(4, product.getSellingPrice());
             stmt.setInt(5, product.getProductID());
             stmt.executeUpdate();
-
-            // Cập nhật số lượng trong kho 1
-            String invSql = "IF EXISTS (SELECT 1 FROM inventory WHERE product_id = ? AND warehouse_id = 1) "
-                          + "  UPDATE inventory SET quantity_in_stock = ?, updated_at = GETDATE() WHERE product_id = ? AND warehouse_id = 1 "
-                          + "ELSE "
-                          + "  INSERT INTO inventory (warehouse_id, product_id, quantity_in_stock, status, updated_at) VALUES (1, ?, ?, 'active', GETDATE())";
-            try (PreparedStatement invStmt = conn.prepareStatement(invSql)) {
-                invStmt.setInt(1, product.getProductID());
-                invStmt.setInt(2, product.getQuantity());
-                invStmt.setInt(3, product.getProductID());
-                invStmt.setInt(4, product.getProductID());
-                invStmt.setInt(5, product.getQuantity());
-                invStmt.executeUpdate();
-            }
         }
     }
 
