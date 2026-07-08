@@ -360,4 +360,67 @@ public class InventoryDAO {
             }
         }
     }
+
+    // --- Compatibility methods for sales/POS ---
+
+    public int getStock(int productId, int warehouseId) {
+        String sql = "SELECT quantity_in_stock FROM inventory WHERE product_id = ? AND warehouse_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productId);
+            ps.setInt(2, warehouseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("quantity_in_stock");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int deductStock(Connection conn, int productId, int warehouseId, int qty) throws SQLException {
+        String sql = "UPDATE inventory SET quantity_in_stock = quantity_in_stock - ?, updated_at = GETDATE() "
+                   + "WHERE product_id = ? AND warehouse_id = ? AND quantity_in_stock >= ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, qty);
+            ps.setInt(2, productId);
+            ps.setInt(3, warehouseId);
+            ps.setInt(4, qty);
+            return ps.executeUpdate();
+        }
+    }
+
+    public int getStockInTransaction(Connection conn, int productId, int warehouseId) throws SQLException {
+        String sql = "SELECT quantity_in_stock FROM inventory WHERE product_id = ? AND warehouse_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productId);
+            ps.setInt(2, warehouseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("quantity_in_stock");
+                }
+            }
+        }
+        return 0;
+    }
+
+    public void logStockTransaction(Connection conn, int warehouseId, int productId,
+                                     int orderId, int quantity, int beforeQty, int empId) throws SQLException {
+        String sql = "INSERT INTO stock_transaction "
+                   + "(warehouse_id, product_id, reference_type, reference_id, transaction_type, "
+                   + " quantity, before_quantity, after_quantity, note, created_by, created_at) "
+                   + "VALUES (?, ?, 'ORDER', ?, 'SALE_DEDUCT', ?, ?, ?, N'Bán hàng POS', ?, GETDATE())";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, warehouseId);
+            ps.setInt(2, productId);
+            ps.setInt(3, orderId);
+            ps.setInt(4, quantity);
+            ps.setInt(5, beforeQty);
+            ps.setInt(6, beforeQty - quantity);
+            ps.setInt(7, empId);
+            ps.executeUpdate();
+        }
+    }
 }

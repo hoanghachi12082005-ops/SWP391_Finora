@@ -1,7 +1,7 @@
 package controller.sales;
 
-import dao.sales.ProductDAO;
-import dao.sales.CustomerDAO;
+import dao.product.ProductDAO;
+import dao.customer.CustomerDAO;
 import dao.sales.VoucherDAO;
 import dao.sales.ShiftDAO;
 import model.Employee;
@@ -147,7 +147,7 @@ public class SalesServlet extends HttpServlet {
             c.setAddress(req.getParameter("address"));
             c.setCusType("REGULAR");
 
-            int cusId = customerDao.insert(c);
+            int cusId = customerDao.insertSales(c);
             if (cusId > 0) {
                 resp.getWriter().write("{\"cusId\":" + cusId + ",\"fullName\":\"" + escJson(c.getFullName()) + "\"}");
             } else {

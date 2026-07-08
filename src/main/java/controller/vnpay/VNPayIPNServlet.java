@@ -1,7 +1,7 @@
 package controller.vnpay;
 
 import dao.sales.OrderDAO;
-import dao.sales.PaymentDAO;
+import dao.finance.PaymentDAO;
 import model.Payment;
 import util.database.DBContext;
 import util.vnpay.Config;

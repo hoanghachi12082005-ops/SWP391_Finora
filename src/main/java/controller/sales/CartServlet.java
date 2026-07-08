@@ -1,8 +1,8 @@
 package controller.sales;
 
-import dao.sales.CustomerDAO;
-import dao.sales.InventoryDAO;
-import dao.sales.ProductDAO;
+import dao.customer.CustomerDAO;
+import dao.inventory.InventoryDAO;
+import dao.product.ProductDAO;
 import dao.sales.VoucherDAO;
 import model.*;
 import jakarta.servlet.annotation.WebServlet;

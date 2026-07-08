@@ -1,6 +1,6 @@
 package controller.sales;
 
-import dao.sales.ProductDAO;
+import dao.product.ProductDAO;
 import model.Employee;
 import model.Product;
 import jakarta.servlet.ServletException;

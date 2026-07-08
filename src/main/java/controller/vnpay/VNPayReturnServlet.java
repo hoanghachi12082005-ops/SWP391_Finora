@@ -1,7 +1,7 @@
 package controller.vnpay;
 
 import dao.sales.OrderDAO;
-import dao.sales.PaymentDAO;
+import dao.finance.PaymentDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

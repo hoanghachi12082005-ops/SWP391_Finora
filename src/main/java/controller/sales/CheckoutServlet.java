@@ -1,6 +1,8 @@
 package controller.sales;
 
 import dao.sales.*;
+import dao.inventory.InventoryDAO;
+import dao.finance.PaymentDAO;
 import model.*;
 import util.database.DBContext;
 import jakarta.servlet.annotation.WebServlet;
