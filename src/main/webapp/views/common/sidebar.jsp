@@ -43,15 +43,6 @@
             </a>
         </c:if>
 
-        <!-- Cashbook (Sổ Quỹ) (Admin, Owner, StoreManager) -->
-        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
-            <a href="${pageContext.request.contextPath}/cashbook" 
-               class="sidebar-menu-item ${originalUri.contains('/cashbook') ? 'active' : ''}">
-                <span class="material-icons">account_balance_wallet</span>
-                <span>Sổ Quỹ</span>
-            </a>
-        </c:if>
-
                     <!-- Inventory Dashboard -->
                     <c:if
                         test="${roleName == 'WarehouseStaff' || roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
@@ -159,7 +150,7 @@
                             <a href="${pageContext.request.contextPath}/admin/user"
                                 class="sidebar-menu-item ${originalUri.contains('/admin/user') ? 'active' : ''}">
                                 <span class="material-icons">manage_accounts</span>
-                                <span>Quản lý Owner</span>
+                                <span>Quản lý Tài khoản</span>
                             </a>
                         </c:if>
                         <c:if test="${roleName == 'Owner'}">
