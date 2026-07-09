@@ -224,7 +224,7 @@
                                                         </a>
                                                     </c:if>
 
-                                                    <c:if test="${sessionScope.currentUser.roleName == 'Admin' || sessionScope.currentUser.roleName == 'Owner' || sessionScope.currentUser.roleName == 'Store Manager' || sessionScope.currentUser.roleName == 'StoreManager' || sessionScope.currentUser.roleName == 'Manager'}">
+                                                    <c:if test="${canDelete}">
                                                         <form method="post" action="${baseUrl}" onsubmit="return confirm('Soft delete this customer?')">
                                                             <input type="hidden" name="action" value="delete"/>
                                                             <input type="hidden" name="customerId" value="${cust.customerId}"/>
@@ -277,7 +277,7 @@
                             <div class="pagination">
 
                                 <c:if test="${currentPage > 1}">
-                                    <c:url var="firstUrl" value="${baseUrl}">
+                                    <c:url var="firstUrl" value="/customers">
                                         <c:param name="page" value="1"/>
                                         <c:param name="sizeValue" value="${sizeValue}"/>
                                         <c:param name="keyword" value="${keyword}"/>
@@ -289,7 +289,7 @@
                                 <c:choose>
                                     <c:when test="${totalPages <= 5}">
                                         <c:forEach begin="1" end="${totalPages}" var="i">
-                                            <c:url var="pageUrl" value="${baseUrl}">
+                                            <c:url var="pageUrl" value="/customers">
                                                 <c:param name="page" value="${i}"/>
                                                 <c:param name="sizeValue" value="${sizeValue}"/>
                                                 <c:param name="keyword" value="${keyword}"/>
@@ -299,7 +299,7 @@
                                         </c:forEach>
                                     </c:when>
                                     <c:otherwise>
-                                        <c:url var="firstUrl" value="${baseUrl}">
+                                        <c:url var="firstUrl" value="/customers">
                                             <c:param name="page" value="1"/>
                                             <c:param name="sizeValue" value="${sizeValue}"/>
                                             <c:param name="keyword" value="${keyword}"/>
@@ -311,7 +311,7 @@
                                         </c:if>
                                         <c:forEach begin="${currentPage - 1 < 2 ? 2 : currentPage - 1}"
                                                    end="${currentPage + 1 > totalPages - 1 ? totalPages - 1 : currentPage + 1}" var="i">
-                                            <c:url var="pageUrl" value="${baseUrl}">
+                                            <c:url var="pageUrl" value="/customers">
                                                 <c:param name="page" value="${i}"/>
                                                 <c:param name="sizeValue" value="${sizeValue}"/>
                                                 <c:param name="keyword" value="${keyword}"/>
@@ -322,7 +322,7 @@
                                         <c:if test="${currentPage < totalPages - 2}">
                                             <span class="dots">...</span>
                                         </c:if>
-                                        <c:url var="lastUrl" value="${baseUrl}">
+                                        <c:url var="lastUrl" value="/customers">
                                             <c:param name="page" value="${totalPages}"/>
                                             <c:param name="sizeValue" value="${sizeValue}"/>
                                             <c:param name="keyword" value="${keyword}"/>
@@ -333,7 +333,7 @@
                                 </c:choose>
 
                                 <c:if test="${currentPage < totalPages}">
-                                    <c:url var="lastUrl" value="${baseUrl}">
+                                    <c:url var="lastUrl" value="/customers">
                                         <c:param name="page" value="${totalPages}"/>
                                         <c:param name="sizeValue" value="${sizeValue}"/>
                                         <c:param name="keyword" value="${keyword}"/>
@@ -590,7 +590,7 @@
                         </div>
                     </div>
 
-                    <c:if test="${isAdmin}">
+                    <c:if test="${canRedeem}">
                         <%-- Sync Loyalty Section --%>
                         <div class="detail-section">
                             <h4>Sync Loyalty Points</h4>

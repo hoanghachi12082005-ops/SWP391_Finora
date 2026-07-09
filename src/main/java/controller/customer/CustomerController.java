@@ -82,10 +82,16 @@ public class CustomerController extends HttpServlet {
 
         // Permissions for UI
         Employee user = getLoggedInUser(request);
-        boolean isAdmin = user != null && "Admin".equalsIgnoreCase(user.getRoleName());
-        request.setAttribute("canCreate", true);
-        request.setAttribute("canEdit", true);
-        request.setAttribute("isAdmin", isAdmin);
+        String role = user != null ? user.getRoleName() : "";
+        boolean isOwner = "Owner".equalsIgnoreCase(role);
+        boolean isStoreManager = "StoreManager".equalsIgnoreCase(role);
+
+        request.setAttribute("canCreate", isStoreManager);
+        request.setAttribute("canEdit", isStoreManager);
+        request.setAttribute("canDelete", isOwner || isStoreManager);
+        request.setAttribute("canRedeem", isOwner || isStoreManager);
+        // ponytail: isAdmin kept for modal readonly compat; only StoreManager reaches modal
+        request.setAttribute("isAdmin", isStoreManager);
 
         request.getRequestDispatcher("/views/customers/customer-list.jsp")
                 .forward(request, response);
@@ -371,7 +377,7 @@ public class CustomerController extends HttpServlet {
         customer.setDateOfBirth(parseDate(dateOfBirthStr));
 
         Employee user = getLoggedInUser(request);
-        boolean isAdmin = user != null && "Admin".equalsIgnoreCase(user.getRoleName());
+        boolean isAdmin = user != null && ("Admin".equalsIgnoreCase(user.getRoleName()) || "Owner".equalsIgnoreCase(user.getRoleName()) || "StoreManager".equalsIgnoreCase(user.getRoleName()));
 
         boolean success;
         if (isUpdate) {
@@ -492,6 +498,7 @@ public class CustomerController extends HttpServlet {
         }
 
         String action = getParam(request, "action", "list");
+        boolean isPost = "POST".equalsIgnoreCase(request.getMethod());
 
         // Sales staff is authorized ONLY for the API search/create/edit endpoints used in POS
         boolean isApiCall = "search-api".equals(action) || "create-api".equals(action) || "update-api".equals(action);
@@ -506,14 +513,33 @@ public class CustomerController extends HttpServlet {
             }
         }
 
-        // Only Owner, Store Manager can access customer management UI
-        if (!"Owner".equalsIgnoreCase(roleName)
-                && !"StoreManager".equalsIgnoreCase(roleName)) {
+        // Admin: redeem/sync POST only, no customer UI access
+        if ("Admin".equalsIgnoreCase(roleName)) {
+            if (isPost && ("sync-loyalty".equals(action) || "redeem-points".equals(action))) {
+                return true;
+            }
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
             return false;
         }
 
-        return true;
+        // Owner: view, search, filter, soft-delete, detail, redeem/sync. No create/edit.
+        if ("Owner".equalsIgnoreCase(roleName)) {
+            boolean isWriteAction = "create".equals(action) || "update".equals(action)
+                    || "create-api".equals(action) || "update-api".equals(action);
+            if (isWriteAction) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Owner cannot create or edit customers.");
+                return false;
+            }
+            return true;
+        }
+
+        // StoreManager: full access
+        if ("StoreManager".equalsIgnoreCase(roleName)) {
+            return true;
+        }
+
+        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
+        return false;
     }
 
     private Employee getLoggedInUser(HttpServletRequest request) {

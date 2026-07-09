@@ -55,7 +55,7 @@ public class BranchController extends HttpServlet {
                 int editId = parseId(req.getParameter("id"));
                 Branch toEdit = dao.findById(editId);
                 if (toEdit == null) {
-                    resp.sendRedirect("branch?error=notfound");
+                    resp.sendRedirect(req.getContextPath() + "/branch?error=notfound");
                     return;
                 }
                 req.setAttribute("branch", toEdit);
@@ -77,7 +77,7 @@ public class BranchController extends HttpServlet {
             case "delete":
                 int deleteId = parseId(req.getParameter("id"));
                 dao.delete(deleteId);
-                resp.sendRedirect("branch?success=delete");
+                resp.sendRedirect(req.getContextPath() + "/branch?success=delete");
                 break;
 
             default:
