@@ -8,6 +8,9 @@
         
         <form action="" method="GET" class="d-flex gap-2">
             <input type="hidden" name="tab" value="history">
+            <c:if test="${not empty selectedWarehouseId}">
+                <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
+            </c:if>
             <c:if test="${not empty warehouses && sessionScope.currentUser.roleName == 'Admin'}">
                 <select name="warehouseId" class="form-select" onchange="this.form.submit()">
                     <option value="">Tất cả kho</option>
@@ -17,15 +20,23 @@
                 </select>
             </c:if>
             <select name="typeFilter" class="form-select" onchange="this.form.submit()">
-                <option value="">Tất cả loại</option>
-                <option value="IN" ${typeFilter == 'IN' ? 'selected' : ''}>Nhập hàng</option>
-                <option value="OUT" ${typeFilter == 'OUT' ? 'selected' : ''}>Chuyển kho</option>
+                <option value="">Tất cả loại giao dịch</option>
+                <c:choose>
+                    <c:when test="${not empty selectedWarehouseId}">
+                        <option value="IN" ${typeFilter == 'IN' ? 'selected' : ''}>Giao dịch Nhập (Nhập mua/Nhập chuyển)</option>
+                        <option value="OUT" ${typeFilter == 'OUT' ? 'selected' : ''}>Giao dịch Xuất (Xuất chuyển)</option>
+                    </c:when>
+                    <c:otherwise>
+                        <option value="IN" ${typeFilter == 'IN' ? 'selected' : ''}>Nhập hàng từ NCC</option>
+                        <option value="OUT" ${typeFilter == 'OUT' ? 'selected' : ''}>Điều chuyển kho</option>
+                    </c:otherwise>
+                </c:choose>
             </select>
             <select name="dateFilter" class="form-select" onchange="this.form.submit()">
                 <option value="">Toàn thời gian</option>
                 <option value="today" ${dateFilter == 'today' ? 'selected' : ''}>Hôm nay</option>
             </select>
-            <button type="submit" class="btn btn-danger">Lọc</button>
+            <button type="submit" class="btn btn-danger d-none">Lọc</button>
         </form>
     </div>
 
@@ -63,15 +74,35 @@
                                         <c:choose>
                                             <c:when test="${tx.ticketType == 'IMPORT'}">
                                                 <span class="badge" style="background-color: #059669; color: #fff; font-size: 11px; padding: 4px 10px;">
-                                                    <span class="material-icons" style="font-size: 13px; vertical-align: text-bottom;">inventory</span>
+                                                    <span class="material-icons" style="font-size: 13px; vertical-align: text-bottom;">call_received</span>
                                                     Nhập hàng
                                                 </span>
                                             </c:when>
                                             <c:otherwise>
-                                                <span class="badge" style="background-color: #2563eb; color: #fff; font-size: 11px; padding: 4px 10px;">
-                                                    <span class="material-icons" style="font-size: 13px; vertical-align: text-bottom;">swap_horiz</span>
-                                                    Chuyển kho
-                                                </span>
+                                                <c:choose>
+                                                    <c:when test="${not empty selectedWarehouseId}">
+                                                        <c:choose>
+                                                            <c:when test="${tx.toWarehouseId == selectedWarehouseId}">
+                                                                <span class="badge bg-success" style="color: #fff; font-size: 11px; padding: 4px 10px;">
+                                                                    <span class="material-icons" style="font-size: 13px; vertical-align: text-bottom;">call_received</span>
+                                                                    Nhập chuyển
+                                                                </span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="badge bg-danger" style="color: #fff; font-size: 11px; padding: 4px 10px;">
+                                                                    <span class="material-icons" style="font-size: 13px; vertical-align: text-bottom;">call_made</span>
+                                                                    Xuất chuyển
+                                                                </span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="badge" style="background-color: #2563eb; color: #fff; font-size: 11px; padding: 4px 10px;">
+                                                            <span class="material-icons" style="font-size: 13px; vertical-align: text-bottom;">swap_horiz</span>
+                                                            Điều chuyển
+                                                        </span>
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </c:otherwise>
                                         </c:choose>
                                     </td>

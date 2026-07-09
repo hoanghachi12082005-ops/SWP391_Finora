@@ -20,12 +20,35 @@
             </div>
         </div>
         <div class="col-6">
-            <div class="text-muted small mb-1">Kho Đề Xuất</div>
-            <div class="fw-bold">${ticket.fromWarehouseName}</div>
+            <div class="text-muted small mb-1">
+                <c:choose>
+                    <c:when test="${ticket.ticketType == 'IMPORT'}">Nguồn / Nhà Cung Cấp</c:when>
+                    <c:otherwise>Kho Chuyển (Nguồn)</c:otherwise>
+                </c:choose>
+            </div>
+            <div class="fw-bold text-primary">
+                <c:choose>
+                    <c:when test="${ticket.ticketType == 'IMPORT'}">
+                        <span class="material-icons" style="font-size: 16px; vertical-align: text-bottom; margin-right: 4px;">local_shipping</span>
+                    </c:when>
+                    <c:otherwise>
+                        <span class="material-icons" style="font-size: 16px; vertical-align: text-bottom; margin-right: 4px;">storefront</span>
+                    </c:otherwise>
+                </c:choose>
+                ${ticket.fromWarehouseName}
+            </div>
         </div>
         <div class="col-6 text-end">
-            <div class="text-muted small mb-1">Kho Xử Lý</div>
-            <div class="fw-bold">${ticket.toWarehouseName}</div>
+            <div class="text-muted small mb-1">
+                <c:choose>
+                    <c:when test="${ticket.ticketType == 'IMPORT'}">Kho Nhập (Đích)</c:when>
+                    <c:otherwise>Kho Nhận (Đích)</c:otherwise>
+                </c:choose>
+            </div>
+            <div class="fw-bold text-success">
+                <span class="material-icons" style="font-size: 16px; vertical-align: text-bottom; margin-right: 4px;">storefront</span>
+                ${ticket.toWarehouseName}
+            </div>
         </div>
     </div>
     
@@ -65,25 +88,32 @@
                     <tr>
                         <td class="text-start fw-medium">${d.productName}</td>
                         <td>
-                            <c:set var="trueSourceId" value="${ticket.fromWarehouseId}" />
-                            <c:if test="${ticket.ticketType == 'TRANSFER_REQUEST' && d.actionType == 'RECEIVE'}">
-                                <c:set var="trueSourceId" value="${ticket.toWarehouseId}" />
-                            </c:if>
-                            
                             <c:choose>
-                                <c:when test="${not empty selectedWarehouseId and selectedWarehouseId == trueSourceId}">
-                                    <span class="badge bg-danger">XUẤT</span>
-                                </c:when>
-                                <c:when test="${not empty selectedWarehouseId and selectedWarehouseId != trueSourceId}">
-                                    <span class="badge bg-success">NHẬP</span>
+                                <c:when test="${ticket.ticketType == 'IMPORT'}">
+                                    <span class="badge bg-success">NHẬP HÀNG</span>
                                 </c:when>
                                 <c:otherwise>
+                                    <c:set var="trueSourceId" value="${ticket.fromWarehouseId}" />
+                                    <c:if test="${ticket.ticketType == 'TRANSFER_REQUEST' && d.actionType == 'RECEIVE'}">
+                                        <c:set var="trueSourceId" value="${ticket.toWarehouseId}" />
+                                    </c:if>
+                                    
                                     <c:choose>
-                                        <c:when test="${trueSourceId == ticket.fromWarehouseId}">
-                                            <span class="badge bg-danger">XUẤT</span>
+                                        <c:when test="${not empty selectedWarehouseId and selectedWarehouseId == trueSourceId}">
+                                            <span class="badge bg-danger">XUẤT KHO</span>
+                                        </c:when>
+                                        <c:when test="${not empty selectedWarehouseId and selectedWarehouseId != trueSourceId}">
+                                            <span class="badge bg-success">NHẬP KHO</span>
                                         </c:when>
                                         <c:otherwise>
-                                            <span class="badge bg-success">NHẬP</span>
+                                            <c:choose>
+                                                <c:when test="${trueSourceId == ticket.fromWarehouseId}">
+                                                    <span class="badge bg-danger">XUẤT KHO</span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="badge bg-success">NHẬP KHO</span>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </c:otherwise>
                                     </c:choose>
                                 </c:otherwise>

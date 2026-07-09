@@ -147,7 +147,11 @@ public class InventoryController extends BaseController {
                 request.setAttribute("ticketDetails", details);
                 
                 if (ticket != null && ("COMPLETED".equals(ticket.getStatus()) || "REJECTED".equals(ticket.getStatus()))) {
-                    List<model.StockTransaction> txs = transactionDAO.findByReference("TRANSFER", ticketId);
+                    String refType = "TRANSFER";
+                    if ("IMPORT".equals(ticket.getTicketType())) {
+                        refType = "IMPORT_TICKET";
+                    }
+                    List<model.StockTransaction> txs = transactionDAO.findByReference(refType, ticketId);
                     request.setAttribute("transactions", txs);
                 }
                 
@@ -384,7 +388,7 @@ public class InventoryController extends BaseController {
         String dateFilter = request.getParameter("dateFilter");
         
         // Fetch both IMPORT and TRANSFER_REQUEST tickets for history
-        List<InventoryTicket> historyTickets = ticketDAO.findHistoryTickets(warehouseId != null ? warehouseId : 0, typeFilter);
+        List<InventoryTicket> historyTickets = ticketDAO.findHistoryTickets(warehouseId != null ? warehouseId : 0, typeFilter, dateFilter);
         for (InventoryTicket t : historyTickets) {
             if ("TRANSFER_REQUEST".equals(t.getTicketType())) {
                 t.setTransferProgress(ticketDAO.getTransferProgress(t.getTicketId()));
@@ -580,7 +584,7 @@ public class InventoryController extends BaseController {
                                 tx.setTransactionType("IMPORT");
                                 tx.setQuantity(od.getQuantity());
                                 tx.setReferenceType("IMPORT_TICKET");
-                                tx.setReferenceId(0);
+                                tx.setReferenceId(importTicket.getTicketId());
                                 tx.setCreatedBy(currentUser.getEmployeeId());
                                 transactionDAO.insert(tx);
                             }
