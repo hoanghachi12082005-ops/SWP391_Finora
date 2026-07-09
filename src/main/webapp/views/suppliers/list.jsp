@@ -458,6 +458,7 @@
                     if (!currentLinkedProductIds.includes(p.productId)) {
                         const opt = document.createElement('option');
                         opt.value = p.productId;
+                        opt.setAttribute('data-selling-price', p.sellingPrice || 0);
                         opt.innerText = `SP\${p.productId} - \${p.productName}`;
                         select.appendChild(opt);
                     }
@@ -503,14 +504,28 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
+        const select = document.getElementById('addProductSelect');
+        const priceInput = document.getElementById('addProductPrice');
+        if (select && priceInput) {
+            select.onchange = () => {
+                const opt = select.options[select.selectedIndex];
+                if (opt && opt.value !== "") {
+                    const sellingPrice = parseFloat(opt.getAttribute('data-selling-price')) || 0;
+                    priceInput.value = Math.round(sellingPrice * 0.7);
+                } else {
+                    priceInput.value = '0';
+                }
+            };
+        }
+
         const btnAdd = document.getElementById('btnAddSupplierProduct');
         if (btnAdd) {
             btnAdd.onclick = () => {
-                const select = document.getElementById('addProductSelect');
-                const priceInput = document.getElementById('addProductPrice');
+                const selectEl = document.getElementById('addProductSelect');
+                const priceInputEl = document.getElementById('addProductPrice');
                 
-                const productId = parseInt(select.value);
-                const price = parseFloat(priceInput.value);
+                const productId = parseInt(selectEl.value);
+                const price = parseFloat(priceInputEl.value);
                 
                 if (!productId) {
                     alert('Vui lòng chọn sản phẩm!');
@@ -526,7 +541,7 @@
                     .then(data => {
                         if (data.success) {
                             showSupplierProducts(currentSupplierId, currentSupplierName);
-                            priceInput.value = '0';
+                            priceInputEl.value = '0';
                         } else {
                             alert('Lỗi thêm sản phẩm!');
                         }

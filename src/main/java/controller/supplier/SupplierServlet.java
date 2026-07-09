@@ -61,7 +61,8 @@ public class SupplierServlet extends HttpServlet {
                         model.Product p = products.get(i);
                         json.append("{");
                         json.append("\"productId\":").append(p.getProductId()).append(",");
-                        json.append("\"productName\":\"").append(p.getProductName().replace("\"", "\\\"")).append("\"");
+                        json.append("\"productName\":\"").append(p.getProductName().replace("\"", "\\\"")).append("\",");
+                        json.append("\"sellingPrice\":").append(p.getSellingPrice() != null ? p.getSellingPrice() : 0);
                         json.append("}");
                         if (i < products.size() - 1) json.append(",");
                     }
