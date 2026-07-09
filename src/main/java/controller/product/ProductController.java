@@ -46,6 +46,9 @@ public class ProductController extends BaseController {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String keyword  = request.getParameter("keyword");
+        if (keyword != null) {
+            keyword = keyword.trim().replaceAll("\\s+", " ");
+        }
         String status   = request.getParameter("status");
         String categoryParam = request.getParameter("categoryID");
         String unitParam = request.getParameter("unitID");
@@ -190,6 +193,9 @@ public class ProductController extends BaseController {
 
     private String buildRedirectUrl(HttpServletRequest request) {
         String keyword = request.getParameter("keyword");
+        if (keyword != null) {
+            keyword = keyword.trim().replaceAll("\\s+", " ");
+        }
         String status  = request.getParameter("filterStatus");
         String categoryID = request.getParameter("filterCategoryID");
         String unitID = request.getParameter("filterUnitID");

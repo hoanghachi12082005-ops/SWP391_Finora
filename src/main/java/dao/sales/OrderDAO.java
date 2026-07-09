@@ -249,7 +249,7 @@ public class OrderDAO {
             (order_code, order_type, customer_id, branch_id, supplier_id, emp_id, 
              voucher_id, warehouse_id, subtotal, discount_amount, total_amount, 
              payment_method, status, created_at) 
-            VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
             """;
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, order.getOrderCode());
@@ -260,18 +260,23 @@ public class OrderDAO {
                 ps.setNull(3, java.sql.Types.INTEGER);
             }
             ps.setInt(4, order.getBranchId());
-            ps.setInt(5, order.getEmpId());
-            if (order.getVoucherId() != null && order.getVoucherId() > 0) {
-                ps.setInt(6, order.getVoucherId());
+            if (order.getSupplierId() != null && order.getSupplierId() > 0) {
+                ps.setInt(5, order.getSupplierId());
             } else {
-                ps.setNull(6, java.sql.Types.INTEGER);
+                ps.setNull(5, java.sql.Types.INTEGER);
             }
-            ps.setInt(7, order.getWarehouseId());
-            ps.setDouble(8, order.getSubtotal());
-            ps.setDouble(9, order.getDiscountAmount());
-            ps.setDouble(10, order.getTotalAmount());
-            ps.setString(11, order.getPaymentMethod());
-            ps.setString(12, order.getStatus() != null ? order.getStatus().name() : "PENDING");
+            ps.setInt(6, order.getEmpId());
+            if (order.getVoucherId() != null && order.getVoucherId() > 0) {
+                ps.setInt(7, order.getVoucherId());
+            } else {
+                ps.setNull(7, java.sql.Types.INTEGER);
+            }
+            ps.setInt(8, order.getWarehouseId());
+            ps.setDouble(9, order.getSubtotal());
+            ps.setDouble(10, order.getDiscountAmount());
+            ps.setDouble(11, order.getTotalAmount());
+            ps.setString(12, order.getPaymentMethod());
+            ps.setString(13, order.getStatus() != null ? order.getStatus().name() : "PENDING");
 
             int affected = ps.executeUpdate();
             if (affected == 0) {

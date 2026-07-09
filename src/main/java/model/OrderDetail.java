@@ -118,6 +118,8 @@ public class OrderDetail {
         this.productCode = productCode;
     }
 
+
+
     @Override
     public String toString() {
         return "OrderDetail{orderDetailId=" + orderDetailId + ", orderId=" + orderId + ", productId=" + productId + ", quantity=" + quantity + ", totalPrice=" + totalPrice + ", importPrice=" + importPrice + ", productName='" + productName + "'}";

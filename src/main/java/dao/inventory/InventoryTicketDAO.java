@@ -91,6 +91,77 @@ public class InventoryTicketDAO {
         return tickets;
     }
 
+    public List<InventoryTicket> findHistoryTickets(Integer warehouseId, String typeFilter, String dateFilter) throws SQLException {
+        List<InventoryTicket> tickets = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+            "SELECT t.*, fw.warehouse_name as from_warehouse_name, " +
+            "tw.warehouse_name as to_warehouse_name, e.fullName as created_by_name, " +
+            "s.supplier_name as supplier_name " +
+            "FROM inventory_ticket t " +
+            "LEFT JOIN warehouse fw ON t.from_warehouse_id = fw.warehouse_id " +
+            "LEFT JOIN warehouse tw ON t.to_warehouse_id = tw.warehouse_id " +
+            "LEFT JOIN Employee e ON t.created_by = e.emp_id " +
+            "LEFT JOIN supplier s ON t.ticket_type = 'IMPORT' AND t.from_warehouse_id = s.supplier_id " +
+            "WHERE t.status IN ('COMPLETED', 'REJECTED', 'COMPLETED_WITH_ERROR', 'CANCELLED')"
+        );
+
+        List<Integer> queryParams = new ArrayList<>();
+
+        if (warehouseId != null && warehouseId > 0) {
+            if ("IN".equals(typeFilter)) {
+                // Nhập vào kho này: gồm phiếu IMPORT có to_warehouse_id = kho này, hoặc TRANSFER_REQUEST có to_warehouse_id = kho này
+                sql.append(" AND t.to_warehouse_id = ?");
+                queryParams.add(warehouseId);
+            } else if ("OUT".equals(typeFilter)) {
+                // Xuất khỏi kho này: gồm phiếu TRANSFER_REQUEST có from_warehouse_id = kho này
+                sql.append(" AND t.from_warehouse_id = ?");
+                queryParams.add(warehouseId);
+            } else {
+                // Tất cả giao dịch liên quan đến kho này
+                sql.append(" AND (t.from_warehouse_id = ? OR t.to_warehouse_id = ?)");
+                queryParams.add(warehouseId);
+                queryParams.add(warehouseId);
+            }
+        } else {
+            // Xem từ sidebar: Toàn bộ hệ thống các kho hàng
+            if ("IN".equals(typeFilter)) {
+                sql.append(" AND t.ticket_type = 'IMPORT'");
+            } else if ("OUT".equals(typeFilter)) {
+                sql.append(" AND t.ticket_type = 'TRANSFER_REQUEST'");
+            } else {
+                sql.append(" AND t.ticket_type IN ('IMPORT', 'TRANSFER_REQUEST')");
+            }
+        }
+
+        if ("today".equals(dateFilter)) {
+            sql.append(" AND CAST(t.created_at AS DATE) = CAST(GETDATE() AS DATE)");
+        }
+
+        sql.append(" ORDER BY t.created_at DESC");
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < queryParams.size(); i++) {
+                stmt.setInt(i + 1, queryParams.get(i));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    InventoryTicket t = extractTicket(rs);
+                    // Với phiếu IMPORT, from_warehouse_id thực ra là supplier_id
+                    if ("IMPORT".equals(t.getTicketType())) {
+                        try {
+                            String supplierName = rs.getString("supplier_name");
+                            if (supplierName != null) {
+                                t.setFromWarehouseName("NCC: " + supplierName);
+                            }
+                        } catch (SQLException ignored) {}
+                    }
+                    tickets.add(t);
+                }
+            }
+        }
+        return tickets;
+    }
     public int getPendingCount(String ticketType, Integer warehouseId) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM inventory_ticket WHERE status = 'PENDING'");
         if (ticketType != null) {
@@ -162,6 +233,7 @@ public class InventoryTicketDAO {
                 try (ResultSet generatedKeys = stmtTicket.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         int ticketId = generatedKeys.getInt(1);
+                        ticket.setTicketId(ticketId);
                         
                         try (PreparedStatement stmtDetail = conn.prepareStatement(insertDetailSql)) {
                             for (InventoryTicketDetail detail : details) {
@@ -185,14 +257,15 @@ public class InventoryTicketDAO {
 
     public InventoryTicket findById(int ticketId) throws SQLException {
         String sql = "SELECT t.*, " +
-                     "fw.warehouse_name as from_warehouse_name, " +
+                     "CASE WHEN t.ticket_type = 'IMPORT' THEN s.supplier_name ELSE fw.warehouse_name END as from_warehouse_name, " +
                      "tw.warehouse_name as to_warehouse_name, " +
                      "e.fullName as created_by_name " +
                      "FROM inventory_ticket t " +
                      "LEFT JOIN warehouse fw ON t.from_warehouse_id = fw.warehouse_id " +
                      "LEFT JOIN warehouse tw ON t.to_warehouse_id = tw.warehouse_id " +
-                      "LEFT JOIN Employee e ON t.created_by = e.emp_id " +
-                      "WHERE t.ticket_id = ?";
+                     "LEFT JOIN supplier s ON t.ticket_type = 'IMPORT' AND t.from_warehouse_id = s.supplier_id " +
+                     "LEFT JOIN Employee e ON t.created_by = e.emp_id " +
+                     "WHERE t.ticket_id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, ticketId);

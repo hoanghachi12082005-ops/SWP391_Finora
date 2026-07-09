@@ -276,6 +276,7 @@ public class ProductDAO {
     }
 
     public List<Product> searchByKeyword(String keyword, int warehouseId) {
+        String cleanedKeyword = keyword != null ? keyword.trim().replaceAll("\\s+", " ") : "";
         List<Product> list = new ArrayList<>();
         String sql = "SELECT p.product_id, p.product_codebar, p.product_name, p.category_id, "
                    + "p.unit_id, p.selling_price, p.created_at, p.update_at, "
@@ -287,7 +288,7 @@ public class ProductDAO {
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, warehouseId);
-            String pattern = "%" + keyword + "%";
+            String pattern = "%" + cleanedKeyword + "%";
             ps.setString(2, pattern);
             ps.setString(3, pattern);
             try (ResultSet rs = ps.executeQuery()) {

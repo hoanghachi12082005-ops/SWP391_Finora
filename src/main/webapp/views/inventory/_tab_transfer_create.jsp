@@ -4,7 +4,7 @@
 <style>
     .search-box { position: relative; max-width: 800px; margin: 0 auto 30px; }
     .search-input { width: 100%; padding: 16px 20px 16px 50px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: all 0.2s; }
-    .search-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.1); }
+    .search-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 4px var(--primary-light-hover); }
     .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 24px; }
     .search-results { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); margin-top: 8px; z-index: 50; display: none; max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; }
     .search-item { padding: 12px 20px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
@@ -21,6 +21,7 @@
     <div class="card-header d-flex justify-content-between align-items-center mb-4">
         <div>
             <h5 class="mb-0">Tạo Lệnh Điều Chuyển</h5>
+            <small class="text-muted">Từ: <strong>Kho hiện tại</strong></small>
         </div>
         <a href="${pageContext.request.contextPath}/inventory?tab=transfer&warehouseId=${selectedWarehouseId}" class="btn btn-outline-secondary btn-sm">
             <span class="material-icons" style="font-size:16px; vertical-align:text-bottom;">arrow_back</span>
@@ -71,7 +72,7 @@
             </div>
 
             <div class="d-flex justify-content-end">
-                <button type="submit" class="btn btn-danger px-4 py-2" id="submitBtn" disabled>
+                <button type="submit" class="page-action-btn px-4 py-2" id="submitBtn" disabled>
                     <span class="material-icons" style="font-size: 18px; vertical-align: text-bottom;">send</span>
                     Khởi Tạo Lệnh Điều Chuyển
                 </button>

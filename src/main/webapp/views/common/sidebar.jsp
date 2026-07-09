@@ -42,15 +42,60 @@
                 <span>Khách hàng</span>
             </a>
         </c:if>
+        <!-- Cashbook (Sổ Quỹ) (Admin, Owner, StoreManager) -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+            <a href="${pageContext.request.contextPath}/cashbook" 
+               class="sidebar-menu-item ${originalUri.contains('/cashbook') ? 'active' : ''}">
+                <span class="material-icons">account_balance_wallet</span>
+                <span>Sổ Quỹ</span>
+            </a>
+        </c:if>
 
-                    <!-- Inventory Dashboard -->
-                    <c:if
-                        test="${roleName == 'WarehouseStaff' || roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
-                        <a href="${pageContext.request.contextPath}/inventory"
-                             class="sidebar-menu-item ${originalUri.contains('/inventory') ? 'active' : ''}">
+                    <!-- Inventory Management (Owner, WarehouseStaff, StoreManager, Admin) -->
+                    <c:if test="${roleName == 'Owner' || roleName == 'WarehouseStaff' || roleName == 'StoreManager' || roleName == 'Admin'}">
+                        <c:set var="isInventoryActive" value="${originalUri.contains('/inventory')}" />
+                        <a href="#inventoryCollapse" data-bs-toggle="collapse" role="button"
+                            aria-expanded="${isInventoryActive ? 'true' : 'false'}" aria-controls="inventoryCollapse"
+                            class="sidebar-menu-item ${isInventoryActive ? 'active' : ''} d-flex align-items-center">
                             <span class="material-icons">inventory_2</span>
                             <span>Kho hàng</span>
+                            <span class="material-icons ms-auto transition-icon"
+                                style="font-size: 1.2rem;">expand_more</span>
                         </a>
+                        <div class="collapse ${isInventoryActive ? 'show' : ''}" id="inventoryCollapse">
+                            <div class="sidebar-submenu">
+                                <c:choose>
+                                    <c:when test="${roleName == 'Owner' || roleName == 'Admin'}">
+                                        <a href="${pageContext.request.contextPath}/inventory?tab=stock"
+                                            class="sidebar-submenu-item ${isInventoryActive && (empty activeTab || activeTab == 'stock') ? 'active' : ''}">
+                                            Danh sách Kho
+                                        </a>
+                                        <a href="${pageContext.request.contextPath}/inventory?tab=history"
+                                            class="sidebar-submenu-item ${isInventoryActive && activeTab == 'history' ? 'active' : ''}">
+                                            Lịch sử xuất nhập kho
+                                        </a>
+                                    </c:when>
+                                    <c:when test="${roleName == 'WarehouseStaff' || roleName == 'StoreManager'}">
+                                        <a href="${pageContext.request.contextPath}/inventory?tab=stock&warehouseId=${sessionScope.selectedWarehouseId}"
+                                            class="sidebar-submenu-item ${isInventoryActive && (empty activeTab || activeTab == 'stock') ? 'active' : ''}">
+                                            Tồn Kho
+                                        </a>
+                                        <a href="${pageContext.request.contextPath}/inventory?tab=transfer&warehouseId=${sessionScope.selectedWarehouseId}"
+                                            class="sidebar-submenu-item ${isInventoryActive && (activeTab == 'transfer' || activeTab == 'createTransfer') ? 'active' : ''}">
+                                            Điều Chuyển
+                                        </a>
+                                        <a href="${pageContext.request.contextPath}/inventory?tab=check&warehouseId=${sessionScope.selectedWarehouseId}"
+                                            class="sidebar-submenu-item ${isInventoryActive && activeTab == 'check' ? 'active' : ''}">
+                                            Kiểm kho
+                                        </a>
+                                        <a href="${pageContext.request.contextPath}/inventory?tab=history&warehouseId=${sessionScope.selectedWarehouseId}"
+                                            class="sidebar-submenu-item ${isInventoryActive && activeTab == 'history' ? 'active' : ''}">
+                                            Lịch sử xuất nhập kho
+                                        </a>
+                                    </c:when>
+                                </c:choose>
+                            </div>
+                        </div>
                     </c:if>
 
                     <!-- Product Management -->

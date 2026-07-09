@@ -229,11 +229,11 @@ public class AuthServlet extends HttpServlet {
             switch (role) {
                 case "admin":
                 case "owner":
-                case "storemanager":
                     redirectUrl = "/dashboard/owner";
                     break;
+                case "storemanager":
                 case "warehousestaff":
-                    redirectUrl = "/inventory/dashboard";
+                    redirectUrl = "/inventory";
                     break;
                 case "salesstaff":
                     redirectUrl = "/sales";
