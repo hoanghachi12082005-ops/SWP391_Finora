@@ -56,4 +56,12 @@ public class SupplierService {
     public List<dto.inventory.ImportProductDTO.SupplierInfo> getSupplierProductsHistory(int supplierId) {
         return dao.getSupplierProductsHistory(supplierId);
     }
+
+    public boolean deleteSupplierProduct(int supplierId, int productId) {
+        return dao.deleteSupplierProduct(supplierId, productId);
+    }
+
+    public boolean addOrUpdateSupplierProduct(int supplierId, int productId, double importPrice) {
+        return dao.addOrUpdateSupplierProduct(supplierId, productId, importPrice);
+    }
 }

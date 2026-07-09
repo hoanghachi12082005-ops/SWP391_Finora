@@ -52,6 +52,67 @@ public class SupplierServlet extends HttpServlet {
                 }
                 return;
             }
+            case "get-active-products-api": {
+                try {
+                    ProductDAO productDAO = new ProductDAO();
+                    List<model.Product> products = productDAO.findAll(0, 10000, "", "ACTIVE", null, null);
+                    StringBuilder json = new StringBuilder("[");
+                    for (int i = 0; i < products.size(); i++) {
+                        model.Product p = products.get(i);
+                        json.append("{");
+                        json.append("\"productId\":").append(p.getProductId()).append(",");
+                        json.append("\"productName\":\"").append(p.getProductName().replace("\"", "\\\"")).append("\"");
+                        json.append("}");
+                        if (i < products.size() - 1) json.append(",");
+                    }
+                    json.append("]");
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write(json.toString());
+                } catch (Exception e) {
+                    response.setContentType("application/json");
+                    response.getWriter().write("[]");
+                }
+                return;
+            }
+            case "add-product-api": {
+                response.setContentType("application/json");
+                try {
+                    int supplierId = Integer.parseInt(request.getParameter("supplierId"));
+                    int productId = Integer.parseInt(request.getParameter("productId"));
+                    double price = Double.parseDouble(request.getParameter("price"));
+                    boolean success = service.addOrUpdateSupplierProduct(supplierId, productId, price);
+                    response.getWriter().write("{\"success\":" + success + "}");
+                } catch (Exception e) {
+                    response.getWriter().write("{\"success\":false}");
+                }
+                return;
+            }
+            case "delete-product-api": {
+                response.setContentType("application/json");
+                try {
+                    int supplierId = Integer.parseInt(request.getParameter("supplierId"));
+                    int productId = Integer.parseInt(request.getParameter("productId"));
+                    boolean success = service.deleteSupplierProduct(supplierId, productId);
+                    response.getWriter().write("{\"success\":" + success + "}");
+                } catch (Exception e) {
+                    response.getWriter().write("{\"success\":false}");
+                }
+                return;
+            }
+            case "update-price-api": {
+                response.setContentType("application/json");
+                try {
+                    int supplierId = Integer.parseInt(request.getParameter("supplierId"));
+                    int productId = Integer.parseInt(request.getParameter("productId"));
+                    double price = Double.parseDouble(request.getParameter("price"));
+                    boolean success = service.addOrUpdateSupplierProduct(supplierId, productId, price);
+                    response.getWriter().write("{\"success\":" + success + "}");
+                } catch (Exception e) {
+                    response.getWriter().write("{\"success\":false}");
+                }
+                return;
+            }
             case "create":
                 request.getRequestDispatcher("/views/suppliers/create.jsp").forward(request, response);
                 break;

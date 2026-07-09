@@ -570,7 +570,7 @@ function selectWarehouse(id) {
             </td>
             <td>
                 <div class="input-group input-group-sm">
-                    <input type="number" name="importPrice[]" class="form-control form-control-sm text-end fw-bold i-price-input" required value="\${finalPrice}" min="0" step="1000" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                    <input type="number" name="importPrice[]" class="form-control form-control-sm text-end fw-bold i-price-input" required value="\${finalPrice}" min="0" step="1000" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; background-color: #f1f5f9; cursor: not-allowed;" readonly>
                     <span class="input-group-text text-muted" style="font-size: 11px; border-top-right-radius: 8px; border-bottom-right-radius: 8px;">đ</span>
                 </div>
             </td>
