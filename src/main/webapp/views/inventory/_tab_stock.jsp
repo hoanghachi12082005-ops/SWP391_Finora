@@ -334,6 +334,13 @@ function selectWarehouse(id) {
     const currentWarehouseId = '${selectedWarehouseId}';
     let iSearchTimeout;
 
+    // Danh sách tất cả nhà cung cấp đang hoạt động trong hệ thống
+    const allActiveSuppliers = [
+        <c:forEach var="s" items="${suppliers}" varStatus="status">
+            { supplierId: ${s.supplierID}, supplierName: "${fn:escapeXml(s.name)}", importPrice: 0 }${!status.last ? ',' : ''}
+        </c:forEach>
+    ];
+
     function checkWarehouseAndOpenModal() {
         if (!currentWarehouseId || currentWarehouseId === '' || currentWarehouseId === 'null') {
             alert('Vui lòng chọn một kho hàng ở bộ lọc trước khi thực hiện nhập hàng!');
@@ -443,8 +450,12 @@ function selectWarehouse(id) {
                                 iSearchInput.focus();
                             };
                         } else {
-                            // Sản phẩm không có nhà cung cấp nào
-                            item.style.opacity = '0.6';
+                            // Sản phẩm chưa có nhà cung cấp nào liên kết trước đó
+                            let optionsHtml = '';
+                            allActiveSuppliers.forEach(sup => {
+                                optionsHtml += `<option value="\${sup.supplierId}" data-price="0">\${sup.supplierName}</option>`;
+                            });
+
                             item.innerHTML = `
                                 <div>
                                     <div class="fw-bold text-dark" style="font-size: 14.5px;">\${p.productName}</div>
@@ -452,15 +463,43 @@ function selectWarehouse(id) {
                                         <span class="badge bg-light text-secondary border">Mã: SP\${p.productId}</span>
                                         <span class="text-muted">|</span>
                                         <span>Tồn kho: <strong class="\${p.myStock > 0 ? 'text-success' : 'text-danger'}">\${p.myStock} SP</strong></span>
+                                        <span class="badge bg-warning text-dark ms-2">Chưa có NCC</span>
                                     </div>
                                 </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge bg-warning text-dark" style="font-size: 12px; padding: 6px 12px; border-radius: 6px;">
-                                        <span class="material-icons" style="font-size: 14px; vertical-align: text-bottom;">block</span>
-                                        Chưa có nhà cung cấp
-                                    </span>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="d-flex flex-column align-items-end">
+                                        <span class="text-muted small" style="font-size: 11px; font-weight: 500;">Giá nhập</span>
+                                        <span class="text-success fw-bold" style="font-size: 15px;">\${formatCurrency(0)}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <select class="form-select form-select-sm i-supplier-select" style="width: 220px; font-size: 13px; border-radius: 8px; cursor: pointer;">
+                                            \${optionsHtml}
+                                        </select>
+                                        <button type="button" class="btn-add-import i-add-btn">
+                                            <span class="material-icons" style="font-size: 16px;">add</span>
+                                            <span>Thêm</span>
+                                        </button>
+                                    </div>
                                 </div>
                             `;
+
+                            const selectEl = item.querySelector('.i-supplier-select');
+                            const addBtn = item.querySelector('.i-add-btn');
+
+                            addBtn.onclick = () => {
+                                if (allActiveSuppliers.length === 0) {
+                                    alert('Vui lòng tạo ít nhất một nhà cung cấp hoạt động trong hệ thống trước!');
+                                    return;
+                                }
+                                const selectedId = parseInt(selectEl.value);
+                                const sup = allActiveSuppliers.find(s => s.supplierId === selectedId);
+
+                                addImportRow(p, 0, sup, allActiveSuppliers);
+                                iSearchActive = false;
+                                iSearchResults.style.display = 'none';
+                                iSearchInput.value = '';
+                                iSearchInput.focus();
+                            };
                         }
 
                         iSearchResults.appendChild(item);
@@ -526,12 +565,12 @@ function selectWarehouse(id) {
             </td>
             <td>
                 <select name="supplierId[]" class="form-select form-select-sm i-row-supplier-select" style="font-size: 13px; font-weight: 500; border-radius: 8px;">
-                    \${supplierOptions}
+                     \${supplierOptions}
                 </select>
             </td>
             <td>
                 <div class="input-group input-group-sm">
-                    <input type="number" name="importPrice[]" class="form-control form-control-sm text-end fw-bold i-price-input" required value="\${finalPrice}" min="0" step="1000" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; background-color: #f1f5f9; cursor: not-allowed;" readonly>
+                    <input type="number" name="importPrice[]" class="form-control form-control-sm text-end fw-bold i-price-input" required value="\${finalPrice}" min="0" step="1000" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
                     <span class="input-group-text text-muted" style="font-size: 11px; border-top-right-radius: 8px; border-bottom-right-radius: 8px;">đ</span>
                 </div>
             </td>
