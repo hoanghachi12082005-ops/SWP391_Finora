@@ -136,15 +136,34 @@ public class BranchDAO {
         return false;
     }
     
-    public boolean isInforDuplicate(String email,String phone, int excludeId) {
-        String sql = "SELECT 1 FROM branch WHERE (email = ? OR phone = ?) AND branch_id != ?";
+    public boolean isInforDuplicate(String email, String phone, int excludeId) {
+        boolean hasEmail = (email != null && !email.isBlank());
+        boolean hasPhone = (phone != null && !phone.isBlank());
+        
+        if (!hasEmail && !hasPhone) {
+            return false;
+        }
 
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setString(1, email);
-            ps.setString(2, phone);
-            
-            ps.setInt(3, excludeId);
+        StringBuilder sql = new StringBuilder("SELECT 1 FROM branch WHERE branch_id != ? AND (");
+        if (hasEmail && hasPhone) {
+            sql.append("email = ? OR phone = ?");
+        } else if (hasEmail) {
+            sql.append("email = ?");
+        } else {
+            sql.append("phone = ?");
+        }
+        sql.append(")");
+
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            ps.setInt(1, excludeId);
+            int paramIndex = 2;
+            if (hasEmail) {
+                ps.setString(paramIndex++, email);
+            }
+            if (hasPhone) {
+                ps.setString(paramIndex++, phone);
+            }
+
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }

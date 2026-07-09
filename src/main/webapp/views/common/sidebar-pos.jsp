@@ -41,6 +41,7 @@
         margin-bottom: 2px;
         transition: all 0.2s ease;
         text-decoration: none;
+        cursor: pointer;
     }
     .sidebar-submenu-item:hover {
         background-color: #f1f5f9;
@@ -51,7 +52,46 @@
         color: var(--primary-color, #93000b);
         font-weight: 600;
     }
+    .sidebar-menu-item.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    .sidebar-menu-item.disabled:hover {
+        background-color: transparent;
+    }
+    #comingSoonToast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: #1e293b;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 14px;
+        z-index: 9999;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        transition: transform 0.4s ease, opacity 0.4s ease;
+        opacity: 0;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    #comingSoonToast.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+    #comingSoonToast .material-icons {
+        font-size: 20px;
+    }
 </style>
+
+<div id="comingSoonToast">
+    <span class="material-icons">construction</span>
+    <span>Chức năng đang hoàn thiện</span>
+</div>
 
 <aside class="sidebar" id="posSidebar">
     <div class="sidebar-brand">
@@ -61,26 +101,15 @@
     <nav class="sidebar-menu">
         <div class="sidebar-menu-title">CHỨC NĂNG CHÍNH</div>
 
-        <!-- Giao dịch Dropdown -->
-        <c:set var="isGiaoDichActive" value="${originalUri.contains('/sales') || originalUri.contains('/orders') || originalUri.contains('/import')}" />
-        <div class="sidebar-menu-item sidebar-menu-item-dropdown ${isGiaoDichActive ? 'open' : ''}" onclick="toggleDropdown(this)">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span class="material-icons">storefront</span>
-                <span>Giao dịch</span>
-            </div>
-            <span class="material-icons sidebar-dropdown-arrow">expand_more</span>
-        </div>
-        <div class="sidebar-submenu ${isGiaoDichActive ? 'open' : ''}">
-            <a href="${pageContext.request.contextPath}/sales" class="sidebar-submenu-item ${originalUri.contains('/sales') ? 'active' : ''}">
-                <span>Bán hàng (POS)</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/orders" class="sidebar-submenu-item ${originalUri.contains('/orders') ? 'active' : ''}">
-                <span>Lịch sử đơn hàng</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/warehouse/import" class="sidebar-submenu-item ${originalUri.contains('/import') ? 'active' : ''}">
-                <span>Nhập hàng</span>
-            </a>
-        </div>
+        <!-- Bán hàng (POS) -->
+        <a href="${pageContext.request.contextPath}/sales" class="sidebar-menu-item ${originalUri.contains('/sales') ? 'active' : ''}">
+            <span class="material-icons">storefront</span><span>Bán hàng (POS)</span>
+        </a>
+
+        <!-- Lịch sử đơn hàng -->
+        <a href="${pageContext.request.contextPath}/orders" class="sidebar-menu-item ${originalUri.contains('/orders') ? 'active' : ''}">
+            <span class="material-icons">receipt_long</span><span>Lịch sử đơn hàng</span>
+        </a>
 
         <!-- Ca làm việc -->
         <a href="${pageContext.request.contextPath}/shift" class="sidebar-menu-item ${originalUri.contains('/shift') ? 'active' : ''}">
@@ -94,60 +123,26 @@
             </a>
         </c:if>
 
-        <!-- Kho hàng -->
-        <a href="${pageContext.request.contextPath}/warehouse" class="sidebar-menu-item ${originalUri.contains('/warehouse') ? 'active' : ''}">
-            <span class="material-icons">warehouse</span><span>Kho hàng</span>
+        <!-- Danh sách sản phẩm -->
+        <a href="${pageContext.request.contextPath}/products" class="sidebar-menu-item ${originalUri.contains('/products') ? 'active' : ''}">
+            <span class="material-icons">shopping_bag</span><span>Danh sách sản phẩm</span>
         </a>
 
-        <!-- Hàng hóa Dropdown -->
-        <c:set var="isHangHoaActive" value="${originalUri.contains('/products') || originalUri.contains('/category')}" />
-        <div class="sidebar-menu-item sidebar-menu-item-dropdown ${isHangHoaActive ? 'open' : ''}" onclick="toggleDropdown(this)">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span class="material-icons">shopping_bag</span>
-                <span>Hàng hóa</span>
-            </div>
-            <span class="material-icons sidebar-dropdown-arrow">expand_more</span>
-        </div>
-        <div class="sidebar-submenu ${isHangHoaActive ? 'open' : ''}">
-            <a href="${pageContext.request.contextPath}/products" class="sidebar-submenu-item ${originalUri.endsWith('/products') ? 'active' : ''}">
-                <span>Danh sách sản phẩm</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/products/categories" class="sidebar-submenu-item ${originalUri.contains('/products/categories') || originalUri.contains('/category') ? 'active' : ''}">
-                <span>Danh mục sản phẩm</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/products/units" class="sidebar-submenu-item ${originalUri.contains('/products/units') ? 'active' : ''}">
-                <span>Đơn vị tính</span>
-            </a>
-        </div>
-
-        <!-- Đối tác Dropdown -->
-        <c:set var="isDoiTacActive" value="${originalUri.contains('/customers') || originalUri.contains('/suppliers')}" />
-        <div class="sidebar-menu-item sidebar-menu-item-dropdown ${isDoiTacActive ? 'open' : ''}" onclick="toggleDropdown(this)">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span class="material-icons">handshake</span>
-                <span>Đối tác</span>
-            </div>
-            <span class="material-icons sidebar-dropdown-arrow">expand_more</span>
-        </div>
-        <div class="sidebar-submenu ${isDoiTacActive ? 'open' : ''}">
-            <a href="${pageContext.request.contextPath}/customers" class="sidebar-submenu-item ${originalUri.contains('/customers') ? 'active' : ''}">
-                <span>Khách hàng</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/suppliers" class="sidebar-submenu-item ${originalUri.contains('/suppliers') ? 'active' : ''}">
-                <span>Nhà cung cấp</span>
-            </a>
-        </div>
+        <!-- Khách hàng -->
+        <a href="${pageContext.request.contextPath}/customers" class="sidebar-menu-item ${originalUri.contains('/customers') ? 'active' : ''}">
+            <span class="material-icons">people</span><span>Khách hàng</span>
+        </a>
 
         <!-- Chi nhánh (Admin, Owner) -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
-            <a href="${pageContext.request.contextPath}/branches" class="sidebar-menu-item ${originalUri.contains('/branches') || originalUri.contains('/branch') ? 'active' : ''}">
+            <a href="#" onclick="showComingSoon(event)" class="sidebar-menu-item">
                 <span class="material-icons">store</span><span>Chi nhánh</span>
             </a>
         </c:if>
 
         <!-- Nhân viên (Admin, Owner, StoreManager) -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
-            <a href="${pageContext.request.contextPath}/employees" class="sidebar-menu-item ${originalUri.contains('/employees') || originalUri.contains('/emp') || originalUri.contains('/user') ? 'active' : ''}">
+            <a href="#" onclick="showComingSoon(event)" class="sidebar-menu-item">
                 <span class="material-icons">badge</span><span>Nhân viên</span>
             </a>
         </c:if>
@@ -178,5 +173,14 @@
         if (submenu && submenu.classList.contains('sidebar-submenu')) {
             submenu.classList.toggle('open');
         }
+    }
+
+    function showComingSoon(event) {
+        if (event) event.preventDefault();
+        const toast = document.getElementById('comingSoonToast');
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2500);
     }
 </script>

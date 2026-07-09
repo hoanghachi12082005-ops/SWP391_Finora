@@ -17,6 +17,16 @@
         <jsp:include page="/views/common/topbar.jsp"/>
         
         <div class="container-fluid py-4">
+            <c:if test="${param.success == 'delete'}">
+                <div style="background-color: #dcfce7; color: #15803d; padding: 15px; margin-bottom: 20px; border-radius: 8px; font-weight: 600;">
+                    ✅ Xóa chi nhánh thành công!
+                </div>
+            </c:if>
+            <c:if test="${param.error == 'deletefailed'}">
+                <div style="background-color: #fee2e2; color: #b91c1c; padding: 15px; margin-bottom: 20px; border-radius: 8px; font-weight: 600;">
+                    ❌ Không thể xóa chi nhánh này vì có dữ liệu liên quan (nhân viên, kho hàng, đơn hàng...)!
+                </div>
+            </c:if>
 
             <div class="page-header">
 
@@ -103,7 +113,7 @@
                             <select class="form-select" name="status">
                                 <option value="">Tất cả trạng thái</option>
                                 <option value="ACTIVE" ${selectedStatus == 'ACTIVE' ? 'selected' : ''}>Hoạt động</option>
-                                <option value="locked" ${selectedStatus == 'locked' ? 'selected' : ''}>Ngừng hoạt động</option>
+                                <option value="INACTIVE" ${selectedStatus == 'INACTIVE' ? 'selected' : ''}>Ngừng hoạt động</option>
                             </select>
                         </div>
                         

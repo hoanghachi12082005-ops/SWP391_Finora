@@ -74,8 +74,12 @@ public class BranchController extends HttpServlet {
 
             case "delete":
                 int deleteId = parseId(req.getParameter("id"));
-                dao.delete(deleteId);
-                resp.sendRedirect("branch?success=delete");
+                boolean isDeleted = dao.delete(deleteId);
+                if (isDeleted) {
+                    resp.sendRedirect("branch?success=delete");
+                } else {
+                    resp.sendRedirect("branch?error=deletefailed");
+                }
                 break;
 
             default:
@@ -178,6 +182,11 @@ public class BranchController extends HttpServlet {
             throws ServletException, IOException {
 
         req.setCharacterEncoding("UTF-8");
+        // Ép parse multipart trước khi đọc parameter
+        // (SecurityFilter gọi getParameter() trước nhưng không có @MultipartConfig
+        //  nên Tomcat chỉ parse query string, bỏ qua body)
+        req.getParts();
+
         String action = req.getParameter("action");
 
         if ("update".equals(action) || "insert".equals(action)) {
@@ -198,6 +207,7 @@ public class BranchController extends HttpServlet {
         //Néu là update kiểm tra xem ID đó có tồn tại không
         if (isUpdate && dao.findById(id) == null) {
             resp.sendRedirect(req.getContextPath() + "/branch?error=notfound");
+            return;
         }
 
         //Build object từ form
