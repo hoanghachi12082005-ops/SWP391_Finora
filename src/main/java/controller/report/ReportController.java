@@ -19,6 +19,8 @@ import model.Branch;
 import model.Employee;
 import model.EmployeeOverview;
 import model.EmployeeSalesSummary;
+import util.pagination.PaginationHelper;
+import util.pagination.PaginationHelper.PageResult;
 import util.report.ExportUtil;
 import util.report.PdfReportUtil;
 
@@ -104,31 +106,21 @@ public class ReportController extends BaseController {
         }
         String dateFromRaw = trim(request.getParameter("dateFrom"));
         String dateToRaw = trim(request.getParameter("dateTo"));
-        String pageSizeOption = getParam(request, "pageSize", "10");
 
         LocalDate dateFrom = parseDate(dateFromRaw);
         LocalDate dateTo = parseDate(dateToRaw);
 
+        int page = parseInt(request.getParameter("page"), 1);
+        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
+
         int totalEmployees = employeeSalesReportDAO.countEmployeeSalesReport(keyword, branchId);
-        int pageSize = resolvePageSize(pageSizeOption, totalEmployees);
-        int currentPage = parseInt(request.getParameter("page"), 1);
-
-        if (currentPage < 1) {
-            currentPage = 1;
-        }
-
-        int totalPages = (int) Math.ceil((double) totalEmployees / pageSize);
-        if (totalPages < 1) {
-            totalPages = 1;
-        }
-        if (currentPage > totalPages) {
-            currentPage = totalPages;
-        }
+        PageResult pr = PaginationHelper.compute(totalEmployees, page, sizeValue);
+        pr.setAttributes(request);
 
         request.setAttribute(
                 "salesReports",
                 employeeSalesReportDAO.getEmployeeSalesReport(
-                        keyword, branchId, dateFrom, dateTo, currentPage, pageSize)
+                        keyword, branchId, dateFrom, dateTo, pr.getCurrentPage(), pr.getPageSize())
         );
         request.setAttribute(
                 "reportOverview",
@@ -147,11 +139,7 @@ public class ReportController extends BaseController {
         request.setAttribute("branchFilter", parseInt(branchId, -1));
         request.setAttribute("dateFrom", dateFromRaw);
         request.setAttribute("dateTo", dateToRaw);
-        request.setAttribute("currentPage", currentPage);
-        request.setAttribute("pageSize", pageSize);
-        request.setAttribute("pageSizeOption", pageSizeOption);
         request.setAttribute("totalEmployees", totalEmployees);
-        request.setAttribute("totalPages", totalPages);
     }
 
     private void loadFullReportPreview(HttpServletRequest request) {
@@ -314,26 +302,6 @@ public class ReportController extends BaseController {
                 request.setAttribute("managerBranchId", currentUser.getBranchID());
             }
         }
-    }
-
-    private int resolvePageSize(String pageSizeOption, int totalRecords) {
-        if (isBlank(pageSizeOption)) {
-            return 10;
-        }
-
-        String option = pageSizeOption.trim().toLowerCase();
-        if ("30p".equals(option) || "30%".equals(option) || "30".equals(option)) {
-            return Math.max(1, (int) Math.ceil(totalRecords * 0.3));
-        }
-        if ("50p".equals(option) || "50%".equals(option) || "50".equals(option)) {
-            return Math.max(1, (int) Math.ceil(totalRecords * 0.5));
-        }
-
-        int size = parseInt(option, 10);
-        if (size != 5 && size != 10 && size != 20) {
-            size = 10;
-        }
-        return size;
     }
 
     private String getParam(HttpServletRequest request, String name, String defaultValue) {

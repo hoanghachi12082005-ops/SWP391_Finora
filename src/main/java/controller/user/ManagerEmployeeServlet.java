@@ -22,6 +22,8 @@ import jakarta.servlet.annotation.WebServlet;
 import dao.user.UserManagementDao;
 import jakarta.servlet.http.HttpSession;
 import model.Employee;
+import util.pagination.PaginationHelper;
+import util.pagination.PaginationHelper.PageResult;
 
 @WebServlet(name = "ManagerEmployeeServlet", urlPatterns = {"/manager/emp"})
 public class ManagerEmployeeServlet extends HttpServlet {
@@ -80,30 +82,16 @@ public class ManagerEmployeeServlet extends HttpServlet {
         String roleID = request.getParameter("roleId");
         String status = request.getParameter("status");
 
-        String pageSizeOption = getParam(request, "pageSize", "5");
+        int page = parseInt(request.getParameter("page"), 1);
+        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
 
         int totalUsers = managerEmployeeDao.countEmployeesByBranch(branchID, keyword, roleID, status);
-        int pageSize = resolvePageSize(pageSizeOption, totalUsers);
-
-        int currentPage = parseInt(request.getParameter("page"), 1);
-
-        if (currentPage < 1) {
-            currentPage = 1;
-        }
-
-        int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
-
-        if (totalPages < 1) {
-            totalPages = 1;
-        }
-
-        if (currentPage > totalPages) {
-            currentPage = totalPages;
-        }
+        PageResult pr = PaginationHelper.compute(totalUsers, page, sizeValue);
+        pr.setAttributes(request);
 
         request.setAttribute(
                 "users",
-                managerEmployeeDao.getEmployeesByBranch(branchID, keyword, roleID, status, currentPage, pageSize)
+                managerEmployeeDao.getEmployeesByBranch(branchID, keyword, roleID, status, pr.getCurrentPage(), pr.getPageSize())
         );
 
         request.setAttribute("roles", managerEmployeeDao.getEmployeeRoles());
@@ -111,37 +99,9 @@ public class ManagerEmployeeServlet extends HttpServlet {
         request.setAttribute("keyword", keyword);
         request.setAttribute("roleFilter", parseInt(roleID, -1));
         request.setAttribute("statusFilter", status);
-
-        request.setAttribute("currentPage", currentPage);
-        request.setAttribute("pageSize", pageSize);
-        request.setAttribute("pageSizeOption", pageSizeOption);
         request.setAttribute("totalUsers", totalUsers);
-        request.setAttribute("totalPages", totalPages);
 
         request.setAttribute("employeeOverview", managerEmployeeDao.getManagerEmployeeOverview(branchID));
-    }
-    private int resolvePageSize(String pageSizeOption, int totalUsers) {
-        if (isBlank(pageSizeOption)) {
-            return 5;
-        }
-
-        String option = pageSizeOption.trim().toLowerCase();
-
-        if ("30p".equals(option) || "30%".equals(option) || "30".equals(option)) {
-            return Math.max(1, (int) Math.ceil(totalUsers * 0.3));
-        }
-
-        if ("50p".equals(option) || "50%".equals(option) || "50".equals(option)) {
-            return Math.max(1, (int) Math.ceil(totalUsers * 0.5));
-        }
-
-        int size = parseInt(option, 5);
-
-        if (size != 5 && size != 10) {
-            size = 5;
-        }
-
-        return size;
     }
 
     private void viewEmployeeProfile(HttpServletRequest request, HttpServletResponse response, int branchID)

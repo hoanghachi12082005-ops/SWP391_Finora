@@ -149,26 +149,7 @@
                             </div>
                         </c:if>
 
-                        <div class="form-group">
-                            <label>Page Size</label>
-                            <select name="pageSize">
-                                <option value="5" ${empty pageSizeOption || pageSizeOption == '5' ? 'selected' : ''}>
-                                    5 records/page
-                                </option>
-
-                                <option value="10" ${pageSizeOption == '10' ? 'selected' : ''}>
-                                    10 records/page
-                                </option>
-
-                                <option value="30p" ${pageSizeOption == '30p' || pageSizeOption == '30%' || pageSizeOption == '30' ? 'selected' : ''}>
-                                    30% records/page
-                                </option>
-
-                                <option value="50p" ${pageSizeOption == '50p' || pageSizeOption == '50%' || pageSizeOption == '50' ? 'selected' : ''}>
-                                    50% records/page
-                                </option>
-                            </select>
-                        </div>
+                        <input type="hidden" name="sizeValue" value="${sizeValue}"/>
 
                         <div class="filter-actions">
                             <button class="btn-primary" type="submit">Apply</button>
@@ -265,71 +246,101 @@
 
                     <%-- ========================= Table Footer & Pagination ========================= --%>
                     <div class="table-footer">
-                        <div>
-                            Showing ${empty customers ? 0 : fn:length(customers)} of ${empty totalCustomers ? 0 : totalCustomers} entries
 
-                            <c:if test="${not empty pageSize}">
-                                <span class="page-size-note">
-                                    / ${pageSize} per page
-                                </span>
-                            </c:if>
-                        </div>
-
-                        <c:set var="paginationBaseUrl"
-                               value="${fn:replace(baseUrl, pageContext.request.contextPath, '')}"/>
+                        <form method="get" action="${baseUrl}" class="pagination-info">
+                            <input type="hidden" name="keyword" value="${keyword}">
+                            <input type="hidden" name="branchId" value="${branchFilter == -1 ? '' : branchFilter}">
+                            <select name="sizeValue" onchange="this.form.submit()">
+                                <option value="30" ${sizeValue == 30 or (sizeValue == 50 and option50 == option30) or (sizeValue == 70 and option70 == option30) ? "selected" : ""}>
+                                    ${option30}
+                                </option>
+                                <c:if test="${option50 != option30}">
+                                    <option value="50" ${sizeValue == 50 or (sizeValue == 70 and option70 == option50) ? "selected" : ""}>
+                                        ${option50}
+                                    </option>
+                                </c:if>
+                                <c:if test="${option70 != option50 and option70 != option30 and option70 != option100}">
+                                    <option value="70" ${sizeValue == 70 ? "selected" : ""}>
+                                        ${option70}
+                                    </option>
+                                </c:if>
+                                <option value="100" ${sizeValue == 100 or (sizeValue == 70 and option70 == option100) or (sizeValue == 50 and option50 == option100) ? "selected" : ""}>
+                                    Tất cả
+                                </option>
+                            </select>
+                            <span class="pagination-summary">
+                                ${startRecord} - ${endRecord} trong số ${totalRecords}
+                            </span>
+                        </form>
 
                         <c:if test="${totalPages > 1}">
                             <div class="pagination">
 
-                                <c:url var="prevUrl" value="${paginationBaseUrl}">
-                                    <c:param name="page" value="${currentPage - 1}"/>
-                                    <c:param name="keyword" value="${keyword}"/>
-                                    <c:param name="branchId" value="${branchFilter == -1 ? '' : branchFilter}"/>
-                                    <c:param name="pageSize" value="${pageSizeOption}"/>
-                                </c:url>
-
-                                <c:choose>
-                                    <c:when test="${currentPage > 1}">
-                                        <a class="page-btn" href="${prevUrl}">Previous</a>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <span class="page-btn disabled">Previous</span>
-                                    </c:otherwise>
-                                </c:choose>
-
-                                <c:forEach begin="1" end="${totalPages}" var="i">
-                                    <c:url var="pageUrl" value="${paginationBaseUrl}">
-                                        <c:param name="page" value="${i}"/>
+                                <c:if test="${currentPage > 1}">
+                                    <c:url var="firstUrl" value="${baseUrl}">
+                                        <c:param name="page" value="1"/>
+                                        <c:param name="sizeValue" value="${sizeValue}"/>
                                         <c:param name="keyword" value="${keyword}"/>
                                         <c:param name="branchId" value="${branchFilter == -1 ? '' : branchFilter}"/>
-                                        <c:param name="pageSize" value="${pageSizeOption}"/>
                                     </c:url>
-
-                                    <c:choose>
-                                        <c:when test="${i == currentPage}">
-                                            <span class="page-btn active">${i}</span>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <a class="page-btn" href="${pageUrl}">${i}</a>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </c:forEach>
-
-                                <c:url var="nextUrl" value="${paginationBaseUrl}">
-                                    <c:param name="page" value="${currentPage + 1}"/>
-                                    <c:param name="keyword" value="${keyword}"/>
-                                    <c:param name="branchId" value="${branchFilter == -1 ? '' : branchFilter}"/>
-                                    <c:param name="pageSize" value="${pageSizeOption}"/>
-                                </c:url>
+                                    <a href="${firstUrl}"><<</a>
+                                </c:if>
 
                                 <c:choose>
-                                    <c:when test="${currentPage < totalPages}">
-                                        <a class="page-btn" href="${nextUrl}">Next</a>
+                                    <c:when test="${totalPages <= 5}">
+                                        <c:forEach begin="1" end="${totalPages}" var="i">
+                                            <c:url var="pageUrl" value="${baseUrl}">
+                                                <c:param name="page" value="${i}"/>
+                                                <c:param name="sizeValue" value="${sizeValue}"/>
+                                                <c:param name="keyword" value="${keyword}"/>
+                                                <c:param name="branchId" value="${branchFilter == -1 ? '' : branchFilter}"/>
+                                            </c:url>
+                                            <a href="${pageUrl}" class="${i == currentPage ? 'active-page' : ''}">${i}</a>
+                                        </c:forEach>
                                     </c:when>
                                     <c:otherwise>
-                                        <span class="page-btn disabled">Next</span>
+                                        <c:url var="firstUrl" value="${baseUrl}">
+                                            <c:param name="page" value="1"/>
+                                            <c:param name="sizeValue" value="${sizeValue}"/>
+                                            <c:param name="keyword" value="${keyword}"/>
+                                            <c:param name="branchId" value="${branchFilter == -1 ? '' : branchFilter}"/>
+                                        </c:url>
+                                        <a href="${firstUrl}" class="${currentPage == 1 ? 'active-page' : ''}">1</a>
+                                        <c:if test="${currentPage > 3}">
+                                            <span class="dots">...</span>
+                                        </c:if>
+                                        <c:forEach begin="${currentPage - 1 < 2 ? 2 : currentPage - 1}"
+                                                   end="${currentPage + 1 > totalPages - 1 ? totalPages - 1 : currentPage + 1}" var="i">
+                                            <c:url var="pageUrl" value="${baseUrl}">
+                                                <c:param name="page" value="${i}"/>
+                                                <c:param name="sizeValue" value="${sizeValue}"/>
+                                                <c:param name="keyword" value="${keyword}"/>
+                                                <c:param name="branchId" value="${branchFilter == -1 ? '' : branchFilter}"/>
+                                            </c:url>
+                                            <a href="${pageUrl}" class="${i == currentPage ? 'active-page' : ''}">${i}</a>
+                                        </c:forEach>
+                                        <c:if test="${currentPage < totalPages - 2}">
+                                            <span class="dots">...</span>
+                                        </c:if>
+                                        <c:url var="lastUrl" value="${baseUrl}">
+                                            <c:param name="page" value="${totalPages}"/>
+                                            <c:param name="sizeValue" value="${sizeValue}"/>
+                                            <c:param name="keyword" value="${keyword}"/>
+                                            <c:param name="branchId" value="${branchFilter == -1 ? '' : branchFilter}"/>
+                                        </c:url>
+                                        <a href="${lastUrl}" class="${currentPage == totalPages ? 'active-page' : ''}">${totalPages}</a>
                                     </c:otherwise>
                                 </c:choose>
+
+                                <c:if test="${currentPage < totalPages}">
+                                    <c:url var="lastUrl" value="${baseUrl}">
+                                        <c:param name="page" value="${totalPages}"/>
+                                        <c:param name="sizeValue" value="${sizeValue}"/>
+                                        <c:param name="keyword" value="${keyword}"/>
+                                        <c:param name="branchId" value="${branchFilter == -1 ? '' : branchFilter}"/>
+                                    </c:url>
+                                    <a href="${lastUrl}">>></a>
+                                </c:if>
 
                             </div>
                         </c:if>

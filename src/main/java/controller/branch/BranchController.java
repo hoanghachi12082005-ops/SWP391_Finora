@@ -5,6 +5,8 @@ import dao.employee.EmployeeDAO;
 import model.Branch;
 import model.Employee;
 import util.branch.BranchValidator;
+import util.pagination.PaginationHelper;
+import util.pagination.PaginationHelper.PageResult;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -88,58 +90,20 @@ public class BranchController extends HttpServlet {
                     keyword = keyword.trim().replaceAll("\\s+", " ");
                 }
 
-                int page = 1;
-                try {
-                    page = Integer.parseInt(req.getParameter("page"));
-                } catch (Exception ignored) {
-                }
+                int page = parseId(req.getParameter("page"));
+                int sizeValue = parseId(req.getParameter("sizeValue"));
+                if (page < 1) page = 1;
+                if (sizeValue < 1) sizeValue = 30;
 
-                int sizeValue = 30;
-
-                try {
-                    sizeValue = Integer.parseInt(req.getParameter("sizeValue"));
-                } catch (Exception ignored) {
-                }
-
-                int pageSize;
                 int totalRecords = dao.countBranch(keyword, status, city);
-
-                switch (sizeValue) {
-                    case 30:
-                        pageSize = (int) Math.ceil(totalRecords * 0.3);
-                        break;
-                    case 50:
-                        pageSize = (int) Math.ceil(totalRecords * 0.5);
-                        break;
-                    case 70:
-                        pageSize = (int) Math.ceil(totalRecords * 0.7);
-                        break;
-                    case 100:
-                        pageSize = totalRecords;
-                        break;
-                    default:
-                        sizeValue = 30;
-                        pageSize = (int) Math.ceil(totalRecords * 0.3);
-                }
-
-                if (pageSize <= 0) {
-                    pageSize = 1;
-                }
-
-                int totalPages = (int) Math.ceil(totalRecords * 1.0 / pageSize);
-
-                int startRecord = totalRecords == 0 ? 0 : (page - 1) * pageSize + 1;
-                int endRecord = Math.min(page * pageSize, totalRecords);
+                PageResult pr = PaginationHelper.compute(totalRecords, page, sizeValue);
+                pr.setAttributes(req);
 
                 List<Branch> branchList = dao.findBranchPaging(
-                        keyword,
-                        status,
-                        city,
-                        page,
-                        pageSize);
+                        keyword, status, city,
+                        pr.getCurrentPage(), pr.getPageSize());
 
                 boolean showEmployeeColumn = false;
-
                 for (Branch branch : branchList) {
                     if (branch.getEmployeeCount() > 0) {
                         showEmployeeColumn = true;
@@ -149,20 +113,6 @@ public class BranchController extends HttpServlet {
 
                 req.setAttribute("branchList", branchList);
                 req.setAttribute("showEmployeeColumn", showEmployeeColumn);
-
-                req.setAttribute("currentPage", page);
-                req.setAttribute("totalPages", totalPages);
-
-                req.setAttribute("pageSize", pageSize);
-                req.setAttribute("sizeValue", sizeValue);
-                req.setAttribute("startRecord", startRecord);
-                req.setAttribute("endRecord", endRecord);
-                req.setAttribute("option30", (int) Math.ceil(totalRecords * 0.3));
-                req.setAttribute("option50", (int) Math.ceil(totalRecords * 0.5));
-                req.setAttribute("option70", (int) Math.ceil(totalRecords * 0.7));
-                req.setAttribute("option100", totalRecords);
-                req.setAttribute("totalRecords", totalRecords);
-
                 req.setAttribute("selectedStatus", status);
                 req.setAttribute("selectedCity", city);
                 req.setAttribute("cityList", dao.getCityWithBranch());
