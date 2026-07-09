@@ -601,7 +601,7 @@
         </div>
       </div>
       <div class="modal-footer border-top-0 pt-0">
-        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 500;">Đóng</button>
+        <button type="button" class="btn btn-danger" onclick="location.reload();" style="border-radius: 8px; font-weight: 500;">Lưu</button>
       </div>
     </div>
   </div>
