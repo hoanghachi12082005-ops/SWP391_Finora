@@ -280,7 +280,6 @@ public class InventoryDAO {
             cleanedKeyword = keyword.trim().replaceAll("\\s+", " ");
         }
         java.util.Map<Integer, dto.inventory.ImportProductDTO> map = new java.util.LinkedHashMap<>();
-        
         StringBuilder sql = new StringBuilder(
             "WITH LatestPurchase AS ( " +
             "    SELECT o.supplier_id, od.product_id, od.import_price, " +

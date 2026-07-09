@@ -348,4 +348,114 @@ public class SupplierDAO {
 
         return 0;
     }
+
+    /**
+     * Lấy danh sách sản phẩm và giá nhập gần đây nhất của nhà cung cấp dựa trên lịch sử order_detail.
+     */
+    public List<dto.inventory.ImportProductDTO.SupplierInfo> getSupplierProductsHistory(int supplierId) {
+        List<dto.inventory.ImportProductDTO.SupplierInfo> list = new ArrayList<>();
+        String sql = """
+            WITH LatestPrices AS (
+                SELECT 
+                    od.product_id,
+                    p.product_name,
+                    od.import_price,
+                    ROW_NUMBER() OVER (PARTITION BY od.product_id ORDER BY o.created_at DESC) as rn
+                FROM order_detail od
+                JOIN [order] o ON od.order_id = o.order_id
+                JOIN product p ON od.product_id = p.product_id
+                WHERE o.order_type = 'PURCHASE' AND o.supplier_id = ?
+            )
+            SELECT product_id, product_name, import_price 
+            FROM LatestPrices 
+            WHERE rn = 1
+            ORDER BY product_name ASC
+            """;
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, supplierId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new dto.inventory.ImportProductDTO.SupplierInfo(
+                        rs.getInt("product_id"),
+                        rs.getString("product_name"),
+                        rs.getBigDecimal("import_price")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public boolean deleteSupplierProduct(int supplierId, int productId) {
+        String sql = """
+            DELETE od 
+            FROM order_detail od
+            JOIN [order] o ON od.order_id = o.order_id
+            WHERE o.order_type = 'PURCHASE' AND o.supplier_id = ? AND od.product_id = ?
+            """;
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, supplierId);
+            ps.setInt(2, productId);
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean addOrUpdateSupplierProduct(int supplierId, int productId, double importPrice) {
+        String insertOrderSql = """
+            INSERT INTO [order] (order_code, order_type, supplier_id, subtotal, discount_amount, total_amount, payment_method, status, created_at)
+            VALUES (?, 'PURCHASE', ?, 0, 0, 0, 'BANK_TRANSFER', 'COMPLETED', GETDATE())
+            """;
+        String insertDetailSql = """
+            INSERT INTO order_detail (order_id, product_id, quantity, unit_price, total_price, import_price)
+            VALUES (?, ?, 0, 0, 0, ?)
+            """;
+        Connection conn = null;
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false);
+            
+            int orderId = 0;
+            String orderCode = "PO-ADJ-" + System.currentTimeMillis();
+            try (PreparedStatement ps = conn.prepareStatement(insertOrderSql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, orderCode);
+                ps.setInt(2, supplierId);
+                ps.executeUpdate();
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        orderId = rs.getInt(1);
+                    }
+                }
+            }
+            
+            if (orderId > 0) {
+                try (PreparedStatement ps = conn.prepareStatement(insertDetailSql)) {
+                    ps.setInt(1, orderId);
+                    ps.setInt(2, productId);
+                    ps.setDouble(3, importPrice);
+                    ps.executeUpdate();
+                }
+            }
+            
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
+            e.printStackTrace();
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
+        }
+        return false;
+    }
 }

@@ -545,7 +545,6 @@ public class InventoryController extends BaseController {
                             importTicket.setCreatedBy(currentUser.getEmployeeId());
                             
                             ticketDAO.createExchangeTicket(importTicket, ticketDetails);
-                            
                             // 2. Tạo đơn mua hàng (Order loại PURCHASE) để lưu vết lịch sử và giá nhập
                             model.Order purchaseOrder = new model.Order();
                             purchaseOrder.setOrderCode("PO-" + System.currentTimeMillis() + "-" + sId);

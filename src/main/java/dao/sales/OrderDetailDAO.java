@@ -13,8 +13,8 @@ public class OrderDetailDAO {
      * Chèn batch chi tiết đơn hàng trong cùng Connection/Transaction.
      */
     public void insertBatch(Connection conn, int orderId, List<CartItem> items) throws SQLException {
-        String sql = "INSERT INTO order_detail (order_id, product_id, quantity, unit_price, total_price) "
-                   + "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO order_detail (order_id, product_id, quantity, unit_price, total_price, import_price) "
+                   + "VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (CartItem item : items) {
                 ps.setInt(1, orderId);
@@ -22,6 +22,7 @@ public class OrderDetailDAO {
                 ps.setInt(3, item.getQuantity());
                 ps.setDouble(4, item.getSellingPrice());
                 ps.setDouble(5, item.getLineTotal());
+                ps.setDouble(6, 0.0);
                 ps.addBatch();
             }
             ps.executeBatch();

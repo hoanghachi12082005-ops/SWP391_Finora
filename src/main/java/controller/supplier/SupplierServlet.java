@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import service.supplier.SupplierService;
-import service.supplier.SupplierProductService;
 import dao.product.ProductDAO;
 
 @WebServlet("/suppliers")
@@ -27,29 +26,94 @@ public class SupplierServlet extends HttpServlet {
         if (action == null) {
             action = "list";
         }
-
         switch (action) {
-            case "manage-products":
+            case "get-products-api": {
                 try {
                     int supplierId = Integer.parseInt(request.getParameter("id"));
-                    Supplier supplierToManage = service.getById(supplierId);
+                    List<dto.inventory.ImportProductDTO.SupplierInfo> list = service.getSupplierProductsHistory(supplierId);
+                    StringBuilder json = new StringBuilder("[");
+                    for (int i = 0; i < list.size(); i++) {
+                        dto.inventory.ImportProductDTO.SupplierInfo item = list.get(i);
+                        json.append("{");
+                        json.append("\"productId\":").append(item.getSupplierId()).append(",");
+                        json.append("\"productName\":\"").append(item.getSupplierName().replace("\"", "\\\"")).append("\",");
+                        json.append("\"importPrice\":").append(item.getImportPrice());
+                        json.append("}");
+                        if (i < list.size() - 1) json.append(",");
+                    }
+                    json.append("]");
                     
-                    ProductDAO productDAO = new ProductDAO();
-                    List<model.Product> allProducts = productDAO.findAll(0, 1000, "", "active", null, null);
-                    
-                    SupplierProductService spService = new SupplierProductService();
-                    Map<Integer, Double> linkedProducts = spService.getLinkedProductsWithPrices(supplierId);
-                    
-                    request.setAttribute("supplier", supplierToManage);
-                    request.setAttribute("allProducts", allProducts);
-                    request.setAttribute("linkedProducts", linkedProducts);
-                    
-                    request.getRequestDispatcher("/views/suppliers/manage_products.jsp").forward(request, response);
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write(json.toString());
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    response.sendRedirect("suppliers");
+                    response.setContentType("application/json");
+                    response.getWriter().write("[]");
                 }
-                break;
+                return;
+            }
+            case "get-active-products-api": {
+                try {
+                    ProductDAO productDAO = new ProductDAO();
+                    List<model.Product> products = productDAO.findAll(0, 10000, "", "ACTIVE", null, null);
+                    StringBuilder json = new StringBuilder("[");
+                    for (int i = 0; i < products.size(); i++) {
+                        model.Product p = products.get(i);
+                        json.append("{");
+                        json.append("\"productId\":").append(p.getProductId()).append(",");
+                        json.append("\"productName\":\"").append(p.getProductName().replace("\"", "\\\"")).append("\",");
+                        json.append("\"sellingPrice\":").append(p.getSellingPrice() != null ? p.getSellingPrice() : 0);
+                        json.append("}");
+                        if (i < products.size() - 1) json.append(",");
+                    }
+                    json.append("]");
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write(json.toString());
+                } catch (Exception e) {
+                    response.setContentType("application/json");
+                    response.getWriter().write("[]");
+                }
+                return;
+            }
+            case "add-product-api": {
+                response.setContentType("application/json");
+                try {
+                    int supplierId = Integer.parseInt(request.getParameter("supplierId"));
+                    int productId = Integer.parseInt(request.getParameter("productId"));
+                    double price = Double.parseDouble(request.getParameter("price"));
+                    boolean success = service.addOrUpdateSupplierProduct(supplierId, productId, price);
+                    response.getWriter().write("{\"success\":" + success + "}");
+                } catch (Exception e) {
+                    response.getWriter().write("{\"success\":false}");
+                }
+                return;
+            }
+            case "delete-product-api": {
+                response.setContentType("application/json");
+                try {
+                    int supplierId = Integer.parseInt(request.getParameter("supplierId"));
+                    int productId = Integer.parseInt(request.getParameter("productId"));
+                    boolean success = service.deleteSupplierProduct(supplierId, productId);
+                    response.getWriter().write("{\"success\":" + success + "}");
+                } catch (Exception e) {
+                    response.getWriter().write("{\"success\":false}");
+                }
+                return;
+            }
+            case "update-price-api": {
+                response.setContentType("application/json");
+                try {
+                    int supplierId = Integer.parseInt(request.getParameter("supplierId"));
+                    int productId = Integer.parseInt(request.getParameter("productId"));
+                    double price = Double.parseDouble(request.getParameter("price"));
+                    boolean success = service.addOrUpdateSupplierProduct(supplierId, productId, price);
+                    response.getWriter().write("{\"success\":" + success + "}");
+                } catch (Exception e) {
+                    response.getWriter().write("{\"success\":false}");
+                }
+                return;
+            }
             case "create":
                 request.getRequestDispatcher("/views/suppliers/create.jsp").forward(request, response);
                 break;
@@ -188,42 +252,7 @@ public class SupplierServlet extends HttpServlet {
                 request.getSession().setAttribute("message", "Không thể cập nhật nhà cung cấp.");
                 request.getSession().setAttribute("messageType", "danger");
             }
-        } else if ("save-products".equals(action)) {
-            try {
-                int supplierId = Integer.parseInt(request.getParameter("id"));
-                String[] selectedIds = request.getParameterValues("productIds");
-                
-                List<Integer> productIds = new java.util.ArrayList<>();
-                List<Double> prices = new java.util.ArrayList<>();
-                
-                if (selectedIds != null) {
-                    for (String idStr : selectedIds) {
-                        int prodId = Integer.parseInt(idStr);
-                        productIds.add(prodId);
-                        
-                        String priceStr = request.getParameter("price_" + prodId);
-                        double importPrice = 0;
-                        if (priceStr != null && !priceStr.isBlank()) {
-                            importPrice = Double.parseDouble(priceStr);
-                        }
-                        prices.add(importPrice);
-                    }
-                }
-                
-                SupplierProductService spService = new SupplierProductService();
-                boolean success = spService.saveAssociations(supplierId, productIds, prices);
-                if (success) {
-                    request.getSession().setAttribute("message", "Cập nhật sản phẩm cung cấp thành công.");
-                    request.getSession().setAttribute("messageType", "success");
-                } else {
-                    request.getSession().setAttribute("message", "Không thể cập nhật sản phẩm cung cấp.");
-                    request.getSession().setAttribute("messageType", "danger");
-                }
-            } catch (Exception e) {
-                request.getSession().setAttribute("message", "Lỗi dữ liệu đầu vào không hợp lệ.");
-                request.getSession().setAttribute("messageType", "danger");
-                e.printStackTrace();
-            }
+
         }
         response.sendRedirect("suppliers");
     }

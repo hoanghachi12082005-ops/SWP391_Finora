@@ -1,37 +1,21 @@
 -- ============================================================
--- Migration: Thêm cột failed_login_count vào bảng Employee
--- Mục đích: Đếm số lần đăng nhập sai liên tiếp.
---           Khi đạt 5 lần, tài khoản bị chuyển sang INACTIVE.
---           Admin mở lại bằng cách set status = 'ACTIVE',
---           đồng thời reset cột này về 0.
+-- Migration: Xoá cột failed_login_count và FailedLoginCount khỏi bảng Employee
+-- Mục đích: Lưu số lần đăng nhập sai bằng session thay vì database.
 -- ============================================================
 
--- Bước 1: Thêm cột failed_login_count nếu chưa có
-IF NOT EXISTS (
-    SELECT 1 FROM sys.columns
-    WHERE object_id = OBJECT_ID(N'
-    AND name = N'FailedLoginCount'
-)
-BEGIN
-    ALTER TABLE Employee
-    ADD FailedLoginCount INT NOT NULL DEFAULT 0;
+USE DBFinoraV3;
+GO
 
-    PRINT 'Đã thêm cột FailedLoginCount vào bảng Employee.';
+IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Employee') AND name = N'failed_login_count')
+BEGIN
+    ALTER TABLE Employee DROP COLUMN failed_login_count;
+    PRINT 'Đã xóa cột failed_login_count khỏi bảng Employee.';
 END
-ELSE
-BEGIN
-    PRINT 'Cột FailedLoginCount đã tồn tại, bỏ qua.';
+GO
 
-    AND name = N'failed_login_count'
-)
+IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Employee') AND name = N'FailedLoginCount')
 BEGIN
-    ALTER TABLE Employee
-    ADD failed_login_count INT NOT NULL DEFAULT 0;
-
-    PRINT 'Đã thêm cột failed_login_count vào bảng Employee.';
-END
-ELSE
-BEGIN
-    PRINT 'Cột failed_login_count đã tồn tại, bỏ qua.';
+    ALTER TABLE Employee DROP COLUMN FailedLoginCount;
+    PRINT 'Đã xóa cột FailedLoginCount khỏi bảng Employee.';
 END
 GO

@@ -204,9 +204,11 @@
                                             Sửa
                                         </button>
 
-                                        <a href="suppliers?action=manage-products&id=${s.supplierID}" class="btn btn-sm btn-outline-primary">
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-info" 
+                                                onclick="showSupplierProducts(${s.supplierID}, '<c:out value="${s.name}"/>')">
                                             Sản phẩm
-                                        </a>
+                                        </button>
 
                                         <a href="suppliers?action=delete&id=${s.supplierID}&page=${page}&keyword=${keyword}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa nhà cung cấp này?')"> Xóa</a>
                                     </td>
@@ -376,6 +378,233 @@
             openSupplierModal('edit', id, name, phone, address, status);
         }
     });
+
+    let currentSupplierId = null;
+    let currentSupplierName = '';
+    let allProducts = [];
+
+    function showSupplierProducts(supplierId, supplierName) {
+        currentSupplierId = supplierId;
+        currentSupplierName = supplierName;
+        
+        document.getElementById('spModalTitle').innerText = 'Sản phẩm của: ' + supplierName;
+        const tbody = document.getElementById('spModalTableBody');
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3">Đang tải dữ liệu...</td></tr>';
+        
+        const myModal = new bootstrap.Modal(document.getElementById('supplierProductsModal'));
+        myModal.show();
+        
+        fetch('suppliers?action=get-products-api&id=' + supplierId)
+            .then(res => res.json())
+            .then(data => {
+                tbody.innerHTML = '';
+                const linkedProductIds = [];
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Nhà cung cấp này chưa từng liên kết sản phẩm nào.</td></tr>';
+                } else {
+                    data.forEach(item => {
+                        linkedProductIds.push(item.productId);
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="text-center fw-semibold">SP\${item.productId}</td>
+                            <td class="text-start">\${item.productName}</td>
+                            <td class="text-end">
+                                <div class="input-group input-group-sm ms-auto" style="width: 160px;">
+                                    <input type="number" class="form-control text-end fw-bold i-row-price" value="\${item.importPrice}" min="0" step="1000" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                                    <span class="input-group-text text-muted small" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px;">đ</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-circle p-1 i-row-delete-btn" title="Xóa sản phẩm" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <span class="material-icons" style="font-size: 18px;">delete</span>
+                                </button>
+                            </td>
+                        `;
+                        
+                        const priceInput = tr.querySelector('.i-row-price');
+                        priceInput.onchange = () => {
+                            const newPrice = parseFloat(priceInput.value);
+                            updateSupplierProductPrice(supplierId, item.productId, newPrice);
+                        };
+
+                        const deleteBtn = tr.querySelector('.i-row-delete-btn');
+                        deleteBtn.onclick = () => {
+                            if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi danh sách của nhà cung cấp?')) {
+                                deleteSupplierProduct(supplierId, item.productId, tr);
+                            }
+                        };
+                        
+                        tbody.appendChild(tr);
+                    });
+                }
+                loadActiveProducts(linkedProductIds);
+            })
+            .catch(err => {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-danger">Có lỗi xảy ra khi tải danh sách sản phẩm.</td></tr>';
+            });
+    }
+
+    function loadActiveProducts(currentLinkedProductIds = []) {
+        const select = document.getElementById('addProductSelect');
+        select.innerHTML = '<option value="">-- Đang tải sản phẩm --</option>';
+        
+        fetch('suppliers?action=get-active-products-api')
+            .then(res => res.json())
+            .then(data => {
+                allProducts = data;
+                select.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
+                allProducts.forEach(p => {
+                    if (!currentLinkedProductIds.includes(p.productId)) {
+                        const opt = document.createElement('option');
+                        opt.value = p.productId;
+                        opt.setAttribute('data-selling-price', p.sellingPrice || 0);
+                        opt.innerText = `SP\${p.productId} - \${p.productName}`;
+                        select.appendChild(opt);
+                    }
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                select.innerHTML = '<option value="">-- Lỗi tải sản phẩm --</option>';
+            });
+    }
+
+    function updateSupplierProductPrice(supplierId, productId, price) {
+        fetch(`suppliers?action=update-price-api&supplierId=\${supplierId}&productId=\${productId}&price=\${price}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Cập nhật giá nhập thành công.');
+                } else {
+                    alert('Lỗi cập nhật giá nhập!');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Có lỗi xảy ra khi kết nối server.');
+            });
+    }
+
+    function deleteSupplierProduct(supplierId, productId, rowEl) {
+        fetch(`suppliers?action=delete-product-api&supplierId=\${supplierId}&productId=\${productId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    rowEl.remove();
+                    showSupplierProducts(currentSupplierId, currentSupplierName);
+                } else {
+                    alert('Lỗi khi xóa sản phẩm!');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Có lỗi xảy ra.');
+            });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const select = document.getElementById('addProductSelect');
+        const priceInput = document.getElementById('addProductPrice');
+        if (select && priceInput) {
+            select.onchange = () => {
+                const opt = select.options[select.selectedIndex];
+                if (opt && opt.value !== "") {
+                    const sellingPrice = parseFloat(opt.getAttribute('data-selling-price')) || 0;
+                    priceInput.value = Math.round(sellingPrice * 0.7);
+                } else {
+                    priceInput.value = '0';
+                }
+            };
+        }
+
+        const btnAdd = document.getElementById('btnAddSupplierProduct');
+        if (btnAdd) {
+            btnAdd.onclick = () => {
+                const selectEl = document.getElementById('addProductSelect');
+                const priceInputEl = document.getElementById('addProductPrice');
+                
+                const productId = parseInt(selectEl.value);
+                const price = parseFloat(priceInputEl.value);
+                
+                if (!productId) {
+                    alert('Vui lòng chọn sản phẩm!');
+                    return;
+                }
+                if (isNaN(price) || price < 0) {
+                    alert('Giá nhập không hợp lệ!');
+                    return;
+                }
+                
+                fetch(`suppliers?action=add-product-api&supplierId=\${currentSupplierId}&productId=\${productId}&price=\${price}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            showSupplierProducts(currentSupplierId, currentSupplierName);
+                            priceInputEl.value = '0';
+                        } else {
+                            alert('Lỗi thêm sản phẩm!');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('Có lỗi xảy ra.');
+                    });
+            };
+        }
+    });
 </script>
+
+<!-- Modal Xem danh sách sản phẩm nhà cung cấp -->
+<div class="modal fade" id="supplierProductsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="spModalTitle" style="color: #111827;">Danh sách sản phẩm</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-3">
+        <!-- Add Product Section -->
+        <div class="row g-2 mb-3 align-items-end p-3 bg-light rounded-3 border border-light-subtle">
+           <div class="col-md-6">
+             <label class="form-label small fw-bold text-muted mb-1">Thêm sản phẩm mới</label>
+             <select id="addProductSelect" class="form-select form-select-sm" style="border-radius: 8px;">
+               <option value="">-- Chọn sản phẩm --</option>
+             </select>
+           </div>
+           <div class="col-md-4">
+             <label class="form-label small fw-bold text-muted mb-1">Giá nhập</label>
+             <div class="input-group input-group-sm">
+               <input type="number" id="addProductPrice" class="form-control text-end fw-bold" value="0" min="0" step="1000" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+               <span class="input-group-text small text-muted" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px;">đ</span>
+             </div>
+           </div>
+           <div class="col-md-2">
+             <button type="button" class="btn btn-sm btn-danger w-100 fw-semibold text-white" id="btnAddSupplierProduct" style="border-radius: 8px; height: 31px;">Thêm</button>
+           </div>
+        </div>
+
+        <div class="table-responsive" style="border-radius: 8px; border: 1px solid #e5e7eb;">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-center" style="font-size: 13px; text-transform: uppercase; font-weight: 700;">
+              <tr>
+                <th width="100">Mã SP</th>
+                <th class="text-start">Tên Sản Phẩm</th>
+                <th width="220">Giá Nhập</th>
+                <th width="100">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="spModalTableBody" style="font-size: 14px;">
+              <!-- Dynamically populated via AJAX -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer border-top-0 pt-0">
+        <button type="button" class="btn btn-danger" onclick="location.reload();" style="border-radius: 8px; font-weight: 500;">Lưu</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <jsp:include page="../common/footer.jsp"/>

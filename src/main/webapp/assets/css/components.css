@@ -1586,9 +1586,7 @@
     .user-page .checkbox-group {
         grid-template-columns: 1fr;
     }
-
     .user-page .modal-overlay {
         padding: 12px;
     }
 }
-
