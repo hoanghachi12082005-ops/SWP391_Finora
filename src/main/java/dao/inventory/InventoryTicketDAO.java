@@ -96,7 +96,11 @@ public class InventoryTicketDAO {
         StringBuilder sql = new StringBuilder(
             "SELECT t.*, fw.warehouse_name as from_warehouse_name, " +
             "tw.warehouse_name as to_warehouse_name, e.fullName as created_by_name, " +
-            "s.supplier_name as supplier_name " +
+            "s.supplier_name as supplier_name, " +
+            "COALESCE(" +
+            "    (SELECT MAX(st.created_at) FROM stock_transaction st WHERE st.reference_type = (CASE WHEN t.ticket_type = 'IMPORT' THEN 'IMPORT_TICKET' ELSE 'TRANSFER' END) AND st.reference_id = t.ticket_id)," +
+            "    t.created_at" +
+            ") as completed_at " +
             "FROM inventory_ticket t " +
             "LEFT JOIN warehouse fw ON t.from_warehouse_id = fw.warehouse_id " +
             "LEFT JOIN warehouse tw ON t.to_warehouse_id = tw.warehouse_id " +
@@ -134,10 +138,13 @@ public class InventoryTicketDAO {
         }
 
         if ("today".equals(dateFilter)) {
-            sql.append(" AND CAST(t.created_at AS DATE) = CAST(GETDATE() AS DATE)");
+            sql.append(" AND CAST(COALESCE(" +
+                       "    (SELECT MAX(st.created_at) FROM stock_transaction st WHERE st.reference_type = (CASE WHEN t.ticket_type = 'IMPORT' THEN 'IMPORT_TICKET' ELSE 'TRANSFER' END) AND st.reference_id = t.ticket_id)," +
+                       "    t.created_at" +
+                       ") AS DATE) = CAST(GETDATE() AS DATE)");
         }
 
-        sql.append(" ORDER BY t.created_at DESC");
+        sql.append(" ORDER BY completed_at DESC");
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
@@ -162,6 +169,7 @@ public class InventoryTicketDAO {
         }
         return tickets;
     }
+
     public int getPendingCount(String ticketType, Integer warehouseId) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM inventory_ticket WHERE status = 'PENDING'");
         if (ticketType != null) {
@@ -195,9 +203,18 @@ public class InventoryTicketDAO {
         t.setStatus(rs.getString("status"));
         t.setNote(rs.getString("note"));
         t.setCreatedBy(rs.getInt("created_by"));
-        if (rs.getTimestamp("created_at") != null) {
-            t.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        
+        Timestamp timeVal = null;
+        try {
+            timeVal = rs.getTimestamp("completed_at");
+        } catch (SQLException ignored) {}
+        if (timeVal == null) {
+            timeVal = rs.getTimestamp("created_at");
         }
+        if (timeVal != null) {
+            t.setCreatedAt(timeVal.toLocalDateTime());
+        }
+
         t.setFromWarehouseName(rs.getString("from_warehouse_name"));
         t.setToWarehouseName(rs.getString("to_warehouse_name"));
         t.setCreatedByName(rs.getString("created_by_name"));
@@ -536,6 +553,24 @@ public class InventoryTicketDAO {
                             s.executeUpdate();
                         }
                     }
+                }
+                
+                // Cập nhật actual_quantity cho tất cả chi tiết của phiếu TI này
+                String updateDetailSql = "UPDATE inventory_ticket_detail SET actual_quantity = ? WHERE ticket_id = ? AND product_id = ?";
+                try (PreparedStatement s = conn.prepareStatement(updateDetailSql)) {
+                    for (InventoryTicketDetail d : details) {
+                        int receivingWId = ticket.getToWarehouseId();
+                        if (receivingWId != currentWarehouseId) continue;
+                        
+                        int expectedQty = d.getQuantity();
+                        int actualQty = actualQtys.getOrDefault(d.getProductId(), expectedQty);
+                        
+                        s.setInt(1, actualQty);
+                        s.setInt(2, ticketId);
+                        s.setInt(3, d.getProductId());
+                        s.addBatch();
+                    }
+                    s.executeBatch();
                 }
                 
                 // If sender already confirmed, complete it

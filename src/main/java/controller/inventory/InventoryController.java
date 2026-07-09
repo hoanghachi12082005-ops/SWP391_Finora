@@ -630,14 +630,24 @@ public class InventoryController extends BaseController {
                     model.InventoryTicket original = ticketDAO.getTicketById(transferId);
                     if (original != null) {
                         List<model.InventoryTicketDetail> allDetails = ticketDAO.getTicketDetails(transferId);
+                        
+                        // Đối với bất kỳ phiếu điều chuyển nào, ta luôn sinh ra 2 phiếu kiểm kê tương ứng:
+                        // 1. Phiếu xuất kho kiểm kê (TX-) tại Kho chuyển (fromWarehouseId)
+                        // 2. Phiếu nhập kho kiểm kê (TI-) tại Kho nhận (toWarehouseId)
                         List<model.InventoryTicketDetail> exportDetails = new ArrayList<>();
                         List<model.InventoryTicketDetail> importDetails = new ArrayList<>();
                         for (model.InventoryTicketDetail d : allDetails) {
-                            if ("SEND".equalsIgnoreCase(d.getActionType()) || "EXPORT".equalsIgnoreCase(d.getActionType())) {
-                                exportDetails.add(d);
-                            } else if ("RECEIVE".equalsIgnoreCase(d.getActionType()) || "IMPORT".equalsIgnoreCase(d.getActionType())) {
-                                importDetails.add(d);
-                            }
+                            model.InventoryTicketDetail ed = new model.InventoryTicketDetail();
+                            ed.setProductId(d.getProductId());
+                            ed.setQuantity(d.getQuantity());
+                            ed.setActionType("SEND");
+                            exportDetails.add(ed);
+                            
+                            model.InventoryTicketDetail idet = new model.InventoryTicketDetail();
+                            idet.setProductId(d.getProductId());
+                            idet.setQuantity(d.getQuantity());
+                            idet.setActionType("RECEIVE");
+                            importDetails.add(idet);
                         }
                         
                         if (!exportDetails.isEmpty()) {
@@ -656,8 +666,8 @@ public class InventoryController extends BaseController {
                             model.InventoryTicket importTicket = new model.InventoryTicket();
                             importTicket.setTicketCode("TI-" + original.getTicketId());
                             importTicket.setTicketType("TRANSFER_CHECK");
-                            importTicket.setFromWarehouseId(original.getToWarehouseId());
-                            importTicket.setToWarehouseId(original.getFromWarehouseId());
+                            importTicket.setFromWarehouseId(original.getFromWarehouseId());
+                            importTicket.setToWarehouseId(original.getToWarehouseId());
                             importTicket.setStatus("IN_TRANSIT");
                             importTicket.setNote("Phiếu gốc: " + original.getTicketCode());
                             importTicket.setCreatedBy(currentUser.getEmployeeId());
