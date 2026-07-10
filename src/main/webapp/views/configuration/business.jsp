@@ -16,7 +16,6 @@
 <div class="app-container">
     <jsp:include page="/views/common/sidebar.jsp" />
     <div class="main-content">
-        <jsp:include page="/views/common/topbar.jsp" />
 
         <c:if test="${not empty _success}"><div class="alert alert-success">${_success}</div></c:if>
         <c:if test="${not empty _error}"><div class="alert alert-error">${_error}</div></c:if>

@@ -21,7 +21,7 @@
 <div class="app-container">
     <jsp:include page="../common/sidebar.jsp"/>
     <main class="main-content">
-        <jsp:include page="../common/topbar.jsp"/>
+        
         <div class="container-fluid py-4">
 
             <div class="d-flex justify-content-between align-items-center mb-4">

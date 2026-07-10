@@ -11,7 +11,6 @@
     <jsp:include page="/views/common/sidebar.jsp" />
     
     <div class="main-content">
-        <jsp:include page="/views/common/topbar.jsp" />
         
         <div class="page-container">
 
