@@ -5,7 +5,7 @@
 
 <jsp:include page="/views/common/header.jsp">
     <jsp:param name="title" value="Danh sách chi nhánh"/>
-    <jsp:param name="additionalCSS" value="branch.css"/>
+    <jsp:param name="additionalCSS" value="branch.css?v=2"/>
 </jsp:include>
 
 
@@ -233,115 +233,88 @@
 
                     </table>
 
-                    <div class="pagination-info">
-
-                        <form method="get" action="branch">
-
+                    <!-- Pagination Section -->
+                    <div class="pagination-wrapper">
+                        <!-- Page Size Select and Record Info -->
+                        <form method="get" action="branch" id="paginationForm" class="pagination-form">
                             <input type="hidden" name="action" value="list"> 
                             <input type="hidden" name="status" value="${selectedStatus}">
                             <input type="hidden" name="city" value="${selectedCity}">
-
-                            <select name="sizeValue" onchange="this.form.submit()"> 
+                            
+                            <span class="pagination-label">Hiển thị:</span>
+                            <select name="sizeValue" onchange="this.form.submit()" class="pagination-select"> 
                                 <option value="30" ${sizeValue == 30 or (sizeValue == 50 and option50 == option30) or (sizeValue == 70 and option70 == option30) ? "selected" : ""}>
-                                    ${option30}
+                                    ${option30} dòng
                                 </option>
-
                                 <c:if test="${option50 != option30}">
                                     <option value="50" ${sizeValue == 50 or (sizeValue == 70 and option70 == option50) ? "selected" : ""}>
-                                        ${option50}
+                                        ${option50} dòng
                                     </option>
                                 </c:if>
-
                                 <c:if test="${option70 != option50 and option70 != option30 and option70 != option100}">
                                     <option value="70" ${sizeValue == 70 ? "selected" : ""}>
-                                        ${option70}
+                                        ${option70} dòng
                                     </option>
                                 </c:if>
-
                                 <option value="100" ${sizeValue == 100 or (sizeValue == 70 and option70 == option100) or (sizeValue == 50 and option50 == option100) ? "selected" : ""}>
                                     Tất cả
                                 </option>
                             </select>
-
-                            <span class="pagination-summary">
-                                ${startRecord}
-                                -
-                                ${endRecord}
-
-                                trong số
-
-                                ${totalRecords}
+                            <span class="pagination-text">
+                                Hiển thị <strong>${startRecord}</strong> - <strong>${endRecord}</strong> trong số <strong>${totalRecords}</strong> chi nhánh
                             </span>        
                         </form>
-                    </div>
 
-                    <div class="pagination">
-
-                        <c:if test="${currentPage > 1}">
-                            <a href="branch?action=list&page=${currentPage - 1}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}">
-                                <<
-                            </a>
-                        </c:if>
-
-                        <c:choose>
-
-                            <%-- Nếu <= 5 trang thì hiện tất cả --%>
-                            <c:when test="${totalPages <= 5}">
-                                <c:forEach begin="1" end="${totalPages}" var="i">
-                                    <a href="branch?action=list&page=${i}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}"
-                                       class="${i == currentPage ? 'active-page' : ''}">
-                                        ${i}
-                                    </a>
-                                </c:forEach>
-                            </c:when>
-
-                            <%-- Nếu > 5 trang --%>
-                            <c:otherwise>
-
-                                <%-- Trang đầu --%>
-                                <a href="branch?action=list&page=1&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}"
-                                   class="${currentPage == 1 ? 'active-page' : ''}">
-                                    1
+                        <!-- Page Numbers -->
+                        <div class="pagination-pages">
+                            <c:if test="${currentPage > 1}">
+                                <a href="branch?action=list&page=${currentPage - 1}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}" class="pagination-page-btn">
+                                    &lt;
                                 </a>
+                            </c:if>
 
-                                <%-- ... bên trái --%>
-                                <c:if test="${currentPage > 3}">
-                                    <span class="dots">...</span>
-                                </c:if>
-
-                                <%-- Trang trước, hiện tại, sau --%>
-                                <c:forEach
-                                    begin="${currentPage - 1 < 2 ? 2 : currentPage - 1}"
-                                    end="${currentPage + 1 > totalPages - 1 ? totalPages - 1 : currentPage + 1}"
-                                    var="i">
-
-                                    <a href="branch?action=list&page=${i}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}"
-                                       class="${i == currentPage ? 'active-page' : ''}">
-                                        ${i}
+                            <c:choose>
+                                <c:when test="${totalPages <= 5}">
+                                    <c:forEach begin="1" end="${totalPages}" var="i">
+                                        <a href="branch?action=list&page=${i}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}"
+                                           class="pagination-page-btn ${i == currentPage ? 'active' : ''}">
+                                            ${i}
+                                        </a>
+                                    </c:forEach>
+                                </c:when>
+                                <c:otherwise>
+                                    <a href="branch?action=list&page=1&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}"
+                                       class="pagination-page-btn ${currentPage == 1 ? 'active' : ''}">
+                                        1
                                     </a>
+                                    <c:if test="${currentPage > 3}">
+                                        <span class="dots">...</span>
+                                    </c:if>
+                                    <c:forEach
+                                        begin="${currentPage - 1 < 2 ? 2 : currentPage - 1}"
+                                        end="${currentPage + 1 > totalPages - 1 ? totalPages - 1 : currentPage + 1}"
+                                        var="i">
+                                        <a href="branch?action=list&page=${i}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}"
+                                           class="pagination-page-btn ${i == currentPage ? 'active' : ''}">
+                                            ${i}
+                                        </a>
+                                    </c:forEach>
+                                    <c:if test="${currentPage < totalPages - 2}">
+                                        <span class="dots">...</span>
+                                    </c:if>
+                                    <a href="branch?action=list&page=${totalPages}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}"
+                                       class="pagination-page-btn ${currentPage == totalPages ? 'active' : ''}">
+                                        ${totalPages}
+                                    </a>
+                                </c:otherwise>
+                            </c:choose>
 
-                                </c:forEach>
-
-                                <%-- ... bên phải --%>
-                                <c:if test="${currentPage < totalPages - 2}">
-                                    <span class="dots">...</span>
-                                </c:if>
-
-                                <%-- Trang cuối --%>
-                                <a href="branch?action=list&page=${totalPages}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}"
-                                   class="${currentPage == totalPages ? 'active-page' : ''}">
-                                    ${totalPages}
+                            <c:if test="${currentPage < totalPages}">
+                                <a href="branch?action=list&page=${currentPage + 1}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}" class="pagination-page-btn">
+                                    &gt;
                                 </a>
-
-                            </c:otherwise>
-
-                        </c:choose>
-
-                        <c:if test="${currentPage < totalPages}">
-                            <a href="branch?action=list&page=${currentPage + 1}&sizeValue=${sizeValue}&status=${selectedStatus}&city=${selectedCity}">
-                                >>
-                            </a>
-                        </c:if>
+                            </c:if>
+                        </div>
                     </div>
                 </div>
 
