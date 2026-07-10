@@ -130,9 +130,11 @@
             <span class="material-icons sidebar-dropdown-arrow">expand_more</span>
         </div>
         <div class="sidebar-submenu ${isDoiTacActive ? 'open' : ''}">
+            <c:if test="${roleName != 'Admin'}">
             <a href="${pageContext.request.contextPath}/customers" class="sidebar-submenu-item ${originalUri.contains('/customers') ? 'active' : ''}">
                 <span>Khách hàng</span>
             </a>
+            </c:if>
             <a href="${pageContext.request.contextPath}/suppliers" class="sidebar-submenu-item ${originalUri.contains('/suppliers') ? 'active' : ''}">
                 <span>Nhà cung cấp</span>
             </a>

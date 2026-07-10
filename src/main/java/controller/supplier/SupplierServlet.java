@@ -254,6 +254,6 @@ public class SupplierServlet extends HttpServlet {
             }
 
         }
-        response.sendRedirect("suppliers");
+        response.sendRedirect(request.getContextPath() + "/suppliers");
     }
 }

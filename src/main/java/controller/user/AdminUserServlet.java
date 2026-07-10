@@ -21,6 +21,8 @@ import dao.user.ProfileDao;
 import jakarta.servlet.http.HttpSession;
 import model.Employee;
 import util.email.EmailUtil;
+import util.pagination.PaginationHelper;
+import util.pagination.PaginationHelper.PageResult;
 import util.security.PasswordUtil;
 import service.system.ActivityLogService;
 
@@ -136,31 +138,16 @@ public class AdminUserServlet extends HttpServlet {
         String roleId = request.getParameter("roleId");
         String status = request.getParameter("status");
 
-        String pageSizeOption = getParam(request, "pageSize", "5");
+        int page = parseInt(request.getParameter("page"), 1);
+        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
 
-        // Admin views all accounts including Owners
         int totalUsers = adminUserDao.countAllEmployees(keyword, branchId, roleId, status);
-        int pageSize = resolvePageSize(pageSizeOption, totalUsers);
-
-        int currentPage = parseInt(request.getParameter("page"), 1);
-
-        if (currentPage < 1) {
-            currentPage = 1;
-        }
-
-        int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
-
-        if (totalPages < 1) {
-            totalPages = 1;
-        }
-
-        if (currentPage > totalPages) {
-            currentPage = totalPages;
-        }
+        PageResult pr = PaginationHelper.compute(totalUsers, page, sizeValue);
+        pr.setAttributes(request);
 
         request.setAttribute(
                 "users",
-                adminUserDao.getAllEmployees(keyword, branchId, roleId, status, currentPage, pageSize)
+                adminUserDao.getAllEmployees(keyword, branchId, roleId, status, pr.getCurrentPage(), pr.getPageSize())
         );
 
         request.setAttribute("branches", adminUserDao.getAllBranches());
@@ -170,37 +157,9 @@ public class AdminUserServlet extends HttpServlet {
         request.setAttribute("branchFilter", parseInt(branchId, -1));
         request.setAttribute("roleFilter", parseInt(roleId, -1));
         request.setAttribute("statusFilter", status);
-
-        request.setAttribute("currentPage", currentPage);
-        request.setAttribute("pageSize", pageSize);
-        request.setAttribute("pageSizeOption", pageSizeOption);
         request.setAttribute("totalUsers", totalUsers);
-        request.setAttribute("totalPages", totalPages);
 
         request.setAttribute("employeeOverview", adminUserDao.getAllEmployeesOverview());
-    }
-    private int resolvePageSize(String pageSizeOption, int totalUsers) {
-        if (isBlank(pageSizeOption)) {
-            return 5;
-        }
-
-        String option = pageSizeOption.trim().toLowerCase();
-
-        if ("30p".equals(option) || "30%".equals(option) || "30".equals(option)) {
-            return Math.max(1, (int) Math.ceil(totalUsers * 0.3));
-        }
-
-        if ("50p".equals(option) || "50%".equals(option) || "50".equals(option)) {
-            return Math.max(1, (int) Math.ceil(totalUsers * 0.5));
-        }
-
-        int size = parseInt(option, 5);
-
-        if (size != 5 && size != 10) {
-            size = 5;
-        }
-
-        return size;
     }
     private void loadSelectedEmployee(HttpServletRequest request, String attributeName) {
         int employeeId = parseInt(request.getParameter("id"), -1);

@@ -16,14 +16,14 @@ public class DBContext {
             + "databaseName=DBFinoraV3;"
             + "encrypt=false;";
 
-    private static String url = DEFAULT_URL;
-    private static String user = "sa";
-    private static String password = "123";
+    private static final String JDBC_URL = envOr("DB_URL", DEFAULT_URL);
+    private static final String DB_USER = envOr("DB_USER", "sa");
+    private static final String DB_SECRET = envOr("DB_PASSWORD", "123456");
 
-    /**
-     * ThreadLocal giu EmployeeID cua nguoi dung hien tai (set boi SecurityFilter).
-     * Trigger DB dung SESSION_CONTEXT(N'EmployeeID') de ghi nhan ai thao tac.
-     */
+    private static String url = JDBC_URL;
+    private static String user = DB_USER;
+    private static String password = DB_SECRET;
+
     private static final ThreadLocal<Integer> currentEmployeeId = new ThreadLocal<>();
 
     public static void setCurrentEmployeeId(Integer empId) {
@@ -81,5 +81,10 @@ public class DBContext {
         } else {
             System.err.println("Kết nối tới SQL Server thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu hoặc cổng 1433!");
         }
+    }
+
+    private static String envOr(String key, String fallback) {
+        String val = System.getenv(key);
+        return val != null ? val : fallback;
     }
 }
