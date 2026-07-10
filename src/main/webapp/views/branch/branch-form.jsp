@@ -3,23 +3,18 @@
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>
-            ${branch == null
-              ? 'Thêm chi nhánh'
-              : 'Cập nhật chi nhánh'}
-        </title>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/common.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/branch.css">
-    </head>
+<jsp:include page="/views/common/header.jsp">
+    <jsp:param name="title" value="${branch == null ? 'Thêm chi nhánh' : 'Cập nhật chi nhánh'}"/>
+    <jsp:param name="additionalCSS" value="branch.css"/>
+</jsp:include>
 
-    <body>
-        <jsp:include page="sidebar.jsp"/>
-        <div class="main-content">
-            <jsp:include page="header.jsp"/>
+<div class="app-container">
+    <jsp:include page="/views/common/sidebar.jsp"/>
+
+    <main class="main-content">
+        <jsp:include page="/views/common/topbar.jsp"/>
+        
+        <div class="container-fluid py-4">
             <div class="page-header">
                 <div class="page-title">
                     <h1>
@@ -72,7 +67,7 @@
 
                 <!-- THÔNG TIN CƠ BẢN -->
 
-                <div class="form-card">
+                <div class="form-card"> 
                     <h2>Thông tin cơ bản</h2>
                     <div class="form-grid">
                         <div class="form-group">
@@ -369,5 +364,7 @@
                 });
             });
         </script>
-    </body>
-</html>
+        </div>
+    </main>
+</div>
+<jsp:include page="/views/common/footer.jsp"/>

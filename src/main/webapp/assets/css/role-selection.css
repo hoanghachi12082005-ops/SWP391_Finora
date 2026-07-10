@@ -1,0 +1,150 @@
+.role-page {
+    min-height: 100vh;
+    background: var(--background, #f8f9fa);
+    padding: 60px 0;
+}
+
+.welcome-section {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.welcome-section h2 {
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.welcome-section p {
+    color: var(--secondary, #6c757d);
+    font-size: 16px;
+}
+
+.module-card {
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--outline-variant, #e5e7eb);
+    border-radius: var(--radius-xl, 20px);
+    background: var(--surface-container-lowest, #fff);
+    padding: 35px 25px;
+    text-align: center;
+    box-shadow: var(--shadow-sm, 0 4px 12px rgba(0,0,0,.08));
+    transition: all .3s ease;
+    cursor: pointer;
+}
+
+.module-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg, 0 24px 80px rgba(0,0,0,.15));
+    border-color: var(--primary-fixed, #ffdadb);
+}
+
+.module-card h5 {
+    margin-top: 20px;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.module-card p {
+    color: var(--secondary, #6c757d);
+    font-size: 14px;
+    margin-bottom: 0;
+}
+
+.icon-wrapper {
+    width: 90px;
+    height: 90px;
+    margin: auto;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.icon-wrapper span {
+    font-size: 50px;
+}
+
+/* POS */
+.pos {
+    background: #ffe5e5;
+    color: #dc3545;
+}
+
+/* Management */
+.management {
+    background: #e8f0ff;
+    color: #0d6efd;
+}
+
+/* Report */
+.report {
+    background: #e8fff2;
+    color: #198754;
+}
+
+/* System */
+.system {
+    background: #fff4db;
+    color: #fd7e14;
+}
+
+.logout-section {
+    margin-top: 50px;
+    text-align: center;
+}
+
+.logout-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    text-decoration: none;
+    transition: all .3s ease;
+}
+
+.logout-btn:hover {
+    background: #dc3545;
+    color: #fff;
+}
+/* Warehouse */
+.warehouse {
+    background: #f0e8ff;
+    color: #6f42c1;
+}
+
+.empty-role-box {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 40px 30px;
+    border-radius: 18px;
+    background: #fff;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+}
+
+.empty-role-box span {
+    font-size: 56px;
+    color: #dc3545;
+    margin-bottom: 15px;
+}
+
+.empty-role-box h5 {
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.empty-role-box p {
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+.module-card {
+    cursor: pointer;
+}
+
+.module-card:focus {
+    outline: none;
+}

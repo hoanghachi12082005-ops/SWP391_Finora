@@ -1,12 +1,67 @@
 package service.supplier;
 
-import service.common.GenericService;
-
 import dao.supplier.SupplierDAO;
 import model.Supplier;
 
-public class SupplierService extends GenericService<Supplier> {
-    public SupplierService() {
-        super(new SupplierDAO());
+import java.util.List;
+
+public class SupplierService {
+
+    private final SupplierDAO dao = new SupplierDAO();
+
+    public int countSuppliers(
+            String keyword,
+            String status) {
+
+        return dao.countSuppliers(keyword, status);
+    }
+
+    public List<Supplier> getSuppliersPaging(
+        String keyword,
+        String status,
+        int page,
+        int pageSize){
+
+        return dao.getSuppliersPaging(
+                keyword,
+                status,
+                page,
+                pageSize);
+    }
+
+    public int countActiveSuppliers() {
+        return dao.countActiveSuppliers();
+    }
+
+    public int countInactiveSuppliers() {
+        return dao.countInactiveSuppliers();
+    }
+
+    public Supplier getById(int id) {
+        return dao.getById(id);
+    }
+
+    public boolean existsByNameOrPhone(String name, String phone) {
+        return dao.existsByNameOrPhone(name, phone);
+    }
+
+    public boolean save(Supplier s) {
+        return dao.save(s);
+    }
+
+    public boolean delete(int id) {
+        return dao.delete(id);
+    }
+
+    public List<dto.inventory.ImportProductDTO.SupplierInfo> getSupplierProductsHistory(int supplierId) {
+        return dao.getSupplierProductsHistory(supplierId);
+    }
+
+    public boolean deleteSupplierProduct(int supplierId, int productId) {
+        return dao.deleteSupplierProduct(supplierId, productId);
+    }
+
+    public boolean addOrUpdateSupplierProduct(int supplierId, int productId, double importPrice) {
+        return dao.addOrUpdateSupplierProduct(supplierId, productId, importPrice);
     }
 }

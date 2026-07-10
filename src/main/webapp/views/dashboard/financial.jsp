@@ -1,35 +1,111 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<% request.setAttribute("pageTitle", "Financial Dashboard"); %>
-<jsp:include page="/views/common/header.jsp" />
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<% request.setAttribute("pageTitle", "Tổng quan tài chính"); %>
+<jsp:include page="/views/common/header.jsp">
+    <jsp:param name="title" value="Tổng quan tài chính"/>
+</jsp:include>
 <jsp:include page="/views/common/sidebar.jsp" />
-<main class="main">
-    <div class="card">
-        <h1>Financial Dashboard</h1>
-        <p>Đây là trang JSP mẫu cho chức năng <strong>Financial Dashboard</strong>.</p>
-        <% if (request.getAttribute("message") != null) { %>
-            <div class="message"><%= request.getAttribute("message") %></div>
-        <% } %>
-    </div>
 
-    <div class="card">
-        <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">
-            <input style="max-width:320px" placeholder="Search keyword...">
-            <button class="btn">Search</button>
-            <button class="btn secondary">Filter</button>
+<div class="page-content">
+    <section class="page-header">
+        <div>
+            <h2>Tổng quan tài chính</h2>
+            <p>Tổng quan doanh thu, chi phí và lợi nhuận</p>
         </div>
-        <table>
-            <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Action</th></tr></thead>
-            <tbody>
-                <tr><td>1</td><td>Sample data</td><td>ACTIVE</td><td><a href="#">View</a> | <a href="#">Edit</a></td></tr>
-            </tbody>
-        </table>
-    </div>
+    </section>
 
-    <div class="grid">
-        <div class="card"><h3>Total Sales</h3><p>0 VND</p></div>
-        <div class="card"><h3>Total Orders</h3><p>0</p></div>
-        <div class="card"><h3>Total Customers</h3><p>0</p></div>
-    </div>
+    <c:if test="${not empty message}">
+        <div class="alert alert-success">${message}</div>
+    </c:if>
 
-</main>
+    <section class="overview-grid">
+        <div class="overview-card">
+            <div class="overview-icon overview-icon-revenue">
+                <span class="material-symbols-outlined">payments</span>
+            </div>
+            <div class="overview-info">
+                <p>Tổng doanh thu</p>
+                <h3><fmt:formatNumber value="${totalRevenue}" type="number" groupingUsed="true"/> ₫</h3>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-icon overview-icon-warning">
+                <span class="material-symbols-outlined">money_off</span>
+            </div>
+            <div class="overview-info">
+                <p>Tổng chi phí</p>
+                <h3><fmt:formatNumber value="${totalExpenses}" type="number" groupingUsed="true"/> ₫</h3>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-icon overview-icon-revenue">
+                <span class="material-symbols-outlined">trending_up</span>
+            </div>
+            <div class="overview-info">
+                <p>Lợi nhuận ròng</p>
+                <h3><fmt:formatNumber value="${netProfit}" type="number" groupingUsed="true"/> ₫</h3>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-icon overview-icon-orders">
+                <span class="material-symbols-outlined">receipt_long</span>
+            </div>
+            <div class="overview-info">
+                <p>Tổng hóa đơn</p>
+                <h3>${totalInvoices}</h3>
+            </div>
+        </div>
+    </section>
+
+    <section class="table-card">
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Mô tả</th>
+                        <th>Số tiền</th>
+                        <th>Trạng thái</th>
+                        <th class="text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <c:choose>
+                        <c:when test="${not empty sampleData}">
+                            <c:forEach var="item" items="${sampleData}">
+                                <tr>
+                                    <td>${item.id}</td>
+                                    <td>${item.description}</td>
+                                    <td><fmt:formatNumber value="${item.amount}" type="number" groupingUsed="true"/> ₫</td>
+                                    <td><span class="status-badge active">Hoàn thành</span></td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <a href="#" title="Xem"><span class="material-symbols-outlined">visibility</span></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                        </c:when>
+                        <c:otherwise>
+                            <tr>
+                                <td colspan="5" class="empty-row">
+                                    <div class="empty-state">
+                                        <span class="material-symbols-outlined">account_balance</span>
+                                        <h4>Không có dữ liệu tài chính</h4>
+                                        <p>Dữ liệu tài chính sẽ xuất hiện sau khi có giao dịch.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </c:otherwise>
+                    </c:choose>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
 <jsp:include page="/views/common/footer.jsp" />

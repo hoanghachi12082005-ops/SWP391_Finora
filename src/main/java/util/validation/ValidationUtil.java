@@ -1,4 +1,4 @@
-package util.validation;
+package       util.validation;
 
 public class ValidationUtil {
     public static boolean isBlank(String value) {

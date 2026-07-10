@@ -1,16 +1,13 @@
 package model;
 
-/**
- * Model đại diện cho Nhân viên trong hệ thống Finora.
- * Khớp hoàn toàn với sơ đồ ERD.
- *
- * @author Finora Team
- */
-public class Employee {
+import java.sql.Timestamp;
 
-    /**
-     * Trạng thái làm việc của nhân viên.
-     */
+public class Employee {
+    // ─── Hằng số ─────────────────────────────────────────────
+    public static final String STATUS_ACTIVE   = "ACTIVE";
+    public static final String STATUS_INACTIVE = "INACTIVE";
+    public static final int    MAX_FAILED_LOGIN = 5;
+
     public enum EmployeeStatus {
         ACTIVE("Đang làm việc"),
         INACTIVE("Đã nghỉ việc"),
@@ -21,93 +18,191 @@ public class Employee {
         public String getDisplayName() { return displayName; }
     }
 
-    private int    empId;
-    private int    branchId;        // FK → Branch.branchId
-    private String fullName;
-    private String gender;          // "Nam" / "Nữ" / "Khác"
-    private String bod;             // Date of Birth (yyyy-MM-dd)
-    private String address;
-    private String email;
-    private String phone;
-    private String passwordHash;    // Mật khẩu đã hash
-    private EmployeeStatus status;
-    private String createdAt;       // yyyy-MM-dd HH:mm:ss
-    private String updateAt;        // yyyy-MM-dd HH:mm:ss
+    // ─── Trường dữ liệu ──────────────────────────────────────
+    private int       employeeID;
+    private int       roleID;
+    private Integer   branchID;
+    private String    avatarUrl;
+    private String    fullName;
+    private String    gender;
+    private Timestamp dob;
+    private String    address;
+    private String    email;
+    private String    phone;
+    private String    passwordHash;
+    private String    status;
 
-    // ── Constructors ─────────────────────────────────────────
 
-    public Employee() {}
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
 
-    /** Constructor đầy đủ dùng khi map từ DB */
-    public Employee(int empId, int branchId, String fullName, String gender, String bod,
-                    String address, String email, String phone, String passwordHash,
-                    EmployeeStatus status, String createdAt, String updateAt) {
-        this.empId        = empId;
-        this.branchId     = branchId;
-        this.fullName     = fullName;
-        this.gender       = gender;
-        this.bod          = bod;
-        this.address      = address;
-        this.email        = email;
-        this.phone        = phone;
-        this.passwordHash = passwordHash;
-        this.status       = status;
-        this.createdAt    = createdAt;
-        this.updateAt     = updateAt;
+    // Extra fields for displaying JOIN data
+    private String roleName;
+    private String roleNames;
+    private String branchName;
+
+    // Default Constructor
+    public Employee() {
     }
 
-    // ── Getters & Setters ─────────────────────────────────────
+    // Full Constructor
+    public Employee(int employeeID, int roleID, Integer branchID, String avatarUrl, String fullName, String gender,
+            Timestamp dob, String address, String email, String phone, String passwordHash,
+            String status, Timestamp createdAt, Timestamp updatedAt) {
+        this.employeeID  = employeeID;
+        this.roleID      = roleID;
+        this.branchID    = branchID;
+        this.avatarUrl   = avatarUrl;
+        this.fullName    = fullName;
+        this.gender      = gender;
+        this.dob         = dob;
+        this.address     = address;
+        this.email       = email;
+        this.phone       = phone;
+        this.passwordHash = passwordHash;
+        this.status      = status;
+        this.createdAt   = createdAt;
+        this.updatedAt   = updatedAt;
+    }
 
-    public int getEmpId()               { return empId; }
-    public void setEmpId(int empId)     { this.empId = empId; }
+    // =========================================================
+    // Getters & Setters
+    // =========================================================
 
-    public int getBranchId()            { return branchId; }
-    public void setBranchId(int branchId) { this.branchId = branchId; }
+    public int getEmployeeID() { return employeeID; }
+    public void setEmployeeID(int employeeID) { this.employeeID = employeeID; }
+    public int getEmployeeId() { return employeeID; }
+    public void setEmployeeId(int employeeID) { this.employeeID = employeeID; }
+    public int getEmpId() { return employeeID; }
+    public void setEmpId(int empId) { this.employeeID = empId; }
+    public int getEmpID() { return employeeID; }
+    public void setEmpID(int empID) { this.employeeID = empID; }
 
-    public String getFullName()                  { return fullName; }
-    public void setFullName(String fullName)     { this.fullName = fullName; }
+    public int getRoleID() { return roleID; }
+    public void setRoleID(int roleID) { this.roleID = roleID; }
+    public int getRoleId() { return roleID; }
+    public void setRoleId(int roleID) { this.roleID = roleID; }
 
-    public String getGender()                    { return gender; }
-    public void setGender(String gender)         { this.gender = gender; }
+    public Integer getBranchID() { return branchID; }
+    public void setBranchID(Integer branchID) { this.branchID = branchID; }
+    public void setBranchID(int branchID) { this.branchID = branchID; }
+    public Integer getBranchId() { return branchID; }
+    public void setBranchId(Integer branchID) { this.branchID = branchID; }
+    public void setBranchId(int branchID) { this.branchID = branchID; }
 
-    public String getBod()                       { return bod; }
-    public void setBod(String bod)               { this.bod = bod; }
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
-    public String getAddress()                   { return address; }
-    public void setAddress(String address)       { this.address = address; }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public String getEmail()                     { return email; }
-    public void setEmail(String email)           { this.email = email; }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
 
-    public String getPhone()                     { return phone; }
-    public void setPhone(String phone)           { this.phone = phone; }
+    public Timestamp getDob() { return dob; }
+    public void setDob(Timestamp dob) { this.dob = dob; }
 
-    public String getPasswordHash()              { return passwordHash; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getUsername() { return email; }
+    public void setUsername(String username) { this.email = username; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
 
-    public EmployeeStatus getStatus()   { return status; }
-    public void setStatus(EmployeeStatus status) { this.status = status; }
+    public String getPassword() { return passwordHash; }
+    public void setPassword(String password) { this.passwordHash = password; }
 
-    public String getCreatedAt()                 { return createdAt; }
-    public void setCreatedAt(String createdAt)   { this.createdAt = createdAt; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public String getUpdateAt()                  { return updateAt; }
-    public void setUpdateAt(String updateAt)     { this.updateAt = updateAt; }
 
-    // ── Backward Compatibility Aliases ────────────────────────
 
-    public int getEmpID() { return getEmpId(); }
-    public void setEmpID(int empID) { setEmpId(empID); }
+    public Timestamp getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
 
-    public int getBranchID() { return getBranchId(); }
-    public void setBranchID(int branchID) { setBranchId(branchID); }
+    public Timestamp getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
 
-    public String getDateOfBirth() { return getBod(); }
-    public void setDateOfBirth(String dateOfBirth) { setBod(dateOfBirth); }
+    public String getRoleName() { return roleName; }
+    public void setRoleName(String roleName) { this.roleName = roleName; }
+
+    public String getRoleNames() { return roleNames; }
+    public void setRoleNames(String roleNames) { this.roleNames = roleNames; }
+
+    public String getBranchName() { return branchName; }
+    public void setBranchName(String branchName) { this.branchName = branchName; }
+
+    public boolean isActive() {
+        return STATUS_ACTIVE.equalsIgnoreCase(status) || "active".equalsIgnoreCase(status);
+    }
+
+    // =========================================================
+    // Backward Compatibility String-date & Enum properties
+    // =========================================================
+
+    public String getBod() {
+        return dob != null ? dob.toString().substring(0, 10) : null;
+    }
+
+    public void setBod(String bod) {
+        if (bod != null && !bod.isBlank()) {
+            try {
+                this.dob = Timestamp.valueOf(bod + " 00:00:00");
+            } catch (Exception e) {
+                // Ignore parsing errors
+            }
+        }
+    }
+
+    public void setCreatedAt(String createdAtStr) {
+        if (createdAtStr != null && !createdAtStr.isBlank()) {
+            try {
+                this.createdAt = Timestamp.valueOf(createdAtStr);
+            } catch (Exception e) {
+                try {
+                    this.createdAt = Timestamp.valueOf(createdAtStr + " 00:00:00");
+                } catch (Exception ex) {}
+            }
+        }
+    }
+
+    public String getUpdateAt() {
+        return updatedAt != null ? updatedAt.toString() : null;
+    }
+
+    public void setUpdateAt(String updatedAtStr) {
+        if (updatedAtStr != null && !updatedAtStr.isBlank()) {
+            try {
+                this.updatedAt = Timestamp.valueOf(updatedAtStr);
+            } catch (Exception e) {
+                try {
+                    this.updatedAt = Timestamp.valueOf(updatedAtStr + " 00:00:00");
+                } catch (Exception ex) {}
+            }
+        }
+    }
+
+    public void setStatus(EmployeeStatus employeeStatus) {
+        this.status = employeeStatus != null ? employeeStatus.name() : null;
+    }
 
     @Override
     public String toString() {
-        return "Employee{empId=" + empId + ", fullName='" + fullName
-                + "', branchId=" + branchId + ", status=" + status + "}";
+        return "Employee{"
+                + "employeeID=" + employeeID
+                + ", roleID=" + roleID
+                + ", branchID=" + branchID
+                + ", fullName='" + fullName + '\''
+                + ", email='" + email + '\''
+                + ", status='" + status + '\''
+                + '}';
     }
 }

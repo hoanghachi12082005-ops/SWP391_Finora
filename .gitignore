@@ -1,6 +1,13 @@
-target/
+/target/
+/.settings/
+/.smarttomcat/
+/nb-configuration.xml
+/nbactions.xml
+/nbproject/private/
+/nbproject/
 *.class
 *.war
-.idea/
-.vscode/
-nbproject/private/
+*.ear
+*.log
+.DS_Store
+Thumbs.db

@@ -1,249 +1,171 @@
 package dao.employee;
 
-
 import model.Employee;
-import model.Employee.EmployeeStatus;
 import util.database.DBContext;
-
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
 
-/**
- * DAO xử lý các thao tác CRUD cho bảng Employee.
- *
- * @author Finora Team
- */
 public class EmployeeDAO {
 
-    // =========================================================
-    //  SQL Constants
-    // =========================================================
+    private static final int MAX_FAILED = Employee.MAX_FAILED_LOGIN;
 
-    private static final String SELECT_ALL =
-        "SELECT emp_id, branch_id, full_name, gender, bod, address, email, " +
-        "phone, password_hash, status, created_at, update_at FROM employee";
+    // ─────────────────────────────────────────────────────────
+    // TÌM KIẾM
+    // ─────────────────────────────────────────────────────────
 
-    private static final String SELECT_BY_ID =
-        SELECT_ALL + " WHERE emp_id = ?";
-
-    private static final String SELECT_BY_BRANCH =
-        SELECT_ALL + " WHERE branch_id = ?";
-
-    private static final String SELECT_BY_EMAIL =
-        SELECT_ALL + " WHERE email = ?";
-
-    private static final String INSERT =
-        "INSERT INTO employee (branch_id, full_name, gender, bod, address, email, " +
-        "phone, password_hash, status, created_at, update_at) " +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
-
-    private static final String UPDATE =
-        "UPDATE employee SET branch_id=?, full_name=?, gender=?, bod=?, address=?, " +
-        "email=?, phone=?, status=?, update_at=NOW() WHERE emp_id=?";
-
-    private static final String UPDATE_PASSWORD =
-        "UPDATE employee SET password_hash=?, update_at=NOW() WHERE emp_id=?";
-
-    private static final String DELETE =
-        "DELETE FROM employee WHERE emp_id=?";
-
-    private static final String UPDATE_STATUS =
-        "UPDATE employee SET status=?, update_at=NOW() WHERE emp_id=?";
-
-    private static final String SELECT_BY_STATUS =
-        SELECT_ALL + " WHERE status = ?";
-
-    private static final String SEARCH =
-        SELECT_ALL + " WHERE full_name LIKE ? OR email LIKE ? OR phone LIKE ?";
-
-    private static final String COUNT_BY_BRANCH =
-        "SELECT COUNT(*) FROM employee WHERE branch_id = ?";
-
-    private static final String COUNT_ALL =
-        "SELECT COUNT(*) FROM employee";
-
-    // =========================================================
-    //  Mapping Helper
-    // =========================================================
-
-    private Employee mapRow(ResultSet rs) throws SQLException {
-        Employee e = new Employee();
-        e.setEmpId(rs.getInt("emp_id"));
-        e.setBranchId(rs.getInt("branch_id"));
-        e.setFullName(rs.getString("full_name"));
-        e.setGender(rs.getString("gender"));
-        e.setBod(rs.getString("bod"));
-        e.setAddress(rs.getString("address"));
-        e.setEmail(rs.getString("email"));
-        e.setPhone(rs.getString("phone"));
-        e.setPasswordHash(rs.getString("password_hash"));
-        String statusStr = rs.getString("status");
-        if (statusStr != null) {
-            try {
-                e.setStatus(EmployeeStatus.valueOf(statusStr.toUpperCase()));
-            } catch (IllegalArgumentException ex) {
-                e.setStatus(EmployeeStatus.ACTIVE);
-            }
-        }
-        e.setCreatedAt(rs.getString("created_at"));
-        e.setUpdateAt(rs.getString("update_at"));
-        return e;
-    }
-
-    // =========================================================
-    //  CRUD Operations
-    // =========================================================
-
-    /** Lấy tất cả nhân viên. */
-    public List<Employee> getAll() throws SQLException {
-        List<Employee> list = new ArrayList<>();
-        try (Connection con = DBContext.getConnection();
-             PreparedStatement ps = con.prepareStatement(SELECT_ALL);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) list.add(mapRow(rs));
-        }
-        return list;
-    }
-
-    /** Lấy nhân viên theo ID. */
-    public Employee getById(int empId) throws SQLException {
-        try (Connection con = DBContext.getConnection();
-             PreparedStatement ps = con.prepareStatement(SELECT_BY_ID)) {
-            ps.setInt(1, empId);
+    /**
+     * Tìm nhân viên theo email hoặc số điện thoại.
+     */
+    public Employee findByEmailOrPhone(String username) {
+        String sql = "SELECT "
+                + "  e.emp_id AS EmployeeID, "
+                + "  e.role_id AS RoleID, "
+                + "  e.branch_id AS BranchID, "
+                + "  e.fullName AS FullName, "
+                + "  e.email AS Email, "
+                + "  e.phone AS Phone, "
+                + "  e.passwordHash AS PasswordHash, "
+                + "  e.status AS Status, "
+                + "  r.role_name AS RoleName, "
+                + "  b.branch_name AS BranchName "
+                + "FROM Employee e "
+                + "JOIN Role r ON e.role_id = r.role_id "
+                + "LEFT JOIN Branch b ON e.branch_id = b.branch_id "
+                + "WHERE e.email = ? OR e.phone = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, username);
+            ps.setString(2, username);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return mapRow(rs);
-            }
-        }
-        return null;
-    }
-
-    /** Lấy danh sách nhân viên theo chi nhánh. */
-    public List<Employee> getByBranch(int branchId) throws SQLException {
-        List<Employee> list = new ArrayList<>();
-        try (Connection con = DBContext.getConnection();
-             PreparedStatement ps = con.prepareStatement(SELECT_BY_BRANCH)) {
-            ps.setInt(1, branchId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(mapRow(rs));
-            }
-        }
-        return list;
-    }
-
-    /** Lấy nhân viên theo email (dùng cho đăng nhập). */
-    public Employee getByEmail(String email) throws SQLException {
-        try (Connection con = DBContext.getConnection();
-             PreparedStatement ps = con.prepareStatement(SELECT_BY_EMAIL)) {
-            ps.setString(1, email);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return mapRow(rs);
-            }
-        }
-        return null;
-    }
-
-    /** Thêm nhân viên mới. Trả về emp_id được sinh ra, hoặc -1 nếu thất bại. */
-    public int insert(Employee emp) throws SQLException {
-        try (Connection con = DBContext.getConnection();
-             PreparedStatement ps = con.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, emp.getBranchId());
-            ps.setString(2, emp.getFullName());
-            ps.setString(3, emp.getGender());
-            ps.setString(4, emp.getBod());
-            ps.setString(5, emp.getAddress());
-            ps.setString(6, emp.getEmail());
-            ps.setString(7, emp.getPhone());
-            ps.setString(8, emp.getPasswordHash());
-            ps.setString(9, emp.getStatus() != null ? emp.getStatus().name() : "ACTIVE");
-            if (ps.executeUpdate() > 0) {
-                try (ResultSet keys = ps.getGeneratedKeys()) {
-                    if (keys.next()) return keys.getInt(1);
+                if (rs.next()) {
+                    return mapRow(rs);
                 }
             }
+        } catch (SQLException e) {
+            System.err.println("Lỗi findByEmailOrPhone: " + e.getMessage());
+            e.printStackTrace();
         }
-        return -1;
+        return null;
     }
 
-    /** Cập nhật thông tin nhân viên (không đổi mật khẩu). Trả về true nếu thành công. */
-    public boolean update(Employee emp) throws SQLException {
-        try (Connection con = DBContext.getConnection();
-             PreparedStatement ps = con.prepareStatement(UPDATE)) {
-            ps.setInt(1, emp.getBranchId());
-            ps.setString(2, emp.getFullName());
-            ps.setString(3, emp.getGender());
-            ps.setString(4, emp.getBod());
-            ps.setString(5, emp.getAddress());
-            ps.setString(6, emp.getEmail());
-            ps.setString(7, emp.getPhone());
-            ps.setString(8, emp.getStatus() != null ? emp.getStatus().name() : "ACTIVE");
-            ps.setInt(9, emp.getEmpId());
+    // ─────────────────────────────────────────────────────────
+    // ĐĂNG NHẬP SAI / KHOÁ TÀI KHOẢN
+    // ─────────────────────────────────────────────────────────
+
+    /**
+     * Khoá tài khoản nhân viên (đổi status thành INACTIVE).
+     */
+    public void lockEmployee(int employeeId) {
+        String sql = "UPDATE Employee SET status = 'INACTIVE', update_at = CURRENT_TIMESTAMP WHERE emp_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, employeeId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Lỗi lockEmployee: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // CÁC PHƯƠNG THỨC KHÁC
+    // ─────────────────────────────────────────────────────────
+
+    public boolean existsByEmail(String email, Object ignore) {
+        String sql = "SELECT COUNT(*) FROM Employee WHERE LOWER(email) = LOWER(?)";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi existsByEmail: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Insert nhân viên mới vào DB 
+     */
+    public boolean insert(Employee employee) {
+        String sql = "INSERT INTO Employee "
+                   + "(role_id, branch_id, fullName, email, phone, passwordHash, status, created_at, update_at) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, employee.getRoleID());
+            if (employee.getBranchID() != null && employee.getBranchID() > 0) {
+                ps.setInt(2, employee.getBranchID());
+            } else {
+                ps.setNull(2, Types.INTEGER);
+            }
+            ps.setString(3, employee.getFullName());
+            ps.setString(4, employee.getEmail());
+            ps.setString(5, employee.getPhone());
+            ps.setString(6, employee.getPasswordHash());
+            ps.setString(7, employee.getStatus() != null ? employee.getStatus() : "ACTIVE");
             return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("LỖI SQL TẠI EmployeeDAO.insert(): " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi hệ thống Database: " + e.getMessage());
         }
     }
 
-    /** Đổi mật khẩu (đã hash). */
-    public boolean updatePassword(int empId, String newPasswordHash) throws SQLException {
-        try (Connection con = DBContext.getConnection();
-             PreparedStatement ps = con.prepareStatement(UPDATE_PASSWORD)) {
+    public boolean checkFullNameAndEmailMatch(String fullName, String email) {
+        String sql = "SELECT COUNT(*) FROM Employee "
+                   + "WHERE LOWER(fullName) = LOWER(?) AND LOWER(email) = LOWER(?)";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, fullName);
+            ps.setString(2, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi checkFullNameAndEmailMatch: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean updatePasswordByEmail(String email, String newPasswordHash) {
+        String sql = "UPDATE Employee "
+                   + "SET passwordHash = ?, update_at = CURRENT_TIMESTAMP "
+                   + "WHERE LOWER(email) = LOWER(?)";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, newPasswordHash);
-            ps.setInt(2, empId);
+            ps.setString(2, email);
             return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Lỗi updatePasswordByEmail: " + e.getMessage());
+            e.printStackTrace();
         }
+        return false;
     }
 
-    /** Xóa nhân viên theo ID. */
-    public boolean delete(int empId) throws SQLException {
-        try (Connection con = DBContext.getConnection();
-             PreparedStatement ps = con.prepareStatement(DELETE)) {
-            ps.setInt(1, empId);
-            return ps.executeUpdate() > 0;
+    // ─────────────────────────────────────────────────────────
+    // PHƯƠNG THỨC COMPATIBILITY CHO BRANCH CONTROLLER
+    // ─────────────────────────────────────────────────────────
+
+    public int count() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM employee";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
         }
+        return 0;
     }
 
-    /** Cập nhật trạng thái nhân viên. */
-    public boolean updateStatus(int empId, EmployeeStatus status) throws SQLException {
-        try (Connection con = DBContext.getConnection();
-             PreparedStatement ps = con.prepareStatement(UPDATE_STATUS)) {
-            ps.setString(1, status.name());
-            ps.setInt(2, empId);
-            return ps.executeUpdate() > 0;
-        }
-    }
-
-    /** Lấy danh sách nhân viên theo trạng thái. */
-    public List<Employee> getByStatus(EmployeeStatus status) throws SQLException {
-        List<Employee> list = new ArrayList<>();
-        try (Connection con = DBContext.getConnection();
-             PreparedStatement ps = con.prepareStatement(SELECT_BY_STATUS)) {
-            ps.setString(1, status.name());
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(mapRow(rs));
-            }
-        }
-        return list;
-    }
-
-    /** Tìm kiếm nhân viên theo tên, email hoặc số điện thoại. */
-    public List<Employee> search(String keyword) throws SQLException {
-        List<Employee> list = new ArrayList<>();
-        String p = "%" + keyword + "%";
-        try (Connection con = DBContext.getConnection();
-             PreparedStatement ps = con.prepareStatement(SEARCH)) {
-            ps.setString(1, p);
-            ps.setString(2, p);
-            ps.setString(3, p);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(mapRow(rs));
-            }
-        }
-        return list;
-    }
-
-    /** Đếm số nhân viên của một chi nhánh. */
     public int countByBranch(int branchId) throws SQLException {
-        try (Connection con = DBContext.getConnection();
-             PreparedStatement ps = con.prepareStatement(COUNT_BY_BRANCH)) {
+        String sql = "SELECT COUNT(*) FROM employee WHERE branch_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, branchId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
@@ -252,13 +174,65 @@ public class EmployeeDAO {
         return 0;
     }
 
-    /** Đếm tổng số nhân viên. */
-    public int count() throws SQLException {
-        try (Connection con = DBContext.getConnection();
-             PreparedStatement ps = con.prepareStatement(COUNT_ALL);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) return rs.getInt(1);
+    public List<Employee> getByBranch(int branchId) throws SQLException {
+        List<Employee> list = new ArrayList<>();
+        String sql = "SELECT e.emp_id AS EmployeeID, e.role_id AS RoleID, e.branch_id AS BranchID, "
+                   + "e.fullName AS FullName, e.email AS Email, e.phone AS Phone, e.passwordHash AS PasswordHash, "
+                   + "e.status AS Status, r.role_name AS RoleName, "
+                   + "b.branch_name AS BranchName "
+                   + "FROM employee e "
+                   + "JOIN Role r ON e.role_id = r.role_id "
+                   + "LEFT JOIN Branch b ON e.branch_id = b.branch_id "
+                   + "WHERE e.branch_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
         }
-        return 0;
+        return list;
+    }
+
+    public List<Employee> getAll() throws SQLException {
+        List<Employee> list = new ArrayList<>();
+        String sql = "SELECT e.emp_id AS EmployeeID, e.role_id AS RoleID, e.branch_id AS BranchID, "
+                   + "e.fullName AS FullName, e.email AS Email, e.phone AS Phone, e.passwordHash AS PasswordHash, "
+                   + "e.status AS Status, r.role_name AS RoleName, "
+                   + "b.branch_name AS BranchName "
+                   + "FROM employee e "
+                   + "JOIN Role r ON e.role_id = r.role_id "
+                   + "LEFT JOIN Branch b ON e.branch_id = b.branch_id";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // HELPER
+    // ─────────────────────────────────────────────────────────
+
+    private Employee mapRow(ResultSet rs) throws SQLException {
+        Employee e = new Employee();
+        e.setEmployeeId(rs.getInt("EmployeeID"));
+        e.setRoleId(rs.getInt("RoleID"));
+        e.setBranchId(rs.getObject("BranchID") != null ? rs.getInt("BranchID") : null);
+        e.setFullName(rs.getString("FullName"));
+        e.setEmail(rs.getString("Email"));
+        e.setPhone(rs.getString("Phone"));
+        String hash = rs.getString("PasswordHash");
+        e.setPasswordHash(hash != null ? hash.trim() : null);
+        e.setStatus(rs.getString("Status"));
+        e.setRoleName(rs.getString("RoleName"));
+        e.setBranchName(rs.getString("BranchName"));
+
+        return e;
     }
 }

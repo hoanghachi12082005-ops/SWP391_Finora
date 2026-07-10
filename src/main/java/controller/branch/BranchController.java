@@ -5,6 +5,8 @@ import dao.employee.EmployeeDAO;
 import model.Branch;
 import model.Employee;
 import util.branch.BranchValidator;
+import util.pagination.PaginationHelper;
+import util.pagination.PaginationHelper.PageResult;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -22,7 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-@WebServlet(name = "BranchController", urlPatterns = {"/branch"})
+@WebServlet(name = "BranchServlet", urlPatterns = {"/branch"})
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024,
         maxFileSize = 5 * 1024 * 1024,
@@ -53,17 +55,10 @@ public class BranchController extends HttpServlet {
                 int editId = parseId(req.getParameter("id"));
                 Branch toEdit = dao.findById(editId);
                 if (toEdit == null) {
-                    resp.sendRedirect("branch?error=notfound");
+                    resp.sendRedirect(req.getContextPath() + "/branch?error=notfound");
                     return;
                 }
                 req.setAttribute("branch", toEdit);
-                req.setAttribute("page", req.getParameter("page"));
-                req.setAttribute("sizeValue", req.getParameter("sizeValue"));
-                req.setAttribute("keyword", req.getParameter("keyword"));
-                req.setAttribute("status", req.getParameter("status"));
-                req.setAttribute("city", req.getParameter("city"));
-                req.setAttribute("branch", toEdit);
-                
                 loadEmployeeList(req);
                 forward(req, resp, "branch-form.jsp");
                 break;
@@ -76,19 +71,13 @@ public class BranchController extends HttpServlet {
                     return;
                 }
                 loadBranchDetail(req, detailBranch);
-                req.setAttribute("page", req.getParameter("page"));
-                req.setAttribute("sizeValue", req.getParameter("sizeValue"));
-                req.setAttribute("keyword", req.getParameter("keyword"));
-                req.setAttribute("status", req.getParameter("status"));
-                req.setAttribute("city", req.getParameter("city"));
-                
                 forward(req, resp, "branch-detail.jsp");
                 break;
 
             case "delete":
                 int deleteId = parseId(req.getParameter("id"));
                 dao.delete(deleteId);
-                resp.sendRedirect("branch?success=delete");
+                resp.sendRedirect(req.getContextPath() + "/branch?success=delete");
                 break;
 
             default:
@@ -96,59 +85,25 @@ public class BranchController extends HttpServlet {
                 String status = req.getParameter("status");
                 String city = req.getParameter("city");
                 String keyword = req.getParameter("keyword");
-                
-                if(keyword != null){
+
+                if (keyword != null) {
                     keyword = keyword.trim().replaceAll("\\s+", " ");
                 }
-                 
-                int page = 1;
-                try {
-                    page = Integer.parseInt(req.getParameter("page"));
-                } catch (Exception ignored) {}
-                
-                int sizeValue = 30;
-                try {
-                    sizeValue = Integer.parseInt(req.getParameter("sizeValue"));
-                } catch (Exception ignored) {}
-                
-                int pageSize;
-                int totalRecords = dao.countBranch(keyword, status, city);
 
-                switch (sizeValue) {
-                    case 30:
-                        pageSize = (int) Math.ceil(totalRecords * 0.3);
-                        break;
-                    case 50:
-                        pageSize = (int) Math.ceil(totalRecords * 0.5);
-                        break;
-                    case 70:
-                        pageSize = (int) Math.ceil(totalRecords * 0.7);
-                        break;
-                    case 100:
-                        pageSize = totalRecords;
-                        break;
-                    default:
-                        sizeValue = 30;
-                        pageSize = (int) Math.ceil(totalRecords * 0.3);
-                }
-                
-                if (pageSize <= 0) {
-                    pageSize = 1;
-                }
-                
-                int totalPages = (int) Math.ceil(totalRecords * 1.0 / pageSize);
-                int startRecord = totalRecords == 0 ? 0 : (page - 1) * pageSize + 1;
-                int endRecord = Math.min(page * pageSize, totalRecords);
-                
+                int page = parseId(req.getParameter("page"));
+                int sizeValue = parseId(req.getParameter("sizeValue"));
+                if (page < 1) page = 1;
+                if (sizeValue < 1) sizeValue = 30;
+
+                int totalRecords = dao.countBranch(keyword, status, city);
+                PageResult pr = PaginationHelper.compute(totalRecords, page, sizeValue);
+                pr.setAttributes(req);
+
                 List<Branch> branchList = dao.findBranchPaging(
-                        keyword,
-                        status,
-                        city,
-                        page,
-                        pageSize);
+                        keyword, status, city,
+                        pr.getCurrentPage(), pr.getPageSize());
 
                 boolean showEmployeeColumn = false;
-
                 for (Branch branch : branchList) {
                     if (branch.getEmployeeCount() > 0) {
                         showEmployeeColumn = true;
@@ -158,20 +113,6 @@ public class BranchController extends HttpServlet {
 
                 req.setAttribute("branchList", branchList);
                 req.setAttribute("showEmployeeColumn", showEmployeeColumn);
-
-                req.setAttribute("currentPage", page);
-                req.setAttribute("totalPages", totalPages);
-
-                req.setAttribute("pageSize", pageSize);
-                req.setAttribute("sizeValue", sizeValue);
-                req.setAttribute("startRecord", startRecord);
-                req.setAttribute("endRecord", endRecord);
-                req.setAttribute("option30", (int) Math.ceil(totalRecords * 0.3));
-                req.setAttribute("option50", (int) Math.ceil(totalRecords * 0.5));
-                req.setAttribute("option70", (int) Math.ceil(totalRecords * 0.7));
-                req.setAttribute("option100", totalRecords);
-                req.setAttribute("totalRecords", totalRecords);
-
                 req.setAttribute("selectedStatus", status);
                 req.setAttribute("selectedCity", city);
                 req.setAttribute("cityList", dao.getCityWithBranch());
@@ -207,34 +148,34 @@ public class BranchController extends HttpServlet {
         //Néu là update kiểm tra xem ID đó có tồn tại không
         if (isUpdate && dao.findById(id) == null) {
             resp.sendRedirect(req.getContextPath() + "/branch?error=notfound");
-        } 
-        
+        }
+
         //Build object từ form
         Branch b = buildBranchFromRequest(req, id);
-        
+
         if (isUpdate) {
             Branch oldBranch = dao.findById(id);
             if (oldBranch != null) {
                 b.setImageUrl(oldBranch.getImageUrl());
             }
         }
-        
+
         //validate
         Map<String, String> errors = isUpdate
                 ? BranchValidator.validateForUpdate(b, id, dao::isCodeDuplicate)
                 : BranchValidator.validateForInsert(b, dao::isCodeDuplicate);
-                if (dao.isInforDuplicate(b.getEmail(),b.getPhone(), id)) {
-                    errors.put("general", "Email hoặc số điện thoại đã tồn tại trong hệ thống.");
-                }
-                
-                Part imagePart = req.getPart("image");
+        if (dao.isInforDuplicate(b.getEmail(), b.getPhone(), id)) {
+            errors.put("general", "Email hoặc số điện thoại đã tồn tại trong hệ thống.");
+        }
 
-                String imageError = BranchValidator.validateImage(imagePart);
+        Part imagePart = req.getPart("image");
 
-                if (imageError != null) {
-                    errors.put("image", imageError);
-                }
-                
+        String imageError = BranchValidator.validateImage(imagePart);
+
+        if (imageError != null) {
+            errors.put("image", imageError);
+        }
+
         //Nếu gặp lỗi thì quay lại branch-form.jsp
         if (!errors.isEmpty()) {
             req.setAttribute("errors", errors);
@@ -243,7 +184,7 @@ public class BranchController extends HttpServlet {
             forward(req, resp, "branch-form.jsp");
             return;
         }
-        
+
         if (imagePart != null && imagePart.getSize() > 0) {
             String imageUrl = saveBranchImage(req, imagePart, b.getBranchCode());
 
@@ -251,7 +192,7 @@ public class BranchController extends HttpServlet {
                 b.setImageUrl(imageUrl);
             }
         }
-        
+
         //Lưu dữ liệu
         int branchId;
         if (isUpdate) {
@@ -359,7 +300,7 @@ public class BranchController extends HttpServlet {
         b.setCity(trim(req.getParameter("city")));
         b.setDistrict(trim(req.getParameter("district")));
         return b;
-    }   
+    }
 
     private void forward(HttpServletRequest req, HttpServletResponse resp, String view)
             throws ServletException, IOException {
@@ -393,7 +334,7 @@ public class BranchController extends HttpServlet {
             e.printStackTrace();
         }
     }
-    
+
     private String saveBranchImage(HttpServletRequest request,
             Part imagePart,
             String branchCode) throws IOException {

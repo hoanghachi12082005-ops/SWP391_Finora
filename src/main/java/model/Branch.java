@@ -31,7 +31,6 @@ public class Branch {
     private String city;
     private String district;
     private String imageUrl;
-    
 
     // Các trường bổ sung phục vụ hiển thị trên view
     private String managerName;
@@ -41,35 +40,35 @@ public class Branch {
     // =========================================================
     //  Constructors
     // =========================================================
-
     public Branch() {
         this.status = "active";
     }
 
     public Branch(int branchId, String branchName, String branchCode,
-                  String address, String phone, String email,
-                  String openingTime, String closingTime,
-                  String status, String createdAt, String updateAt, String city, String district) {
-        this.branchId    = branchId;
-        this.branchName  = branchName;
-        this.branchCode  = branchCode;
-        this.address     = address;
-        this.phone       = phone;
-        this.email       = email;
+            String address, String phone, String email,
+            String openingTime, String closingTime,
+            String status, String createdAt, String updateAt, String city, String district, String imageUrl) {
+        this.branchId = branchId;
+        this.branchName = branchName;
+        this.branchCode = branchCode;
+        this.address = address;
+        this.phone = phone;
+        this.email = email;
         this.openingTime = openingTime;
         this.closingTime = closingTime;
         setStatus(status);
-        this.createdAt   = createdAt;
-        this.updateAt    = updateAt;        
-        this.city        = city;
-        this.district    = district;
+        this.createdAt = createdAt;
+        this.updateAt = updateAt;
+        this.city = city;
+        this.district = district;
         this.imageUrl = imageUrl;
+
     }
 
     // =========================================================
     //  Getters & Setters
     // =========================================================
-public int getBranchId() {
+    public int getBranchId() {
         return branchId;
     }
 
