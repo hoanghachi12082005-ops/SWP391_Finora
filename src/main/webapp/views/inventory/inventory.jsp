@@ -104,12 +104,13 @@
                         .subtab-link.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
                     </style>
 
-                    <c:if test="${roleName == 'Owner'}">
+                    <c:if test="${roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'WarehouseStaff'}">
                         <div class="subtab-nav mb-4">
                             <a href="${pageContext.request.contextPath}/inventory?tab=stock&warehouseId=${selectedWarehouseId}"
                                 class="subtab-link ${empty activeTab || activeTab == 'stock' ? 'active' : ''}">
                                 Tồn Kho
                             </a>
+
                             <a href="${pageContext.request.contextPath}/inventory?tab=transfer&warehouseId=${selectedWarehouseId}"
                                 class="subtab-link ${activeTab == 'transfer' || activeTab == 'createTransfer' ? 'active' : ''}">
                                 Điều Chuyển
@@ -120,7 +121,7 @@
                             </a>
                             <a href="${pageContext.request.contextPath}/inventory?tab=history&warehouseId=${selectedWarehouseId}"
                                 class="subtab-link ${activeTab == 'history' ? 'active' : ''}">
-                                Lịch sử xuất nhập kho
+                                Lịch sử xuất nhập
                             </a>
                         </div>
                     </c:if>
@@ -174,6 +175,12 @@
                             <c:when test="${activeTab == 'stock'}">
                                 <jsp:include page="_tab_stock.jsp" />
                             </c:when>
+                            <c:when test="${activeTab == 'import'}">
+                                <jsp:include page="_tab_import.jsp" />
+                            </c:when>
+                            <c:when test="${activeTab == 'export'}">
+                                <jsp:include page="_tab_export.jsp" />
+                            </c:when>
                             <c:when test="${activeTab == 'transfer'}">
                                 <jsp:include page="_tab_transfer.jsp" />
                             </c:when>
@@ -182,6 +189,9 @@
                             </c:when>
                             <c:when test="${activeTab == 'check'}">
                                 <jsp:include page="_tab_check.jsp" />
+                            </c:when>
+                            <c:when test="${activeTab == 'approval'}">
+                                <jsp:include page="_tab_approval.jsp" />
                             </c:when>
                             <c:when test="${activeTab == 'history'}">
                                 <jsp:include page="_tab_history.jsp" />
@@ -194,6 +204,9 @@
         </div>
     </div>
 </div>
+
+<jsp:include page="_modal_create_import.jsp" />
+<jsp:include page="_modal_create_export.jsp" />
 
 <!-- Edit Warehouse Modal -->
 <div class="modal fade" id="editWarehouseModal" tabindex="-1" aria-hidden="true">

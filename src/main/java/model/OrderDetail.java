@@ -15,10 +15,13 @@ public class OrderDetail {
     private double unitPrice;
     private double totalPrice;
     private double importPrice; // Added import_price column field
+    private Integer supplierId;    // FK -> Supplier (for multi-supplier purchase orders)
+    private String supplierStatus; // PENDING, APPROVED, SHIPPED, DELIVERED
 
     // Transient fields for join queries
     private String productName;
     private String productCode;
+    private String supplierName;
 
     // ── Constructors ─────────────────────────────────────────
 
@@ -118,7 +121,29 @@ public class OrderDetail {
         this.productCode = productCode;
     }
 
+    public Integer getSupplierId() {
+        return supplierId;
+    }
 
+    public void setSupplierId(Integer supplierId) {
+        this.supplierId = supplierId;
+    }
+
+    public String getSupplierStatus() {
+        return supplierStatus;
+    }
+
+    public void setSupplierStatus(String supplierStatus) {
+        this.supplierStatus = supplierStatus;
+    }
+
+    public String getSupplierName() {
+        return supplierName;
+    }
+
+    public void setSupplierName(String supplierName) {
+        this.supplierName = supplierName;
+    }
 
     @Override
     public String toString() {

@@ -52,8 +52,9 @@ public class StockTransactionDAO {
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             
             int idx = 1;
-            if (warehouseId > 0) stmt.setInt(idx++, warehouseId);
-            if (allowedWarehouseIds != null && !allowedWarehouseIds.isEmpty()) {
+            if (warehouseId > 0) {
+                stmt.setInt(idx++, warehouseId);
+            } else if (allowedWarehouseIds != null && !allowedWarehouseIds.isEmpty()) {
                 for (Integer wid : allowedWarehouseIds) stmt.setInt(idx++, wid);
             }
             if (typeFilter != null && !typeFilter.trim().isEmpty()) stmt.setString(idx++, typeFilter);

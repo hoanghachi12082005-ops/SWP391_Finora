@@ -60,6 +60,48 @@ public class OrderDAO {
         return list;
     }
 
+    public List<Order> getPendingInventoryOrders(int branchId) {
+        List<Order> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+            SELECT o.*, 
+                   s.name AS supplierName, 
+                   e.fullName AS employeeName, 
+                   w.warehouse_name AS warehouseName
+            FROM [order] o
+            LEFT JOIN Supplier s ON o.supplier_id = s.supplier_id
+            JOIN Employee e ON o.emp_id = e.emp_id
+            JOIN Warehouse w ON o.warehouse_id = w.warehouse_id
+            WHERE o.order_type IN ('PURCHASE', 'EXPORT') AND o.status = 'PENDING'
+            """);
+        
+        if (branchId > 0) {
+            sql.append(" AND o.branch_id = ?");
+        }
+        sql.append(" ORDER BY o.created_at ASC");
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+             
+            if (branchId > 0) {
+                ps.setInt(1, branchId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Order o = mapRow(rs);
+                    o.setSupplierName(rs.getString("supplierName"));
+                    o.setEmployeeName(rs.getString("employeeName"));
+                    // We can reuse getCustomerName to store warehouseName or add warehouseName field.
+                    // For simplicity, let's reuse setCustomerName for warehouse name in the approval screen.
+                    o.setCustomerName(rs.getString("warehouseName")); 
+                    list.add(o);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public List<OrderDetail> getOrderDetailById(int orderId) {
         return findDetailsByOrderId(orderId);
     }

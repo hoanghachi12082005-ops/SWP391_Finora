@@ -62,6 +62,10 @@
                                class="sidebar-submenu-item ${isInventoryActive && (empty activeTab || activeTab == 'stock') ? 'active' : ''}">
                                 Danh sách Kho
                             </a>
+                            <a href="${pageContext.request.contextPath}/approval"
+                               class="sidebar-submenu-item ${originalUri.contains('/approval') ? 'active' : ''}">
+                                Xử Lý Phiếu (Duyệt)
+                            </a>
                             <a href="${pageContext.request.contextPath}/inventory?tab=history"
                                class="sidebar-submenu-item ${isInventoryActive && activeTab == 'history' ? 'active' : ''}">
                                 Lịch sử xuất nhập kho
