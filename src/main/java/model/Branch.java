@@ -41,7 +41,7 @@ public class Branch {
     //  Constructors
     // =========================================================
     public Branch() {
-        this.status = "active";
+        this.status = "ACTIVE";
     }
 
     public Branch(int branchId, String branchName, String branchCode,
@@ -137,12 +137,12 @@ public class Branch {
     }
 
     public void setStatus(String status) {
-        if (status == null) {
-            this.status = "active";
-        } else if (status.equalsIgnoreCase("ACTIVE") || status.equalsIgnoreCase("active")) {
-            this.status = "active";
+        if (status == null || status.isBlank()) {
+            this.status = "ACTIVE";
+        } else if (status.equalsIgnoreCase("ACTIVE")) {
+            this.status = "ACTIVE";
         } else {
-            this.status = "locked";
+            this.status = "INACTIVE";
         }
     }
 

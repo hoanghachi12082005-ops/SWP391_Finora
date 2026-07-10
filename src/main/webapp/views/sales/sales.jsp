@@ -165,6 +165,10 @@
                     <div class="flex-1 min-w-0">
                         <div class="text-caption text-outline">Khách hàng</div>
                         <div id="selectedCustomerName" class="text-label-md text-on-surface truncate">Khách vãng lai</div>
+                        <div id="customerPointsDisplay" class="text-caption text-primary hidden mt-0.5">
+                            <span class="material-symbols-outlined text-[12px] align-text-bottom">stars</span>
+                            Điểm khả dụng: <span id="customerPointsValue">0</span>
+                        </div>
                     </div>
                     <button onclick="openCustomerModal()" class="text-primary text-label-md hover:underline">Thay đổi</button>
                 </div>
@@ -183,10 +187,7 @@
                     <span class="text-outline">Tổng tiền hàng</span>
                     <span id="summarySubtotal" class="font-semibold">0 ₫</span>
                 </div>
-                <div class="flex justify-between text-body-md">
-                    <span class="text-outline">Giảm giá sản phẩm</span>
-                    <span class="text-error font-semibold">0 ₫</span>
-                </div>
+
                 <div class="flex justify-between text-body-md">
                     <span class="text-outline">Chiết khấu đơn hàng</span>
                     <span id="summaryDiscount" class="text-error font-semibold">0 ₫</span>
@@ -401,7 +402,7 @@
                 <div class="text-label-md truncate">${c.fullName}</div>
                 <div class="flex items-center gap-3 text-caption text-outline">
                     <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">call</span>${c.phone}</span>
-                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">stars</span>${c.cusType}</span>
+                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">stars</span>${c.loyaltyPoint} điểm</span>
                 </div>
             </div>
             <span class="text-label-md text-primary opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-lg group-hover:bg-primary group-hover:text-white">Chọn</span>
@@ -681,12 +682,17 @@ function renderUI() {
 
     const customerNameDiv = document.getElementById('selectedCustomerName');
     const customerIdInput = document.getElementById('selectedCustomerId');
+    const pointsDisplay = document.getElementById('customerPointsDisplay');
+    const pointsValue = document.getElementById('customerPointsValue');
     if (activeTab.selectedCustomer) {
         customerNameDiv.textContent = activeTab.selectedCustomer.fullName + ' - ' + activeTab.selectedCustomer.phone;
         customerIdInput.value = activeTab.selectedCustomer.cusId;
+        pointsValue.textContent = activeTab.selectedCustomer.loyaltyPoint || 0;
+        pointsDisplay.classList.remove('hidden');
     } else {
         customerNameDiv.textContent = 'Khách vãng lai';
         customerIdInput.value = '';
+        pointsDisplay.classList.add('hidden');
     }
 
     document.getElementById('summaryItemCount').textContent = activeTab.items.reduce((sum, item) => sum + item.quantity, 0);

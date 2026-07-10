@@ -198,25 +198,25 @@ public class OrdersServlet extends HttpServlet {
 
             // 2. Hoàn điểm cho khách hàng
             if (order.getCustomerId() != null && order.getCustomerId() > 0) {
-                int pointsEarned = (int) (order.getTotalAmount() / 100_000);
+                double pointsEarned = Math.round(order.getTotalAmount() / 10_000 * 100.0) / 100.0;
                 if (pointsEarned > 0) {
                     String selectSql = "SELECT cus_point_id, current_points FROM customer_point WHERE cus_id = ?";
                     int cusPointId = -1;
-                    int beforePoints = 0;
+                    double beforePoints = 0;
                     try (PreparedStatement ps = conn.prepareStatement(selectSql)) {
                         ps.setInt(1, order.getCustomerId());
                         try (ResultSet rs = ps.executeQuery()) {
                             if (rs.next()) {
                                 cusPointId = rs.getInt("cus_point_id");
-                                beforePoints = rs.getInt("current_points");
+                                beforePoints = rs.getDouble("current_points");
                             }
                         }
                     }
                     if (cusPointId != -1) {
                         String updateSql = "UPDATE customer_point SET current_points = current_points - ?, lifetime_points = lifetime_points - ?, updated_at = GETDATE() WHERE cus_point_id = ?";
                         try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
-                            ps.setInt(1, pointsEarned);
-                            ps.setInt(2, pointsEarned);
+                            ps.setDouble(1, pointsEarned);
+                            ps.setDouble(2, pointsEarned);
                             ps.setInt(3, cusPointId);
                             ps.executeUpdate();
                         }
@@ -224,8 +224,8 @@ public class OrdersServlet extends HttpServlet {
                         try (PreparedStatement ps = conn.prepareStatement(logSql)) {
                             ps.setInt(1, cusPointId);
                             ps.setInt(2, orderId);
-                            ps.setInt(3, beforePoints);
-                            ps.setInt(4, Math.max(0, beforePoints - pointsEarned));
+                            ps.setDouble(3, beforePoints);
+                            ps.setDouble(4, Math.max(0, beforePoints - pointsEarned));
                             ps.executeUpdate();
                         }
                     }

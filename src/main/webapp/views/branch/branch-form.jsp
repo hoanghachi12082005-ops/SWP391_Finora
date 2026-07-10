@@ -35,7 +35,11 @@
                 </div>
             </c:if>
 
-            <form action="branch"
+            <c:url var="branchAction" value="branch">
+                <c:param name="csrfToken" value="${sessionScope.csrfToken}"/>
+            </c:url>
+
+            <form action="${branchAction}"
                   method="post"
                   enctype="multipart/form-data"
                   class="branch-form">

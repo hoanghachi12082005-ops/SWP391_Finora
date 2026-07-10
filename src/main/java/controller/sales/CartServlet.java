@@ -326,7 +326,8 @@ public class CartServlet extends HttpServlet {
             out.write("\"selectedCustomer\":{");
             out.write("\"cusId\":" + c.getCusId() + ",");
             out.write("\"fullName\":\"" + escJson(c.getFullName()) + "\",");
-            out.write("\"phone\":\"" + escJson(c.getPhone()) + "\"");
+            out.write("\"phone\":\"" + escJson(c.getPhone()) + "\",");
+            out.write("\"loyaltyPoint\":" + c.getLoyaltyPoint());
             out.write("},");
         } else {
             out.write("\"selectedCustomer\":null,");
