@@ -149,18 +149,89 @@
                                         </table>
                                     </div>
                                     <!-- Pagination Section -->
-                                    <c:if test="${totalPages > 1}">
-                                        <div class="flex justify-between items-center mt-4 px-2">
-                                            <div class="text-sm text-outline">
-                                                Trang <strong class="text-on-surface">${currentPage}</strong> / <strong class="text-on-surface">${totalPages}</strong>
+                                    <div class="flex justify-between items-center mt-6 px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant/30">
+                                        <!-- Page Size Select and Record Info -->
+                                        <form method="get" action="${pageContext.request.contextPath}/orders" id="paginationForm" class="flex items-center gap-3">
+                                            <input type="hidden" name="keyword" value="${fn:escapeXml(keyword)}">
+                                            <span class="text-caption text-outline">Hiển thị:</span>
+                                            <select name="sizeValue" onchange="this.form.submit()" 
+                                                class="text-caption bg-white rounded-lg border border-outline-variant/60 px-2 py-1 outline-none cursor-pointer focus:border-primary">
+                                                <option value="10" ${sizeValue == 10 ? 'selected' : ''}>10 dòng</option>
+                                                <option value="20" ${sizeValue == 20 ? 'selected' : ''}>20 dòng</option>
+                                                <option value="50" ${sizeValue == 50 ? 'selected' : ''}>50 dòng</option>
+                                                <option value="100" ${sizeValue == 100 ? 'selected' : ''}>Tất cả</option>
+                                            </select>
+                                            <span class="text-caption text-outline">
+                                                Hiển thị <strong class="text-on-surface">${startRecord}</strong> - <strong class="text-on-surface">${endRecord}</strong> trong số <strong class="text-on-surface">${totalOrders}</strong> đơn hàng
+                                            </span>
+                                        </form>
+
+                                        <!-- Page Numbers -->
+                                        <c:if test="${totalPages > 1}">
+                                            <div class="flex items-center gap-1.5">
+                                                <!-- Previous Page -->
+                                                <c:if test="${currentPage > 1}">
+                                                    <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${currentPage - 1}&sizeValue=${sizeValue}"
+                                                       class="w-8 h-8 rounded-lg border border-outline-variant/60 flex items-center justify-center text-caption hover:bg-surface-container-high hover:text-primary transition-colors bg-white text-on-surface-variant font-medium">
+                                                        &lt;
+                                                    </a>
+                                                </c:if>
+
+                                                <!-- Page Numbers Logic (similar to branch-list.jsp) -->
+                                                <c:choose>
+                                                    <c:when test="${totalPages <= 5}">
+                                                        <c:forEach begin="1" end="${totalPages}" var="i">
+                                                            <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${i}&sizeValue=${sizeValue}"
+                                                               class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${i == currentPage ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                                ${i}
+                                                            </a>
+                                                        </c:forEach>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <!-- First Page -->
+                                                        <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=1&sizeValue=${sizeValue}"
+                                                           class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${currentPage == 1 ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                            1
+                                                        </a>
+
+                                                        <!-- Dots Left -->
+                                                        <c:if test="${currentPage > 3}">
+                                                            <span class="text-caption text-outline px-1">...</span>
+                                                        </c:if>
+
+                                                        <!-- Mid Pages -->
+                                                        <c:forEach begin="${currentPage - 1 < 2 ? 2 : currentPage - 1}"
+                                                                   end="${currentPage + 1 > totalPages - 1 ? totalPages - 1 : currentPage + 1}"
+                                                                   var="i">
+                                                            <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${i}&sizeValue=${sizeValue}"
+                                                               class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${i == currentPage ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                                ${i}
+                                                            </a>
+                                                        </c:forEach>
+
+                                                        <!-- Dots Right -->
+                                                        <c:if test="${currentPage < totalPages - 2}">
+                                                            <span class="text-caption text-outline px-1">...</span>
+                                                        </c:if>
+
+                                                        <!-- Last Page -->
+                                                        <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${totalPages}&sizeValue=${sizeValue}"
+                                                           class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${currentPage == totalPages ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                            ${totalPages}
+                                                        </a>
+                                                    </c:otherwise>
+                                                </c:choose>
+
+                                                <!-- Next Page -->
+                                                <c:if test="${currentPage < totalPages}">
+                                                    <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${currentPage + 1}&sizeValue=${sizeValue}"
+                                                       class="w-8 h-8 rounded-lg border border-outline-variant/60 flex items-center justify-center text-caption hover:bg-surface-container-high hover:text-primary transition-colors bg-white text-on-surface-variant font-medium">
+                                                        &gt;
+                                                    </a>
+                                                </c:if>
                                             </div>
-                                            <jsp:include page="/views/common/pagination.jsp">
-                                                <jsp:param name="currentPage" value="${currentPage}"/>
-                                                <jsp:param name="totalPages" value="${totalPages}"/>
-                                                <jsp:param name="url" value="${pageContext.request.contextPath}/orders?keyword=${keyword}&page="/>
-                                            </jsp:include>
-                                        </div>
-                                    </c:if>
+                                        </c:if>
+                                    </div>
                                 </div>
 
                                 <!-- Right Pane: Slide-out Panel (Width: 480px) -->
