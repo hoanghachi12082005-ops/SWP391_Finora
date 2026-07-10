@@ -185,9 +185,9 @@
                                     </div>
                                 </div>
 
-                                <!-- ═══ RIGHT: CART PANEL (400px) ═══ -->
+                                <!-- ═══ RIGHT: CART PANEL (340px) ═══ -->
                                 <aside
-                                    class="w-[400px] bg-white border-l border-outline-variant flex flex-col shrink-0">
+                                    class="w-[340px] bg-white border-l border-outline-variant flex flex-col shrink-0">
 
                                     <!-- Customer Section -->
                                     <div class="p-3 border-b border-outline-variant">
