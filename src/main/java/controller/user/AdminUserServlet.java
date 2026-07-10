@@ -174,6 +174,9 @@ public class AdminUserServlet extends HttpServlet {
         boolean isUpdate = "update".equals(action);
 
         int employeeId = parseInt(request.getParameter("employeeId"), -1);
+        if (employeeId <= 0) {
+            employeeId = parseInt(request.getParameter("employeeID"), -1);
+        }
 
         String fullName = trim(request.getParameter("fullName"));
         String email = trim(request.getParameter("email"));
@@ -257,6 +260,12 @@ public class AdminUserServlet extends HttpServlet {
         throws ServletException, IOException {
 
         int employeeId = parseInt(request.getParameter("id"), -1);
+        if (employeeId <= 0) {
+            employeeId = parseInt(request.getParameter("employeeId"), -1);
+        }
+        if (employeeId <= 0) {
+            employeeId = parseInt(request.getParameter("employeeID"), -1);
+        }
 
         if (employeeId <= 0) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid employee ID.");
@@ -287,6 +296,9 @@ public class AdminUserServlet extends HttpServlet {
 
     private void updateStatus(HttpServletRequest request, String status) {
         int employeeId = parseInt(request.getParameter("employeeId"), -1);
+        if (employeeId <= 0) {
+            employeeId = parseInt(request.getParameter("employeeID"), -1);
+        }
 
         if (employeeId <= 0) {
             setFlash(request, "errorMessage", "ID nhân viên không hợp lệ.");
@@ -309,6 +321,9 @@ public class AdminUserServlet extends HttpServlet {
 
     private void resetPassword(HttpServletRequest request) {
         int employeeId = parseInt(request.getParameter("employeeId"), -1);
+        if (employeeId <= 0) {
+            employeeId = parseInt(request.getParameter("employeeID"), -1);
+        }
 
         if (employeeId <= 0) {
             setFlash(request, "errorMessage", "Dữ liệu đặt lại mật khẩu không hợp lệ.");

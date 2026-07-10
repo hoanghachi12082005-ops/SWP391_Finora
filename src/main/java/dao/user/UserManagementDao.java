@@ -1137,7 +1137,13 @@ public class UserManagementDao extends DBContext {
     }
 
     private String normalize(String value) {
-        return value == null || value.trim().isEmpty() ? null : value.trim();
+        if (value == null || value.trim().isEmpty()) return null;
+        String trimmed = value.trim();
+        if (trimmed.equalsIgnoreCase("active") || trimmed.equalsIgnoreCase("inactive")
+                || trimmed.equalsIgnoreCase("locked")) {
+            return trimmed.toUpperCase();
+        }
+        return trimmed;
     }
 
     private String normalizeLike(String value) {

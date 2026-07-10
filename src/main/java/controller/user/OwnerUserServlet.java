@@ -14,13 +14,15 @@
      *
      * @author PCQN
      */
-    import dao.sales.OrderDAO;
-    import dao.user.UserManagementDao;
-    import dao.user.ProfileDao;
-    import jakarta.servlet.http.HttpSession;
-    import java.util.List;
-    import model.Order;
-    import model.Employee;
+     import dao.sales.OrderDAO;
+     import dao.user.UserManagementDao;
+     import dao.user.ProfileDao;
+     import jakarta.servlet.http.HttpSession;
+     import java.util.List;
+     import model.Order;
+     import model.Employee;
+     import util.pagination.PaginationHelper;
+     import util.pagination.PaginationHelper.PageResult;
 
     @WebServlet(name = "OwnerUserServlet", urlPatterns = {"/owner/emp"})
     public class OwnerUserServlet extends HttpServlet {
@@ -80,30 +82,16 @@
             String roleId = request.getParameter("roleId");
             String status = request.getParameter("status");
 
-            String pageSizeOption = getParam(request, "pageSize", "5");
+            int page = parseInt(request.getParameter("page"), 1);
+            int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
 
-            int totalUsers = ownerUserDao.countEmployees(keyword, branchId, roleId, status);
-            int pageSize = resolvePageSize(pageSizeOption, totalUsers);
-
-            int currentPage = parseInt(request.getParameter("page"), 1);
-
-            if (currentPage < 1) {
-                currentPage = 1;
-            }
-
-            int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
-
-            if (totalPages < 1) {
-                totalPages = 1;
-            }
-
-            if (currentPage > totalPages) {
-                currentPage = totalPages;
-            }
+            int totalRecords = ownerUserDao.countEmployees(keyword, branchId, roleId, status);
+            PageResult pr = PaginationHelper.compute(totalRecords, page, sizeValue);
+            pr.setAttributes(request);
 
             request.setAttribute(
                     "users",
-                    ownerUserDao.getEmployees(keyword, branchId, roleId, status, currentPage, pageSize)
+                    ownerUserDao.getEmployees(keyword, branchId, roleId, status, pr.getCurrentPage(), pr.getPageSize())
             );
 
             request.setAttribute("branches", ownerUserDao.getAllBranches());
@@ -114,36 +102,7 @@
             request.setAttribute("roleFilter", parseInt(roleId, -1));
             request.setAttribute("statusFilter", status);
 
-            request.setAttribute("currentPage", currentPage);
-            request.setAttribute("pageSize", pageSize);
-            request.setAttribute("pageSizeOption", pageSizeOption);
-            request.setAttribute("totalUsers", totalUsers);
-            request.setAttribute("totalPages", totalPages);
-
             request.setAttribute("employeeOverview", ownerUserDao.getOwnerEmployeeOverview());
-        }
-        private int resolvePageSize(String pageSizeOption, int totalUsers) {
-            if (isBlank(pageSizeOption)) {
-                return 5;
-            }
-
-            String option = pageSizeOption.trim().toLowerCase();
-
-            if ("30p".equals(option) || "30%".equals(option) || "30".equals(option)) {
-                return Math.max(1, (int) Math.ceil(totalUsers * 0.3));
-            }
-
-            if ("50p".equals(option) || "50%".equals(option) || "50".equals(option)) {
-                return Math.max(1, (int) Math.ceil(totalUsers * 0.5));
-            }
-
-            int size = parseInt(option, 5);
-
-            if (size != 5 && size != 10) {
-                size = 5;
-            }
-
-            return size;
         }
 
         private void viewEmployeeProfile(HttpServletRequest request, HttpServletResponse response)

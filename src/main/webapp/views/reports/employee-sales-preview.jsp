@@ -189,20 +189,20 @@
     <span class="title">${pageTitle}</span>
     <c:choose>
         <c:when test="${empty allSalesReports}">
-            <button class="btn-pdf btn-disabled" disabled>Export PDF</button>
-            <button class="btn-print btn-disabled" disabled>Print</button>
+            <button class="btn-pdf btn-disabled" disabled>Xuất PDF</button>
+            <button class="btn-print btn-disabled" disabled>In</button>
         </c:when>
         <c:otherwise>
             <a class="btn-pdf" href="${pageContext.request.contextPath}/reports/employee-sales-export?keyword=${param.keyword}&branchId=${param.branchId}&dateFrom=${param.dateFrom}&dateTo=${param.dateTo}" target="_blank">
-                <span class="material-symbols-outlined" style="font-size:18px">picture_as_pdf</span> Export PDF
+                <span class="material-symbols-outlined" style="font-size:18px">picture_as_pdf</span> Xuất PDF
             </a>
             <button class="btn-print" onclick="window.print()">
-                <span class="material-symbols-outlined" style="font-size:18px">print</span> Print
+                <span class="material-symbols-outlined" style="font-size:18px">print</span> In
             </button>
         </c:otherwise>
     </c:choose>
     <a class="btn-close" href="${pageContext.request.contextPath}/reports/employee-sales?keyword=${param.keyword}&branchId=${param.branchId}&dateFrom=${param.dateFrom}&dateTo=${param.dateTo}">
-        Close Preview
+        Đóng xem trước
     </a>
 </div>
 
@@ -211,14 +211,14 @@
     <c:if test="${empty allSalesReports}">
         <div class="empty-state">
             <span class="material-symbols-outlined">description</span>
-            <h4>No report data available</h4>
-            <p>Try adjusting your filters or date range.</p>
+            <h4>Không có dữ liệu báo cáo</h4>
+            <p>Hãy điều chỉnh bộ lọc hoặc khoảng thời gian.</p>
         </div>
     </c:if>
 
     <c:if test="${not empty allSalesReports}">
         <div class="report-header">
-            <h1>Employee Sales Report</h1>
+            <h1>Báo cáo doanh số nhân viên</h1>
             <div class="company">Finora Retail</div>
             <div class="meta">
                 Generated: <fmt:formatDate value="<%= new java.util.Date() %>" pattern="dd/MM/yyyy HH:mm"/>
@@ -228,22 +228,22 @@
         <hr class="report-divider"/>
 
         <div class="filter-info">
-            <strong>Date Range:</strong>
-            ${empty param.dateFrom ? 'Earliest' : param.dateFrom} — ${empty param.dateTo ? 'Latest' : param.dateTo}
-            &nbsp;|&nbsp; <strong>Branch:</strong> ${empty reportBranchName ? 'All Branches' : reportBranchName}
-            &nbsp;|&nbsp; <strong>Period:</strong> ${empty param.dateFrom ? '—' : param.dateFrom} to ${empty param.dateTo ? '—' : param.dateTo}
+            <strong>Khoảng thời gian:</strong>
+            ${empty param.dateFrom ? 'Sớm nhất' : param.dateFrom} — ${empty param.dateTo ? 'Mới nhất' : param.dateTo}
+            &nbsp;|&nbsp; <strong>Chi nhánh:</strong> ${empty reportBranchName ? 'Tất cả chi nhánh' : reportBranchName}
+            &nbsp;|&nbsp; <strong>Kỳ:</strong> ${empty param.dateFrom ? '—' : param.dateFrom} đến ${empty param.dateTo ? '—' : param.dateTo}
         </div>
 
         <table>
             <thead>
                 <tr>
-                    <th>Employee</th>
-                    <th>Branch</th>
-                    <th>Role</th>
-                    <th>Orders</th>
-                    <th class="text-right">Revenue</th>
-                    <th class="text-right">Avg. Order</th>
-                    <th>Completed</th>
+                    <th>Nhân viên</th>
+                    <th>Chi nhánh</th>
+                    <th>Vai trò</th>
+                    <th>Đơn hàng</th>
+                    <th class="text-right">Doanh thu</th>
+                    <th class="text-right">TB Đơn hàng</th>
+                    <th>Hoàn thành</th>
                 </tr>
             </thead>
             <tbody>
@@ -262,26 +262,26 @@
         </table>
 
         <div class="summary-section">
-            <h3>Summary</h3>
+            <h3>Tổng kết</h3>
             <div class="summary-grid">
-                <span class="label">Total Employees</span>
+                <span class="label">Tổng nhân viên</span>
                 <span class="value">${reportOverview.totalEmployees}</span>
-                <span class="label">Total Orders</span>
+                <span class="label">Tổng đơn hàng</span>
                 <span class="value">${reportOverview.totalOrders}</span>
-                <span class="label">Total Revenue</span>
+                <span class="label">Tổng doanh thu</span>
                 <span class="value"><fmt:formatNumber value="${reportOverview.totalRevenue}" type="number" groupingUsed="true"/> ₫</span>
-                <span class="label">Avg Revenue / Employee</span>
+                <span class="label">Doanh thu TB / Nhân viên</span>
                 <span class="value"><fmt:formatNumber value="${reportOverview.avgRevenuePerEmployee}" type="number" groupingUsed="true"/> ₫</span>
                 <c:if test="${not empty reportOverview.topEmployeeName}">
-                    <span class="label">Top Employee</span>
+                    <span class="label">Nhân viên xuất sắc nhất</span>
                     <span class="value">${reportOverview.topEmployeeName}</span>
-                    <span class="label">Highest Revenue</span>
+                    <span class="label">Doanh thu cao nhất</span>
                     <span class="value"><fmt:formatNumber value="${reportOverview.topEmployeeRevenue}" type="number" groupingUsed="true"/> ₫</span>
                 </c:if>
                 <c:if test="${not empty reportOverview.lowestEmployeeName}">
-                    <span class="label">Lowest Employee</span>
+                    <span class="label">Nhân viên thấp nhất</span>
                     <span class="value">${reportOverview.lowestEmployeeName}</span>
-                    <span class="label">Lowest Revenue</span>
+                    <span class="label">Doanh thu thấp nhất</span>
                     <span class="value"><fmt:formatNumber value="${reportOverview.lowestEmployeeRevenue}" type="number" groupingUsed="true"/> ₫</span>
                 </c:if>
             </div>
@@ -289,7 +289,7 @@
     </c:if>
 
     <div class="report-footer">
-        Generated by Finora Retail Management System
+        Được tạo bởi Hệ thống Quản lý Finora Retail
     </div>
 </div>
 

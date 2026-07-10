@@ -11,15 +11,15 @@
     <title>${pageTitle} - Finora</title>
 
     <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/base.css?v=20260601"/>
-    <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/components.css?v=20260601"/>
-    <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/employee-sales-report.css?v=20260601"/>
+    <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/assets/css/layout.css?v=20260601"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-management.css?v=2"/>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 </head>
 
-<body class="report-page">
+<body class="user-page">
 <div class="app-layout">
     <jsp:include page="/views/common/sidebar.jsp"/>
 
@@ -40,7 +40,7 @@
                             <span class="material-symbols-outlined">groups</span>
                         </div>
                         <div class="overview-info">
-                            <p>Total Employees</p>
+                            <p>Tổng nhân viên</p>
                             <h3>${reportOverview.totalEmployees}</h3>
                         </div>
                     </div>
@@ -50,7 +50,7 @@
                             <span class="material-symbols-outlined">verified_user</span>
                         </div>
                         <div class="overview-info">
-                            <p>Active Employees</p>
+                            <p>Nhân viên hoạt động</p>
                             <h3>${reportOverview.activeEmployees}</h3>
                         </div>
                     </div>
@@ -60,7 +60,7 @@
                             <span class="material-symbols-outlined">receipt_long</span>
                         </div>
                         <div class="overview-info">
-                            <p>Total Orders</p>
+                            <p>Tổng đơn hàng</p>
                             <h3>${reportOverview.totalOrders}</h3>
                         </div>
                     </div>
@@ -70,7 +70,7 @@
                             <span class="material-symbols-outlined">payments</span>
                         </div>
                         <div class="overview-info">
-                            <p>Total Revenue</p>
+                            <p>Tổng doanh thu</p>
                             <h3>
                                 <fmt:formatNumber value="${reportOverview.totalRevenue}" type="number" groupingUsed="true"/> ₫
                             </h3>
@@ -82,10 +82,10 @@
                             <span class="material-symbols-outlined">emoji_events</span>
                         </div>
                         <div class="overview-info">
-                            <p>Top Employee</p>
+                            <p>Nhân viên xuất sắc</p>
                             <h3>${empty reportOverview.topEmployeeName ? '—' : reportOverview.topEmployeeName}</h3>
                             <small>
-                                Revenue:
+                                Doanh thu:
                                 <fmt:formatNumber value="${reportOverview.topEmployeeRevenue}" type="number" groupingUsed="true"/> ₫
                             </small>
                         </div>
@@ -98,18 +98,18 @@
 
                 <div class="filter-grid">
                     <div class="form-group filter-search">
-                        <label>Search</label>
+                        <label>Tìm kiếm</label>
                         <input name="keyword"
                                value="${keyword}"
                                type="text"
-                               placeholder="Name, email or phone..."/>
+                               placeholder="Tên, email hoặc số điện thoại..."/>
                     </div>
 
                     <c:if test="${not empty branches}">
                         <div class="form-group">
-                            <label>Branch</label>
+                            <label>Chi nhánh</label>
                             <select name="branchId">
-                                <option value="">All Branches</option>
+                                <option value="">Tất cả chi nhánh</option>
                                 <c:forEach var="branch" items="${branches}">
                                     <option value="${branch.branchID}"
                                         ${branchFilter == branch.branchID ? 'selected' : ''}>
@@ -121,23 +121,23 @@
                     </c:if>
 
                     <div class="form-group">
-                        <label>From Date</label>
+                        <label>Từ ngày</label>
                         <input type="date" name="dateFrom" value="${dateFrom}"/>
                     </div>
 
                     <div class="form-group">
-                        <label>To Date</label>
+                        <label>Đến ngày</label>
                         <input type="date" name="dateTo" value="${dateTo}"/>
                     </div>
 
                     <input type="hidden" name="sizeValue" value="${sizeValue}"/>
 
                     <div class="filter-actions">
-                        <button class="btn-primary" type="submit">Apply</button>
+                        <button class="btn-primary" type="submit">Áp dụng</button>
                         <a class="btn-secondary" href="${pageContext.request.contextPath}/reports/employee-sales-preview?keyword=${empty keyword ? '' : keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}&dateFrom=${empty dateFrom ? '' : dateFrom}&dateTo=${empty dateTo ? '' : dateTo}">
-                            <span class="material-symbols-outlined">visibility</span> Preview
+                            <span class="material-symbols-outlined">visibility</span> Xem trước
                         </a>
-                        <a class="btn-secondary" href="${baseUrl}">Reset</a>
+                        <a class="btn-secondary" href="${baseUrl}">Đặt lại</a>
                     </div>
                 </div>
             </form>
@@ -148,12 +148,12 @@
                         <thead>
                         <tr>
                             <th>#</th>
-                            <th>Employee</th>
-                            <th>Branch</th>
-                            <th>Role</th>
-                            <th class="text-right">Orders</th>
-                            <th class="text-right">Revenue</th>
-                            <th class="text-right">Avg. Order</th>
+                            <th>Nhân viên</th>
+                            <th>Chi nhánh</th>
+                            <th>Vai trò</th>
+                            <th class="text-right">Đơn hàng</th>
+                            <th class="text-right">Doanh thu</th>
+                            <th class="text-right">TB Đơn hàng</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -163,8 +163,8 @@
                                         <td colspan="7" class="empty-row">
                                             <div class="empty-state">
                                                 <span class="material-symbols-outlined">bar_chart</span>
-                                                <h4>No sales data found</h4>
-                                                <p>Try adjusting your filters or date range.</p>
+                                                <h4>Không tìm thấy dữ liệu doanh số</h4>
+                                                <p>Hãy điều chỉnh bộ lọc hoặc khoảng thời gian.</p>
                                             </div>
                                         </td>
                                 </tr>
@@ -207,84 +207,10 @@
                     </table>
                 </div>
 
-                <div class="table-footer">
-
-                    <form method="get" action="${baseUrl}" class="pagination-info">
-                        <input type="hidden" name="keyword" value="${keyword}">
-                        <input type="hidden" name="branchId" value="${branchFilter == -1 ? '' : branchFilter}">
-                        <input type="hidden" name="dateFrom" value="${dateFrom}">
-                        <input type="hidden" name="dateTo" value="${dateTo}">
-                        <select name="sizeValue" onchange="this.form.submit()">
-                            <option value="30" ${sizeValue == 30 or (sizeValue == 50 and option50 == option30) or (sizeValue == 70 and option70 == option30) ? "selected" : ""}>
-                                ${option30}
-                            </option>
-                            <c:if test="${option50 != option30}">
-                                <option value="50" ${sizeValue == 50 or (sizeValue == 70 and option70 == option50) ? "selected" : ""}>
-                                    ${option50}
-                                </option>
-                            </c:if>
-                            <c:if test="${option70 != option50 and option70 != option30 and option70 != option100}">
-                                <option value="70" ${sizeValue == 70 ? "selected" : ""}>
-                                    ${option70}
-                                </option>
-                            </c:if>
-                            <option value="100" ${sizeValue == 100 or (sizeValue == 70 and option70 == option100) or (sizeValue == 50 and option50 == option100) ? "selected" : ""}>
-                                Tất cả
-                            </option>
-                        </select>
-                        <span class="pagination-summary">
-                            ${startRecord} - ${endRecord} trong số ${totalRecords}
-                        </span>
-                    </form>
-
-                    <c:if test="${totalPages > 1}">
-                        <div class="pagination">
-
-                            <c:if test="${currentPage > 1}">
-                                <a href="${baseUrl}?page=1&sizeValue=${sizeValue}&keyword=${keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}&dateFrom=${dateFrom}&dateTo=${dateTo}">
-                                    <<
-                                </a>
-                            </c:if>
-
-                            <c:choose>
-                                <c:when test="${totalPages <= 5}">
-                                    <c:forEach begin="1" end="${totalPages}" var="i">
-                                        <a href="${baseUrl}?page=${i}&sizeValue=${sizeValue}&keyword=${keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}&dateFrom=${dateFrom}&dateTo=${dateTo}"
-                                           class="${i == currentPage ? 'active-page' : ''}">
-                                            ${i}
-                                        </a>
-                                    </c:forEach>
-                                </c:when>
-                                <c:otherwise>
-                                    <a href="${baseUrl}?page=1&sizeValue=${sizeValue}&keyword=${keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}&dateFrom=${dateFrom}&dateTo=${dateTo}"
-                                       class="${currentPage == 1 ? 'active-page' : ''}">1</a>
-                                    <c:if test="${currentPage > 3}">
-                                        <span class="dots">...</span>
-                                    </c:if>
-                                    <c:forEach begin="${currentPage - 1 < 2 ? 2 : currentPage - 1}"
-                                               end="${currentPage + 1 > totalPages - 1 ? totalPages - 1 : currentPage + 1}" var="i">
-                                        <a href="${baseUrl}?page=${i}&sizeValue=${sizeValue}&keyword=${keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}&dateFrom=${dateFrom}&dateTo=${dateTo}"
-                                           class="${i == currentPage ? 'active-page' : ''}">
-                                            ${i}
-                                        </a>
-                                    </c:forEach>
-                                    <c:if test="${currentPage < totalPages - 2}">
-                                        <span class="dots">...</span>
-                                    </c:if>
-                                    <a href="${baseUrl}?page=${totalPages}&sizeValue=${sizeValue}&keyword=${keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}&dateFrom=${dateFrom}&dateTo=${dateTo}"
-                                       class="${currentPage == totalPages ? 'active-page' : ''}">${totalPages}</a>
-                                </c:otherwise>
-                            </c:choose>
-
-                            <c:if test="${currentPage < totalPages}">
-                                <a href="${baseUrl}?page=${totalPages}&sizeValue=${sizeValue}&keyword=${keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}&dateFrom=${dateFrom}&dateTo=${dateTo}">
-                                    >>
-                                </a>
-                            </c:if>
-
-                        </div>
-                    </c:if>
-                </div>
+                <jsp:include page="/views/common/pagination.jsp">
+                    <jsp:param name="baseUrl" value="${baseUrl}"/>
+                    <jsp:param name="queryString" value="&keyword=${empty keyword ? '' : keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}&dateFrom=${empty dateFrom ? '' : dateFrom}&dateTo=${empty dateTo ? '' : dateTo}"/>
+                </jsp:include>
             </section>
         </main>
     </div>
