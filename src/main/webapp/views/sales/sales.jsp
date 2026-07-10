@@ -35,7 +35,7 @@
 <div class="flex h-screen pl-[var(--sidebar-width,260px)] pr-6">
 
 <!-- ═══════════════ SIDEBAR (80px) ═══════════════ -->
-<jsp:include page="/views/common/sidebar.jsp" />
+<jsp:include page="/views/common/sidebar-pos.jsp" />
 
 
 <!-- ═══════════════ MAIN AREA ═══════════════ -->
