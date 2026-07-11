@@ -255,7 +255,7 @@
                                                 <span id="detailDiscount" class="text-error font-medium">-0 đ</span>
                                             </div>
                                             <div class="flex justify-between text-on-surface-variant">
-                                                <span>VAT (8%)</span>
+                                                <span>VAT (<fmt:formatNumber value="${vatPercentage}" type="number" maxFractionDigits="1"/>%)</span>
                                                 <span id="detailTax">0 đ</span>
                                             </div>
                                             <hr class="border-outline-variant/60 my-1">
@@ -350,7 +350,8 @@
 
                                     // VAT calculation
                                     let totalBeforeTax = data.subtotal - data.discountAmount;
-                                    let vat = totalBeforeTax * 0.08;
+                                    let vatRate = (data.vatPercentage || 8) / 100;
+                                    let vat = totalBeforeTax * vatRate;
                                     document.getElementById('detailTax').innerText = formatVND(vat);
                                     document.getElementById('detailTotal').innerText = formatVND(data.totalAmount);
 
