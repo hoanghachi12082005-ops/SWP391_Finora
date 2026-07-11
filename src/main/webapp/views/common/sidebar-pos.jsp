@@ -88,16 +88,30 @@
 
         <!-- Chi nhánh (Admin, Owner) -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
-            <a href="#" onclick="showComingSoon(event)" class="sidebar-menu-item">
+            <a href="${pageContext.request.contextPath}/branch" class="sidebar-menu-item ${originalUri.contains('/branch') ? 'active' : ''}">
                 <span class="material-icons">store</span><span>Chi nhánh</span>
             </a>
         </c:if>
 
         <!-- Nhân viên (Admin, Owner, StoreManager) -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
-            <a href="#" onclick="showComingSoon(event)" class="sidebar-menu-item">
-                <span class="material-icons">badge</span><span>Nhân viên</span>
-            </a>
+            <c:choose>
+                <c:when test="${roleName == 'Admin'}">
+                    <a href="${pageContext.request.contextPath}/admin/user" class="sidebar-menu-item ${originalUri.contains('/admin/user') ? 'active' : ''}">
+                        <span class="material-icons">badge</span><span>Nhân viên</span>
+                    </a>
+                </c:when>
+                <c:when test="${roleName == 'Owner'}">
+                    <a href="${pageContext.request.contextPath}/owner/emp" class="sidebar-menu-item ${originalUri.contains('/owner/emp') ? 'active' : ''}">
+                        <span class="material-icons">badge</span><span>Nhân viên</span>
+                    </a>
+                </c:when>
+                <c:when test="${roleName == 'StoreManager'}">
+                    <a href="${pageContext.request.contextPath}/manager/emp" class="sidebar-menu-item ${originalUri.contains('/manager/emp') ? 'active' : ''}">
+                        <span class="material-icons">badge</span><span>Nhân viên</span>
+                    </a>
+                </c:when>
+            </c:choose>
         </c:if>
 
         <!-- Báo cáo doanh thu (Admin, Owner, StoreManager) -->
