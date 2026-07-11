@@ -508,6 +508,18 @@ GO
 
 
 -- ============================================================
+--  VAT_SETTING — Cấu hình VAT chung cho bán hàng
+-- ============================================================
+CREATE TABLE vat_setting (
+    setting_id       INT           IDENTITY(1,1) PRIMARY KEY,
+    vat_percentage   DECIMAL(5,2)  NOT NULL DEFAULT 8,
+    updated_by       INT           REFERENCES employee(emp_id),
+    updated_at       DATETIME      DEFAULT GETDATE()
+);
+GO
+
+
+-- ============================================================
 --  INDEXES
 -- ============================================================
 CREATE INDEX IX_Employee_BranchID ON Employee(branch_id);
@@ -525,6 +537,10 @@ GO
 --  DEFAULT DATA
 -- ============================================================
 INSERT INTO loyalty_point_setting (amount_per_point, point_to_currency) VALUES (100000, 0);
+GO
+
+-- VAT setting default: 8%
+INSERT INTO vat_setting (vat_percentage, updated_by) VALUES (8, 1);
 GO
 
 -- ============================================================
