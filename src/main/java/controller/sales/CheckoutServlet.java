@@ -93,7 +93,8 @@ public class CheckoutServlet extends HttpServlet {
         Integer customerId = tab.getSelectedCustomer() != null ? tab.getSelectedCustomer().getCusId() : null;
 
         double totalBeforeTax = subtotal - discountAmount;
-        double vat = totalBeforeTax * 0.08;
+        double vatRate = tab.getVatRate();
+        double vat = totalBeforeTax * vatRate;
         double totalAmount = totalBeforeTax + vat;
 
         // ══════════════════════════════════════════════════════════
