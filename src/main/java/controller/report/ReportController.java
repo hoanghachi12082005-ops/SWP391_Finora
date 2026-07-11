@@ -2,6 +2,9 @@ package controller.report;
 
 import controller.common.BaseController;
 import dao.report.EmployeeSalesReportDAO;
+import dao.report.BranchSalesReportDAO;
+import dao.report.InventoryReportDAO;
+import dao.report.CustomerLoyaltyReportDAO;
 import dao.user.UserManagementDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -29,18 +32,30 @@ import util.report.PdfReportUtil;
         "/reports/employee-sales-preview",
         "/reports/employee-sales-export",
         "/reports/customer-loyal",
+        "/reports/customer-loyal-preview",
+        "/reports/customer-loyal-export",
         "/reports/sales-by-store",
+        "/reports/sales-by-store-preview",
+        "/reports/sales-by-store-export",
         "/reports/inventory",
+        "/reports/inventory-preview",
+        "/reports/inventory-export",
         "/reports/export"
 })
 public class ReportController extends BaseController {
 
     private EmployeeSalesReportDAO employeeSalesReportDAO;
+    private BranchSalesReportDAO branchSalesReportDAO;
+    private InventoryReportDAO inventoryReportDAO;
+    private CustomerLoyaltyReportDAO customerLoyaltyReportDAO;
     private UserManagementDao userManagementDao;
 
     @Override
     public void init() throws ServletException {
         employeeSalesReportDAO = new EmployeeSalesReportDAO();
+        branchSalesReportDAO = new BranchSalesReportDAO();
+        inventoryReportDAO = new InventoryReportDAO();
+        customerLoyaltyReportDAO = new CustomerLoyaltyReportDAO();
         userManagementDao = new UserManagementDao();
     }
 
@@ -72,17 +87,73 @@ public class ReportController extends BaseController {
             return;
         }
 
+        if ("/reports/sales-by-store".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            applyBranchFilterForManager(request);
+            loadBranchSalesReport(request);
+            forward(request, response, "reports/sales-by-store");
+            return;
+        }
+
+        if ("/reports/sales-by-store-preview".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            applyBranchFilterForManager(request);
+            loadBranchSalesPreview(request);
+            forward(request, response, "reports/sales-by-store-preview");
+            return;
+        }
+
+        if ("/reports/sales-by-store-export".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            applyBranchFilterForManager(request);
+            exportBranchSalesPdf(request, response);
+            return;
+        }
+
+        if ("/reports/inventory".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            applyBranchFilterForManager(request);
+            loadInventoryReport(request);
+            forward(request, response, "reports/inventory");
+            return;
+        }
+
+        if ("/reports/inventory-preview".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            applyBranchFilterForManager(request);
+            loadInventoryPreview(request);
+            forward(request, response, "reports/inventory-preview");
+            return;
+        }
+
+        if ("/reports/inventory-export".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            applyBranchFilterForManager(request);
+            exportInventoryPdf(request, response);
+            return;
+        }
+
+        if ("/reports/customer-loyal".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            loadCustomerLoyaltyReport(request);
+            forward(request, response, "reports/customer-loyal");
+            return;
+        }
+
+        if ("/reports/customer-loyal-preview".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            loadCustomerLoyaltyPreview(request);
+            forward(request, response, "reports/customer-loyal-preview");
+            return;
+        }
+
+        if ("/reports/customer-loyal-export".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            exportCustomerLoyaltyPdf(request, response);
+            return;
+        }
+
         switch (path) {
-            case "/reports/customer-loyal":
-                if (!isOwnerOrManager(request, response)) return;
-                forward(request, response, "reports/customer-loyal");
-                break;
-            case "/reports/sales-by-store":
-                forward(request, response, "reports/sales-by-store");
-                break;
-            case "/reports/inventory":
-                forward(request, response, "reports/inventory");
-                break;
             case "/reports/export":
                 forward(request, response, "reports/export");
                 break;
@@ -96,6 +167,118 @@ public class ReportController extends BaseController {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doGet(request, response);
+    }
+
+    private void loadBranchSalesReport(HttpServletRequest request) {
+        String keyword = trim(request.getParameter("keyword"));
+        String branchId = trim(request.getParameter("branchId"));
+        if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
+            branchId = String.valueOf(request.getAttribute("managerBranchId"));
+        }
+        String dateFromRaw = trim(request.getParameter("dateFrom"));
+        String dateToRaw = trim(request.getParameter("dateTo"));
+
+        LocalDate dateFrom = parseDate(dateFromRaw);
+        LocalDate dateTo = parseDate(dateToRaw);
+
+        int page = parseInt(request.getParameter("page"), 1);
+        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
+
+        int totalBranches = branchSalesReportDAO.countBranchSalesReport(keyword, branchId);
+        PageResult pr = PaginationHelper.compute(totalBranches, page, sizeValue);
+        pr.setAttributes(request);
+
+        request.setAttribute(
+                "salesReports",
+                branchSalesReportDAO.getBranchSalesReport(
+                        keyword, branchId, dateFrom, dateTo, pr.getCurrentPage(), pr.getPageSize())
+        );
+        request.setAttribute(
+                "reportOverview",
+                branchSalesReportDAO.getReportOverview(keyword, branchId, dateFrom, dateTo)
+        );
+        request.setAttribute("branches", userManagementDao.getAllBranches());
+
+        request.setAttribute("pageTitle", "Báo cáo doanh số theo chi nhánh");
+        request.setAttribute(
+                "pageSubtitle",
+                "Xem chỉ số doanh thu và đơn hàng của các chi nhánh"
+        );
+        request.setAttribute("baseUrl", request.getContextPath() + "/reports/sales-by-store");
+
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("branchFilter", parseInt(branchId, -1));
+        request.setAttribute("dateFrom", dateFromRaw);
+        request.setAttribute("dateTo", dateToRaw);
+        request.setAttribute("totalBranches", totalBranches);
+    }
+
+    private void loadInventoryReport(HttpServletRequest request) {
+        String keyword = trim(request.getParameter("keyword"));
+        String branchId = trim(request.getParameter("branchId"));
+        if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
+            branchId = String.valueOf(request.getAttribute("managerBranchId"));
+        }
+
+        int page = parseInt(request.getParameter("page"), 1);
+        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
+
+        int totalProducts = inventoryReportDAO.countInventoryReport(keyword, branchId);
+        PageResult pr = PaginationHelper.compute(totalProducts, page, sizeValue);
+        pr.setAttributes(request);
+
+        request.setAttribute(
+                "inventoryItems",
+                inventoryReportDAO.getInventoryReport(
+                        keyword, branchId, pr.getCurrentPage(), pr.getPageSize())
+        );
+        request.setAttribute(
+                "reportOverview",
+                inventoryReportDAO.getReportOverview(keyword, branchId)
+        );
+        request.setAttribute("branches", userManagementDao.getAllBranches());
+
+        request.setAttribute("pageTitle", "Báo cáo tồn kho");
+        request.setAttribute(
+                "pageSubtitle",
+                "Xem số lượng tồn kho và giá trị tồn kho của các chi nhánh"
+        );
+        request.setAttribute("baseUrl", request.getContextPath() + "/reports/inventory");
+
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("branchFilter", parseInt(branchId, -1));
+        request.setAttribute("totalProducts", totalProducts);
+    }
+
+    private void loadCustomerLoyaltyReport(HttpServletRequest request) {
+        String keyword = trim(request.getParameter("keyword"));
+
+        int page = parseInt(request.getParameter("page"), 1);
+        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
+
+        int totalCustomers = customerLoyaltyReportDAO.countCustomerLoyaltyReport(keyword);
+        PageResult pr = PaginationHelper.compute(totalCustomers, page, sizeValue);
+        pr.setAttributes(request);
+
+        request.setAttribute(
+                "customerReports",
+                customerLoyaltyReportDAO.getCustomerLoyaltyReport(
+                        keyword, pr.getCurrentPage(), pr.getPageSize())
+        );
+        request.setAttribute(
+                "reportOverview",
+                customerLoyaltyReportDAO.getReportOverview(keyword)
+        );
+
+        request.setAttribute("pageTitle", "Báo cáo khách hàng thân thiết");
+        request.setAttribute(
+                "pageSubtitle",
+                "Xem thống kê chi tiêu và tích điểm của khách hàng thân thiết"
+        );
+        request.setAttribute("baseUrl", request.getContextPath() + "/reports/customer-loyal");
+
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("totalCustomers", totalCustomers);
     }
 
     private void loadEmployeeSalesReport(HttpServletRequest request) {
@@ -333,6 +516,227 @@ public class ReportController extends BaseController {
             return LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE);
         } catch (DateTimeParseException e) {
             return null;
+        }
+    }
+
+    private void loadBranchSalesPreview(HttpServletRequest request) {
+        String keyword = trim(request.getParameter("keyword"));
+        String branchId = trim(request.getParameter("branchId"));
+        if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
+            branchId = String.valueOf(request.getAttribute("managerBranchId"));
+        }
+        String dateFromRaw = trim(request.getParameter("dateFrom"));
+        String dateToRaw = trim(request.getParameter("dateTo"));
+
+        LocalDate dateFrom = parseDate(dateFromRaw);
+        LocalDate dateTo = parseDate(dateToRaw);
+
+        request.setAttribute(
+                "allReports",
+                branchSalesReportDAO.getBranchSalesReport(
+                        keyword, branchId, dateFrom, dateTo, 1, 1000000)
+        );
+        request.setAttribute(
+                "reportOverview",
+                branchSalesReportDAO.getReportOverview(keyword, branchId, dateFrom, dateTo)
+        );
+
+        final int finalBranchId = parseInt(branchId, -1);
+        String branchName = null;
+        if (!isBlank(branchId)) {
+            var branches = userManagementDao.getAllBranches();
+            if (branches != null) {
+                branchName = branches.stream()
+                        .filter(b -> b.getBranchID() == finalBranchId)
+                        .findFirst()
+                        .map(b -> b.getName())
+                        .orElse(null);
+            }
+        }
+        request.setAttribute("reportBranchName", branchName);
+        request.setAttribute("pageTitle", "Xem trước báo cáo doanh số chi nhánh");
+    }
+
+    private void exportBranchSalesPdf(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            String keyword = trim(request.getParameter("keyword"));
+            String branchId = trim(request.getParameter("branchId"));
+            if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
+                branchId = String.valueOf(request.getAttribute("managerBranchId"));
+            }
+            String dateFromRaw = trim(request.getParameter("dateFrom"));
+            String dateToRaw = trim(request.getParameter("dateTo"));
+
+            LocalDate dateFrom = parseDate(dateFromRaw);
+            LocalDate dateTo = parseDate(dateToRaw);
+
+            var allData = branchSalesReportDAO.getBranchSalesReport(
+                    keyword, branchId, dateFrom, dateTo, 1, 1000000);
+            var overview = branchSalesReportDAO.getReportOverview(keyword, branchId, dateFrom, dateTo);
+
+            String generatedBy = "Unknown";
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Employee currentUser = (Employee) session.getAttribute("currentUser");
+                if (currentUser != null) {
+                    generatedBy = currentUser.getFullName();
+                }
+            }
+
+            final int pdfBranchId = parseInt(branchId, -1);
+            String branchName = null;
+            if (!isBlank(branchId)) {
+                var branches = userManagementDao.getAllBranches();
+                if (branches != null) {
+                    branchName = branches.stream()
+                            .filter(b -> b.getBranchID() == pdfBranchId)
+                            .findFirst()
+                            .map(b -> b.getName())
+                            .orElse(null);
+                }
+            }
+
+            byte[] pdfBytes = PdfReportUtil.generateBranchSalesReport(
+                    "Finora Retail", generatedBy, allData, overview,
+                    keyword, branchName, dateFrom, dateTo);
+
+            response.setContentType("application/pdf");
+            response.setHeader("Content-Disposition", "inline; filename=\"BranchSalesReport.pdf\"");
+            response.setContentLength(pdfBytes.length);
+            response.getOutputStream().write(pdfBytes);
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(500, e.getMessage());
+        }
+    }
+
+    private void loadInventoryPreview(HttpServletRequest request) {
+        String keyword = trim(request.getParameter("keyword"));
+        String branchId = trim(request.getParameter("branchId"));
+        if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
+            branchId = String.valueOf(request.getAttribute("managerBranchId"));
+        }
+
+        request.setAttribute(
+                "allReports",
+                inventoryReportDAO.getInventoryReport(
+                        keyword, branchId, 1, 1000000)
+        );
+        request.setAttribute(
+                "reportOverview",
+                inventoryReportDAO.getReportOverview(keyword, branchId)
+        );
+
+        final int finalBranchId = parseInt(branchId, -1);
+        String branchName = null;
+        if (!isBlank(branchId)) {
+            var branches = userManagementDao.getAllBranches();
+            if (branches != null) {
+                branchName = branches.stream()
+                        .filter(b -> b.getBranchID() == finalBranchId)
+                        .findFirst()
+                        .map(b -> b.getName())
+                        .orElse(null);
+            }
+        }
+        request.setAttribute("reportBranchName", branchName);
+        request.setAttribute("pageTitle", "Xem trước báo cáo tồn kho");
+    }
+
+    private void exportInventoryPdf(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            String keyword = trim(request.getParameter("keyword"));
+            String branchId = trim(request.getParameter("branchId"));
+            if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
+                branchId = String.valueOf(request.getAttribute("managerBranchId"));
+            }
+
+            var allData = inventoryReportDAO.getInventoryReport(keyword, branchId, 1, 1000000);
+            var overview = inventoryReportDAO.getReportOverview(keyword, branchId);
+
+            String generatedBy = "Unknown";
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Employee currentUser = (Employee) session.getAttribute("currentUser");
+                if (currentUser != null) {
+                    generatedBy = currentUser.getFullName();
+                }
+            }
+
+            final int pdfBranchId = parseInt(branchId, -1);
+            String branchName = null;
+            if (!isBlank(branchId)) {
+                var branches = userManagementDao.getAllBranches();
+                if (branches != null) {
+                    branchName = branches.stream()
+                            .filter(b -> b.getBranchID() == pdfBranchId)
+                            .findFirst()
+                            .map(b -> b.getName())
+                            .orElse(null);
+                }
+            }
+
+            byte[] pdfBytes = PdfReportUtil.generateInventoryReport(
+                    "Finora Retail", generatedBy, allData, overview,
+                    keyword, branchName);
+
+            response.setContentType("application/pdf");
+            response.setHeader("Content-Disposition", "inline; filename=\"InventoryReport.pdf\"");
+            response.setContentLength(pdfBytes.length);
+            response.getOutputStream().write(pdfBytes);
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(500, e.getMessage());
+        }
+    }
+
+    private void loadCustomerLoyaltyPreview(HttpServletRequest request) {
+        String keyword = trim(request.getParameter("keyword"));
+
+        request.setAttribute(
+                "allReports",
+                customerLoyaltyReportDAO.getCustomerLoyaltyReport(
+                        keyword, 1, 1000000)
+        );
+        request.setAttribute(
+                "reportOverview",
+                customerLoyaltyReportDAO.getReportOverview(keyword)
+        );
+        request.setAttribute("pageTitle", "Xem trước báo cáo khách hàng thân thiết");
+    }
+
+    private void exportCustomerLoyaltyPdf(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            String keyword = trim(request.getParameter("keyword"));
+
+            var allData = customerLoyaltyReportDAO.getCustomerLoyaltyReport(keyword, 1, 1000000);
+            var overview = customerLoyaltyReportDAO.getReportOverview(keyword);
+
+            String generatedBy = "Unknown";
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Employee currentUser = (Employee) session.getAttribute("currentUser");
+                if (currentUser != null) {
+                    generatedBy = currentUser.getFullName();
+                }
+            }
+
+            byte[] pdfBytes = PdfReportUtil.generateCustomerLoyaltyReport(
+                    "Finora Retail", generatedBy, allData, overview, keyword);
+
+            response.setContentType("application/pdf");
+            response.setHeader("Content-Disposition", "inline; filename=\"CustomerLoyaltyReport.pdf\"");
+            response.setContentLength(pdfBytes.length);
+            response.getOutputStream().write(pdfBytes);
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(500, e.getMessage());
         }
     }
 }

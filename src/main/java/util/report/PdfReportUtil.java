@@ -18,6 +18,12 @@ import com.lowagie.text.pdf.PdfWriter;
 import com.lowagie.text.pdf.BaseFont;
 import model.EmployeeOverview;
 import model.EmployeeSalesSummary;
+import model.BranchSalesSummary;
+import model.BranchSalesOverview;
+import model.InventoryReportItem;
+import model.InventoryReportOverview;
+import model.LoyalCustomerSummary;
+import model.LoyalCustomerOverview;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
@@ -325,6 +331,347 @@ public final class PdfReportUtil {
                     pageNum,
                     rect.getRight() - PAGE_MARGIN,
                     rect.getBottom() + 12, 0);
+        }
+    }
+
+    public static byte[] generateBranchSalesReport(
+            String companyName,
+            String generatedBy,
+            List<BranchSalesSummary> rows,
+            BranchSalesOverview overview,
+            String keyword,
+            String branchName,
+            LocalDate dateFrom,
+            LocalDate dateTo) {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4, PAGE_MARGIN, PAGE_MARGIN, 50, 50);
+
+        try {
+            initFonts();
+            PdfWriter writer = PdfWriter.getInstance(document, baos);
+            writer.setPageEvent(new HeaderFooter());
+            document.open();
+
+            // Header
+            Paragraph title = new Paragraph("Báo cáo doanh số theo chi nhánh", TITLE_FONT);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(4);
+            document.add(title);
+
+            Paragraph company = new Paragraph(companyName, HEADER_FONT);
+            company.setAlignment(Element.ALIGN_CENTER);
+            company.setSpacingAfter(2);
+            document.add(company);
+
+            String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+            Paragraph meta = new Paragraph("Generated: " + now + "  |  By: " + generatedBy, SMALL_FONT);
+            meta.setAlignment(Element.ALIGN_CENTER);
+            meta.setSpacingAfter(6);
+            document.add(meta);
+
+            addHorizontalRule(document);
+            document.add(new Paragraph(" "));
+
+            // Filter info
+            addFilterInfo(document, keyword, branchName, dateFrom, dateTo);
+
+            // Table
+            PdfPTable table = new PdfPTable(7);
+            table.setWidthPercentage(100);
+            table.setWidths(new float[]{4, 4, 2, 2, 2, 3, 3});
+            table.setHeaderRows(1);
+            
+            // Header cells
+            String[] headers = {"Chi nhánh", "Địa chỉ", "Tổng đơn", "Hoàn tất", "Đã hủy", "Doanh thu", "TB Đơn"};
+            Color bg = new Color(0x1a, 0x1a, 0x2e);
+            for (String h : headers) {
+                PdfPCell cell = new PdfPCell(new Phrase(h, TABLE_HEADER_FONT));
+                cell.setBackgroundColor(bg);
+                cell.setPadding(6);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBorder(Rectangle.NO_BORDER);
+                table.addCell(cell);
+            }
+
+            NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+            nf.setGroupingUsed(true);
+            nf.setMaximumFractionDigits(0);
+
+            if (rows == null || rows.isEmpty()) {
+                PdfPCell emptyCell = new PdfPCell(new Phrase("No report data available.", TABLE_CELL_FONT));
+                emptyCell.setColspan(7);
+                emptyCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                emptyCell.setPadding(12);
+                table.addCell(emptyCell);
+            } else {
+                for (BranchSalesSummary row : rows) {
+                    table.addCell(createCell(row.getBranchName(), Element.ALIGN_LEFT));
+                    table.addCell(createCell(nullToDash(row.getAddress()), Element.ALIGN_LEFT));
+                    table.addCell(createCell(String.valueOf(row.getTotalOrders()), Element.ALIGN_RIGHT));
+                    table.addCell(createCell(String.valueOf(row.getCompletedOrders()), Element.ALIGN_RIGHT));
+                    table.addCell(createCell(String.valueOf(row.getCancelledOrders()), Element.ALIGN_RIGHT));
+                    table.addCell(createCell(nf.format(row.getTotalRevenue()) + " ₫", Element.ALIGN_RIGHT));
+                    table.addCell(createCell(nf.format(row.getAverageOrderValue()) + " ₫", Element.ALIGN_RIGHT));
+                }
+            }
+            document.add(table);
+
+            // Summary
+            if (overview != null) {
+                addHorizontalRule(document);
+                document.add(new Paragraph(" "));
+                Paragraph sumTitle = new Paragraph("Tổng kết", HEADER_FONT);
+                sumTitle.setSpacingAfter(4);
+                document.add(sumTitle);
+
+                PdfPTable summaryTable = new PdfPTable(2);
+                summaryTable.setWidthPercentage(60);
+                summaryTable.setHorizontalAlignment(Element.ALIGN_LEFT);
+                summaryTable.setWidths(new float[]{3, 3});
+
+                addSummaryRow(summaryTable, "Tổng số chi nhánh", String.valueOf(overview.getTotalBranches()));
+                addSummaryRow(summaryTable, "Tổng đơn hàng", String.valueOf(overview.getTotalOrders()));
+                addSummaryRow(summaryTable, "Tổng doanh thu", nf.format(overview.getTotalRevenue()) + " ₫");
+                if (overview.getTopBranchName() != null) {
+                    addSummaryRow(summaryTable, "Chi nhánh xuất sắc nhất", overview.getTopBranchName());
+                    addSummaryRow(summaryTable, "Doanh thu cao nhất", nf.format(overview.getTopBranchRevenue()) + " ₫");
+                }
+                document.add(summaryTable);
+            }
+
+            document.close();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            try { if (document.isOpen()) document.close(); } catch (Exception ignored) {}
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static byte[] generateInventoryReport(
+            String companyName,
+            String generatedBy,
+            List<InventoryReportItem> rows,
+            InventoryReportOverview overview,
+            String keyword,
+            String branchName) {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4, PAGE_MARGIN, PAGE_MARGIN, 50, 50);
+
+        try {
+            initFonts();
+            PdfWriter writer = PdfWriter.getInstance(document, baos);
+            writer.setPageEvent(new HeaderFooter());
+            document.open();
+
+            // Header
+            Paragraph title = new Paragraph("Báo cáo tồn kho", TITLE_FONT);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(4);
+            document.add(title);
+
+            Paragraph company = new Paragraph(companyName, HEADER_FONT);
+            company.setAlignment(Element.ALIGN_CENTER);
+            company.setSpacingAfter(2);
+            document.add(company);
+
+            String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+            Paragraph meta = new Paragraph("Generated: " + now + "  |  By: " + generatedBy, SMALL_FONT);
+            meta.setAlignment(Element.ALIGN_CENTER);
+            meta.setSpacingAfter(6);
+            document.add(meta);
+
+            addHorizontalRule(document);
+            document.add(new Paragraph(" "));
+
+            // Filter info
+            Paragraph filterText = new Paragraph("Chi nhánh: " + (branchName != null && !branchName.isEmpty() ? branchName : "Tất cả chi nhánh"), SMALL_FONT);
+            filterText.setSpacingAfter(8);
+            document.add(filterText);
+
+            // Table
+            PdfPTable table = new PdfPTable(7);
+            table.setWidthPercentage(100);
+            table.setWidths(new float[]{2, 5, 3, 3, 2, 3, 3});
+            table.setHeaderRows(1);
+            
+            // Header cells
+            String[] headers = {"Mã SP", "Tên sản phẩm", "Kho hàng", "Chi nhánh", "Tồn", "Giá bán", "Tổng giá trị"};
+            Color bg = new Color(0x1a, 0x1a, 0x2e);
+            for (String h : headers) {
+                PdfPCell cell = new PdfPCell(new Phrase(h, TABLE_HEADER_FONT));
+                cell.setBackgroundColor(bg);
+                cell.setPadding(6);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBorder(Rectangle.NO_BORDER);
+                table.addCell(cell);
+            }
+
+            NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+            nf.setGroupingUsed(true);
+            nf.setMaximumFractionDigits(0);
+
+            if (rows == null || rows.isEmpty()) {
+                PdfPCell emptyCell = new PdfPCell(new Phrase("No report data available.", TABLE_CELL_FONT));
+                emptyCell.setColspan(7);
+                emptyCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                emptyCell.setPadding(12);
+                table.addCell(emptyCell);
+            } else {
+                for (InventoryReportItem row : rows) {
+                    table.addCell(createCell(String.valueOf(row.getProductId()), Element.ALIGN_CENTER));
+                    table.addCell(createCell(row.getProductName(), Element.ALIGN_LEFT));
+                    table.addCell(createCell(row.getWarehouseName(), Element.ALIGN_LEFT));
+                    table.addCell(createCell(row.getBranchName(), Element.ALIGN_LEFT));
+                    table.addCell(createCell(String.valueOf(row.getQuantityInStock()), Element.ALIGN_RIGHT));
+                    table.addCell(createCell(nf.format(row.getSellingPrice()) + " ₫", Element.ALIGN_RIGHT));
+                    table.addCell(createCell(nf.format(row.getTotalValue()) + " ₫", Element.ALIGN_RIGHT));
+                }
+            }
+            document.add(table);
+
+            // Summary
+            if (overview != null) {
+                addHorizontalRule(document);
+                document.add(new Paragraph(" "));
+                Paragraph sumTitle = new Paragraph("Tổng kết", HEADER_FONT);
+                sumTitle.setSpacingAfter(4);
+                document.add(sumTitle);
+
+                PdfPTable summaryTable = new PdfPTable(2);
+                summaryTable.setWidthPercentage(60);
+                summaryTable.setHorizontalAlignment(Element.ALIGN_LEFT);
+                summaryTable.setWidths(new float[]{3, 3});
+
+                addSummaryRow(summaryTable, "Tổng số sản phẩm", String.valueOf(overview.getTotalProducts()));
+                addSummaryRow(summaryTable, "Tổng số lượng tồn", String.valueOf(overview.getTotalQuantity()));
+                addSummaryRow(summaryTable, "Tổng giá trị tồn kho", nf.format(overview.getTotalValue()) + " ₫");
+                addSummaryRow(summaryTable, "Sản phẩm sắp hết hàng (<=10)", String.valueOf(overview.getLowStockCount()));
+                addSummaryRow(summaryTable, "Sản phẩm hết hàng (0)", String.valueOf(overview.getOutOfStockCount()));
+                document.add(summaryTable);
+            }
+
+            document.close();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            try { if (document.isOpen()) document.close(); } catch (Exception ignored) {}
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static byte[] generateCustomerLoyaltyReport(
+            String companyName,
+            String generatedBy,
+            List<LoyalCustomerSummary> rows,
+            LoyalCustomerOverview overview,
+            String keyword) {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4, PAGE_MARGIN, PAGE_MARGIN, 50, 50);
+
+        try {
+            initFonts();
+            PdfWriter writer = PdfWriter.getInstance(document, baos);
+            writer.setPageEvent(new HeaderFooter());
+            document.open();
+
+            // Header
+            Paragraph title = new Paragraph("Báo cáo khách hàng thân thiết", TITLE_FONT);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(4);
+            document.add(title);
+
+            Paragraph company = new Paragraph(companyName, HEADER_FONT);
+            company.setAlignment(Element.ALIGN_CENTER);
+            company.setSpacingAfter(2);
+            document.add(company);
+
+            String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+            Paragraph meta = new Paragraph("Generated: " + now + "  |  By: " + generatedBy, SMALL_FONT);
+            meta.setAlignment(Element.ALIGN_CENTER);
+            meta.setSpacingAfter(6);
+            document.add(meta);
+
+            addHorizontalRule(document);
+            document.add(new Paragraph(" "));
+
+            // Filter info
+            if (keyword != null && !keyword.isEmpty()) {
+                Paragraph filterText = new Paragraph("Tìm kiếm: " + keyword, SMALL_FONT);
+                filterText.setSpacingAfter(8);
+                document.add(filterText);
+            }
+
+            // Table
+            PdfPTable table = new PdfPTable(7);
+            table.setWidthPercentage(100);
+            table.setWidths(new float[]{4, 3, 4, 2, 2, 2, 3});
+            table.setHeaderRows(1);
+            
+            // Header cells
+            String[] headers = {"Khách hàng", "Số điện thoại", "Email", "Tổng đơn", "Điểm hiện tại", "Điểm trọn đời", "Tổng chi tiêu"};
+            Color bg = new Color(0x1a, 0x1a, 0x2e);
+            for (String h : headers) {
+                PdfPCell cell = new PdfPCell(new Phrase(h, TABLE_HEADER_FONT));
+                cell.setBackgroundColor(bg);
+                cell.setPadding(6);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBorder(Rectangle.NO_BORDER);
+                table.addCell(cell);
+            }
+
+            NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+            nf.setGroupingUsed(true);
+            nf.setMaximumFractionDigits(0);
+
+            if (rows == null || rows.isEmpty()) {
+                PdfPCell emptyCell = new PdfPCell(new Phrase("No report data available.", TABLE_CELL_FONT));
+                emptyCell.setColspan(7);
+                emptyCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                emptyCell.setPadding(12);
+                table.addCell(emptyCell);
+            } else {
+                for (LoyalCustomerSummary row : rows) {
+                    table.addCell(createCell(row.getFullName(), Element.ALIGN_LEFT));
+                    table.addCell(createCell(row.getPhone(), Element.ALIGN_LEFT));
+                    table.addCell(createCell(nullToDash(row.getEmail()), Element.ALIGN_LEFT));
+                    table.addCell(createCell(String.valueOf(row.getTotalOrders()), Element.ALIGN_RIGHT));
+                    table.addCell(createCell(String.valueOf(row.getCurrentPoints()), Element.ALIGN_RIGHT));
+                    table.addCell(createCell(String.valueOf(row.getLifetimePoints()), Element.ALIGN_RIGHT));
+                    table.addCell(createCell(nf.format(row.getTotalSpent()) + " ₫", Element.ALIGN_RIGHT));
+                }
+            }
+            document.add(table);
+
+            // Summary
+            if (overview != null) {
+                addHorizontalRule(document);
+                document.add(new Paragraph(" "));
+                Paragraph sumTitle = new Paragraph("Tổng kết", HEADER_FONT);
+                sumTitle.setSpacingAfter(4);
+                document.add(sumTitle);
+
+                PdfPTable summaryTable = new PdfPTable(2);
+                summaryTable.setWidthPercentage(60);
+                summaryTable.setHorizontalAlignment(Element.ALIGN_LEFT);
+                summaryTable.setWidths(new float[]{3, 3});
+
+                addSummaryRow(summaryTable, "Tổng số khách hàng", String.valueOf(overview.getTotalCustomers()));
+                addSummaryRow(summaryTable, "Tổng chi tiêu khách hàng", nf.format(overview.getTotalSpent()) + " ₫");
+                addSummaryRow(summaryTable, "Tổng điểm tích lũy", overview.getTotalPoints() + " pts");
+                if (overview.getTopCustomerName() != null) {
+                    addSummaryRow(summaryTable, "Khách hàng VIP nhất", overview.getTopCustomerName());
+                    addSummaryRow(summaryTable, "Chi tiêu nhiều nhất", nf.format(overview.getTopCustomerSpent()) + " ₫");
+                }
+                document.add(summaryTable);
+            }
+
+            document.close();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            try { if (document.isOpen()) document.close(); } catch (Exception ignored) {}
+            throw new RuntimeException(e);
         }
     }
 }

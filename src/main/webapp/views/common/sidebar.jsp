@@ -234,6 +234,24 @@
                               style="font-size: 1rem; margin-right: 4px;">bar_chart</span>
                         Doanh thu nhân viên
                     </a>
+                    <a href="${pageContext.request.contextPath}/reports/sales-by-store"
+                       class="sidebar-submenu-item ${originalUri.contains('/reports/sales-by-store') ? 'active' : ''}">
+                        <span class="material-icons"
+                               style="font-size: 1rem; margin-right: 4px;">storefront</span>
+                        Doanh thu chi nhánh
+                    </a>
+                    <a href="${pageContext.request.contextPath}/reports/inventory"
+                       class="sidebar-submenu-item ${originalUri.contains('/reports/inventory') ? 'active' : ''}">
+                        <span class="material-icons"
+                               style="font-size: 1rem; margin-right: 4px;">inventory_2</span>
+                        Hàng tồn kho
+                    </a>
+                    <a href="${pageContext.request.contextPath}/reports/customer-loyal"
+                       class="sidebar-submenu-item ${originalUri.contains('/reports/customer-loyal') ? 'active' : ''}">
+                        <span class="material-icons"
+                               style="font-size: 1rem; margin-right: 4px;">groups</span>
+                        Khách hàng thân thiết
+                    </a>
                 </div>
             </div>
         </c:if>
