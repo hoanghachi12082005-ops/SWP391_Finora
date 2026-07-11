@@ -3,6 +3,7 @@ package controller.sales;
 import model.CartItem;
 import model.Employee;
 import model.OrderTab;
+import dao.system.VatSettingDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -38,6 +39,9 @@ public class PrintPreviewServlet extends HttpServlet {
 
         Employee emp = (Employee) session.getAttribute("employee");
         String empName = emp != null ? emp.getFullName() : "Nhân viên";
+
+        double vatRate = VatSettingDAO.getVatRate();
+        int vatPercent = (int) Math.round(vatRate * 100);
 
         PrintWriter out = resp.getWriter();
         out.write("<!DOCTYPE html>");
@@ -84,7 +88,7 @@ public class PrintPreviewServlet extends HttpServlet {
             if (tab.getDiscountAmount() > 0) {
                 out.write("<tr><td>Chiết khấu:</td><td class='text-right'>-" + String.format("%,.0f ₫", tab.getDiscountAmount()) + "</td></tr>");
             }
-            out.write("<tr><td>Thuế VAT (8%):</td><td class='text-right'>" + String.format("%,.0f ₫", tab.getVatAmount()) + "</td></tr>");
+            out.write("<tr><td>Thuế VAT (" + vatPercent + "%):</td><td class='text-right'>" + String.format("%,.0f ₫", tab.getVatAmount()) + "</td></tr>");
             out.write("<tr class='bold'><td>TỔNG CỘNG:</td><td class='text-right'>" + String.format("%,.0f ₫", tab.getTotalAmount()) + "</td></tr>");
             out.write("</table>");
         } else {
