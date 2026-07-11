@@ -18,7 +18,8 @@ import java.util.logging.Logger;
 import model.Customer;
 import model.CustomerOverview;
 import model.Branch;
-import model.LoyaltyPointSetting;
+import model.Voucher;
+import dao.sales.VoucherDAO;
 import util.database.DBContext;
 
 public class CustomerDAO {
@@ -750,10 +751,13 @@ public class CustomerDAO {
 
     private int calculatePoints(BigDecimal spent) {
         if (spent == null) return 0;
-        LoyaltyPointSetting setting = new LoyaltyPointSettingDAO().getSetting();
-        java.math.BigDecimal amountPerPoint = setting.getAmountPerPoint();
-        if (amountPerPoint.compareTo(java.math.BigDecimal.ZERO) <= 0) return 0;
-        return spent.divide(amountPerPoint, 0, java.math.RoundingMode.DOWN).intValue();
+        // Dùng POINT_CONFIG từ bảng voucher để xác định số tiền cần chi để được 1 điểm
+        Voucher pointConfig = new VoucherDAO().getByCode("POINT_CONFIG");
+        double amountPerPoint = (pointConfig != null && pointConfig.getDiscountValue() > 0)
+                ? pointConfig.getDiscountValue() : 100000;
+        if (amountPerPoint <= 0) return 0;
+        BigDecimal bdAmount = BigDecimal.valueOf(amountPerPoint);
+        return spent.divide(bdAmount, 0, java.math.RoundingMode.DOWN).intValue();
     }
 
     private Customer mapRow(ResultSet rs) throws SQLException {
