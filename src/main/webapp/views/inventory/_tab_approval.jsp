@@ -4,14 +4,14 @@
 
 <style>
     .approval-card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; }
-    .approval-header { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white; border-radius: 12px 12px 0 0; padding: 16px 24px; font-weight: 600; }
+    .approval-header { background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%); color: white; border-radius: 12px 12px 0 0; padding: 16px 24px; font-weight: 600; }
     .table th { font-weight: 600; color: #475569; background-color: #f8fafc; border-bottom: 2px solid #e2e8f0; }
     .table td { vertical-align: middle; color: #334155; }
     .action-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 12px; border-radius: 6px; font-weight: 500; font-size: 13px; transition: all 0.2s; border: none; }
-    .btn-approve { background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-    .btn-approve:hover { background-color: #d1fae5; transform: translateY(-1px); }
-    .btn-reject { background-color: #fef2f2; color: #e11d48; border: 1px solid #fecdd3; }
-    .btn-reject:hover { background-color: #ffe4e6; transform: translateY(-1px); }
+    .btn-approve { background-color: var(--success-bg); color: var(--success-text); border: 1px solid rgba(16, 185, 129, 0.15); }
+    .btn-approve:hover { background-color: var(--success-bg); opacity: 0.85; transform: translateY(-1px); }
+    .btn-reject { background-color: var(--danger-bg); color: var(--danger-text); border: 1px solid rgba(239, 68, 68, 0.15); }
+    .btn-reject:hover { background-color: var(--danger-bg); opacity: 0.85; transform: translateY(-1px); }
 </style>
 
 <div class="dashboard-card">

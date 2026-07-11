@@ -318,6 +318,25 @@
             });
     }
 
+    function viewOrderDetails(orderId) {
+        const modalContent = document.getElementById('ticketDetailsModalContent');
+        modalContent.innerHTML = '<div class="modal-body text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Đang tải dữ liệu...</p></div>';
+        
+        const myModal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
+        myModal.show();
+        
+        let url = '${pageContext.request.contextPath}/inventory?action=viewOrderDetails&orderId=' + orderId;
+        
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                modalContent.innerHTML = html;
+            })
+            .catch(err => {
+                modalContent.innerHTML = '<div class="modal-body py-5 text-center text-danger"><i class="ph ph-warning-circle fs-1 mb-2"></i><p>Lỗi khi tải dữ liệu phiếu.</p></div>';
+            });
+    }
+
     function openRejectModal(ticketId) {
         document.getElementById('rejectTransferId').value = ticketId;
         const myModal = new bootstrap.Modal(document.getElementById('rejectModal'));

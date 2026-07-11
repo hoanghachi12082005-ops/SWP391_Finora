@@ -14,10 +14,23 @@ public class StockTransactionDAO {
     public List<StockTransaction> findAll(int warehouseId, List<Integer> allowedWarehouseIds, int offset, int limit, String typeFilter, String dateFilter) throws SQLException {
         List<StockTransaction> transactions = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-            "SELECT st.*, " +
-            "p.product_name, p.product_codebar, " +
-            "e.fullName as created_by_name, " +
-            "w.warehouse_name " +
+            "SELECT " +
+            "    MIN(st.stock_transaction_id) as stock_transaction_id, " +
+            "    st.warehouse_id, " +
+            "    MIN(st.product_id) as product_id, " +
+            "    st.reference_id, " +
+            "    MIN(st.reference_type) as reference_type, " +
+            "    MIN(st.transaction_type) as transaction_type, " +
+            "    SUM(st.quantity) as quantity, " +
+            "    0 as before_quantity, " +
+            "    0 as after_quantity, " +
+            "    MIN(st.note) as note, " +
+            "    MIN(st.created_by) as created_by, " +
+            "    MIN(st.created_at) as created_at, " +
+            "    STRING_AGG(p.product_name, ', ') as product_name, " +
+            "    '' as product_codebar, " +
+            "    MIN(e.fullName) as created_by_name, " +
+            "    MIN(w.warehouse_name) as warehouse_name " +
             "FROM stock_transaction st " +
             "JOIN product p ON st.product_id = p.product_id " +
             "JOIN warehouse w ON st.warehouse_id = w.warehouse_id " +
@@ -46,7 +59,8 @@ public class StockTransactionDAO {
             sql.append(" AND CAST(st.created_at AS DATE) = CAST(GETDATE() AS DATE)");
         }
 
-        sql.append(" ORDER BY st.created_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        sql.append(" GROUP BY st.warehouse_id, st.reference_type, st.reference_id");
+        sql.append(" ORDER BY MIN(st.created_at) DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {

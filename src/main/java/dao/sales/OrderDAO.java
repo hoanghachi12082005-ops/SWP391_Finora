@@ -109,9 +109,10 @@ public class OrderDAO {
     public List<OrderDetail> findDetailsByOrderId(int orderId) {
         List<OrderDetail> list = new ArrayList<>();
         String sql = """
-            SELECT od.*, p.product_name, p.product_codebar 
+            SELECT od.*, p.product_name, p.product_codebar, s.supplier_name 
             FROM order_detail od 
             JOIN Product p ON od.product_id = p.product_id 
+            LEFT JOIN supplier s ON od.supplier_id = s.supplier_id
             WHERE od.order_id = ?
             """;
         
@@ -130,6 +131,7 @@ public class OrderDAO {
                     od.setImportPrice(rs.getDouble("import_price"));
                     od.setProductName(rs.getString("product_name"));
                     od.setProductCode(rs.getString("product_codebar"));
+                    od.setSupplierName(rs.getString("supplier_name"));
                     list.add(od);
                 }
             }

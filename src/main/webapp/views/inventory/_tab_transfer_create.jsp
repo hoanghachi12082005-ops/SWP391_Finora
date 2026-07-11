@@ -148,19 +148,22 @@
                         
                         let optionsHtml = '';
                         g.partners.forEach(partner => {
-                            optionsHtml += `<option value="\${partner.partnerWarehouseId}">\${partner.partnerWarehouseName} (Tồn: \${partner.partnerStock})</option>`;
+                            const isZero = partner.partnerStock <= 0;
+                            const optionStyle = isZero ? 'style="color: #dc3545; font-weight: bold;"' : '';
+                            const zeroLabel = isZero ? ' (HẾT HÀNG - tồn: 0)' : ` (Tồn: ${partner.partnerStock})`;
+                            optionsHtml += `<option value="${partner.partnerWarehouseId}" ${optionStyle}>${partner.partnerWarehouseName}${zeroLabel}</option>`;
                         });
 
                         item.innerHTML = `
                             <div>
-                                <div class="fw-semibold text-dark">\${g.productName}</div>
+                                <div class="fw-semibold text-dark">${g.productName}</div>
                                 <div class="small text-muted mt-1">
-                                    Tồn của bạn: <strong class="\${g.myStock > 0 ? 'text-success' : 'text-danger'}">\${g.myStock}</strong>
+                                    Tồn của bạn: <strong class="${g.myStock > 0 ? 'text-success' : 'text-danger'}">${g.myStock}</strong>
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <select class="form-select form-select-sm partner-select" style="width: 230px; font-size: 13px; cursor: pointer;">
-                                    \${optionsHtml}
+                                <select class="form-select form-select-sm partner-select" style="width: 250px; font-size: 13px; cursor: pointer;">
+                                    ${optionsHtml}
                                 </select>
                                 <span class="material-icons text-danger add-btn" style="font-size: 28px; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Thêm vào danh sách">add_circle</span>
                             </div>
@@ -213,11 +216,7 @@
         });
 
         if (isDuplicate) {
-            Toast.fire({
-                icon: 'warning',
-                title: 'Đã chọn',
-                text: 'Sản phẩm này từ kho ' + product.partnerWarehouseName + ' đã được chọn!'
-            });
+            alert('Sản phẩm này từ kho ' + product.partnerWarehouseName + ' đã được chọn!');
             searchResults.style.display = 'none';
             searchInput.value = '';
             return;
@@ -232,35 +231,43 @@
         if (product.allPartners && product.allPartners.length > 0) {
             product.allPartners.forEach(p => {
                 const selected = p.partnerWarehouseId == product.partnerWarehouseId ? 'selected' : '';
-                partnerOptions += `<option value="\${p.partnerWarehouseId}" \${selected}>\${p.partnerWarehouseName} (Tồn: \${p.partnerStock})</option>`;
+                const isZero = p.partnerStock <= 0;
+                const optionStyle = isZero ? 'style="color: #dc3545; font-weight: bold;"' : '';
+                const zeroLabel = isZero ? ' (HẾT - 0)' : ` (Tồn: ${p.partnerStock})`;
+                partnerOptions += `<option value="${p.partnerWarehouseId}" ${optionStyle} ${selected}>${p.partnerWarehouseName}${zeroLabel}</option>`;
             });
         } else {
-            partnerOptions = `<option value="\${product.partnerWarehouseId}">\${product.partnerWarehouseName} (Tồn: \${product.partnerStock})</option>`;
+            const isZero = product.partnerStock <= 0;
+            const optionStyle = isZero ? 'style="color: #dc3545; font-weight: bold;"' : '';
+            const zeroLabel = isZero ? ' (HẾT - 0)' : ` (Tồn: ${product.partnerStock})`;
+            partnerOptions = `<option value="${product.partnerWarehouseId}" ${optionStyle}>${product.partnerWarehouseName}${zeroLabel}</option>`;
         }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>
-                <div class="fw-medium text-dark">\${product.productName}</div>
-                <input type="hidden" name="productId[]" value="\${product.productId}">
+                <div class="fw-medium text-dark">${product.productName}</div>
+                <input type="hidden" name="productId[]" value="${product.productId}">
             </td>
-            <td class="text-center fw-semibold \${product.myStock > 0 ? 'text-success' : 'text-danger'}">
-                \${product.myStock}
+            <td class="text-center fw-semibold ${product.myStock > 0 ? 'text-success' : 'text-danger'}">
+                ${product.myStock}
             </td>
             <td>
-                <select name="partnerWarehouseId[]" class="form-select form-select-sm" style="min-width: 180px; font-size: 13px; background-color: #f8fafc; font-weight: 500;">
-                    \${partnerOptions}
+                <select name="partnerWarehouseId[]" class="form-select form-select-sm partner-select-row" style="min-width: 180px; font-size: 13px; background-color: #f8fafc; font-weight: 500;">
+                    ${partnerOptions}
                 </select>
             </td>
             <td>
                 <select name="actionType[]" class="form-select action-select" style="background-color: #f8fafc;" required>
-                    <option value="RECEIVE" \${product.partnerStock > 0 ? 'selected' : ''}>Nhập</option>
-                    <option value="SEND" \${product.partnerStock <= 0 ? 'selected' : ''}>Xuất</option>
+                    <option value="RECEIVE" ${product.partnerStock > 0 ? 'selected' : ''}>Nhập</option>
+                    <option value="SEND" ${product.partnerStock <= 0 ? 'selected' : ''}>Xuất</option>
                 </select>
             </td>
             <td>
                 <div class="position-relative">
-                    <input type="number" name="quantity[]" class="form-control qty-input" required min="1" placeholder="Số lượng" data-mystock="\${product.myStock}">
+                    <input type="number" name="quantity[]" class="form-control qty-input" required min="1" placeholder="Số lượng" 
+                           data-mystock="${product.myStock}" 
+                           data-partnerstock="${product.partnerStock}">
                 </div>
             </td>
             <td class="text-center">
@@ -270,7 +277,35 @@
             </td>
         `;
         tableBody.appendChild(tr);
-        validateRow(tr.querySelector('.qty-input')); // Validate initially
+        
+        // Listeners for warning update
+        const qtyInput = tr.querySelector('.qty-input');
+        const actionSelect = tr.querySelector('.action-select');
+        const partnerSelectRow = tr.querySelector('.partner-select-row');
+        
+        qtyInput.addEventListener('input', function() {
+            validateInputWarning(this);
+        });
+        actionSelect.addEventListener('change', function() {
+            validateInputWarning(qtyInput);
+        });
+        partnerSelectRow.addEventListener('change', function() {
+            const selectedWId = parseInt(this.value);
+            const partner = product.allPartners.find(p => p.partnerWarehouseId === selectedWId);
+            if (partner) {
+                qtyInput.setAttribute('data-partnerstock', partner.partnerStock);
+                
+                // Auto adjust transaction type suggestion based on new partner's stock
+                if (partner.partnerStock > 0) {
+                    actionSelect.value = "RECEIVE";
+                } else {
+                    actionSelect.value = "SEND";
+                }
+                validateInputWarning(qtyInput);
+            }
+        });
+        
+        validateInputWarning(qtyInput);
     }
 
     function checkEmpty() {
@@ -282,43 +317,66 @@
         }
     }
 
-    function validateRow(element) {
-        if (!element) return true;
-        const tr = element.closest('tr');
-        if (!tr || tr.id === 'emptyRow') return true;
-        const actionSelect = tr.querySelector('.action-select');
-        const qtyInput = tr.querySelector('.qty-input');
+    function validateInputWarning(input) {
+        const tr = input.closest('tr');
+        if (!tr || tr.id === 'emptyRow') return;
+        const action = tr.querySelector('.action-select').value;
+        const qty = parseInt(input.value) || 0;
         
-        const qty = parseInt(qtyInput.value) || 0;
-        
-        if (qty <= 0 && qtyInput.value !== '') {
-            return false;
+        let limit = 0;
+        if (action === 'SEND') {
+            limit = parseInt(input.getAttribute('data-mystock')) || 0;
+        } else {
+            limit = parseInt(input.getAttribute('data-partnerstock')) || 0;
         }
         
-        if (actionSelect.value === 'SEND') {
-            const myStock = parseInt(qtyInput.getAttribute('data-mystock')) || 0;
-            if (qty > myStock) {
-                return false;
-            }
+        let warningEl = tr.querySelector('.qty-warning');
+        if (!warningEl) {
+            warningEl = document.createElement('div');
+            warningEl.className = 'qty-warning text-danger small mt-1';
+            warningEl.style.fontSize = '11px';
+            input.parentNode.appendChild(warningEl);
         }
         
-        return true;
+        if (qty > limit) {
+            input.style.borderColor = '#fd7e14';
+            input.style.boxShadow = '0 0 0 0.2rem rgba(253, 126, 20, 0.25)';
+            warningEl.innerHTML = `<span class="material-icons" style="font-size:12px;vertical-align:text-bottom;color:#fd7e14;">warning</span> Vượt tồn nguồn (${limit})`;
+            warningEl.style.color = '#fd7e14';
+        } else {
+            input.style.borderColor = '';
+            input.style.boxShadow = '';
+            warningEl.innerHTML = "";
+        }
     }
 
     document.getElementById('transferForm').addEventListener('submit', function(e) {
-        let valid = true;
+        e.preventDefault();
+        
+        let hasWarning = false;
         this.querySelectorAll('.qty-input').forEach(input => {
-            if (!validateRow(input)) {
-                valid = false;
+            const tr = input.closest('tr');
+            if (tr && tr.id !== 'emptyRow') {
+                const action = tr.querySelector('.action-select').value;
+                const qty = parseInt(input.value) || 0;
+                let limit = 0;
+                if (action === 'SEND') {
+                    limit = parseInt(input.getAttribute('data-mystock')) || 0;
+                } else {
+                    limit = parseInt(input.getAttribute('data-partnerstock')) || 0;
+                }
+                if (qty > limit) {
+                    hasWarning = true;
+                }
             }
         });
-        if (!valid) {
-            e.preventDefault();
-            Toast.fire({
-                icon: 'error',
-                title: 'Lỗi nhập liệu',
-                text: 'Vui lòng kiểm tra lại: Không thể xuất số lượng lớn hơn tồn kho hiện tại!'
-            });
+        
+        if (hasWarning) {
+            if (confirm("Cảnh báo: Có sản phẩm có số lượng điều chuyển vượt quá số lượng tồn kho thực tế của kho nguồn (kho gửi). Bạn có chắc chắn muốn tiếp tục tạo lệnh điều chuyển này?")) {
+                this.submit();
+            }
+        } else {
+            this.submit();
         }
     });
 </script>

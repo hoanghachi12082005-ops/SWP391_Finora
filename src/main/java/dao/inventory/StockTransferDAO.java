@@ -79,7 +79,7 @@ public class StockTransferDAO {
     }
 
     public StockTransfer findById(int id) throws Exception {
-        String sql = "SELECT st.*, fw.warehouse_name as from_warehouse_name, tw.warehouse_name as to_warehouse_name, e.employee_name as created_by_name " +
+        String sql = "SELECT st.*, fw.warehouse_name as from_warehouse_name, tw.warehouse_name as to_warehouse_name, e.fullName as created_by_name " +
                      "FROM stock_transfer st " +
                      "LEFT JOIN warehouse fw ON st.from_warehouse_id = fw.warehouse_id " +
                      "LEFT JOIN warehouse tw ON st.to_warehouse_id = tw.warehouse_id " +
@@ -139,7 +139,7 @@ public class StockTransferDAO {
     }
 
     public int getPendingCount(int warehouseId) throws Exception {
-        String sql = "SELECT COUNT(*) FROM stock_transfer WHERE status IN ('PENDING', 'IN_TRANSIT')";
+        String sql = "SELECT COUNT(*) FROM stock_transfer WHERE status IN ('PENDING_DISPATCH', 'APPROVED_DISPATCH', 'IN_TRANSIT')";
         if (warehouseId > 0) {
             sql += " AND (from_warehouse_id = ? OR to_warehouse_id = ?)";
         }

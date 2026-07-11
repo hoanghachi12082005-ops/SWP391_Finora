@@ -138,14 +138,53 @@ public class InventoryController extends BaseController {
             } else if ("searchImportProductsApi".equals(action)) {
                 handleSearchImportProductsApi(request, response);
                 return;
-            } else if ("viewReceiptForm".equals(action)) {
-                // TODO: Implement with PurchaseOrder
-                return;
             } else if ("viewTicket".equals(action)) {
-                // TODO: Implement with StockTransfer/Order
+                int ticketId = Integer.parseInt(request.getParameter("ticketId"));
+                model.StockTransfer transfer = transferDAO.findById(ticketId);
+                List<model.StockTransferDetail> details = transferDAO.getTransferDetails(ticketId);
+                List<model.StockTransaction> txs = transactionDAO.findByReference("STOCK_TRANSFER", ticketId);
+                
+                request.setAttribute("ticket", transfer);
+                request.setAttribute("ticketDetails", details);
+                request.setAttribute("transactions", txs);
+                
+                forward(request, response, "inventory/_modal_ticket_details");
+                return;
+            } else if ("viewOrderDetails".equals(action)) {
+                int orderId = Integer.parseInt(request.getParameter("orderId"));
+                model.Order order = orderDAO.findById(orderId);
+                List<model.OrderDetail> details = orderDAO.findDetailsByOrderId(orderId);
+                List<model.StockTransaction> txs = transactionDAO.findByReference("PURCHASE_ORDER", orderId);
+                
+                request.setAttribute("order", order);
+                request.setAttribute("orderDetails", details);
+                request.setAttribute("transactions", txs);
+                
+                forward(request, response, "inventory/_modal_order_details");
                 return;
             } else if ("printTicket".equals(action)) {
-                // TODO: Implement with StockTransfer/Order
+                int ticketId = Integer.parseInt(request.getParameter("ticketId"));
+                model.StockTransfer transfer = transferDAO.findById(ticketId);
+                List<model.StockTransferDetail> details = transferDAO.getTransferDetails(ticketId);
+                List<model.StockTransaction> txs = transactionDAO.findByReference("STOCK_TRANSFER", ticketId);
+                
+                request.setAttribute("ticket", transfer);
+                request.setAttribute("ticketDetails", details);
+                request.setAttribute("transactions", txs);
+                
+                forward(request, response, "inventory/_print_ticket");
+                return;
+            } else if ("printOrder".equals(action)) {
+                int orderId = Integer.parseInt(request.getParameter("orderId"));
+                model.Order order = orderDAO.findById(orderId);
+                List<model.OrderDetail> details = orderDAO.findDetailsByOrderId(orderId);
+                List<model.StockTransaction> txs = transactionDAO.findByReference("PURCHASE_ORDER", orderId);
+                
+                request.setAttribute("order", order);
+                request.setAttribute("orderDetails", details);
+                request.setAttribute("transactions", txs);
+                
+                forward(request, response, "inventory/_print_order");
                 return;
             }
 
@@ -534,9 +573,6 @@ public class InventoryController extends BaseController {
                     redirect(response, request.getContextPath() + "/inventory?tab=export&warehouseId=" + currentWarehouseId);
                     break;
                 }
-                case "confirmExport": 
-                case "cancelTransfer":
-                case "rejectTransfer":
                 case "confirmDispatch": {
                     int transferId = Integer.parseInt(request.getParameter("transferId"));
                     int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
@@ -546,10 +582,9 @@ public class InventoryController extends BaseController {
                     executionService.dispatchTransfer(transferId, currentUser.getEmployeeId());
                     
                     request.getSession().setAttribute("message", "Đã xuất kho thành công. Hàng đang trên đường vận chuyển.");
-                    redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + currentWarehouseId);
+                    redirect(response, request.getContextPath() + "/inventory?tab=transfer&subtab=transfer_process&warehouseId=" + currentWarehouseId);
                     break;
                 }
-                case "rejectDispatch":
                 case "confirmReceive": {
                     int transferId = Integer.parseInt(request.getParameter("transferId"));
                     int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
@@ -559,6 +594,16 @@ public class InventoryController extends BaseController {
                     executionService.receiveTransfer(transferId, currentUser.getEmployeeId());
                     
                     request.getSession().setAttribute("message", "Đã nhập kho thành công. Phiếu điều chuyển hoàn tất.");
+                    redirect(response, request.getContextPath() + "/inventory?tab=transfer&subtab=transfer_process&warehouseId=" + currentWarehouseId);
+                    break;
+                }
+                case "cancelTransfer": {
+                    int transferId = Integer.parseInt(request.getParameter("transferId"));
+                    int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
+                    
+                    transferDAO.updateStatus(transferId, "CANCELLED");
+                    
+                    request.getSession().setAttribute("message", "Đã hủy phiếu điều chuyển.");
                     redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + currentWarehouseId);
                     break;
                 }

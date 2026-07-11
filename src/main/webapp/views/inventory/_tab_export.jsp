@@ -45,7 +45,7 @@
                                     <td>${po.empName}</td>
                                     <td><fmt:formatNumber value="${po.totalAmount}" type="currency" currencySymbol="₫"/></td>
                                     <td>
-                                        <fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${po.createdAt}" />
+                                        ${po.createdAtFormatted}
                                     </td>
                                     <td>
                                         <c:choose>
