@@ -383,26 +383,43 @@ public class InventoryDAO {
     }
 
     public void increaseStock(int warehouseId, int productId, int quantity) throws SQLException {
-        // If it exists, update; if not, insert
-        int invId = getInventoryId(warehouseId, productId);
+        try (Connection conn = DBContext.getConnection()) {
+            increaseStock(conn, warehouseId, productId, quantity);
+        }
+    }
+
+    public void increaseStock(Connection conn, int warehouseId, int productId, int quantity) throws SQLException {
+        int invId = getInventoryIdInTransaction(conn, warehouseId, productId);
         if (invId != -1) {
             String sql = "UPDATE inventory SET quantity_in_stock = quantity_in_stock + ?, updated_at = GETDATE() WHERE inventory_id = ?";
-            try (Connection conn = DBContext.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, quantity);
                 stmt.setInt(2, invId);
                 stmt.executeUpdate();
             }
         } else {
             String sql = "INSERT INTO inventory (warehouse_id, product_id, quantity_in_stock, status, updated_at) VALUES (?, ?, ?, 'ACTIVE', GETDATE())";
-            try (Connection conn = DBContext.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, warehouseId);
                 stmt.setInt(2, productId);
                 stmt.setInt(3, quantity);
                 stmt.executeUpdate();
             }
         }
+    }
+
+    public int getInventoryIdInTransaction(Connection conn, int warehouseId, int productId) throws SQLException {
+        String sql = "SELECT inventory_id FROM inventory WHERE warehouse_id = ? AND product_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, warehouseId);
+            ps.setInt(2, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("inventory_id");
+                }
+            }
+        }
+        return -1;
     }
 
     // --- Compatibility methods for sales/POS ---
@@ -464,6 +481,28 @@ public class InventoryDAO {
             ps.setInt(5, beforeQty);
             ps.setInt(6, beforeQty - quantity);
             ps.setInt(7, empId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void logCustomStockTransaction(Connection conn, int warehouseId, int productId, 
+                                        String refType, int refId, String txType,
+                                        int quantity, int beforeQty, int afterQty, String note, int empId) throws SQLException {
+        String sql = "INSERT INTO stock_transaction "
+                   + "(warehouse_id, product_id, reference_type, reference_id, transaction_type, "
+                   + " quantity, before_quantity, after_quantity, note, created_by, created_at) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, warehouseId);
+            ps.setInt(2, productId);
+            ps.setString(3, refType);
+            ps.setInt(4, refId);
+            ps.setString(5, txType);
+            ps.setInt(6, quantity);
+            ps.setInt(7, beforeQty);
+            ps.setInt(8, afterQty);
+            ps.setString(9, note);
+            ps.setInt(10, empId);
             ps.executeUpdate();
         }
     }

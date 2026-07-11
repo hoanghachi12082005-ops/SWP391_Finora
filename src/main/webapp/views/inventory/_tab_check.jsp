@@ -44,10 +44,10 @@
                         <c:otherwise>
                             <c:forEach var="c" items="${checks}">
                                 <tr>
-                                    <td><strong>${c.ticketCode}</strong></td>
-                                    <td>${c.fromWarehouseName}</td>
+                                    <td><strong>${c.orderCode}</strong></td>
+                                    <td>${c.customerName}</td>
                                     <td>${c.createdAt}</td>
-                                    <td>${c.createdByName}</td>
+                                    <td>${c.employeeName}</td>
                                     <td>
                                         <c:choose>
                                             <c:when test="${c.status == 'PENDING'}">

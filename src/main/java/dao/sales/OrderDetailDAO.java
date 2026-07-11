@@ -33,8 +33,8 @@ public class OrderDetailDAO {
      * Chèn batch chi tiết đơn nhập hàng (PURCHASE) trong cùng Connection/Transaction.
      */
     public void insertBatchPurchase(Connection conn, int orderId, List<model.OrderDetail> items) throws SQLException {
-        String sql = "INSERT INTO order_detail (order_id, product_id, quantity, unit_price, total_price, import_price) "
-                   + "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO order_detail (order_id, product_id, quantity, unit_price, total_price, import_price, supplier_id, supplier_status) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (model.OrderDetail item : items) {
                 ps.setInt(1, orderId);
@@ -43,6 +43,12 @@ public class OrderDetailDAO {
                 ps.setDouble(4, item.getUnitPrice());
                 ps.setDouble(5, item.getTotalPrice());
                 ps.setDouble(6, item.getImportPrice());
+                if (item.getSupplierId() != null) {
+                    ps.setInt(7, item.getSupplierId());
+                } else {
+                    ps.setNull(7, java.sql.Types.INTEGER);
+                }
+                ps.setString(8, item.getSupplierStatus() != null ? item.getSupplierStatus() : "PENDING");
                 ps.addBatch();
             }
             ps.executeBatch();

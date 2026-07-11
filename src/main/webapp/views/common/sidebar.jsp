@@ -62,6 +62,10 @@
                                class="sidebar-submenu-item ${isInventoryActive && (empty activeTab || activeTab == 'stock') ? 'active' : ''}">
                                 Danh sách Kho
                             </a>
+                            <a href="${pageContext.request.contextPath}/approval"
+                               class="sidebar-submenu-item ${originalUri.contains('/approval') ? 'active' : ''}">
+                                Xử Lý Phiếu (Duyệt)
+                            </a>
                             <a href="${pageContext.request.contextPath}/inventory?tab=history"
                                class="sidebar-submenu-item ${isInventoryActive && activeTab == 'history' ? 'active' : ''}">
                                 Lịch sử xuất nhập kho
@@ -117,7 +121,44 @@
             </div>
         </c:if>
 
-
+        <%-- ═══ POS Sales Menu — ĐÃ TÁCH SANG sidebar-pos.jsp ═══
+        <c:if
+            test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'SalesStaff'}">
+            <c:set var="isSalesActive"
+                value="${originalUri.contains('/sales') || originalUri.contains('/orders') || originalUri.contains('/shift') || originalUri.contains('/revenue')}" />
+            <a href="#salesCollapse" data-bs-toggle="collapse" role="button"
+                aria-expanded="${isSalesActive ? 'true' : 'false'}" aria-controls="salesCollapse"
+                class="sidebar-menu-item ${isSalesActive ? 'active' : ''} d-flex align-items-center">
+                <span class="material-icons">point_of_sale</span>
+                <span>Giao dịch</span>
+                <span class="material-icons ms-auto transition-icon"
+                    style="font-size: 1.2rem;">expand_more</span>
+            </a>
+            <div class="collapse ${isSalesActive ? 'show' : ''}" id="salesCollapse">
+                <div class="sidebar-submenu">
+                    <a href="${pageContext.request.contextPath}/sales"
+                        class="sidebar-submenu-item ${originalUri.contains('/sales') ? 'active' : ''}">
+                        Bán hàng (POS)
+                    </a>
+                    <a href="${pageContext.request.contextPath}/orders"
+                        class="sidebar-submenu-item ${originalUri.contains('/orders') ? 'active' : ''}">
+                        Lịch sử đơn hàng
+                    </a>
+                    <a href="${pageContext.request.contextPath}/shift"
+                        class="sidebar-submenu-item ${originalUri.contains('/shift') ? 'active' : ''}">
+                        Ca làm việc
+                    </a>
+                    <c:if
+                        test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+                        <a href="${pageContext.request.contextPath}/revenue"
+                            class="sidebar-submenu-item ${originalUri.contains('/revenue') ? 'active' : ''}">
+                            Báo cáo doanh thu
+                        </a>
+                    </c:if>
+                </div>
+            </div>
+        </c:if>
+        --%>
 
         <!-- Cashbook (Sổ Quỹ) (Admin, Owner, StoreManager) -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
@@ -151,7 +192,7 @@
             <a href="${pageContext.request.contextPath}/admin/user"
                class="sidebar-menu-item ${originalUri.contains('/admin/user') ? 'active' : ''}">
                 <span class="material-icons">manage_accounts</span>
-                <span>Quản lý Tài khoản</span>
+                <span>Quản lý Owner</span>
             </a>
         </c:if>
         <c:if test="${roleName == 'Owner'}">

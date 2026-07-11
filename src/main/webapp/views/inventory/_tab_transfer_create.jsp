@@ -112,7 +112,11 @@
             .then(data => {
                 searchResults.innerHTML = '';
                 if (data.length === 0) {
-                    searchResults.innerHTML = '<div class="p-3 text-center text-muted">Không tìm thấy kho nào có sẵn sản phẩm này</div>';
+                    if (keyword === '') {
+                        searchResults.innerHTML = '<div class="p-3 text-center text-muted"><span class="material-icons" style="font-size:40px; color:#e2e8f0;">search</span><br>Gõ tên hoặc mã sản phẩm để tìm kiếm...</div>';
+                    } else {
+                        searchResults.innerHTML = '<div class="p-3 text-center text-muted">Không tìm thấy kho nào có sẵn sản phẩm này</div>';
+                    }
                 } else {
                     if (keyword === '') {
                         const header = document.createElement('div');
