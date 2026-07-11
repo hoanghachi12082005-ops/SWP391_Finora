@@ -372,4 +372,100 @@ public class OrderDAO {
         }
         return o;
     }
+
+    public int countSaleOrders(String keyword, int branchId) {
+        StringBuilder sql = new StringBuilder("""
+            SELECT COUNT(*) 
+            FROM [order] o
+            LEFT JOIN Customer c ON o.customer_id = c.cus_id
+            JOIN Employee e ON o.emp_id = e.emp_id
+            JOIN Branch b ON o.branch_id = b.branch_id
+            WHERE o.order_type = 'SALE'
+            """);
+        
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        boolean hasBranch = branchId > 0;
+        
+        if (hasKeyword) {
+            sql.append(" AND (o.order_code LIKE ? OR c.full_name LIKE ?)");
+        }
+        if (hasBranch) {
+            sql.append(" AND o.branch_id = ?");
+        }
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            if (hasKeyword) {
+                String searchStr = "%" + keyword.trim() + "%";
+                ps.setString(paramIndex++, searchStr);
+                ps.setString(paramIndex++, searchStr);
+            }
+            if (hasBranch) {
+                ps.setInt(paramIndex++, branchId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public List<Order> getAllSaleOrdersPaginated(String keyword, int branchId, int offset, int pageSize) {
+        List<Order> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+            SELECT o.*, 
+                   c.full_name AS customerName, 
+                   e.fullName AS employeeName, 
+                   b.branch_name AS branchName
+            FROM [order] o
+            LEFT JOIN Customer c ON o.customer_id = c.cus_id
+            JOIN Employee e ON o.emp_id = e.emp_id
+            JOIN Branch b ON o.branch_id = b.branch_id
+            WHERE o.order_type = 'SALE'
+            """);
+        
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        boolean hasBranch = branchId > 0;
+        
+        if (hasKeyword) {
+            sql.append(" AND (o.order_code LIKE ? OR c.full_name LIKE ?)");
+        }
+        if (hasBranch) {
+            sql.append(" AND o.branch_id = ?");
+        }
+        sql.append(" ORDER BY o.order_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            if (hasKeyword) {
+                String searchStr = "%" + keyword.trim() + "%";
+                ps.setString(paramIndex++, searchStr);
+                ps.setString(paramIndex++, searchStr);
+            }
+            if (hasBranch) {
+                ps.setInt(paramIndex++, branchId);
+            }
+            ps.setInt(paramIndex++, offset);
+            ps.setInt(paramIndex++, pageSize);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Order o = mapRow(rs);
+                    o.setCustomerName(rs.getString("customerName"));
+                    o.setEmployeeName(rs.getString("employeeName"));
+                    o.setBranchName(rs.getString("branchName"));
+                    list.add(o);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }

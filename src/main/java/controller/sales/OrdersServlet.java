@@ -60,9 +60,53 @@ public class OrdersServlet extends HttpServlet {
         // Ở đây ta lọc theo branchId của nhân viên đang đăng nhập.
         int branchId = emp.getBranchId();
 
-        List<Order> orders = orderDao.getAllSaleOrders(keyword, branchId);
+        int page = 1;
+        String pageStr = req.getParameter("page");
+        if (pageStr != null) {
+            try {
+                page = Integer.parseInt(pageStr);
+                if (page < 1) page = 1;
+            } catch (NumberFormatException e) {
+                page = 1;
+            }
+        }
+
+        int sizeValue = 10;
+        String sizeStr = req.getParameter("sizeValue");
+        if (sizeStr != null) {
+            try {
+                sizeValue = Integer.parseInt(sizeStr);
+                if (sizeValue < 1) sizeValue = 10;
+            } catch (NumberFormatException e) {
+                sizeValue = 10;
+            }
+        }
+
+        int totalOrders = orderDao.countSaleOrders(keyword, branchId);
+
+        int pageSize = sizeValue;
+        if (sizeValue == 100) {
+            pageSize = totalOrders > 0 ? totalOrders : 10;
+        }
+
+        int totalPages = (int) Math.ceil((double) totalOrders / pageSize);
+        if (totalPages < 1) totalPages = 1;
+        if (page > totalPages) page = totalPages;
+
+        int offset = (page - 1) * pageSize;
+        List<Order> orders = orderDao.getAllSaleOrdersPaginated(keyword, branchId, offset, pageSize);
+
+        int startRecord = totalOrders == 0 ? 0 : offset + 1;
+        int endRecord = Math.min(page * pageSize, totalOrders);
+
         req.setAttribute("orders", orders);
         req.setAttribute("keyword", keyword);
+        req.setAttribute("currentPage", page);
+        req.setAttribute("totalPages", totalPages);
+        req.setAttribute("sizeValue", sizeValue);
+        req.setAttribute("totalOrders", totalOrders);
+        req.setAttribute("startRecord", startRecord);
+        req.setAttribute("endRecord", endRecord);
 
         req.getRequestDispatcher("/views/sales/orders.jsp").forward(req, resp);
     }

@@ -5,7 +5,7 @@
 
 <jsp:include page="/views/common/header.jsp">
     <jsp:param name="title" value="Danh sách chi nhánh"/>
-    <jsp:param name="additionalCSS" value="branch.css"/>
+    <jsp:param name="additionalCSS" value="branch.css?v=2"/>
 </jsp:include>
 
 
