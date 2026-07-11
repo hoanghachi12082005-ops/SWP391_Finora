@@ -766,7 +766,8 @@ INSERT INTO voucher (voucher_code, voucher_name, discount_type, discount_value, 
 ('FIXED20',  N'Giảm 20,000đ',                    'FIXED',   20000,12, '2026-03-01','2026-12-31','ACTIVE'),
 ('FIXED100', N'Giảm 100,000đ đơn từ 1 triệu',   'FIXED',   100000,2, '2026-04-01','2026-09-30','ACTIVE'),
 ('SALE5',    N'Giảm 5% đơn hàng',               'PERCENT', 5,    15, '2026-01-01','2026-12-31','ACTIVE'),
-('POINT_CONFIG', N'Cấu hình đổi điểm ra tiền', 'FIXED',   1,    0,  NULL, NULL, 'ACTIVE');
+('POINT_CONFIG', N'Cấu hình đổi điểm ra tiền', 'FIXED',   1,    0,  NULL, NULL, 'ACTIVE'),
+('POINT_EARN_CONFIG', N'Cấu hình tích điểm',   'FIXED',   100000,0,  NULL, NULL, 'ACTIVE');
 GO
 
 -- 13. ORDERS (100 SALE orders, Jan-Jun 2026)
