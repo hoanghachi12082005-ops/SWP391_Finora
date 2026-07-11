@@ -24,6 +24,7 @@
             <h1>Cấu hình kinh doanh</h1>
             <p>Cấu hình các thiết lập hệ thống</p>
 
+            <!-- Điểm tích lũy -->
             <div style="background: #fff; padding: 1.5rem; border-radius: 8px; border: 1px solid #e5e7eb; margin-top: 1.5rem;">
                 <h3>Cài đặt điểm tích lũy</h3>
                 <form method="post" action="${pageContext.request.contextPath}/configuration/business" style="margin-top: 1rem;">
@@ -33,6 +34,21 @@
                                value="<fmt:formatNumber value="${loyaltySetting.amountPerPoint}" type="number" groupingUsed="false"/>"
                                min="1" step="1000" required/>
                         <small class="form-text text-muted">Số tiền chi tiêu (VNĐ) để nhận 1 điểm tích lũy. Mặc định: 100.000 VNĐ</small>
+                    </div>
+                    <button class="btn btn-danger" type="submit">Lưu</button>
+                </form>
+            </div>
+
+            <!-- Cấu hình VAT -->
+            <div style="background: #fff; padding: 1.5rem; border-radius: 8px; border: 1px solid #e5e7eb; margin-top: 1.5rem;">
+                <h3>Cấu hình VAT chung</h3>
+                <form method="post" action="${pageContext.request.contextPath}/configuration/business" style="margin-top: 1rem;">
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">Tỷ lệ VAT (%)</label>
+                        <input type="number" name="vatPercentage" class="form-control"
+                               value="<fmt:formatNumber value="${vatSetting.vatPercentage}" type="number" groupingUsed="false" maxFractionDigits="2"/>"
+                               min="0" max="100" step="0.1" required/>
+                        <small class="form-text text-muted">Phần trăm thuế VAT áp dụng cho tất cả đơn hàng bán tại POS. Mặc định: 8%</small>
                     </div>
                     <button class="btn btn-danger" type="submit">Lưu</button>
                 </form>
