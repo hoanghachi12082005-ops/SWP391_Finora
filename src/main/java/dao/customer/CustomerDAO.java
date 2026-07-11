@@ -751,10 +751,10 @@ public class CustomerDAO {
 
     private int calculatePoints(BigDecimal spent) {
         if (spent == null) return 0;
-        // Dùng POINT_CONFIG từ bảng voucher để xác định số tiền cần chi để được 1 điểm
-        Voucher pointConfig = new VoucherDAO().getByCode("POINT_CONFIG");
-        double amountPerPoint = (pointConfig != null && pointConfig.getDiscountValue() > 0)
-                ? pointConfig.getDiscountValue() : 100000;
+        // Dùng POINT_EARN_CONFIG từ bảng voucher: ? VNĐ = 1 điểm
+        Voucher earnConfig = new VoucherDAO().getByCode("POINT_EARN_CONFIG");
+        double amountPerPoint = (earnConfig != null && earnConfig.getDiscountValue() > 0)
+                ? earnConfig.getDiscountValue() : 100000;
         if (amountPerPoint <= 0) return 0;
         BigDecimal bdAmount = BigDecimal.valueOf(amountPerPoint);
         return spent.divide(bdAmount, 0, java.math.RoundingMode.DOWN).intValue();
