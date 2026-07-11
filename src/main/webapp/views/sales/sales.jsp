@@ -311,7 +311,7 @@
             <div id="cashInputSection">
                 <label class="text-label-md text-on-surface-variant block mb-2">Khách thanh toán</label>
                 <div class="relative">
-                    <input id="modalCashInput" type="number" class="w-full text-headline-lg text-primary font-bold bg-surface-container-low rounded-xl px-5 py-4 border-2 border-primary outline-none text-right" oninput="calcChange()">
+                    <input id="modalCashInput" type="number" class="w-full text-headline-lg text-primary font-bold bg-surface-container-low rounded-xl pl-5 pr-14 py-4 border-2 border-primary outline-none text-right" oninput="calcChange()">
                     <span class="absolute right-5 top-1/2 -translate-y-1/2 text-headline-md text-outline font-bold">₫</span>
                 </div>
             </div>
