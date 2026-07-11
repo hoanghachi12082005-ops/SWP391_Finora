@@ -12,7 +12,8 @@ public class PurchaseOrderDAO {
         List<PurchaseOrder> list = new ArrayList<>();
         String sql = "SELECT o.order_id, o.order_code, o.supplier_id, o.branch_id, o.emp_id, o.warehouse_id, "
                    + "o.subtotal, o.discount_amount, o.total_amount, o.status, o.created_at, "
-                   + "s.supplier_name, b.branch_name, e.fullName AS emp_name "
+                   + "COALESCE(s.supplier_name, (SELECT STRING_AGG(sup.supplier_name, ', ') FROM (SELECT DISTINCT s2.supplier_name FROM order_detail od2 JOIN supplier s2 ON od2.supplier_id = s2.supplier_id WHERE od2.order_id = o.order_id) sup)) AS supplier_name, "
+                   + "b.branch_name, e.fullName AS emp_name "
                    + "FROM [order] o "
                    + "LEFT JOIN supplier s ON o.supplier_id = s.supplier_id "
                    + "LEFT JOIN Branch b ON o.branch_id = b.branch_id "
@@ -49,7 +50,8 @@ public class PurchaseOrderDAO {
     public PurchaseOrder findById(int id) {
         String sql = "SELECT o.order_id, o.order_code, o.supplier_id, o.branch_id, o.emp_id, o.warehouse_id, "
                    + "o.subtotal, o.discount_amount, o.total_amount, o.status, o.created_at, "
-                   + "s.supplier_name, b.branch_name, e.fullName AS emp_name "
+                   + "COALESCE(s.supplier_name, (SELECT STRING_AGG(sup.supplier_name, ', ') FROM (SELECT DISTINCT s2.supplier_name FROM order_detail od2 JOIN supplier s2 ON od2.supplier_id = s2.supplier_id WHERE od2.order_id = o.order_id) sup)) AS supplier_name, "
+                   + "b.branch_name, e.fullName AS emp_name "
                    + "FROM [order] o "
                    + "LEFT JOIN supplier s ON o.supplier_id = s.supplier_id "
                    + "LEFT JOIN Branch b ON o.branch_id = b.branch_id "

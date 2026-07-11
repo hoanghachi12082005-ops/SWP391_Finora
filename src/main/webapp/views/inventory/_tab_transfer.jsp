@@ -57,13 +57,14 @@
                                 <th>Tiến Trình</th>
                                 <th>Người Tạo</th>
                                 <th>Thời Gian</th>
+                                <th width="100px" class="text-center">Thao Tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:choose>
                                 <c:when test="${empty transfers}">
                                     <tr>
-                                        <td colspan="7" class="text-center py-4 text-muted">Không có phiếu điều chuyển nào</td>
+                                        <td colspan="8" class="text-center py-4 text-muted">Không có phiếu điều chuyển nào</td>
                                     </tr>
                                 </c:when>
                                 <c:otherwise>
@@ -135,6 +136,11 @@
                                             <td>${tx.createdByName}</td>
                                             <td>
                                                 <fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${tx.transferDate}" />
+                                            </td>
+                                            <td class="text-center">
+                                                <button class="btn btn-sm btn-outline-primary" style="padding: 4px 8px; font-size: 12px; border-radius: 6px;" onclick="viewTicketDetails(${tx.stockTransferId})">
+                                                    Chi tiết
+                                                </button>
                                             </td>
                                         </tr>
                                     </c:forEach>

@@ -22,9 +22,6 @@
                                 <th>Thời Gian</th>
                                 <th>Loại</th>
                                 <th>Sản Phẩm</th>
-                                <th>Số Lượng</th>
-                                <th>Tồn Trước</th>
-                                <th>Tồn Sau</th>
                                 <th>Người Thực Hiện</th>
                                 <th>Ghi Chú</th>
                             </tr>
@@ -52,19 +49,28 @@
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
+                                     <td>
+                                         <strong>${tx.productName}</strong>
+                                     </td>
+                                     <td>${tx.createdByName}</td>
                                     <td>
-                                        <strong>${tx.productName}</strong><br>
-                                        <small class="text-muted">${tx.productCodebar}</small>
+                                        ${tx.note}
+                                        <c:if test="${not empty tx.referenceType and not empty tx.referenceId}">
+                                            <br>
+                                            <c:choose>
+                                                <c:when test="${tx.referenceType == 'STOCK_TRANSFER'}">
+                                                    <a href="javascript:void(0)" class="text-primary small fw-semibold" style="font-size: 11.5px; text-decoration: none;" onclick="viewTicketDetails(${tx.referenceId})">
+                                                        <span class="material-icons" style="font-size: 13px; vertical-align: text-bottom;">open_in_new</span> Xem phiếu gốc
+                                                    </a>
+                                                </c:when>
+                                                <c:when test="${tx.referenceType == 'PURCHASE_ORDER' || tx.referenceType == 'EXPORT_ORDER'}">
+                                                    <a href="javascript:void(0)" class="text-primary small fw-semibold" style="font-size: 11.5px; text-decoration: none;" onclick="viewOrderDetails(${tx.referenceId})">
+                                                        <span class="material-icons" style="font-size: 13px; vertical-align: text-bottom;">open_in_new</span> Xem phiếu gốc
+                                                    </a>
+                                                </c:when>
+                                            </c:choose>
+                                        </c:if>
                                     </td>
-                                    <td>
-                                        <span class="${tx.transactionType == 'IMPORT' || tx.transactionType == 'TRANSFER_IN' || tx.transactionType == 'RETURN' ? 'text-success' : 'text-danger'} fw-bold">
-                                            ${tx.transactionType == 'IMPORT' || tx.transactionType == 'TRANSFER_IN' || tx.transactionType == 'RETURN' ? '+' : '-'}${tx.quantity}
-                                        </span>
-                                    </td>
-                                    <td>${tx.beforeQuantity}</td>
-                                    <td>${tx.afterQuantity}</td>
-                                    <td>${tx.createdByName}</td>
-                                    <td>${tx.note}</td>
                                 </tr>
                             </c:forEach>
                         </tbody>

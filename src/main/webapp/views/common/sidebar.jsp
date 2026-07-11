@@ -45,7 +45,7 @@
 
         <!-- Inventory Management (Owner, WarehouseStaff, StoreManager, Admin) -->
         <c:if test="${roleName == 'Owner' || roleName == 'WarehouseStaff' || roleName == 'StoreManager' || roleName == 'Admin'}">
-            <c:set var="isInventoryActive" value="${originalUri.contains('/inventory')}" />
+            <c:set var="isInventoryActive" value="${originalUri.contains('/inventory') || originalUri.contains('/approval')}" />
             <a href="#inventoryCollapse" data-bs-toggle="collapse" role="button"
                aria-expanded="${isInventoryActive ? 'true' : 'false'}" aria-controls="inventoryCollapse"
                class="sidebar-menu-item ${isInventoryActive ? 'active' : ''} d-flex align-items-center">
@@ -59,7 +59,7 @@
                     <c:choose>
                         <c:when test="${roleName == 'Owner' || roleName == 'Admin'}">
                             <a href="${pageContext.request.contextPath}/inventory?tab=stock"
-                               class="sidebar-submenu-item ${isInventoryActive && (empty activeTab || activeTab == 'stock') ? 'active' : ''}">
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && (empty activeTab || activeTab == 'stock') ? 'active' : ''}">
                                 Danh sách Kho
                             </a>
                             <a href="${pageContext.request.contextPath}/approval"
@@ -67,25 +67,25 @@
                                 Xử Lý Phiếu (Duyệt)
                             </a>
                             <a href="${pageContext.request.contextPath}/inventory?tab=history"
-                               class="sidebar-submenu-item ${isInventoryActive && activeTab == 'history' ? 'active' : ''}">
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'history' ? 'active' : ''}">
                                 Lịch sử xuất nhập kho
                             </a>
                         </c:when>
                         <c:when test="${roleName == 'WarehouseStaff' || roleName == 'StoreManager'}">
                             <a href="${pageContext.request.contextPath}/inventory?tab=stock&warehouseId=${sessionScope.selectedWarehouseId}"
-                               class="sidebar-submenu-item ${isInventoryActive && (empty activeTab || activeTab == 'stock') ? 'active' : ''}">
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && (empty activeTab || activeTab == 'stock') ? 'active' : ''}">
                                 Tồn Kho
                             </a>
                             <a href="${pageContext.request.contextPath}/inventory?tab=transfer&warehouseId=${sessionScope.selectedWarehouseId}"
-                               class="sidebar-submenu-item ${isInventoryActive && (activeTab == 'transfer' || activeTab == 'createTransfer') ? 'active' : ''}">
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && (activeTab == 'transfer' || activeTab == 'createTransfer') ? 'active' : ''}">
                                 Điều Chuyển
                             </a>
                             <a href="${pageContext.request.contextPath}/inventory?tab=check&warehouseId=${sessionScope.selectedWarehouseId}"
-                               class="sidebar-submenu-item ${isInventoryActive && activeTab == 'check' ? 'active' : ''}">
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'check' ? 'active' : ''}">
                                 Kiểm kho
                             </a>
                             <a href="${pageContext.request.contextPath}/inventory?tab=history&warehouseId=${sessionScope.selectedWarehouseId}"
-                               class="sidebar-submenu-item ${isInventoryActive && activeTab == 'history' ? 'active' : ''}">
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'history' ? 'active' : ''}">
                                 Lịch sử xuất nhập kho
                             </a>
                         </c:when>
@@ -278,4 +278,40 @@
             <span class="material-icons">logout</span>
         </a>
     </div>
+
+    <!-- Fallback style for pages without Bootstrap CSS -->
+    <style>
+        .collapse:not(.show) {
+            display: none !important;
+        }
+    </style>
+
+    <!-- Fallback script for pages without Bootstrap JS -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const toggles = document.querySelectorAll('[data-bs-toggle="collapse"]');
+            toggles.forEach(function(toggle) {
+                toggle.addEventListener('click', function(e) {
+                    if (typeof bootstrap !== 'undefined') {
+                        return;
+                    }
+                    e.preventDefault();
+                    const targetSelector = toggle.getAttribute('href') || toggle.getAttribute('data-bs-target');
+                    if (targetSelector) {
+                        const targetEl = document.querySelector(targetSelector);
+                        if (targetEl) {
+                            const isShown = targetEl.classList.contains('show');
+                            if (isShown) {
+                                targetEl.classList.remove('show');
+                                toggle.setAttribute('aria-expanded', 'false');
+                            } else {
+                                targetEl.classList.add('show');
+                                toggle.setAttribute('aria-expanded', 'true');
+                            }
+                        }
+                    }
+                });
+            });
+        });
+    </script>
 </aside>
