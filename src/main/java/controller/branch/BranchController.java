@@ -120,6 +120,7 @@ public class BranchController extends HttpServlet {
                 req.setAttribute("selectedStatus", status);
                 req.setAttribute("selectedCity", city);
                 req.setAttribute("cityList", dao.getCityWithBranch());
+                req.setAttribute("baseUrl", req.getContextPath() + "/branch");
 
                 forward(req, resp, "branch-list.jsp");
                 break;

@@ -16,11 +16,12 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 
     <title>
-        ${empty profileTitle ? 'My Profile' : profileTitle} - FinoraRetail
+        ${empty profileTitle ? 'Hồ sơ của tôi' : profileTitle} - FinoraRetail
     </title>
 
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/base.css?v=20260601"/>
-    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/components.css?v=20260601"/>
+    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/layout.css?v=20260601"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-management.css?v=2"/>
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/profile.css?v=2"/>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -29,7 +30,7 @@
 </head>
 
 <body>
-<div class="app-layout profile-page">
+<div class="app-layout user-page">
 
     <jsp:include page="/views/common/sidebar.jsp"/>
 
@@ -50,20 +51,20 @@
                 <c:remove var="errorMessage" scope="session"/>
             </c:if>
 
+            <div class="profile-back">
+                <button type="button" class="btn-secondary" onclick="goBack()">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    Quay lại
+                </button>
+            </div>
+
             <section class="page-header">
                 <div>
-                    <h2>${empty profileTitle ? 'My Profile' : profileTitle}</h2>
+                    <h2>${empty profileTitle ? 'Hồ sơ của tôi' : profileTitle}</h2>
                     <p>
-                        ${empty profileSubtitle ? 'View your account information and sales performance' : profileSubtitle}
+                        ${empty profileSubtitle ? 'Xem thông tin tài khoản và hiệu suất bán hàng' : profileSubtitle}
                     </p>
                 </div>
-
-                <c:if test="${not empty backUrl}">
-                    <a class="btn-secondary" href="${backUrl}">
-                        <span class="material-symbols-outlined">arrow_back</span>
-                        Back
-                    </a>
-                </c:if>
             </section>
 
             <c:choose>
@@ -71,8 +72,8 @@
                     <section class="profile-card">
                         <div class="empty-profile">
                             <span class="material-symbols-outlined">person_off</span>
-                            <h3>Profile not found</h3>
-                            <p>The selected employee profile could not be loaded.</p>
+                            <h3>Không tìm thấy hồ sơ</h3>
+                            <p>Không thể tải hồ sơ nhân viên đã chọn.</p>
                         </div>
                     </section>
                 </c:when>
@@ -120,11 +121,11 @@
                                 </span>
 
                                 <c:choose>
-                                    <c:when test="${profile.status == 'ACTIVE'}">
-                                        <span class="status-badge active">Active</span>
+                                    <c:when test="${fn:toUpperCase(profile.status) == 'ACTIVE'}">
+                                        <span class="status-badge active">Hoạt động</span>
                                     </c:when>
                                     <c:otherwise>
-                                        <span class="status-badge locked">Locked</span>
+                                        <span class="status-badge locked">Đã khóa</span>
                                     </c:otherwise>
                                 </c:choose>
                             </div>
@@ -135,12 +136,12 @@
 
                         <div class="profile-card">
                             <div class="card-header">
-                                <h3>Account Information</h3>
+                                <h3>Thông tin tài khoản</h3>
                             </div>
 
                             <div class="detail-list">
                                 <div class="detail-item">
-                                    <span>Full Name</span>
+                                    <span>Họ tên</span>
                                     <strong>${profile.fullName}</strong>
                                 </div>
 
@@ -150,27 +151,27 @@
                                 </div>
 
                                 <div class="detail-item">
-                                    <span>Phone</span>
+                                    <span>Số điện thoại</span>
                                     <strong>${empty profile.phone ? '—' : profile.phone}</strong>
                                 </div>
 
                                 <div class="detail-item">
-                                    <span>Role</span>
+                                    <span>Vai trò</span>
                                     <strong>${profile.roleName}</strong>
                                 </div>
 
                                 <div class="detail-item">
-                                    <span>Branch</span>
+                                    <span>Chi nhánh</span>
                                     <strong>${empty profile.branchName ? '—' : profile.branchName}</strong>
                                 </div>
 
                                 <div class="detail-item">
-                                    <span>Status</span>
+                                    <span>Trạng thái</span>
                                     <strong>${profile.status}</strong>
                                 </div>
 
                                 <div class="detail-item">
-                                    <span>Created At</span>
+                                    <span>Ngày tạo</span>
                                     <strong>
                                         <c:if test="${not empty profile.createdAt}">
                                             <fmt:formatDate value="${profile.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
@@ -184,19 +185,19 @@
                         <c:if test="${showSalesSection}">
                             <div class="profile-card">
                                 <div class="card-header">
-                                    <h3>Sales Performance</h3>
+                                    <h3>Hiệu suất bán hàng</h3>
                                 </div>
 
                                 <div class="sales-grid">
                                     <div class="sales-card">
                                         <span class="material-symbols-outlined">receipt_long</span>
-                                        <p>Total Orders</p>
+                                        <p>Tổng đơn hàng</p>
                                         <h4>${empty salesSummary ? 0 : salesSummary.totalOrders}</h4>
                                     </div>
 
                                     <div class="sales-card">
                                         <span class="material-symbols-outlined">payments</span>
-                                        <p>Total Revenue</p>
+                                        <p>Tổng doanh thu</p>
                                         <h4>
                                             <fmt:formatNumber value="${empty salesSummary ? 0 : salesSummary.totalRevenue}"
                                                               type="number"
@@ -206,7 +207,7 @@
 
                                     <div class="sales-card">
                                         <span class="material-symbols-outlined">trending_up</span>
-                                        <p>Average Order</p>
+                                        <p>Giá trị TB đơn hàng</p>
                                         <h4>
                                             <fmt:formatNumber value="${empty salesSummary ? 0 : salesSummary.averageOrderValue}"
                                                               type="number"
@@ -218,25 +219,25 @@
 
                             <div class="profile-card">
                                 <div class="card-header">
-                                    <h3>Order History</h3>
-                                    <p>Your recent orders</p>
+                                    <h3>Lịch sử đơn hàng</h3>
+                                    <p>Đơn hàng gần đây của bạn</p>
                                 </div>
 
                                 <c:choose>
                                     <c:when test="${empty orderHistory}">
-                                        <p class="text-muted">No orders found.</p>
+                                        <p class="text-muted">Không tìm thấy đơn hàng.</p>
                                     </c:when>
                                     <c:otherwise>
                                         <div class="profile-order-table-wrap">
                                             <table class="profile-order-table">
                                                 <thead>
                                                     <tr>
-                                                        <th>Code</th>
-                                                        <th>Customer</th>
-                                                        <th>Total</th>
-                                                        <th>Payment</th>
-                                                        <th>Status</th>
-                                                        <th>Date</th>
+                                                        <th>Mã</th>
+                                                        <th>Khách hàng</th>
+                                                        <th>Tổng</th>
+                                                        <th>Thanh toán</th>
+                                                        <th>Trạng thái</th>
+                                                        <th>Ngày</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -265,8 +266,8 @@
 
                             <div class="profile-card">
                                 <div class="card-header">
-                                    <h3>Update Profile</h3>
-                                    <p>Update your personal information and profile image.</p>
+                                    <h3>Cập nhật hồ sơ</h3>
+                                    <p>Cập nhật thông tin cá nhân và ảnh đại diện.</p>
                                 </div>
 
                                 <form method="post"
@@ -277,14 +278,14 @@
                                     <input type="hidden" name="action" value="updateProfile"/>
 
                                     <div class="form-group">
-                                        <label>Profile Image</label>
+                                        <label>Ảnh đại diện</label>
                                         <input type="file" name="avatarFile" accept="image/*"/>
-                                        <small>Allowed: JPG, JPEG, PNG, WEBP. Maximum size depends on servlet config.</small>
+                                        <small>Cho phép: JPG, JPEG, PNG, WEBP. Kích thước tối đa phụ thuộc vào cấu hình.</small>
                                     </div>
 
                                     <div class="form-row">
                                         <div class="form-group">
-                                            <label>Full Name</label>
+                                            <label>Họ tên</label>
                                             <input type="text"
                                                    name="fullName"
                                                    value="${profile.fullName}"
@@ -301,7 +302,7 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Phone</label>
+                                        <label>Số điện thoại</label>
                                         <input type="text"
                                                name="phone"
                                                value="${profile.phone}"/>
@@ -310,7 +311,7 @@
                                     <div class="form-actions">
                                         <button type="submit" class="btn-primary">
                                             <span class="material-symbols-outlined">save</span>
-                                            Save Changes
+                                            Lưu thay đổi
                                         </button>
                                     </div>
                                 </form>
@@ -318,8 +319,8 @@
 
                             <div class="profile-card">
                                 <div class="card-header">
-                                    <h3>Change Password</h3>
-                                    <p>Use a strong password to protect your account.</p>
+                                    <h3>Đổi mật khẩu</h3>
+                                    <p>Sử dụng mật khẩu mạnh để bảo vệ tài khoản của bạn.</p>
                                 </div>
 
                                 <form method="post"
@@ -329,21 +330,21 @@
                                     <input type="hidden" name="action" value="changePassword"/>
 
                                     <div class="form-group">
-                                        <label>Old Password</label>
+                                        <label>Mật khẩu cũ</label>
                                         <input type="password"
                                                name="oldPassword"
                                                required/>
                                     </div>
 
                                     <div class="form-group">
-                                        <label>New Password</label>
+                                        <label>Mật khẩu mới</label>
                                         <input type="password"
                                                name="newPassword"
                                                required/>
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Confirm Password</label>
+                                        <label>Xác nhận mật khẩu</label>
                                         <input type="password"
                                                name="confirmPassword"
                                                required/>
@@ -352,7 +353,7 @@
                                     <div class="form-actions">
                                         <button type="submit" class="btn-primary">
                                             <span class="material-symbols-outlined">lock_reset</span>
-                                            Change Password
+                                            Đổi mật khẩu
                                         </button>
                                     </div>
                                 </form>
@@ -369,5 +370,14 @@
 </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/main.js"></script>
+    <script>
+        function goBack() {
+            if (document.referrer && document.referrer.indexOf(window.location.host) !== -1) {
+                window.history.back();
+            } else {
+                window.location.href = '${pageContext.request.contextPath}/dashboard';
+            }
+        }
+    </script>
 </body>
 </html>

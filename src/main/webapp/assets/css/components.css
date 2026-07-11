@@ -729,6 +729,20 @@
     background-color: #fca5a5;
 }
 
+/* Shared pagination.css styles */
+.pagination a.active-page {
+    background: var(--primary);
+    color: var(--on-primary);
+    border-color: var(--primary);
+}
+.dots {
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    color: var(--secondary);
+    font-weight: 600;
+}
+
 /* ── Utilities & Pagination (Restored from Thắng's branch) ── */
 .d-flex {
     display: flex !important;
@@ -837,7 +851,7 @@
 
 /* .page-content → alias for .page-container */
 .page-content {
-    padding: 32px;
+    padding: calc(var(--navbar-height) + 24px) 12px 24px;
     flex: 1;
     max-width: 1280px;
     margin: 0 auto;
