@@ -33,7 +33,7 @@
                         <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">Tích điểm: bao nhiêu VNĐ được 1 điểm?</label>
                         <input type="number" name="earnValue" class="form-control"
                                value="<fmt:formatNumber value="${pointEarn.discountValue}" type="number" groupingUsed="false" maxFractionDigits="0"/>"
-                               min="1" step="1000" required/>
+                               min="1" required/>
                         <small class="form-text text-muted">Số tiền chi tiêu (VNĐ) để nhận 1 điểm tích lũy. Mặc định: 100.000 VNĐ</small>
                     </div>
                     <!-- Tỉ lệ đổi điểm -->
