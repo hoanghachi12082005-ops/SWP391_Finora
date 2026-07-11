@@ -50,28 +50,6 @@
             <span class="material-icons">people</span><span>Khách hàng</span>
         </a>
 
-        <!-- Chi nhánh (Admin, Owner) -->
-        <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
-            <a href="#" onclick="showComingSoon(event)" class="sidebar-menu-item">
-                <span class="material-icons">store</span><span>Chi nhánh</span>
-            </a>
-        </c:if>
-
-        <!-- Nhân viên (Admin, Owner, StoreManager) -->
-        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
-            <a href="#" onclick="showComingSoon(event)" class="sidebar-menu-item">
-                <span class="material-icons">badge</span><span>Nhân viên</span>
-            </a>
-        </c:if>
-
-        <!-- Báo cáo doanh thu (Admin, Owner, StoreManager) -->
-        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
-            <a href="${pageContext.request.contextPath}/revenue" class="sidebar-menu-item ${originalUri.contains('/revenue') ? 'active' : ''}">
-                <span class="material-icons">trending_up</span><span>Báo cáo doanh thu</span>
-            </a>
-        </c:if>
-  
-
     </nav>
     <div class="sidebar-user">
         <div class="sidebar-user-info">
