@@ -120,8 +120,6 @@
                 <span class="material-icons">trending_up</span><span>Báo cáo doanh thu</span>
             </a>
         </c:if>
-  
-
     </nav>
     <div class="sidebar-user">
         <div class="sidebar-user-info">
