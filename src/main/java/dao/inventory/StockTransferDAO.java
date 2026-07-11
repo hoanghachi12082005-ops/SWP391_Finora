@@ -12,11 +12,12 @@ public class StockTransferDAO {
     public List<StockTransfer> findAllByStatus(int warehouseId, String status) throws Exception {
         List<StockTransfer> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT st.*, " +
-                "fw.warehouse_name as from_warehouse_name, tw.warehouse_name as to_warehouse_name, e.fullName as created_by_name " +
+                "fw.warehouse_name as from_warehouse_name, tw.warehouse_name as to_warehouse_name, e.fullName as created_by_name, e2.fullName as approved_by_name " +
                 "FROM stock_transfer st " +
                 "LEFT JOIN warehouse fw ON st.from_warehouse_id = fw.warehouse_id " +
                 "LEFT JOIN warehouse tw ON st.to_warehouse_id = tw.warehouse_id " +
                 "LEFT JOIN Employee e ON st.created_by = e.emp_id " +
+                "LEFT JOIN Employee e2 ON st.approved_by = e2.emp_id " +
                 "WHERE 1=1 ");
         
         if (warehouseId > 0) {
@@ -56,12 +57,155 @@ public class StockTransferDAO {
                     t.setFromWarehouseName(rs.getString("from_warehouse_name"));
                     t.setToWarehouseName(rs.getString("to_warehouse_name"));
                     t.setCreatedByName(rs.getString("created_by_name"));
+                    int ab = rs.getInt("approved_by"); if (!rs.wasNull()) t.setApprovedBy(ab);
+                    t.setApprovedByName(rs.getString("approved_by_name"));
                     list.add(t);
                 }
             }
         }
         return list;
     }
+
+    public List<StockTransfer> findAllByStatusFiltered(int warehouseId, String status, String transferCode, Integer partnerWarehouseId) throws Exception {
+        List<StockTransfer> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT st.*, " +
+                "fw.warehouse_name as from_warehouse_name, tw.warehouse_name as to_warehouse_name, e.fullName as created_by_name, e2.fullName as approved_by_name " +
+                "FROM stock_transfer st " +
+                "LEFT JOIN warehouse fw ON st.from_warehouse_id = fw.warehouse_id " +
+                "LEFT JOIN warehouse tw ON st.to_warehouse_id = tw.warehouse_id " +
+                "LEFT JOIN Employee e ON st.created_by = e.emp_id " +
+                "LEFT JOIN Employee e2 ON st.approved_by = e2.emp_id " +
+                "WHERE 1=1 ");
+        
+        if (warehouseId > 0) {
+            sql.append("AND (st.from_warehouse_id = ? OR st.to_warehouse_id = ?) ");
+        }
+        if (status != null && !status.isEmpty()) {
+            if (status.equals("PENDING_IN_TRANSIT")) {
+                sql.append("AND st.status IN ('PENDING', 'IN_TRANSIT') ");
+            } else {
+                sql.append("AND st.status = ? ");
+            }
+        }
+        if (transferCode != null && !transferCode.trim().isEmpty()) {
+            sql.append("AND st.transfer_code LIKE ? ");
+        }
+        if (partnerWarehouseId != null && partnerWarehouseId > 0) {
+            if (warehouseId > 0) {
+                sql.append("AND ((st.from_warehouse_id = ? AND st.to_warehouse_id = ?) OR (st.to_warehouse_id = ? AND st.from_warehouse_id = ?)) ");
+            } else {
+                sql.append("AND (st.from_warehouse_id = ? OR st.to_warehouse_id = ?) ");
+            }
+        }
+        sql.append("ORDER BY st.transfer_date DESC");
+
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            if (warehouseId > 0) {
+                ps.setInt(paramIndex++, warehouseId);
+                ps.setInt(paramIndex++, warehouseId);
+            }
+            if (status != null && !status.isEmpty() && !status.equals("PENDING_IN_TRANSIT")) {
+                ps.setString(paramIndex++, status);
+            }
+            if (transferCode != null && !transferCode.trim().isEmpty()) {
+                ps.setString(paramIndex++, "%" + transferCode.trim() + "%");
+            }
+            if (partnerWarehouseId != null && partnerWarehouseId > 0) {
+                if (warehouseId > 0) {
+                    ps.setInt(paramIndex++, warehouseId);
+                    ps.setInt(paramIndex++, partnerWarehouseId);
+                    ps.setInt(paramIndex++, warehouseId);
+                    ps.setInt(paramIndex++, partnerWarehouseId);
+                } else {
+                    ps.setInt(paramIndex++, partnerWarehouseId);
+                    ps.setInt(paramIndex++, partnerWarehouseId);
+                }
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    StockTransfer t = new StockTransfer();
+                    t.setStockTransferId(rs.getInt("stock_transfer_id"));
+                    t.setFromWarehouseId(rs.getInt("from_warehouse_id"));
+                    t.setToWarehouseId(rs.getInt("to_warehouse_id"));
+                    t.setTransferCode(rs.getString("transfer_code"));
+                    t.setTransferDate(rs.getTimestamp("transfer_date"));
+                    t.setStatus(rs.getString("status"));
+                    t.setNote(rs.getString("note"));
+                    t.setCreatedBy(rs.getInt("created_by"));
+                    t.setFromWarehouseName(rs.getString("from_warehouse_name"));
+                    t.setToWarehouseName(rs.getString("to_warehouse_name"));
+                    t.setCreatedByName(rs.getString("created_by_name"));
+                    int ab = rs.getInt("approved_by"); if (!rs.wasNull()) t.setApprovedBy(ab);
+                    t.setApprovedByName(rs.getString("approved_by_name"));
+                    list.add(t);
+                }
+            }
+        }
+        return list;
+    }
+
+    public List<StockTransfer> findPendingTransfersFiltered(String transferCode, Integer fromWarehouseId, Integer toWarehouseId) throws Exception {
+        List<StockTransfer> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT st.*, " +
+                "fw.warehouse_name as from_warehouse_name, tw.warehouse_name as to_warehouse_name, e.fullName as created_by_name, e2.fullName as approved_by_name " +
+                "FROM stock_transfer st " +
+                "LEFT JOIN warehouse fw ON st.from_warehouse_id = fw.warehouse_id " +
+                "LEFT JOIN warehouse tw ON st.to_warehouse_id = tw.warehouse_id " +
+                "LEFT JOIN Employee e ON st.created_by = e.emp_id " +
+                "LEFT JOIN Employee e2 ON st.approved_by = e2.emp_id " +
+                "WHERE st.status = 'PENDING_DISPATCH' ");
+        
+        if (transferCode != null && !transferCode.trim().isEmpty()) {
+            sql.append("AND st.transfer_code LIKE ? ");
+        }
+        if (fromWarehouseId != null && fromWarehouseId > 0) {
+            sql.append("AND st.from_warehouse_id = ? ");
+        }
+        if (toWarehouseId != null && toWarehouseId > 0) {
+            sql.append("AND st.to_warehouse_id = ? ");
+        }
+        sql.append("ORDER BY st.transfer_date DESC");
+
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            if (transferCode != null && !transferCode.trim().isEmpty()) {
+                ps.setString(paramIndex++, "%" + transferCode.trim() + "%");
+            }
+            if (fromWarehouseId != null && fromWarehouseId > 0) {
+                ps.setInt(paramIndex++, fromWarehouseId);
+            }
+            if (toWarehouseId != null && toWarehouseId > 0) {
+                ps.setInt(paramIndex++, toWarehouseId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    StockTransfer t = new StockTransfer();
+                    t.setStockTransferId(rs.getInt("stock_transfer_id"));
+                    t.setFromWarehouseId(rs.getInt("from_warehouse_id"));
+                    t.setToWarehouseId(rs.getInt("to_warehouse_id"));
+                    t.setTransferCode(rs.getString("transfer_code"));
+                    t.setTransferDate(rs.getTimestamp("transfer_date"));
+                    t.setStatus(rs.getString("status"));
+                    t.setNote(rs.getString("note"));
+                    t.setCreatedBy(rs.getInt("created_by"));
+                    t.setFromWarehouseName(rs.getString("from_warehouse_name"));
+                    t.setToWarehouseName(rs.getString("to_warehouse_name"));
+                    t.setCreatedByName(rs.getString("created_by_name"));
+                    int ab = rs.getInt("approved_by"); if (!rs.wasNull()) t.setApprovedBy(ab);
+                    t.setApprovedByName(rs.getString("approved_by_name"));
+                    list.add(t);
+                }
+            }
+        }
+        return list;
+    }
+
+
 
     public boolean updateStatus(int transferId, String status) throws Exception {
         try (Connection conn = new DBContext().getConnection()) {
@@ -78,12 +222,33 @@ public class StockTransferDAO {
         }
     }
 
+    public boolean updateStatus(int transferId, String status, Integer approvedBy) throws Exception {
+        try (Connection conn = new DBContext().getConnection()) {
+            return updateStatus(conn, transferId, status, approvedBy);
+        }
+    }
+
+    public boolean updateStatus(Connection conn, int transferId, String status, Integer approvedBy) throws Exception {
+        String sql = "UPDATE stock_transfer SET status = ?, approved_by = ? WHERE stock_transfer_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            if (approvedBy != null) {
+                ps.setInt(2, approvedBy);
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }
+            ps.setInt(3, transferId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     public StockTransfer findById(int id) throws Exception {
-        String sql = "SELECT st.*, fw.warehouse_name as from_warehouse_name, tw.warehouse_name as to_warehouse_name, e.fullName as created_by_name " +
+        String sql = "SELECT st.*, fw.warehouse_name as from_warehouse_name, tw.warehouse_name as to_warehouse_name, e.fullName as created_by_name, e2.fullName as approved_by_name " +
                      "FROM stock_transfer st " +
                      "LEFT JOIN warehouse fw ON st.from_warehouse_id = fw.warehouse_id " +
                      "LEFT JOIN warehouse tw ON st.to_warehouse_id = tw.warehouse_id " +
                      "LEFT JOIN Employee e ON st.created_by = e.emp_id " +
+                     "LEFT JOIN Employee e2 ON st.approved_by = e2.emp_id " +
                      "WHERE st.stock_transfer_id = ?";
         try (Connection conn = new DBContext().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -102,6 +267,8 @@ public class StockTransferDAO {
                     t.setFromWarehouseName(rs.getString("from_warehouse_name"));
                     t.setToWarehouseName(rs.getString("to_warehouse_name"));
                     t.setCreatedByName(rs.getString("created_by_name"));
+                    int ab = rs.getInt("approved_by"); if (!rs.wasNull()) t.setApprovedBy(ab);
+                    t.setApprovedByName(rs.getString("approved_by_name"));
                     return t;
                 }
             }

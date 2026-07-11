@@ -22,10 +22,16 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0">Điều chuyển kho</h5>
             <c:if test="${roleName == 'WarehouseStaff' || roleName == 'StoreManager' || roleName == 'Admin' || roleName == 'Owner'}">
-                <a href="${pageContext.request.contextPath}/inventory?tab=createTransfer&warehouseId=${selectedWarehouseId}" class="page-action-btn text-decoration-none">
-                    <span class="material-icons" style="font-size:16px; vertical-align:text-bottom;">add</span>
-                    Tạo Phiếu Điều Chuyển
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="${pageContext.request.contextPath}/inventory?tab=createTransfer&type=RECEIVE&warehouseId=${selectedWarehouseId}" class="btn btn-success btn-sm d-flex align-items-center gap-1" style="border-radius: 8px; font-weight: 500; padding: 6px 12px;">
+                        <span class="material-icons" style="font-size:18px;">call_received</span>
+                        Tạo Phiếu Nhập Chuyển Kho
+                    </a>
+                    <a href="${pageContext.request.contextPath}/inventory?tab=createTransfer&type=SEND&warehouseId=${selectedWarehouseId}" class="btn btn-danger btn-sm d-flex align-items-center gap-1" style="border-radius: 8px; font-weight: 500; padding: 6px 12px;">
+                        <span class="material-icons" style="font-size:18px;">call_made</span>
+                        Tạo Phiếu Xuất Chuyển Kho
+                    </a>
+                </div>
             </c:if>
         </div>
         <div class="transfer-subtab-nav">
@@ -46,6 +52,64 @@
         <c:choose>
             <%-- ============ SUB-TAB 1: ĐƠN ĐIỀU CHUYỂN (Xem trạng thái) ============ --%>
             <c:when test="${currentSubtab == 'transfer_list'}">
+                <!-- Filter form -->
+                <div class="p-3 bg-white border-bottom rounded-3 mb-3">
+                    <form action="${pageContext.request.contextPath}/inventory" method="GET" id="transferFilterForm" class="row g-3 align-items-end m-0">
+                        <input type="hidden" name="tab" value="transfer">
+                        <input type="hidden" name="subtab" value="transfer_list">
+                        <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
+                        
+                        <div class="col-md-4 col-sm-6">
+                            <label class="form-label small text-muted fw-semibold mb-1 ms-1">Mã phiếu điều chuyển</label>
+                            <div class="position-relative">
+                                <span class="material-icons position-absolute text-muted" style="left: 16px; top: 50%; transform: translateY(-50%); font-size: 18px; pointer-events: none;">search</span>
+                                <input type="text" name="transferCodeQuery" class="form-control rounded-pill inventory-search-input w-100" 
+                                       style="padding-left: 48px; padding-right: 20px; padding-top: 10px; padding-bottom: 10px; font-size: 14.5px; box-shadow: none;" 
+                                       placeholder="Tìm mã phiếu điều chuyển..." value="${transferCodeQuery}">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label small text-muted fw-semibold mb-1 ms-1">Kho đối tác</label>
+                            <div class="position-relative">
+                                <span class="material-icons position-absolute text-muted" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; pointer-events: none;">warehouse</span>
+                                <select name="partnerWarehouseQuery" class="form-select rounded-pill inventory-filter-select" 
+                                        style="padding-left: 42px; padding-right: 36px; padding-top: 10px; padding-bottom: 10px; font-size: 14px; box-shadow: none; appearance: none; cursor: pointer; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 14px top 50%; background-size: 10px auto;">
+                                    <option value="">Tất cả kho đối tác</option>
+                                    <c:forEach var="w" items="${warehouses}">
+                                        <c:if test="${w.warehouseId != selectedWarehouseId}">
+                                            <option value="${w.warehouseId}" ${partnerWarehouseQuery == w.warehouseId ? 'selected' : ''}>${w.warehouseName}</option>
+                                        </c:if>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label small text-muted fw-semibold mb-1 ms-1">Trạng thái</label>
+                            <div class="position-relative">
+                                <span class="material-icons position-absolute text-muted" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; pointer-events: none;">inventory_2</span>
+                                <select name="statusQuery" class="form-select rounded-pill inventory-filter-select" 
+                                        style="padding-left: 42px; padding-right: 36px; padding-top: 10px; padding-bottom: 10px; font-size: 14px; box-shadow: none; appearance: none; cursor: pointer; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 14px top 50%; background-size: 10px auto;">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="PENDING_DISPATCH" ${statusQuery == 'PENDING_DISPATCH' ? 'selected' : ''}>Chờ duyệt</option>
+                                    <option value="APPROVED_DISPATCH" ${statusQuery == 'APPROVED_DISPATCH' ? 'selected' : ''}>Chờ xuất kho</option>
+                                    <option value="IN_TRANSIT" ${statusQuery == 'IN_TRANSIT' ? 'selected' : ''}>Đang chuyển</option>
+                                    <option value="COMPLETED" ${statusQuery == 'COMPLETED' ? 'selected' : ''}>Hoàn thành</option>
+                                    <option value="CANCELLED" ${statusQuery == 'CANCELLED' ? 'selected' : ''}>Đã hủy</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2 col-sm-6">
+                            <button type="submit" class="btn inventory-btn-filter w-100" style="height: 43px;">
+                                <span class="material-icons" style="font-size: 18px; margin-right: 6px;">filter_alt</span>
+                                <span>Lọc</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
                 <div class="premium-table-container">
                     <table class="table premium-table mb-0">
                         <thead>

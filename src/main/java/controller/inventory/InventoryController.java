@@ -26,6 +26,8 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 @WebServlet(name = "InventoryController", urlPatterns = {"/inventory"})
 public class InventoryController extends BaseController {
@@ -186,6 +188,20 @@ public class InventoryController extends BaseController {
                 
                 forward(request, response, "inventory/_print_order");
                 return;
+            } else if ("searchStockCheckProductsApi".equals(action)) {
+                handleSearchStockCheckProductsApi(request, response, selectedWarehouseId);
+                return;
+            } else if ("viewCheckDetails".equals(action)) {
+                int checkId = Integer.parseInt(request.getParameter("checkId"));
+                dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
+                model.InventoryCheck check = checkDAO.findById(checkId);
+                List<model.InventoryCheckDetail> details = checkDAO.getCheckDetails(checkId);
+                
+                request.setAttribute("check", check);
+                request.setAttribute("checkDetails", details);
+                
+                forward(request, response, "inventory/_modal_check_details");
+                return;
             }
 
             // Calculate KPIs
@@ -200,6 +216,10 @@ public class InventoryController extends BaseController {
             String tab = request.getParameter("tab");
             if ("createTransfer".equals(action)) {
                 tab = "createTransfer";
+            } else if ("createCheck".equals(action)) {
+                tab = "createCheck";
+            } else if ("editCheck".equals(action)) {
+                tab = "editCheck";
             } else if (tab == null || tab.isEmpty()) {
                 tab = "stock";
             }
@@ -228,10 +248,28 @@ public class InventoryController extends BaseController {
                 case "export":
                     handleExportTab(request, selectedWarehouseId, role);
                     break;
-                case "createTransfer":
-                    // No extra data fetching needed for createTransfer view itself
-                    // It uses API for data
+                case "pending_vouchers":
+                    handlePendingVouchersTab(request, selectedWarehouseId, role);
                     break;
+                case "createTransfer": {
+                    String type = request.getParameter("type");
+                    if (type == null) {
+                        type = "RECEIVE";
+                    }
+                    request.setAttribute("transferType", type);
+                    break;
+                }
+                case "createCheck":
+                    break;
+                case "editCheck": {
+                    int checkId = Integer.parseInt(request.getParameter("checkId"));
+                    dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
+                    model.InventoryCheck check = checkDAO.findById(checkId);
+                    List<model.InventoryCheckDetail> checkDetails = checkDAO.getCheckDetails(checkId);
+                    request.setAttribute("check", check);
+                    request.setAttribute("checkDetails", checkDetails);
+                    break;
+                }
                 default:
                     handleStockTab(request, selectedWarehouseId);
                     request.setAttribute("activeTab", "stock");
@@ -295,50 +333,537 @@ public class InventoryController extends BaseController {
         }
         request.setAttribute("activeSubtab", subtab);
 
-        List<StockTransfer> transfers = transferDAO.findAllByStatus(warehouseId != null ? warehouseId : 0, null);
+        // Filters
+        String transferCodeQuery = request.getParameter("transferCodeQuery");
+        String partnerWQueryStr = request.getParameter("partnerWarehouseQuery");
+        String statusQuery = request.getParameter("statusQuery");
+
+        Integer partnerWarehouseQuery = null;
+        if (partnerWQueryStr != null && !partnerWQueryStr.trim().isEmpty()) {
+            try {
+                partnerWarehouseQuery = Integer.parseInt(partnerWQueryStr);
+            } catch (NumberFormatException e) {
+                // Ignore invalid format
+            }
+        }
+
+        // Clean & validate text filters
+        if (transferCodeQuery != null) {
+            transferCodeQuery = transferCodeQuery.trim();
+        }
+
+        List<StockTransfer> transfers = transferDAO.findAllByStatusFiltered(
+            warehouseId != null ? warehouseId : 0,
+            statusQuery,
+            transferCodeQuery,
+            partnerWarehouseQuery
+        );
         request.setAttribute("transfers", transfers);
+        request.setAttribute("transferCodeQuery", transferCodeQuery);
+        request.setAttribute("partnerWarehouseQuery", partnerWarehouseQuery);
+        request.setAttribute("statusQuery", statusQuery);
     }
 
     private void handleImportTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
         List<PurchaseOrder> imports = purchaseOrderDAO.findAllByWarehouseAndType(warehouseId != null ? warehouseId : 0, "PURCHASE", null);
+        if ("WarehouseStaff".equalsIgnoreCase(role)) {
+            imports.removeIf(po -> !"PENDING".equals(po.getStatus()));
+        }
         request.setAttribute("imports", imports);
     }
 
     private void handleExportTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
         List<PurchaseOrder> exports = purchaseOrderDAO.findAllByWarehouseAndType(warehouseId != null ? warehouseId : 0, "EXPORT", null);
+        if ("WarehouseStaff".equalsIgnoreCase(role)) {
+            exports.removeIf(po -> !"PENDING".equals(po.getStatus()));
+        }
         request.setAttribute("exports", exports);
+    }
+
+    private void handlePendingVouchersTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
+        List<PurchaseOrder> pendingImports = purchaseOrderDAO.findAllByWarehouseAndType(warehouseId != null ? warehouseId : 0, "PURCHASE", "PENDING");
+        List<PurchaseOrder> pendingExports = purchaseOrderDAO.findAllByWarehouseAndType(warehouseId != null ? warehouseId : 0, "EXPORT", "PENDING");
+        
+        List<Map<String, Object>> pendingVouchers = new ArrayList<>();
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+        java.text.SimpleDateFormat inputSdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        if (pendingImports != null) {
+            for (PurchaseOrder po : pendingImports) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", po.getOrderId());
+                map.put("code", po.getOrderCode());
+                map.put("type", "IMPORT");
+                map.put("typeLabel", "Nhập");
+                map.put("partner", po.getSupplierName() != null ? po.getSupplierName() : "Nhà cung cấp");
+                map.put("createdBy", po.getEmpName());
+                map.put("amount", po.getTotalAmount());
+                
+                String dateStr = po.getCreatedAt() != null ? po.getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null;
+                java.util.Date parsedDate = null;
+                if (dateStr != null) {
+                    try { parsedDate = inputSdf.parse(dateStr); } catch (Exception e) {}
+                }
+                map.put("createdAt", parsedDate != null ? sdf.format(parsedDate) : (po.getCreatedAt() != null ? po.getCreatedAtFormatted() : ""));
+                map.put("rawDate", parsedDate != null ? parsedDate : new java.util.Date(0));
+                map.put("actionCancel", "cancelOrder");
+                map.put("idParamName", "orderId");
+                map.put("detailCallback", "viewOrderDetails(" + po.getOrderId() + ")");
+                pendingVouchers.add(map);
+            }
+        }
+
+        if (pendingExports != null) {
+            for (PurchaseOrder po : pendingExports) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", po.getOrderId());
+                map.put("code", po.getOrderCode());
+                map.put("type", "EXPORT");
+                map.put("typeLabel", "Xuất");
+                map.put("partner", po.getSupplierName() != null ? po.getSupplierName() : "Khách hàng");
+                map.put("createdBy", po.getEmpName());
+                map.put("amount", po.getTotalAmount());
+                
+                String dateStr = po.getCreatedAt() != null ? po.getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null;
+                java.util.Date parsedDate = null;
+                if (dateStr != null) {
+                    try { parsedDate = inputSdf.parse(dateStr); } catch (Exception e) {}
+                }
+                map.put("createdAt", parsedDate != null ? sdf.format(parsedDate) : (po.getCreatedAt() != null ? po.getCreatedAtFormatted() : ""));
+                map.put("rawDate", parsedDate != null ? parsedDate : new java.util.Date(0));
+                map.put("actionCancel", "cancelOrder");
+                map.put("idParamName", "orderId");
+                map.put("detailCallback", "viewOrderDetails(" + po.getOrderId() + ")");
+                pendingVouchers.add(map);
+            }
+        }
+
+        try {
+            dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
+            List<model.InventoryCheck> pendingChecks = checkDAO.findAllByWarehouseFiltered(warehouseId != null ? warehouseId : 0, null, "PENDING", null);
+            if (pendingChecks != null) {
+                for (model.InventoryCheck check : pendingChecks) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", check.getCheckId());
+                    map.put("code", check.getCheckCode());
+                    map.put("type", "CHECK");
+                    map.put("typeLabel", "Kiểm Kho");
+                    map.put("partner", check.getWarehouseName());
+                    map.put("createdBy", check.getCreatedByName());
+                    map.put("amount", null);
+                    
+                    java.util.Date parsedDate = null;
+                    if (check.getCreatedAt() != null) {
+                        try {
+                            parsedDate = java.sql.Timestamp.valueOf(check.getCreatedAt());
+                        } catch (Exception e) {}
+                    }
+                    map.put("createdAt", check.getFormattedCreatedAt());
+                    map.put("rawDate", parsedDate != null ? parsedDate : new java.util.Date(0));
+                    map.put("actionCancel", "cancelCheck");
+                    map.put("idParamName", "checkId");
+                    map.put("detailCallback", "viewCheckDetails(" + check.getCheckId() + ")");
+                    pendingVouchers.add(map);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Sort by created time descending
+        pendingVouchers.sort((m1, m2) -> ((java.util.Date) m2.get("rawDate")).compareTo((java.util.Date) m1.get("rawDate")));
+        request.setAttribute("pendingVouchers", pendingVouchers);
     }
 
     private void handleCheckTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
         String subtab = "inventory_check";
         request.setAttribute("activeSubtab", subtab);
 
-        List<Order> checks = orderDAO.getAllSaleOrders("", warehouseId != null ? warehouseId : 0); // Need specialized check method in OrderDAO later
+        String checkCodeQuery = request.getParameter("checkCodeQuery");
+        String statusQuery = request.getParameter("statusQuery");
+        String discrepancyQuery = request.getParameter("discrepancyQuery");
+
+        dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
+        List<model.InventoryCheck> checks = checkDAO.findAllByWarehouseFiltered(
+            warehouseId != null ? warehouseId : 0,
+            checkCodeQuery,
+            statusQuery,
+            discrepancyQuery
+        );
         request.setAttribute("checks", checks);
     }
 
     private void handleApprovalTab(HttpServletRequest request, String role) throws Exception {
-        if (!"Owner".equalsIgnoreCase(role)) {
+        if (!"Owner".equalsIgnoreCase(role) && !"StoreManager".equalsIgnoreCase(role)) {
             request.setAttribute("error", "Bạn không có quyền truy cập tab này.");
             return;
         }
-        List<model.StockTransfer> pendingTransfers = transferDAO.findAllByStatus(0, "PENDING_DISPATCH");
+
+        String transferCodeQuery = request.getParameter("transferCodeQuery");
+        String fromWarehouseQueryStr = request.getParameter("fromWarehouseQuery");
+        String toWarehouseQueryStr = request.getParameter("toWarehouseQuery");
+
+        Integer fromWarehouseQuery = null;
+        Integer toWarehouseQuery = null;
+        try {
+            if (fromWarehouseQueryStr != null && !fromWarehouseQueryStr.trim().isEmpty()) {
+                fromWarehouseQuery = Integer.parseInt(fromWarehouseQueryStr);
+            }
+            if (toWarehouseQueryStr != null && !toWarehouseQueryStr.trim().isEmpty()) {
+                toWarehouseQuery = Integer.parseInt(toWarehouseQueryStr);
+            }
+        } catch (NumberFormatException e) {
+            // Ignore
+        }
+
+        if (transferCodeQuery != null) {
+            transferCodeQuery = transferCodeQuery.trim();
+        }
+
+        List<model.StockTransfer> pendingTransfers = transferDAO.findPendingTransfersFiltered(
+            transferCodeQuery,
+            fromWarehouseQuery,
+            toWarehouseQuery
+        );
+        
+        Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+        int branchId = currentUser != null && currentUser.getBranchId() != null ? currentUser.getBranchId() : 0;
+        List<model.Order> pendingOrders = orderDAO.getPendingInventoryOrders(branchId);
+        
+        List<model.InventoryCheck> pendingChecks = null;
+        try {
+            dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
+            pendingChecks = checkDAO.findAllByWarehouseFiltered(0, null, "PENDING", null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        // Build unified list of pending approvals
+        List<Map<String, Object>> unifiedApprovals = new ArrayList<>();
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+        java.text.SimpleDateFormat inputSdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        if (pendingTransfers != null) {
+            for (model.StockTransfer item : pendingTransfers) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", item.getStockTransferId());
+                map.put("code", item.getTransferCode());
+                map.put("type", "TRANSFER");
+                map.put("typeLabel", "Điều chuyển");
+                map.put("warehouseName", item.getToWarehouseName()); // Requesting warehouse is destination
+                map.put("createdBy", item.getCreatedByName());
+                map.put("createdAt", item.getTransferDate() != null ? sdf.format(item.getTransferDate()) : "");
+                map.put("amount", null);
+                map.put("actionApprove", "approveTransfer");
+                map.put("actionReject", "rejectTransfer");
+                map.put("idParamName", "transferId");
+                map.put("detailCallback", "viewTicketDetails(" + item.getStockTransferId() + ")");
+                map.put("rawDate", item.getTransferDate() != null ? item.getTransferDate() : new java.util.Date(0));
+                unifiedApprovals.add(map);
+            }
+        }
+
+        if (pendingOrders != null) {
+            for (model.Order order : pendingOrders) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", order.getOrderId());
+                map.put("code", order.getOrderCode());
+                map.put("type", order.getOrderType());
+                map.put("typeLabel", "PURCHASE".equalsIgnoreCase(order.getOrderType()) ? "Nhập" : "Xuất");
+                map.put("warehouseName", order.getCustomerName()); // customerName stores warehouseName
+                map.put("createdBy", order.getEmployeeName());
+                
+                String dateStr = order.getCreatedAt();
+                java.util.Date parsedDate = null;
+                if (dateStr != null) {
+                    try {
+                        parsedDate = inputSdf.parse(dateStr);
+                    } catch (Exception e) {
+                        // ignore
+                    }
+                }
+                map.put("createdAt", parsedDate != null ? sdf.format(parsedDate) : dateStr);
+                map.put("amount", order.getTotalAmount());
+                map.put("actionApprove", "approveOrder");
+                map.put("actionReject", "rejectOrder");
+                map.put("idParamName", "orderId");
+                map.put("detailCallback", "viewOrderDetails(" + order.getOrderId() + ")");
+                map.put("rawDate", parsedDate != null ? parsedDate : new java.util.Date(0));
+                unifiedApprovals.add(map);
+            }
+        }
+        
+        if (pendingChecks != null) {
+            for (model.InventoryCheck check : pendingChecks) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", check.getCheckId());
+                map.put("code", check.getCheckCode());
+                map.put("type", "CHECK");
+                map.put("typeLabel", "Kiểm Kho");
+                map.put("warehouseName", check.getWarehouseName());
+                map.put("createdBy", check.getCreatedByName());
+                
+                java.util.Date parsedDate = null;
+                if (check.getCreatedAt() != null) {
+                    try {
+                        parsedDate = java.sql.Timestamp.valueOf(check.getCreatedAt());
+                    } catch (Exception e) {
+                        // ignore
+                    }
+                }
+                map.put("createdAt", check.getFormattedCreatedAt());
+                map.put("amount", null);
+                map.put("actionApprove", "approveCheck");
+                map.put("actionReject", "rejectCheck");
+                map.put("idParamName", "checkId");
+                map.put("detailCallback", "viewCheckDetails(" + check.getCheckId() + ")");
+                map.put("rawDate", parsedDate != null ? parsedDate : new java.util.Date(0));
+                unifiedApprovals.add(map);
+            }
+        }
+
+        // Sort by rawDate descending
+        unifiedApprovals.sort((m1, m2) -> ((java.util.Date) m2.get("rawDate")).compareTo((java.util.Date) m1.get("rawDate")));
+
         request.setAttribute("pendingTransfers", pendingTransfers);
+        request.setAttribute("pendingOrders", pendingOrders);
+        request.setAttribute("unifiedApprovals", unifiedApprovals);
+        request.setAttribute("transferCodeQuery", transferCodeQuery);
+        request.setAttribute("fromWarehouseQuery", fromWarehouseQuery);
+        request.setAttribute("toWarehouseQuery", toWarehouseQuery);
     }
 
     private void handleHistoryTab(HttpServletRequest request, Integer warehouseId, List<Integer> allowedWarehouseIds) throws Exception {
         String typeFilter = request.getParameter("typeFilter");
-        String dateFilter = request.getParameter("dateFilter");
+        String fromDate = request.getParameter("fromDate");
+        String toDate = request.getParameter("toDate");
+        String productNameQuery = request.getParameter("productNameQuery");
         
         int page = 1;
         if (request.getParameter("page") != null) page = Integer.parseInt(request.getParameter("page"));
         int offset = (page - 1) * 20;
 
-        List<StockTransaction> history = transactionDAO.findAll(warehouseId != null ? warehouseId : 0, allowedWarehouseIds, offset, 20, typeFilter, dateFilter);
+        // Clean & validate text filter
+        if (productNameQuery != null) {
+            productNameQuery = productNameQuery.trim();
+        }
+
+        // Validate date years and ranges
+        if (fromDate != null && !fromDate.trim().isEmpty()) {
+            try {
+                String[] parts = fromDate.split("-");
+                if (parts.length > 0) {
+                    int year = Integer.parseInt(parts[0]);
+                    if (year < 1000 || year > 9999) {
+                        request.setAttribute("error", "Từ ngày không hợp lệ! Năm phải nằm trong khoảng từ 1000 đến 9999.");
+                        request.setAttribute("history", new ArrayList<StockTransaction>());
+                        request.setAttribute("typeFilter", typeFilter);
+                        request.setAttribute("fromDate", fromDate);
+                        request.setAttribute("toDate", toDate);
+                        request.setAttribute("productNameQuery", productNameQuery);
+                        return;
+                    }
+                }
+            } catch (Exception e) {
+                // Ignore format exception here
+            }
+        }
+        
+        if (toDate != null && !toDate.trim().isEmpty()) {
+            try {
+                String[] parts = toDate.split("-");
+                if (parts.length > 0) {
+                    int year = Integer.parseInt(parts[0]);
+                    if (year < 1000 || year > 9999) {
+                        request.setAttribute("error", "Đến ngày không hợp lệ! Năm phải nằm trong khoảng từ 1000 đến 9999.");
+                        request.setAttribute("history", new ArrayList<StockTransaction>());
+                        request.setAttribute("typeFilter", typeFilter);
+                        request.setAttribute("fromDate", fromDate);
+                        request.setAttribute("toDate", toDate);
+                        request.setAttribute("productNameQuery", productNameQuery);
+                        return;
+                    }
+                }
+            } catch (Exception e) {
+                // Ignore format exception here
+            }
+        }
+
+        if (fromDate != null && !fromDate.trim().isEmpty() && toDate != null && !toDate.trim().isEmpty()) {
+            if (fromDate.compareTo(toDate) > 0) {
+                request.setAttribute("error", "Khoảng ngày lọc không hợp lệ! Từ ngày phải trước hoặc bằng Đến ngày.");
+                request.setAttribute("history", new ArrayList<StockTransaction>());
+                request.setAttribute("typeFilter", typeFilter);
+                request.setAttribute("fromDate", fromDate);
+                request.setAttribute("toDate", toDate);
+                request.setAttribute("productNameQuery", productNameQuery);
+                return;
+            }
+        }
+
+        List<StockTransaction> history = transactionDAO.findAllFiltered(
+            warehouseId != null ? warehouseId : 0,
+            allowedWarehouseIds,
+            offset,
+            20,
+            typeFilter,
+            fromDate,
+            toDate,
+            productNameQuery
+        );
         
         request.setAttribute("typeFilter", typeFilter);
-        request.setAttribute("dateFilter", dateFilter);
+        request.setAttribute("fromDate", fromDate);
+        request.setAttribute("toDate", toDate);
+        request.setAttribute("productNameQuery", productNameQuery);
         request.setAttribute("history", history);
+
+        List<PurchaseOrder> completedImports = purchaseOrderDAO.findAllByWarehouseAndType(warehouseId != null ? warehouseId : 0, "PURCHASE", null);
+        List<PurchaseOrder> completedExports = purchaseOrderDAO.findAllByWarehouseAndType(warehouseId != null ? warehouseId : 0, "EXPORT", null);
+        List<StockTransfer> completedTransfers = new ArrayList<>();
+        try {
+            completedTransfers = transferDAO.findAllByStatus(warehouseId != null ? warehouseId : 0, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        List<Map<String, Object>> unifiedVoucherHistory = new ArrayList<>();
+        
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+        java.text.SimpleDateFormat inputSdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        for (PurchaseOrder po : completedImports) {
+            if (!"PENDING".equalsIgnoreCase(po.getStatus())) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", po.getOrderId());
+                map.put("code", po.getOrderCode());
+                map.put("type", "IMPORT");
+                map.put("typeLabel", "Nhập");
+                map.put("partner", po.getSupplierName() != null ? po.getSupplierName() : "Nhà cung cấp");
+                map.put("createdBy", po.getEmpName());
+                map.put("approvedBy", po.getApprovedByName() != null ? po.getApprovedByName() : "-");
+                map.put("amount", po.getTotalAmount());
+                
+                String dateStr = po.getCreatedAt() != null ? po.getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null;
+                java.util.Date parsedDate = null;
+                if (dateStr != null) {
+                    try { parsedDate = inputSdf.parse(dateStr); } catch (Exception e) {}
+                }
+                map.put("createdAt", parsedDate != null ? sdf.format(parsedDate) : (po.getCreatedAt() != null ? po.getCreatedAtFormatted() : ""));
+                map.put("rawDate", parsedDate != null ? parsedDate : new java.util.Date(0));
+                map.put("status", po.getStatus());
+                map.put("statusLabel", "COMPLETED".equalsIgnoreCase(po.getStatus()) ? "Đã hoàn thành" : ("REJECTED".equalsIgnoreCase(po.getStatus()) ? "Bị từ chối" : "Đã hủy"));
+                map.put("statusColor", "COMPLETED".equalsIgnoreCase(po.getStatus()) ? "bg-success" : ("REJECTED".equalsIgnoreCase(po.getStatus()) ? "bg-danger" : "bg-secondary"));
+                map.put("detailCallback", "viewOrderDetails(" + po.getOrderId() + ")");
+                unifiedVoucherHistory.add(map);
+            }
+        }
+
+        for (PurchaseOrder po : completedExports) {
+            if (!"PENDING".equalsIgnoreCase(po.getStatus())) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", po.getOrderId());
+                map.put("code", po.getOrderCode());
+                map.put("type", "EXPORT");
+                map.put("typeLabel", "Xuất");
+                map.put("partner", po.getSupplierName() != null ? po.getSupplierName() : "Khách hàng");
+                map.put("createdBy", po.getEmpName());
+                map.put("approvedBy", po.getApprovedByName() != null ? po.getApprovedByName() : "-");
+                map.put("amount", po.getTotalAmount());
+                
+                String dateStr = po.getCreatedAt() != null ? po.getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null;
+                java.util.Date parsedDate = null;
+                if (dateStr != null) {
+                    try { parsedDate = inputSdf.parse(dateStr); } catch (Exception e) {}
+                }
+                map.put("createdAt", parsedDate != null ? sdf.format(parsedDate) : (po.getCreatedAt() != null ? po.getCreatedAtFormatted() : ""));
+                map.put("rawDate", parsedDate != null ? parsedDate : new java.util.Date(0));
+                map.put("status", po.getStatus());
+                map.put("statusLabel", "COMPLETED".equalsIgnoreCase(po.getStatus()) ? "Đã hoàn thành" : ("REJECTED".equalsIgnoreCase(po.getStatus()) ? "Bị từ chối" : "Đã hủy"));
+                map.put("statusColor", "COMPLETED".equalsIgnoreCase(po.getStatus()) ? "bg-success" : ("REJECTED".equalsIgnoreCase(po.getStatus()) ? "bg-danger" : "bg-secondary"));
+                map.put("detailCallback", "viewOrderDetails(" + po.getOrderId() + ")");
+                unifiedVoucherHistory.add(map);
+            }
+        }
+
+        for (StockTransfer st : completedTransfers) {
+            if (!"PENDING".equalsIgnoreCase(st.getStatus()) && !"PENDING_DISPATCH".equalsIgnoreCase(st.getStatus()) && !"APPROVED_DISPATCH".equalsIgnoreCase(st.getStatus()) && !"IN_TRANSIT".equalsIgnoreCase(st.getStatus())) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", st.getStockTransferId());
+                map.put("code", st.getTransferCode());
+                map.put("type", "TRANSFER");
+                map.put("typeLabel", "Điều chuyển");
+                map.put("partner", st.getToWarehouseName());
+                map.put("createdBy", st.getCreatedByName());
+                map.put("approvedBy", st.getApprovedByName() != null ? st.getApprovedByName() : "-");
+                map.put("amount", null);
+                map.put("createdAt", st.getTransferDate() != null ? sdf.format(st.getTransferDate()) : "");
+                map.put("rawDate", st.getTransferDate() != null ? st.getTransferDate() : new java.util.Date(0));
+                map.put("status", st.getStatus());
+                map.put("statusLabel", "COMPLETED".equalsIgnoreCase(st.getStatus()) ? "Đã hoàn thành" : ("REJECTED".equalsIgnoreCase(st.getStatus()) ? "Bị từ chối" : "Đã hủy"));
+                map.put("statusColor", "COMPLETED".equalsIgnoreCase(st.getStatus()) ? "bg-success" : ("REJECTED".equalsIgnoreCase(st.getStatus()) ? "bg-danger" : "bg-secondary"));
+                map.put("detailCallback", "viewTicketDetails(" + st.getStockTransferId() + ")");
+                unifiedVoucherHistory.add(map);
+            }
+        }
+        
+        try {
+            dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
+            List<model.InventoryCheck> checks = checkDAO.findAllByWarehouseFiltered(warehouseId != null ? warehouseId : 0, null, null, null);
+            if (checks != null) {
+                for (model.InventoryCheck c : checks) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", c.getCheckId());
+                    map.put("code", c.getCheckCode());
+                    map.put("type", "CHECK");
+                    map.put("typeLabel", "Kiểm Kho");
+                    map.put("partner", c.getWarehouseName());
+                    map.put("createdBy", c.getCreatedByName());
+                    map.put("approvedBy", c.getApprovedByName() != null && !c.getApprovedByName().isEmpty() ? c.getApprovedByName() : "-");
+                    map.put("amount", null);
+                    
+                    java.util.Date parsedDate = null;
+                    if (c.getCreatedAt() != null) {
+                        try {
+                            parsedDate = java.sql.Timestamp.valueOf(c.getCreatedAt());
+                        } catch (Exception e) {
+                            // ignore
+                        }
+                    }
+                    map.put("createdAt", c.getFormattedCreatedAt());
+                    map.put("rawDate", parsedDate != null ? parsedDate : new java.util.Date(0));
+                    map.put("status", c.getStatus());
+                    map.put("statusLabel", "APPROVED".equalsIgnoreCase(c.getStatus()) ? "Đã duyệt" : ("PENDING".equalsIgnoreCase(c.getStatus()) ? "Chờ duyệt" : "Đã hủy"));
+                    map.put("statusColor", "APPROVED".equalsIgnoreCase(c.getStatus()) ? "bg-success" : ("PENDING".equalsIgnoreCase(c.getStatus()) ? "bg-warning text-dark" : "bg-danger"));
+                    map.put("detailCallback", "viewCheckDetails(" + c.getCheckId() + ")");
+                    unifiedVoucherHistory.add(map);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        // Filter by dates if present
+        if (fromDate != null && !fromDate.trim().isEmpty()) {
+            try {
+                java.util.Date fd = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(fromDate);
+                unifiedVoucherHistory.removeIf(map -> ((java.util.Date) map.get("rawDate")).before(fd));
+            } catch (Exception e) {}
+        }
+        if (toDate != null && !toDate.trim().isEmpty()) {
+            try {
+                java.util.Date td = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(toDate);
+                java.util.Calendar cal = java.util.Calendar.getInstance();
+                cal.setTime(td);
+                cal.add(java.util.Calendar.DAY_OF_YEAR, 1);
+                java.util.Date nextDay = cal.getTime();
+                unifiedVoucherHistory.removeIf(map -> ((java.util.Date) map.get("rawDate")).after(nextDay));
+            } catch (Exception e) {}
+        }
+        
+        // Sort by created time descending
+        unifiedVoucherHistory.sort((m1, m2) -> ((java.util.Date) m2.get("rawDate")).compareTo((java.util.Date) m1.get("rawDate")));
+        request.setAttribute("voucherHistory", unifiedVoucherHistory);
     }
 
     @Override
@@ -378,33 +903,47 @@ public class InventoryController extends BaseController {
                     String[] productIds = request.getParameterValues("productId[]");
                     String[] partnerWarehouseIds = request.getParameterValues("partnerWarehouseId[]");
                     String[] quantities = request.getParameterValues("quantity[]");
+                    String[] actionTypes = request.getParameterValues("actionType[]");
                     
                     int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     boolean isOwner = "Owner".equals(currentUser.getRoleName());
                     
                     if (productIds != null && productIds.length > 0) {
-                        java.util.Map<Integer, List<model.StockTransferDetail>> groupedDetails = new java.util.HashMap<>();
+                        java.util.Map<String, List<model.StockTransferDetail>> groupedDetails = new java.util.HashMap<>();
+                        java.util.Map<String, int[]> groupInfo = new java.util.HashMap<>();
+                        
                         for (int i = 0; i < productIds.length; i++) {
                             int pId = Integer.parseInt(productIds[i]);
                             int partnerWId = Integer.parseInt(partnerWarehouseIds[i]);
                             int qty = Integer.parseInt(quantities[i]);
+                            String actType = (actionTypes != null && actionTypes.length > i) ? actionTypes[i] : "RECEIVE";
+                            
                             if (qty > 0) {
+                                int fromWId = "RECEIVE".equals(actType) ? partnerWId : currentWarehouseId;
+                                int toWId = "RECEIVE".equals(actType) ? currentWarehouseId : partnerWId;
+                                String key = fromWId + "_" + toWId;
+                                
                                 model.StockTransferDetail detail = new model.StockTransferDetail();
                                 detail.setProductId(pId);
                                 detail.setQuantity(qty);
-                                groupedDetails.computeIfAbsent(partnerWId, k -> new ArrayList<>()).add(detail);
+                                
+                                groupedDetails.computeIfAbsent(key, k -> new ArrayList<>()).add(detail);
+                                groupInfo.put(key, new int[]{fromWId, toWId});
                             }
                         }
                         
-                        for (java.util.Map.Entry<Integer, List<model.StockTransferDetail>> entry : groupedDetails.entrySet()) {
-                            int partnerWId = entry.getKey();
+                        for (java.util.Map.Entry<String, List<model.StockTransferDetail>> entry : groupedDetails.entrySet()) {
+                            String key = entry.getKey();
                             List<model.StockTransferDetail> details = entry.getValue();
+                            int[] info = groupInfo.get(key);
+                            int fromWId = info[0];
+                            int toWId = info[1];
                             
                             model.StockTransfer transfer = new model.StockTransfer();
-                            transfer.setTransferCode("TX-" + System.currentTimeMillis() + "-" + partnerWId);
-                            transfer.setFromWarehouseId(currentWarehouseId);
-                            transfer.setToWarehouseId(partnerWId);
+                            transfer.setTransferCode("TX-" + System.currentTimeMillis() + "-" + fromWId + "-" + toWId);
+                            transfer.setFromWarehouseId(fromWId);
+                            transfer.setToWarehouseId(toWId);
                             // Owner tạo -> tự động duyệt, nhân viên tạo -> chờ Owner duyệt
                             transfer.setStatus(isOwner ? "APPROVED_DISPATCH" : "PENDING_DISPATCH");
                             transfer.setCreatedBy(currentUser.getEmployeeId());
@@ -430,7 +969,7 @@ public class InventoryController extends BaseController {
                     String[] importPrices = request.getParameterValues("importPrice[]");
                     
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
-                    boolean isOwner = "Owner".equals(currentUser.getRoleName());
+                    boolean isOwner = "Owner".equals(currentUser.getRoleName()) || "StoreManager".equals(currentUser.getRoleName());
                     
                     if (productIds != null && productIds.length > 0) {
                         List<model.OrderDetail> allDetails = new ArrayList<>();
@@ -505,7 +1044,7 @@ public class InventoryController extends BaseController {
                     if (isOwner) {
                         request.getSession().setAttribute("message", "Đã nhập hàng và cập nhật tồn kho thành công!");
                     } else {
-                        request.getSession().setAttribute("message", "Đã tạo phiếu nhập hàng (Chờ Owner duyệt).");
+                        request.getSession().setAttribute("message", "Đã tạo phiếu nhập hàng (Chờ duyệt).");
                     }
                     redirect(response, request.getContextPath() + "/inventory?tab=stock&warehouseId=" + currentWarehouseId);
                     break;
@@ -607,9 +1146,244 @@ public class InventoryController extends BaseController {
                     redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + currentWarehouseId);
                     break;
                 }
+                case "approveTransfer": {
+                    int transferId = Integer.parseInt(request.getParameter("transferId"));
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+                    transferDAO.updateStatus(transferId, "APPROVED_DISPATCH", currentUser.getEmployeeId());
+                    request.getSession().setAttribute("message", "Đã duyệt phiếu điều chuyển thành công. (Chờ xuất kho)");
+                    redirect(response, request.getContextPath() + "/inventory?tab=history&subtab=voucher");
+                    break;
+                }
+                case "rejectTransfer": {
+                    int transferId = Integer.parseInt(request.getParameter("transferId"));
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+                    transferDAO.updateStatus(transferId, "REJECTED", currentUser.getEmployeeId());
+                    request.getSession().setAttribute("message", "Đã từ chối phiếu điều chuyển.");
+                    redirect(response, request.getContextPath() + "/inventory?tab=history&subtab=voucher");
+                    break;
+                }
+                case "approveOrder": {
+                    int orderId = Integer.parseInt(request.getParameter("orderId"));
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+                    service.inventory.InventoryExecutionService executionService = new service.inventory.InventoryExecutionService();
+                    executionService.executeOrder(orderId, currentUser.getEmployeeId());
+                    request.getSession().setAttribute("message", "Đã phê duyệt phiếu và cập nhật tồn kho thành công.");
+                    redirect(response, request.getContextPath() + "/inventory?tab=history&subtab=voucher");
+                    break;
+                }
+                case "rejectOrder": {
+                    int orderId = Integer.parseInt(request.getParameter("orderId"));
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+                    orderDAO.updateStatus(orderId, "REJECTED", currentUser.getEmployeeId());
+                    request.getSession().setAttribute("message", "Đã từ chối phiếu.");
+                    redirect(response, request.getContextPath() + "/inventory?tab=history&subtab=voucher");
+                    break;
+                }
+                case "cancelOrder": {
+                    int orderId = Integer.parseInt(request.getParameter("orderId"));
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    if (currentUser == null || (!"WarehouseStaff".equals(currentUser.getRoleName()) && !"Owner".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+                    PurchaseOrder po = purchaseOrderDAO.findById(orderId);
+                    if (po == null || !"PENDING".equals(po.getStatus())) {
+                        request.getSession().setAttribute("error", "Không thể hủy phiếu này vì phiếu không tồn tại hoặc đã được xử lý.");
+                    } else {
+                        orderDAO.updateStatus(orderId, "CANCELLED");
+                        request.getSession().setAttribute("message", "Đã hủy phiếu thành công.");
+                    }
+                    String redirectTab = request.getParameter("tab");
+                    if (redirectTab == null || redirectTab.isEmpty()) {
+                        redirectTab = "WarehouseStaff".equals(currentUser.getRoleName()) ? "pending_vouchers" : "import";
+                    }
+                    redirect(response, request.getContextPath() + "/inventory?tab=" + redirectTab + "&warehouseId=" + request.getParameter("warehouseId"));
+                    break;
+                }
+                case "saveCheck": {
+                    int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
+                    String[] productIds = request.getParameterValues("productId[]");
+                    String[] systemQtys = request.getParameterValues("systemQty[]");
+                    String[] actualQtys = request.getParameterValues("actualQty[]");
+                    String[] notes = request.getParameterValues("note[]");
+
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+
+                    if (productIds != null && productIds.length > 0) {
+                        List<model.InventoryCheckDetail> details = new ArrayList<>();
+                        int totalDiscrepancy = 0;
+
+                        for (int i = 0; i < productIds.length; i++) {
+                            int pId = Integer.parseInt(productIds[i]);
+                            int sysQty = Integer.parseInt(systemQtys[i]);
+                            int actQty = Integer.parseInt(actualQtys[i]);
+                            String note = (notes != null && notes.length > i) ? notes[i] : "";
+
+                            int disc = actQty - sysQty;
+                            totalDiscrepancy += Math.abs(disc);
+
+                            model.InventoryCheckDetail d = new model.InventoryCheckDetail();
+                            d.setProductId(pId);
+                            d.setSystemQty(sysQty);
+                            d.setActualQty(actQty);
+                            d.setDiscrepancy(disc);
+                            d.setNote(note);
+                            details.add(d);
+                        }
+
+                        model.InventoryCheck check = new model.InventoryCheck();
+                        check.setCheckCode("IC-" + System.currentTimeMillis());
+                        check.setWarehouseId(currentWarehouseId);
+                        check.setCreatedBy(currentUser.getEmployeeId());
+                        
+                        boolean isApprover = "Owner".equals(currentUser.getRoleName()) || "StoreManager".equals(currentUser.getRoleName());
+                        check.setStatus(isApprover ? "APPROVED" : "PENDING");
+                        check.setTotalDiscrepancy(totalDiscrepancy);
+
+                        dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
+                        int checkId = checkDAO.createCheck(check, details);
+
+                        if (isApprover) {
+                            service.inventory.InventoryExecutionService executionService = new service.inventory.InventoryExecutionService();
+                            executionService.executeStockBalance(checkId, currentUser.getEmployeeId());
+                            request.getSession().setAttribute("message", "Đã lập và duyệt phiếu kiểm kho, hoàn tất cân bằng tồn kho!");
+                        } else {
+                            request.getSession().setAttribute("message", "Đã lập phiếu kiểm kho (Chờ quản lý phê duyệt)!");
+                        }
+                    }
+                    redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
+                    break;
+                }
+                case "approveCheck": {
+                    int checkId = Integer.parseInt(request.getParameter("checkId"));
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+                    service.inventory.InventoryExecutionService executionService = new service.inventory.InventoryExecutionService();
+                    executionService.approveInventoryCheck(checkId, currentUser.getEmployeeId());
+
+                    request.getSession().setAttribute("message", "Đã phê duyệt phiếu kiểm kho và cân bằng tồn kho thành công!");
+                    String redirectTab = request.getParameter("tab");
+                    if ("check".equals(redirectTab)) {
+                        redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + request.getParameter("warehouseId"));
+                    } else {
+                        redirect(response, request.getContextPath() + "/inventory?tab=history&subtab=voucher");
+                    }
+                    break;
+                }
+                case "rejectCheck": {
+                    int checkId = Integer.parseInt(request.getParameter("checkId"));
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+                    dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
+                    checkDAO.updateStatus(checkId, "REJECTED", currentUser.getEmployeeId());
+
+                    request.getSession().setAttribute("message", "Đã từ chối phiếu kiểm kho.");
+                    String redirectTab = request.getParameter("tab");
+                    if ("check".equals(redirectTab)) {
+                        redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + request.getParameter("warehouseId"));
+                    } else {
+                        redirect(response, request.getContextPath() + "/inventory?tab=history&subtab=voucher");
+                    }
+                    break;
+                }
+                case "cancelCheck": {
+                    int checkId = Integer.parseInt(request.getParameter("checkId"));
+                    dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
+                    checkDAO.updateStatus(checkId, "CANCELLED", null);
+
+                    request.getSession().setAttribute("message", "Đã hủy phiếu kiểm kho thành công.");
+                    String redirectTab = request.getParameter("tab");
+                    if (redirectTab == null || redirectTab.isEmpty()) {
+                        redirectTab = "check";
+                    }
+                    redirect(response, request.getContextPath() + "/inventory?tab=" + redirectTab + "&warehouseId=" + request.getParameter("warehouseId"));
+                    break;
+                }
+                case "updateStockDirectly": {
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"Admin".equals(currentUser.getRoleName()))) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+                    int productId = Integer.parseInt(request.getParameter("productId"));
+                    int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
+                    int newQty = Integer.parseInt(request.getParameter("quantity"));
+
+                    inventoryDAO.updateStockQty(warehouseId, productId, newQty);
+                    request.getSession().setAttribute("message", "Cập nhật số lượng tồn kho thành công!");
+                    redirect(response, request.getContextPath() + "/inventory?tab=stock&warehouseId=" + warehouseId);
+                    break;
+                }
+                case "updateCheck": {
+                    int checkId = Integer.parseInt(request.getParameter("checkId"));
+                    int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
+                    String[] productIds = request.getParameterValues("productId[]");
+                    String[] systemQtys = request.getParameterValues("systemQty[]");
+                    String[] actualQtys = request.getParameterValues("actualQty[]");
+                    String[] notes = request.getParameterValues("note[]");
+
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"Admin".equals(currentUser.getRoleName()))) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+
+                    if (productIds != null && productIds.length > 0) {
+                        List<model.InventoryCheckDetail> details = new ArrayList<>();
+                        int totalDiscrepancy = 0;
+
+                        for (int i = 0; i < productIds.length; i++) {
+                            int pId = Integer.parseInt(productIds[i]);
+                            int sysQty = Integer.parseInt(systemQtys[i]);
+                            int actQty = Integer.parseInt(actualQtys[i]);
+                            String note = (notes != null && notes.length > i) ? notes[i] : "";
+
+                            int disc = actQty - sysQty;
+                            totalDiscrepancy += Math.abs(disc);
+
+                            model.InventoryCheckDetail d = new model.InventoryCheckDetail();
+                            d.setProductId(pId);
+                            d.setSystemQty(sysQty);
+                            d.setActualQty(actQty);
+                            d.setDiscrepancy(disc);
+                            d.setNote(note);
+                            details.add(d);
+                        }
+
+                        dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
+                        checkDAO.updateCheck(checkId, totalDiscrepancy, details);
+
+                        service.inventory.InventoryExecutionService executionService = new service.inventory.InventoryExecutionService();
+                        executionService.executeStockBalance(checkId, currentUser.getEmployeeId());
+                    }
+
+                    request.getSession().setAttribute("message", "Đã cập nhật phiếu nhập kiểm kho và cân bằng tồn kho thành công.");
+                    redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
+                    break;
+                }
                 case "confirmReceiveWithDiscrepancy":
-                case "createCheck":
-                case "approveCheck":
                     request.getSession().setAttribute("message", "Tính năng đang bảo trì cấu trúc database.");
                     redirect(response, request.getContextPath() + "/inventory?tab=stock");
                     break;
@@ -626,11 +1400,17 @@ public class InventoryController extends BaseController {
         }
     }
 
-    private void handleSearchProductsApi(HttpServletRequest request, HttpServletResponse response, Integer warehouseId) throws Exception {
+    private void handleSearchProductsApi(HttpServletRequest request, HttpServletResponse response, Integer selectedWarehouseId) throws Exception {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         
-        if (warehouseId == null) {
+        String fromWIdParam = request.getParameter("fromWarehouseId");
+        String toWIdParam = request.getParameter("toWarehouseId");
+        
+        int fromWarehouseId = (fromWIdParam != null && !fromWIdParam.isEmpty()) ? Integer.parseInt(fromWIdParam) : (selectedWarehouseId != null ? selectedWarehouseId : 0);
+        int toWarehouseId = (toWIdParam != null && !toWIdParam.isEmpty()) ? Integer.parseInt(toWIdParam) : 0;
+        
+        if (fromWarehouseId == 0 || toWarehouseId == 0) {
             response.getWriter().write("[]");
             return;
         }
@@ -642,17 +1422,17 @@ public class InventoryController extends BaseController {
             keyword = keyword.trim().replaceAll("\\s+", " ");
         }
 
-        List<dto.inventory.ExchangeProductDTO> list = inventoryDAO.searchExchangeProducts(warehouseId, keyword);
+        List<dto.inventory.ExchangeProductDTO> list = inventoryDAO.searchTransferProducts(fromWarehouseId, toWarehouseId, keyword);
         
         StringBuilder json = new StringBuilder("[");
         for (int i = 0; i < list.size(); i++) {
             dto.inventory.ExchangeProductDTO dto = list.get(i);
             json.append("{");
             json.append("\"productId\":").append(dto.getProductId()).append(",");
-            json.append("\"productName\":\"").append(dto.getProductName().replace("\"", "\\\"")).append("\",");
+            json.append("\"productName\":\"").append(escapeJson(dto.getProductName())).append("\",");
             json.append("\"myStock\":").append(dto.getMyStock()).append(",");
             json.append("\"partnerWarehouseId\":").append(dto.getPartnerWarehouseId()).append(",");
-            json.append("\"partnerWarehouseName\":\"").append(dto.getPartnerWarehouseName().replace("\"", "\\\"")).append("\",");
+            json.append("\"partnerWarehouseName\":\"").append(escapeJson(dto.getPartnerWarehouseName())).append("\",");
             json.append("\"partnerStock\":").append(dto.getPartnerStock());
             json.append("}");
             if (i < list.size() - 1) json.append(",");
@@ -691,7 +1471,7 @@ public class InventoryController extends BaseController {
             model.Product p = list.get(i);
             json.append("{");
             json.append("\"productId\":").append(p.getProductID()).append(",");
-            json.append("\"productName\":\"").append(p.getName().replace("\"", "\\\"")).append("\",");
+            json.append("\"productName\":\"").append(escapeJson(p.getName())).append("\",");
             json.append("\"importPrice\":").append(p.getImportPrice() != null ? p.getImportPrice() : 0);
             json.append("}");
             if (i < list.size() - 1) json.append(",");
@@ -722,7 +1502,7 @@ public class InventoryController extends BaseController {
             dto.inventory.ImportProductDTO p = list.get(i);
             json.append("{");
             json.append("\"productId\":").append(p.getProductId()).append(",");
-            json.append("\"productName\":\"").append(p.getProductName().replace("\"", "\\\"")).append("\",");
+            json.append("\"productName\":\"").append(escapeJson(p.getProductName())).append("\",");
             json.append("\"myStock\":").append(p.getMyStock()).append(",");
             json.append("\"suppliers\":[");
             if (p.getSuppliers() != null) {
@@ -730,7 +1510,7 @@ public class InventoryController extends BaseController {
                     dto.inventory.ImportProductDTO.SupplierInfo s = p.getSuppliers().get(j);
                     json.append("{");
                     json.append("\"supplierId\":").append(s.getSupplierId()).append(",");
-                    json.append("\"supplierName\":\"").append(s.getSupplierName().replace("\"", "\\\"")).append("\",");
+                    json.append("\"supplierName\":\"").append(escapeJson(s.getSupplierName())).append("\",");
                     json.append("\"importPrice\":").append(s.getImportPrice() != null ? s.getImportPrice() : 0);
                     json.append("}");
                     if (j < p.getSuppliers().size() - 1) json.append(",");
@@ -762,5 +1542,81 @@ public class InventoryController extends BaseController {
                 }
             }
         }
+    }
+
+    private void handleSearchStockCheckProductsApi(HttpServletRequest request, HttpServletResponse response, Integer warehouseId) throws Exception {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        
+        if (warehouseId == null) {
+            response.getWriter().write("[]");
+            return;
+        }
+
+        String keyword = request.getParameter("keyword");
+        if (keyword == null) {
+            keyword = "";
+        } else {
+            keyword = keyword.trim().replaceAll("\\s+", " ");
+        }
+
+        List<dto.inventory.StockCheckProductDTO> list = inventoryDAO.searchStockCheckProducts(warehouseId, keyword);
+        
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < list.size(); i++) {
+            dto.inventory.StockCheckProductDTO dto = list.get(i);
+            json.append("{");
+            json.append("\"productId\":").append(dto.getProductId()).append(",");
+            json.append("\"productName\":\"").append(escapeJson(dto.getProductName())).append("\",");
+            json.append("\"systemStock\":").append(dto.getSystemStock()).append(",");
+            json.append("\"productCodebar\":\"").append(escapeJson(dto.getProductCodebar() != null ? dto.getProductCodebar() : "")).append("\",");
+            json.append("\"categoryName\":\"").append(escapeJson(dto.getCategoryName())).append("\"");
+            json.append("}");
+            if (i < list.size() - 1) json.append(",");
+        }
+        json.append("]");
+        
+        response.getWriter().write(json.toString());
+    }
+
+    private String escapeJson(String input) {
+        if (input == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < input.length(); i++) {
+            char ch = input.charAt(i);
+            switch (ch) {
+                case '"':
+                    sb.append("\\\"");
+                    break;
+                case '\\':
+                    sb.append("\\\\");
+                    break;
+                case '\b':
+                    sb.append("\\b");
+                    break;
+                case '\f':
+                    sb.append("\\f");
+                    break;
+                case '\n':
+                    sb.append("\\n");
+                    break;
+                case '\r':
+                    sb.append("\\r");
+                    break;
+                case '\t':
+                    sb.append("\\t");
+                    break;
+                default:
+                    if (ch < ' ') {
+                        String t = "000" + Integer.toHexString(ch);
+                        sb.append("\\u" + t.substring(t.length() - 4));
+                    } else {
+                        sb.append(ch);
+                    }
+            }
+        }
+        return sb.toString();
     }
 }

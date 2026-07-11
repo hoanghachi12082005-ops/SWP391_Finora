@@ -52,6 +52,9 @@
                                 <!-- Include _tab_stock to render the Warehouse Cards -->
                                 <jsp:include page="_tab_stock.jsp" />
                             </c:when>
+                            <c:when test="${activeTab == 'approval'}">
+                                <jsp:include page="_tab_approval.jsp" />
+                            </c:when>
                             <c:when test="${activeTab == 'history'}">
                                 <jsp:include page="_tab_history.jsp" />
                             </c:when>
@@ -90,10 +93,23 @@
                             </div>
                         </div>
                         <c:if test="${activeTab == 'stock'}">
-                            <button type="button" class="page-action-btn" data-bs-toggle="modal" data-bs-target="#importStockModal">
-                                <span class="material-icons" style="font-size: 20px;">add_circle_outline</span>
-                                <span>Nhập Hàng</span>
-                            </button>
+                            <div class="d-flex align-items-center gap-2">
+                                <c:if test="${not empty selectedWarehouseId}">
+                                    <button type="button" class="btn d-flex align-items-center justify-content-center gap-2 px-3" onclick="exportStockExcel()" 
+                                            style="font-size: 14px; font-weight: 600; height: 38px; border: 1.5px solid var(--primary-color); color: var(--primary-color); border-radius: 50px; background-color: transparent; transition: all 0.2s ease-in-out; box-shadow: none;"
+                                            onmouseover="this.style.backgroundColor='var(--primary-color)'; this.style.color='white';"
+                                            onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--primary-color)';"
+                                            onfocus="this.style.boxShadow='0 0 0 3px var(--primary-light)';"
+                                            onblur="this.style.boxShadow='none';">
+                                        <span class="material-icons" style="font-size: 18px;">download</span>
+                                        <span>Xuất Excel Tồn Kho</span>
+                                    </button>
+                                </c:if>
+                                <button type="button" class="page-action-btn rounded-pill d-flex align-items-center justify-content-center gap-2 px-3 border-0" data-bs-toggle="modal" data-bs-target="#importStockModal" style="height: 38px; font-size: 14px; font-weight: 600; box-shadow: none;">
+                                    <span class="material-icons" style="font-size: 20px;">add_circle_outline</span>
+                                    <span>Nhập Hàng</span>
+                                </button>
+                            </div>
                         </c:if>
                     </div>
 
@@ -104,7 +120,7 @@
                         .subtab-link.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
                     </style>
 
-                    <c:if test="${roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'WarehouseStaff'}">
+                    <c:if test="${roleName == 'Owner'}">
                         <div class="subtab-nav mb-4">
                             <a href="${pageContext.request.contextPath}/inventory?tab=stock&warehouseId=${selectedWarehouseId}"
                                 class="subtab-link ${empty activeTab || activeTab == 'stock' ? 'active' : ''}">
@@ -116,12 +132,12 @@
                                 Điều Chuyển
                             </a>
                             <a href="${pageContext.request.contextPath}/inventory?tab=check&warehouseId=${selectedWarehouseId}"
-                                class="subtab-link ${activeTab == 'check' ? 'active' : ''}">
+                                class="subtab-link ${activeTab == 'check' || activeTab == 'createCheck' || activeTab == 'editCheck' ? 'active' : ''}">
                                 Kiểm kho
                             </a>
                             <a href="${pageContext.request.contextPath}/inventory?tab=history&warehouseId=${selectedWarehouseId}"
                                 class="subtab-link ${activeTab == 'history' ? 'active' : ''}">
-                                Lịch sử xuất nhập
+                                Lịch sử
                             </a>
                         </div>
                     </c:if>
@@ -190,8 +206,14 @@
                             <c:when test="${activeTab == 'check'}">
                                 <jsp:include page="_tab_check.jsp" />
                             </c:when>
+                            <c:when test="${activeTab == 'createCheck' || activeTab == 'editCheck'}">
+                                <jsp:include page="_tab_check_create.jsp" />
+                            </c:when>
                             <c:when test="${activeTab == 'approval'}">
                                 <jsp:include page="_tab_approval.jsp" />
+                            </c:when>
+                            <c:when test="${activeTab == 'pending_vouchers'}">
+                                <jsp:include page="_tab_pending_vouchers.jsp" />
                             </c:when>
                             <c:when test="${activeTab == 'history'}">
                                 <jsp:include page="_tab_history.jsp" />
@@ -316,6 +338,25 @@
             })
             .catch(err => {
                 modalContent.innerHTML = '<div class="modal-body py-5 text-center text-danger"><i class="ph ph-warning-circle fs-1 mb-2"></i><p>Lỗi khi tải dữ liệu phiếu.</p></div>';
+            });
+    }
+
+    function viewCheckDetails(checkId) {
+        const modalContent = document.getElementById('ticketDetailsModalContent');
+        modalContent.innerHTML = '<div class="modal-body text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Đang tải dữ liệu...</p></div>';
+        
+        const myModal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
+        myModal.show();
+        
+        let url = '${pageContext.request.contextPath}/inventory?action=viewCheckDetails&checkId=' + checkId;
+        
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                modalContent.innerHTML = html;
+            })
+            .catch(err => {
+                modalContent.innerHTML = '<div class="modal-body py-5 text-center text-danger"><i class="ph ph-warning-circle fs-1 mb-2"></i><p>Lỗi khi tải dữ liệu phiếu kiểm kê.</p></div>';
             });
     }
 

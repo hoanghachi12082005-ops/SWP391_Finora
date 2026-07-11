@@ -17,6 +17,13 @@ public class StockTransfer {
     private String toWarehouseName;
     private String createdByName;
     private String transferProgress;
+    private Integer approvedBy;
+    private String approvedByName;
+
+    public Integer getApprovedBy() { return approvedBy; }
+    public void setApprovedBy(Integer approvedBy) { this.approvedBy = approvedBy; }
+    public String getApprovedByName() { return approvedByName; }
+    public void setApprovedByName(String approvedByName) { this.approvedByName = approvedByName; }
 
     public StockTransfer() {
     }

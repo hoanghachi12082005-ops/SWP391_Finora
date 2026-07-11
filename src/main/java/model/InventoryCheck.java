@@ -136,4 +136,14 @@ public class InventoryCheck {
     public void setDetails(List<InventoryCheckDetail> details) {
         this.details = details;
     }
+
+    public String getFormattedCreatedAt() {
+        if (createdAt == null) return "";
+        return createdAt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
+
+    public String getFormattedUpdatedAt() {
+        if (updatedAt == null) return "";
+        return updatedAt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
 }

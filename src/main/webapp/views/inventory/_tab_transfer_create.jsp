@@ -1,6 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
+<c:set var="selectedWarehouseName" value="Kho hiện tại" />
+<c:forEach var="w" items="${warehouses}">
+    <c:if test="${w.warehouseId == selectedWarehouseId}">
+        <c:set var="selectedWarehouseName" value="${w.warehouseName}" />
+    </c:if>
+</c:forEach>
+
 <style>
     .search-box { position: relative; max-width: 800px; margin: 0 auto 30px; }
     .search-input { width: 100%; padding: 16px 20px 16px 50px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: all 0.2s; }
@@ -20,8 +27,26 @@
 <div class="dashboard-card">
     <div class="card-header d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h5 class="mb-0">Tạo Lệnh Điều Chuyển</h5>
-            <small class="text-muted">Từ: <strong>Kho hiện tại</strong></small>
+            <h5 class="mb-0">
+                <c:choose>
+                    <c:when test="${transferType == 'RECEIVE'}">
+                        📥 Tạo Phiếu Nhập Chuyển Kho
+                    </c:when>
+                    <c:otherwise>
+                        📤 Tạo Phiếu Xuất Chuyển Kho
+                    </c:otherwise>
+                </c:choose>
+            </h5>
+            <small class="text-muted">
+                <c:choose>
+                    <c:when test="${transferType == 'RECEIVE'}">
+                        Nhập về: <strong>${selectedWarehouseName}</strong>
+                    </c:when>
+                    <c:otherwise>
+                        Xuất từ: <strong>${selectedWarehouseName}</strong>
+                    </c:otherwise>
+                </c:choose>
+            </small>
         </div>
         <a href="${pageContext.request.contextPath}/inventory?tab=transfer&warehouseId=${selectedWarehouseId}" class="btn btn-outline-secondary btn-sm">
             <span class="material-icons" style="font-size:16px; vertical-align:text-bottom;">arrow_back</span>
@@ -30,10 +55,43 @@
     </div>
 
     <div class="card-body">
+        <!-- Warehouse Selector Section -->
+        <div class="row align-items-center mb-4 bg-light p-3 rounded-3 mx-0">
+            <div class="col-md-6 d-flex align-items-center gap-3">
+                <c:choose>
+                    <c:when test="${transferType == 'RECEIVE'}">
+                        <span class="fw-semibold text-muted">Kho nhận (Đến):</span>
+                        <strong class="text-dark fs-6">${selectedWarehouseName}</strong>
+                    </c:when>
+                    <c:otherwise>
+                        <span class="fw-semibold text-muted">Kho xuất (Từ):</span>
+                        <strong class="text-dark fs-6">${selectedWarehouseName}</strong>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+            <div class="col-md-6 d-flex align-items-center gap-3 justify-content-md-end mt-2 mt-md-0">
+                <c:choose>
+                    <c:when test="${transferType == 'RECEIVE'}">
+                        <span class="fw-semibold text-muted">Kho gửi (Từ):</span>
+                    </c:when>
+                    <c:otherwise>
+                        <span class="fw-semibold text-muted">Kho nhận (Đến):</span>
+                    </c:otherwise>
+                </c:choose>
+                <select id="partnerWarehouseSelect" class="form-select form-select-sm" style="width: 250px; font-weight: 600; cursor: pointer;">
+                    <c:forEach var="w" items="${warehouses}">
+                        <c:if test="${w.warehouseId != selectedWarehouseId}">
+                            <option value="${w.warehouseId}">${w.warehouseName}</option>
+                        </c:if>
+                    </c:forEach>
+                </select>
+            </div>
+        </div>
+
         <!-- Search Section -->
         <div class="search-box">
             <span class="material-icons search-icon">search</span>
-            <input type="text" class="search-input" id="productSearch" placeholder="Tìm kiếm sản phẩm hoặc chi nhánh..." autocomplete="off">
+            <input type="text" class="search-input" id="productSearch" placeholder="Tìm kiếm sản phẩm cần điều chuyển..." autocomplete="off">
             <div class="search-results" id="searchResults">
                 <!-- JS Populated -->
             </div>
@@ -50,10 +108,10 @@
                     <thead>
                         <tr>
                             <th width="25%">Sản Phẩm</th>
-                            <th width="10%" class="text-center">Tồn Kho</th>
-                            <th width="25%">Chi Nhánh Đối Tác</th>
+                            <th width="20%" class="text-center">Tồn Kho (Gửi / Nhận)</th>
+                            <th width="20%">Kho Đối Tác</th>
                             <th width="15%">Loại Giao Dịch</th>
-                            <th width="20%">Số Lượng</th>
+                            <th width="15%">Số Lượng</th>
                             <th width="5%" class="text-center">Xóa</th>
                         </tr>
                     </thead>
@@ -87,8 +145,10 @@
     const tableBody = document.getElementById('transferTableBody');
     const emptyRow = document.getElementById('emptyRow');
     const submitBtn = document.getElementById('submitBtn');
+    const partnerSelect = document.getElementById('partnerWarehouseSelect');
     const contextPath = '${pageContext.request.contextPath}';
     const currentWarehouseId = '${selectedWarehouseId}';
+    const transferType = '${transferType}';
     let searchTimeout;
 
     // Show suggestion automatically when focus
@@ -106,8 +166,24 @@
         }, 300);
     });
 
+    if (partnerSelect) {
+        partnerSelect.addEventListener('change', function() {
+            // Clear current items to avoid mix-up
+            tableBody.querySelectorAll('tr').forEach(tr => {
+                if (tr.id !== 'emptyRow') tr.remove();
+            });
+            checkEmpty();
+            // Refetch suggestions
+            fetchResults(searchInput.value.trim());
+        });
+    }
+
     function fetchResults(keyword) {
-        fetch(`${pageContext.request.contextPath}/inventory?action=searchProductsApi&keyword=` + encodeURIComponent(keyword) + `&warehouseId=${selectedWarehouseId}`)
+        const partnerId = partnerSelect ? partnerSelect.value : '0';
+        const fromWId = transferType === 'RECEIVE' ? partnerId : currentWarehouseId;
+        const toWId = transferType === 'RECEIVE' ? currentWarehouseId : partnerId;
+
+        fetch(`${pageContext.request.contextPath}/inventory?action=searchProductsApi&keyword=` + encodeURIComponent(keyword) + `&fromWarehouseId=\${fromWId}&toWarehouseId=\${toWId}`)
             .then(res => res.json())
             .then(data => {
                 searchResults.innerHTML = '';
@@ -115,79 +191,43 @@
                     if (keyword === '') {
                         searchResults.innerHTML = '<div class="p-3 text-center text-muted"><span class="material-icons" style="font-size:40px; color:#e2e8f0;">search</span><br>Gõ tên hoặc mã sản phẩm để tìm kiếm...</div>';
                     } else {
-                        searchResults.innerHTML = '<div class="p-3 text-center text-muted">Không tìm thấy kho nào có sẵn sản phẩm này</div>';
+                        searchResults.innerHTML = '<div class="p-3 text-center text-muted">Không tìm thấy sản phẩm nào ở kho nguồn</div>';
                     }
                 } else {
                     if (keyword === '') {
                         const header = document.createElement('div');
                         header.className = 'suggestion-header';
-                        header.innerHTML = '<span class="material-icons" style="font-size:16px; vertical-align:text-bottom;">warning</span> Gợi ý hàng sắp hết (Có thể nhập từ kho khác)';
+                        header.innerHTML = '<span class="material-icons" style="font-size:16px; vertical-align:text-bottom;">warning</span> Gợi ý hàng sắp hết ở kho nhận';
                         searchResults.appendChild(header);
                     }
-                    const grouped = {};
+                    
                     data.forEach(p => {
-                        if (!grouped[p.productId]) {
-                            grouped[p.productId] = {
-                                productId: p.productId,
-                                productName: p.productName,
-                                myStock: p.myStock,
-                                partners: []
-                            };
-                        }
-                        grouped[p.productId].partners.push({
-                            partnerWarehouseId: p.partnerWarehouseId,
-                            partnerWarehouseName: p.partnerWarehouseName,
-                            partnerStock: p.partnerStock
-                        });
-                    });
-
-                    Object.values(grouped).forEach(g => {
                         const item = document.createElement('div');
                         item.className = 'search-item d-flex align-items-center justify-content-between p-2 border-bottom';
                         item.style.cursor = 'default';
                         
-                        let optionsHtml = '';
-                        g.partners.forEach(partner => {
-                            const isZero = partner.partnerStock <= 0;
-                            const optionStyle = isZero ? 'style="color: #dc3545; font-weight: bold;"' : '';
-                            const zeroLabel = isZero ? ' (HẾT HÀNG - tồn: 0)' : ` (Tồn: ${partner.partnerStock})`;
-                            optionsHtml += `<option value="${partner.partnerWarehouseId}" ${optionStyle}>${partner.partnerWarehouseName}${zeroLabel}</option>`;
-                        });
-
                         item.innerHTML = `
                             <div>
-                                <div class="fw-semibold text-dark">${g.productName}</div>
+                                <div class="fw-semibold text-dark">\${p.productName}</div>
                                 <div class="small text-muted mt-1">
-                                    Tồn của bạn: <strong class="${g.myStock > 0 ? 'text-success' : 'text-danger'}">${g.myStock}</strong>
+                                    Tồn kho gửi: <strong class="\${p.myStock > 0 ? 'text-success' : 'text-danger'}">\${p.myStock}</strong> | 
+                                    Tồn kho nhận: <strong class="\${p.partnerStock > 0 ? 'text-success' : 'text-danger'}">\${p.partnerStock}</strong>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <select class="form-select form-select-sm partner-select" style="width: 250px; font-size: 13px; cursor: pointer;">
-                                    ${optionsHtml}
-                                </select>
+                            <div>
                                 <span class="material-icons text-danger add-btn" style="font-size: 28px; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Thêm vào danh sách">add_circle</span>
                             </div>
                         `;
                         
-                        const selectEl = item.querySelector('.partner-select');
                         const addBtn = item.querySelector('.add-btn');
-                        
                         addBtn.onclick = () => {
-                            const selectedId = parseInt(selectEl.value);
-                            const partner = g.partners.find(p => p.partnerWarehouseId === selectedId);
-                            if (partner) {
-                                addRow({
-                                    productId: g.productId,
-                                    productName: g.productName,
-                                    myStock: g.myStock,
-                                    partnerWarehouseId: partner.partnerWarehouseId,
-                                    partnerWarehouseName: partner.partnerWarehouseName,
-                                    partnerStock: partner.partnerStock,
-                                    allPartners: g.partners
-                                });
-                            }
+                            addRow({
+                                productId: p.productId,
+                                productName: p.productName,
+                                myStock: p.myStock,
+                                partnerStock: p.partnerStock
+                            });
                         };
-                        
                         searchResults.appendChild(item);
                     });
                 }
@@ -207,16 +247,13 @@
         tableBody.querySelectorAll('tr').forEach(tr => {
             if (tr.id === 'emptyRow') return;
             const pidInput = tr.querySelector('input[name="productId[]"]');
-            const pwidInput = tr.querySelector('[name="partnerWarehouseId[]"]');
-            if (pidInput && pwidInput) {
-                if (pidInput.value == product.productId && pwidInput.value == product.partnerWarehouseId) {
-                    isDuplicate = true;
-                }
+            if (pidInput && pidInput.value == product.productId) {
+                isDuplicate = true;
             }
         });
 
         if (isDuplicate) {
-            alert('Sản phẩm này từ kho ' + product.partnerWarehouseName + ' đã được chọn!');
+            alert('Sản phẩm này đã được chọn!');
             searchResults.style.display = 'none';
             searchInput.value = '';
             return;
@@ -227,47 +264,35 @@
         searchResults.style.display = 'none';
         searchInput.value = '';
 
-        let partnerOptions = '';
-        if (product.allPartners && product.allPartners.length > 0) {
-            product.allPartners.forEach(p => {
-                const selected = p.partnerWarehouseId == product.partnerWarehouseId ? 'selected' : '';
-                const isZero = p.partnerStock <= 0;
-                const optionStyle = isZero ? 'style="color: #dc3545; font-weight: bold;"' : '';
-                const zeroLabel = isZero ? ' (HẾT - 0)' : ` (Tồn: ${p.partnerStock})`;
-                partnerOptions += `<option value="${p.partnerWarehouseId}" ${optionStyle} ${selected}>${p.partnerWarehouseName}${zeroLabel}</option>`;
-            });
-        } else {
-            const isZero = product.partnerStock <= 0;
-            const optionStyle = isZero ? 'style="color: #dc3545; font-weight: bold;"' : '';
-            const zeroLabel = isZero ? ' (HẾT - 0)' : ` (Tồn: ${product.partnerStock})`;
-            partnerOptions = `<option value="${product.partnerWarehouseId}" ${optionStyle}>${product.partnerWarehouseName}${zeroLabel}</option>`;
-        }
+        const partnerName = partnerSelect.options[partnerSelect.selectedIndex].text;
+        const partnerId = partnerSelect.value;
+
+        const typeBadge = transferType === 'RECEIVE'
+            ? '<span class="badge bg-success-subtle text-success border border-success-subtle py-1 px-2">NHẬP (Từ kho đối tác)</span><input type="hidden" name="actionType[]" class="action-select" value="RECEIVE">'
+            : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle py-1 px-2">XUẤT (Đi kho đối tác)</span><input type="hidden" name="actionType[]" class="action-select" value="SEND">';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>
-                <div class="fw-medium text-dark">${product.productName}</div>
-                <input type="hidden" name="productId[]" value="${product.productId}">
+                <div class="fw-medium text-dark">\${product.productName}</div>
+                <input type="hidden" name="productId[]" value="\${product.productId}">
             </td>
-            <td class="text-center fw-semibold ${product.myStock > 0 ? 'text-success' : 'text-danger'}">
-                ${product.myStock}
-            </td>
-            <td>
-                <select name="partnerWarehouseId[]" class="form-select form-select-sm partner-select-row" style="min-width: 180px; font-size: 13px; background-color: #f8fafc; font-weight: 500;">
-                    ${partnerOptions}
-                </select>
+            <td class="text-center fw-semibold">
+                <span class="text-muted small">Gửi:</span> <strong class="\${product.myStock > 0 ? 'text-success' : 'text-danger'}">\${product.myStock}</strong><br>
+                <span class="text-muted small">Nhận:</span> <strong class="\${product.partnerStock > 0 ? 'text-success' : 'text-danger'}">\${product.partnerStock}</strong>
             </td>
             <td>
-                <select name="actionType[]" class="form-select action-select" style="background-color: #f8fafc;" required>
-                    <option value="RECEIVE" ${product.partnerStock > 0 ? 'selected' : ''}>Nhập</option>
-                    <option value="SEND" ${product.partnerStock <= 0 ? 'selected' : ''}>Xuất</option>
-                </select>
+                <span class="fw-semibold text-dark">\${partnerName}</span>
+                <input type="hidden" name="partnerWarehouseId[]" value="\${partnerId}">
+            </td>
+            <td>
+                \${typeBadge}
             </td>
             <td>
                 <div class="position-relative">
                     <input type="number" name="quantity[]" class="form-control qty-input" required min="1" placeholder="Số lượng" 
-                           data-mystock="${product.myStock}" 
-                           data-partnerstock="${product.partnerStock}">
+                           data-mystock="\${product.myStock}" 
+                           data-partnerstock="\${product.partnerStock}">
                 </div>
             </td>
             <td class="text-center">
@@ -280,29 +305,8 @@
         
         // Listeners for warning update
         const qtyInput = tr.querySelector('.qty-input');
-        const actionSelect = tr.querySelector('.action-select');
-        const partnerSelectRow = tr.querySelector('.partner-select-row');
-        
         qtyInput.addEventListener('input', function() {
             validateInputWarning(this);
-        });
-        actionSelect.addEventListener('change', function() {
-            validateInputWarning(qtyInput);
-        });
-        partnerSelectRow.addEventListener('change', function() {
-            const selectedWId = parseInt(this.value);
-            const partner = product.allPartners.find(p => p.partnerWarehouseId === selectedWId);
-            if (partner) {
-                qtyInput.setAttribute('data-partnerstock', partner.partnerStock);
-                
-                // Auto adjust transaction type suggestion based on new partner's stock
-                if (partner.partnerStock > 0) {
-                    actionSelect.value = "RECEIVE";
-                } else {
-                    actionSelect.value = "SEND";
-                }
-                validateInputWarning(qtyInput);
-            }
         });
         
         validateInputWarning(qtyInput);
@@ -320,15 +324,11 @@
     function validateInputWarning(input) {
         const tr = input.closest('tr');
         if (!tr || tr.id === 'emptyRow') return;
-        const action = tr.querySelector('.action-select').value;
         const qty = parseInt(input.value) || 0;
         
-        let limit = 0;
-        if (action === 'SEND') {
-            limit = parseInt(input.getAttribute('data-mystock')) || 0;
-        } else {
-            limit = parseInt(input.getAttribute('data-partnerstock')) || 0;
-        }
+        let limit = transferType === 'SEND'
+            ? (parseInt(input.getAttribute('data-mystock')) || 0)
+            : (parseInt(input.getAttribute('data-partnerstock')) || 0);
         
         let warningEl = tr.querySelector('.qty-warning');
         if (!warningEl) {
@@ -341,7 +341,7 @@
         if (qty > limit) {
             input.style.borderColor = '#fd7e14';
             input.style.boxShadow = '0 0 0 0.2rem rgba(253, 126, 20, 0.25)';
-            warningEl.innerHTML = `<span class="material-icons" style="font-size:12px;vertical-align:text-bottom;color:#fd7e14;">warning</span> Vượt tồn nguồn (${limit})`;
+            warningEl.innerHTML = `<span class="material-icons" style="font-size:12px;vertical-align:text-bottom;color:#fd7e14;">warning</span> Vượt tồn nguồn (\${limit})`;
             warningEl.style.color = '#fd7e14';
         } else {
             input.style.borderColor = '';
@@ -357,14 +357,10 @@
         this.querySelectorAll('.qty-input').forEach(input => {
             const tr = input.closest('tr');
             if (tr && tr.id !== 'emptyRow') {
-                const action = tr.querySelector('.action-select').value;
                 const qty = parseInt(input.value) || 0;
-                let limit = 0;
-                if (action === 'SEND') {
-                    limit = parseInt(input.getAttribute('data-mystock')) || 0;
-                } else {
-                    limit = parseInt(input.getAttribute('data-partnerstock')) || 0;
-                }
+                let limit = transferType === 'SEND'
+                    ? (parseInt(input.getAttribute('data-mystock')) || 0)
+                    : (parseInt(input.getAttribute('data-partnerstock')) || 0);
                 if (qty > limit) {
                     hasWarning = true;
                 }

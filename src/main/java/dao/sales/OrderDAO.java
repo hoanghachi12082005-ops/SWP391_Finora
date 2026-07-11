@@ -64,7 +64,7 @@ public class OrderDAO {
         List<Order> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
             SELECT o.*, 
-                   s.name AS supplierName, 
+                   s.supplier_name AS supplierName, 
                    e.fullName AS employeeName, 
                    w.warehouse_name AS warehouseName
             FROM [order] o
@@ -227,6 +227,38 @@ public class OrderDAO {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             ps.setInt(2, orderId);
+            ps.executeUpdate();
+        }
+    }
+
+    public boolean updateStatus(int orderId, String status, Integer approvedBy) {
+        String sql = "UPDATE [order] SET status = ?, approved_by = ? WHERE order_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            if (approvedBy != null) {
+                ps.setInt(2, approvedBy);
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }
+            ps.setInt(3, orderId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public void updateStatus(Connection conn, int orderId, String status, Integer approvedBy) throws SQLException {
+        String sql = "UPDATE [order] SET status = ?, approved_by = ? WHERE order_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            if (approvedBy != null) {
+                ps.setInt(2, approvedBy);
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }
+            ps.setInt(3, orderId);
             ps.executeUpdate();
         }
     }
