@@ -395,7 +395,7 @@ public class PaymentDAO {
 
     // --- Compatibility method for sales/POS transaction ---
     public void insert(Connection conn, Payment p) throws SQLException {
-        String sql = "INSERT INTO Payment (OrderID, PaymentAmount, PaymentDate, PaymentStatus, TransactionCode, PaymentType, Description, EmployeeID, BranchID, PaymentMethod) "
+        String sql = "INSERT INTO payment (order_id, payment_amount, payment_date, payment_status, transaction_code, payment_type, description, emp_id, branch_id, payment_method) "
                    + "VALUES (?, ?, GETDATE(), ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, p.getOrderId());
