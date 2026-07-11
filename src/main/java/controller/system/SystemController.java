@@ -2,9 +2,9 @@ package controller.system;
 
 import controller.common.BaseController;
 import dao.system.VatSettingDAO;
-import dao.customer.LoyaltyPointSettingDAO;
+import dao.sales.VoucherDAO;
 import model.VatSetting;
-import model.LoyaltyPointSetting;
+import model.Voucher;
 import model.Employee;
 
 import jakarta.servlet.ServletException;
@@ -17,8 +17,9 @@ import java.io.IOException;
 @WebServlet(name = "SystemController", urlPatterns = {"/notifications", "/configuration/business"})
 public class SystemController extends BaseController {
 
-    private final LoyaltyPointSettingDAO loyaltyDao = new LoyaltyPointSettingDAO();
+    private final VoucherDAO voucherDao = new VoucherDAO();
     private final VatSettingDAO vatDao = new VatSettingDAO();
+    private static final String POINT_CONFIG_CODE = "POINT_CONFIG";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -29,9 +30,17 @@ public class SystemController extends BaseController {
                 forward(request, response, "notifications/list");
                 break;
             case "/configuration/business":
-                // Load loyalty setting
-                LoyaltyPointSetting loyaltySetting = loyaltyDao.getSetting();
-                request.setAttribute("loyaltySetting", loyaltySetting);
+                // Load cấu hình đổi điểm từ voucher POINT_CONFIG
+                Voucher pointConfig = voucherDao.getByCode(POINT_CONFIG_CODE);
+                if (pointConfig == null) {
+                    pointConfig = new Voucher();
+                    pointConfig.setVoucherCode(POINT_CONFIG_CODE);
+                    pointConfig.setVoucherName("Cấu hình đổi điểm ra tiền");
+                    pointConfig.setDiscountType("FIXED");
+                    pointConfig.setDiscountValue(1.00);
+                }
+                request.setAttribute("pointConfig", pointConfig);
+
                 // Load VAT setting
                 VatSetting vatSetting = vatDao.getSetting();
                 request.setAttribute("vatSetting", vatSetting);
@@ -48,21 +57,18 @@ public class SystemController extends BaseController {
             throws ServletException, IOException {
         String path = request.getServletPath();
         HttpSession session = request.getSession();
-        Employee emp = (Employee) session.getAttribute("currentUser");
 
         if ("/configuration/business".equals(path)) {
-            // Xử lý cập nhật điểm tích lũy
-            String amountPerPointStr = request.getParameter("amountPerPoint");
-            if (amountPerPointStr != null && !amountPerPointStr.isBlank()) {
+            // Xử lý cập nhật tỉ lệ đổi điểm
+            String pointValueStr = request.getParameter("pointValue");
+            if (pointValueStr != null && !pointValueStr.isBlank()) {
                 try {
-                    LoyaltyPointSetting loyaltySetting = loyaltyDao.getSetting();
-                    loyaltySetting.setAmountPerPoint(new java.math.BigDecimal(amountPerPointStr));
-                    if (emp != null) loyaltySetting.setUpdatedBy(emp.getEmployeeId());
-                    loyaltyDao.update(loyaltySetting);
-                    session.setAttribute("successMessage", "Cập nhật cài đặt điểm tích lũy thành công!");
+                    double newValue = Double.parseDouble(pointValueStr);
+                    voucherDao.updateDiscountValue(POINT_CONFIG_CODE, newValue);
+                    session.setAttribute("successMessage", "Cập nhật tỉ lệ đổi điểm thành công!");
                 } catch (Exception e) {
                     e.printStackTrace();
-                    session.setAttribute("errorMessage", "Lỗi cập nhật điểm tích lũy: " + e.getMessage());
+                    session.setAttribute("errorMessage", "Lỗi cập nhật tỉ lệ đổi điểm: " + e.getMessage());
                 }
             }
 
@@ -70,6 +76,7 @@ public class SystemController extends BaseController {
             String vatPercentageStr = request.getParameter("vatPercentage");
             if (vatPercentageStr != null && !vatPercentageStr.isBlank()) {
                 try {
+                    Employee emp = (Employee) session.getAttribute("currentUser");
                     VatSetting vatSetting = vatDao.getSetting();
                     vatSetting.setVatPercentage(Double.parseDouble(vatPercentageStr));
                     if (emp != null) vatSetting.setUpdatedBy(emp.getEmployeeId());
