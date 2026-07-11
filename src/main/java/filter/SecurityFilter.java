@@ -33,7 +33,7 @@ public class SecurityFilter implements Filter {
         ROLE_MAP.put("/owner/",          Set.of("owner"));
         ROLE_MAP.put("/admin/",          Set.of("admin", "owner"));
         ROLE_MAP.put("/manager/",        Set.of("admin", "owner", "storemanager"));
-        ROLE_MAP.put("/branch/",         Set.of("admin", "owner"));
+        ROLE_MAP.put("/branch",          Set.of("admin", "owner"));
         ROLE_MAP.put("/supplier/",       Set.of("admin", "owner", "storemanager", "warehousestaff"));
         ROLE_MAP.put("/purchase/",       Set.of("admin", "owner", "storemanager", "warehousestaff"));
         ROLE_MAP.put("/finance/",        Set.of("admin", "owner"));
@@ -102,6 +102,8 @@ public class SecurityFilter implements Filter {
         // 6. Role-based authorization
         String role = employee.getRoleName() != null ? employee.getRoleName().trim().toLowerCase() : "";
         Set<String> allowedRoles = findRequiredRoles(path);
+
+        System.out.println("[SecurityFilter] Path: " + path + ", Role: " + role + ", Allowed: " + allowedRoles);
 
         if (allowedRoles != null && !allowedRoles.contains(role)) {
             resp.sendError(403, "Bạn không có quyền truy cập chức năng này.");
