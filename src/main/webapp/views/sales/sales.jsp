@@ -193,7 +193,7 @@
                     <span id="summaryDiscount" class="text-error font-semibold">0 ₫</span>
                 </div>
                 <div class="flex justify-between text-body-md">
-                    <span class="text-outline">Thuế (VAT 8%)</span>
+                    <span class="text-outline">Thuế (VAT <fmt:formatNumber value="${vatPercentage}" type="number" maxFractionDigits="1"/>%)</span>
                     <span id="summaryVat" class="font-semibold">0 ₫</span>
                 </div>
 
