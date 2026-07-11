@@ -95,58 +95,25 @@
                         <div class="row">
 
                             <div class="col-md-6">
-
                                 <input type="text" name="keyword" value="${keyword}" class="form-control" placeholder="Nhập NCC muốn tìm...">
                             </div>
 
-                            <div class="col-md-2">
-
+                            <div class="col-md-3">
                                 <select name="status" class="form-select" onchange="this.form.submit()">
-
                                     <option value="" ${empty status ? 'selected' : ''}>
-                                        All Status
+                                        Tất cả trạng thái
                                     </option>
-
                                     <option value="active" ${status eq 'active' ? 'selected' : ''}>
                                         Active
                                     </option>
-
                                     <option value="inactive" ${status eq 'inactive' ? 'selected' : ''}>
                                         Inactive
                                     </option>
-
                                 </select>
-
                             </div>
 
-                            <div class="col-md-2">
-
-                                <select name="pageSize" class="form-select" onchange="this.form.submit()">
-
-                                    <option value="5" ${pageSizeOption == '5' ? 'selected' : ''}>
-                                        5 bản ghi/trang
-                                    </option>
-
-                                    <option value="10" ${empty pageSizeOption || pageSizeOption == '10' ? 'selected' : ''}>
-                                        10 bản ghi/trang
-                                    </option>
-
-                                    <option value="30p" ${pageSizeOption == '30p' ? 'selected' : ''}>
-                                        30% số bản ghi
-                                    </option>
-
-                                    <option value="50p" ${pageSizeOption == '50p' ? 'selected' : ''}>
-                                        50% số bản ghi
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-                            <div class="col-md-2">
-
+                            <div class="col-md-3">
                                 <button class="btn btn-danger w-100"> Tìm kiếm </button>
-
                             </div>
 
                         </div>
@@ -220,17 +187,10 @@
                     </table>
 
                     <!-- Pagination -->
-
-                    <div class="d-flex justify-content-between align-items-center mt-4">
-                        <div class="text-muted small">
-                            Trang <strong>${page}</strong> / <strong>${totalPage}</strong>
-                        </div>
-                        <jsp:include page="../common/pagination.jsp">
-                            <jsp:param name="currentPage" value="${page}"/>
-                            <jsp:param name="totalPages" value="${totalPage}"/>
-                            <jsp:param name="url" value="suppliers?keyword=${keyword}&status=${status}&pageSize=${pageSizeOption}&page="/>
-                        </jsp:include>
-                    </div>
+                    <jsp:include page="/views/common/pagination.jsp">
+                        <jsp:param name="baseUrl" value="suppliers"/>
+                        <jsp:param name="queryString" value="&keyword=${empty keyword ? '' : keyword}&status=${empty status ? '' : status}"/>
+                    </jsp:include>
 
                 </div>
 
