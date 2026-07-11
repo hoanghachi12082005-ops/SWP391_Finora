@@ -599,6 +599,23 @@
                         let modalPayMethod = 'CASH';
                         let cartState = null; // Dữ liệu chứa tabs, activeTabId, activeTab
 
+                        function selectPayMethod(method) {
+                            currentPayMethod = method;
+                            const btnCash = document.getElementById('btnCash');
+                            const btnBank = document.getElementById('btnBank');
+                            
+                            const activeClass = 'flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border-2 border-primary ring-2 ring-primary/10 text-primary bg-white font-label-md transition-all text-sm';
+                            const inactiveClass = 'flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border-2 border-outline-variant text-on-surface-variant bg-white font-label-md transition-all hover:border-outline text-sm';
+                            
+                            if (method === 'CASH') {
+                                if (btnCash) btnCash.className = activeClass;
+                                if (btnBank) btnBank.className = inactiveClass;
+                            } else {
+                                if (btnCash) btnCash.className = inactiveClass;
+                                if (btnBank) btnBank.className = activeClass;
+                            }
+                        }
+
                         // ── Init ────────────────────────────────────────────────
                         document.addEventListener('DOMContentLoaded', () => { loadCart(); });
 
@@ -868,8 +885,14 @@
                             const total = cartState.activeTab.totalAmount;
                             document.getElementById('modalTotalDisplay').innerHTML = fmt(total).replace('₫', '') + ' <span class="text-headline-md text-outline">₫</span>';
                             document.getElementById('modalCashInput').value = new Intl.NumberFormat('vi-VN').format(Math.ceil(total));
+                            
+                            // Đồng bộ phương thức thanh toán đã chọn từ trang chính vào modal
+                            selectModalPayMethod(currentPayMethod);
+                            
                             document.getElementById('paymentModal').classList.remove('hidden');
-                            calcChange();
+                            if (currentPayMethod === 'CASH') {
+                                calcChange();
+                            }
                         }
 
                         function closePaymentModal() { document.getElementById('paymentModal').classList.add('hidden'); }
@@ -881,7 +904,7 @@
                             document.getElementById('cashInputSection').style.display = method === 'CASH' ? '' : 'none';
                             document.getElementById('quickCashSection').style.display = method === 'CASH' ? '' : 'none';
                             if (method !== 'CASH') {
-                                document.getElementById('changeDisplay').textContent = 'Thanh toán qua thẻ/CK';
+                                document.getElementById('changeDisplay').textContent = '0 ₫';
                             } else { calcChange(); }
                         }
 

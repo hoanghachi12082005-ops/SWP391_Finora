@@ -532,24 +532,13 @@ public class CustomerController extends HttpServlet {
             return false;
         }
 
-        String action = getParam(request, "action", "list");
+        String roleLower = roleName.trim().toLowerCase();
 
-        // Sales staff is authorized ONLY for the API search/create/edit endpoints used in POS
-        boolean isApiCall = "search-api".equals(action) || "create-api".equals(action) || "update-api".equals(action);
-        boolean isSales = roleName.toLowerCase().contains("sales");
-
-        if (isSales) {
-            if (isApiCall) {
-                return true;
-            } else {
-                response.sendRedirect(request.getContextPath() + "/pos/sale");
-                return false;
-            }
-        }
-
-        // Only Owner, Store Manager can access customer management UI
-        if (!"Owner".equalsIgnoreCase(roleName)
-                && !"StoreManager".equalsIgnoreCase(roleName)) {
+        // Allowed roles for Customer Management: Admin, Owner, StoreManager, SalesStaff
+        if (!"admin".equals(roleLower)
+                && !"owner".equals(roleLower)
+                && !"storemanager".equals(roleLower)
+                && !"salesstaff".equals(roleLower)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
             return false;
         }
