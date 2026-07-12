@@ -1,6 +1,6 @@
 -- =============================================
 -- Script: Thêm cột payment_method vào bảng payment
--- Mục đích: Hỗ trợ phân loại thu/chi theo phương thức (CASH, BANK_TRANSFER)
+-- Mục đích: Hỗ trợ phân loại thu/chi theo phương thức (CASH, BANK_TRANSFER, VNPAY)
 -- =============================================
 USE [DBFinoraV3];
 GO
@@ -9,11 +9,21 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[payment]') AND name = 'payment_method')
 BEGIN
     ALTER TABLE [payment] ADD payment_method NVARCHAR(50) NULL
-        CONSTRAINT CK_Payment_PaymentMethod CHECK (payment_method IN ('CASH', 'BANK_TRANSFER', 'BANKING', 'CARD'));
+        CONSTRAINT CK_Payment_PaymentMethod CHECK (payment_method IN ('CASH', 'BANK_TRANSFER', 'VNPAY', 'BANKING', 'CARD'));
     PRINT N'Đã thêm cột payment_method vào bảng payment.';
 END
 ELSE
     PRINT N'Cột payment_method đã tồn tại.';
+GO
+
+-- Bước 1b: Cập nhật CHECK constraint để bao gồm VNPAY
+IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'CK_Payment_PaymentMethod')
+BEGIN
+    ALTER TABLE [payment] DROP CONSTRAINT CK_Payment_PaymentMethod;
+    ALTER TABLE [payment] ADD CONSTRAINT CK_Payment_PaymentMethod
+        CHECK (payment_method IN ('CASH', 'BANK_TRANSFER', 'VNPAY', 'BANKING', 'CARD'));
+    PRINT N'Đã cập nhật CHECK constraint để bao gồm VNPAY.';
+END
 GO
 
 -- Bước 2: Cập nhật dữ liệu cũ (batch riêng để thấy cột mới)
