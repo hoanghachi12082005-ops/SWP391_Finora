@@ -177,7 +177,7 @@
 
             <!-- Summary Section -->
             <div class="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-3">
-                <!-- Cart Summary (ẩn khi VNPAY QR hiện) -->
+                <!-- Cart Summary (ẩn khi VNPAY hiện) -->
                 <div id="cartSummaryContent">
                 <div class="flex justify-between text-body-md">
                     <span class="text-outline">Số lượng sản phẩm</span>
@@ -244,7 +244,6 @@
                             <div class="w-4 h-4 border-2 border-warning border-t-transparent rounded-full animate-spin"></div>
                             <span>Đang chờ thanh toán...</span>
                         </div>
-                        <p class="text-caption text-outline">VNPAY sẽ mở tab mới, khách chọn ngân hàng/quét QR tại đó. Hệ thống tự cập nhật khi thanh toán xong.</p>
                         <button onclick="cancelVNPayQR()" class="text-sm text-outline hover:text-error transition-colors">Hủy thanh toán</button>
                     </div>
                 </div>
@@ -258,7 +257,7 @@
                         <span class="material-symbols-outlined text-[18px]">payments</span> Tiền mặt
                     </button>
                     <button id="btnBank" onclick="selectPayMethod('BANK_TRANSFER')" class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-outline-variant text-on-surface-variant bg-white font-label-md transition-all hover:border-outline">
-                        <span class="material-symbols-outlined text-[18px]">qr_code_scanner</span> Chuyển khoản
+                        <span class="material-symbols-outlined text-[18px]">account_balance</span> VNPAY
                     </button>
                 </div>
                 <!-- Checkout Button -->
@@ -301,7 +300,7 @@
             </button>
             <button onclick="selectModalPayMethod('BANK_TRANSFER')" id="modalBtnBank" class="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-outline-variant bg-white transition-all hover:border-outline">
                 <div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="material-symbols-outlined text-[28px] text-on-surface-variant">qr_code_scanner</span></div>
-                <div class="text-left"><div class="text-label-md font-bold">Chuyển khoản (VNPAY QR)</div><div class="text-caption text-outline">Quét mã QR thanh toán</div></div>
+                <div class="text-left"><div class="text-label-md font-bold">VNPAY</div><div class="text-caption text-outline">Thanh toán qua VNPAY</div></div>
             </button>
         </div>
         <!-- Right: Calculation -->
@@ -349,25 +348,6 @@
         </div>
     </div>
 </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- ═══════════════ VNPAY STATUS BAR ═════════════════════ -->
-<!-- ═══════════════════════════════════════════════════════ -->
-<div id="vnpayBar" class="hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-outline-variant shadow-2xl px-4 py-3 flex items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-        <div id="vnpayBarSpinner" class="w-5 h-5 border-2 border-warning border-t-transparent rounded-full animate-spin"></div>
-        <span class="font-semibold">VNPAY: <span id="vnpayBarOrderCode" class="text-primary">...</span></span>
-        <span id="vnpayBarStatus" class="text-warning text-sm">Ðang chờ thanh toán...</span>
-    </div>
-    <div class="flex items-center gap-2">
-        <button id="openVNPayBtn" onclick="openVNPayWindow()" class="px-4 py-2 bg-primary text-white rounded-xl font-button-text text-sm hover:bg-secondary transition-colors flex items-center gap-1">
-            <span class="material-symbols-outlined text-[16px]">open_in_new</span> Mở VNPay
-        </button>
-        <button onclick="closeVNPayBar()" class="px-3 py-2 rounded-xl border border-outline-variant text-on-surface-variant font-button-text text-sm hover:bg-surface-container-high transition-colors">
-            Ẩn
-        </button>
-    </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════ -->
@@ -781,7 +761,7 @@ function selectModalPayMethod(method) {
     if (isCash) {
         calcChange();
     } else {
-        document.getElementById('changeDisplay').textContent = 'Chuyển khoản VNPAY QR';
+        document.getElementById('changeDisplay').textContent = 'VNPAY';
     }
 }
 
