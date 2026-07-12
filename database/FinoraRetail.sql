@@ -539,9 +539,6 @@ GO
 INSERT INTO loyalty_point_setting (amount_per_point, point_to_currency) VALUES (100000, 0);
 GO
 
--- VAT setting default: 8%
-INSERT INTO vat_setting (vat_percentage, updated_by) VALUES (8, 1);
-GO
 
 -- ============================================================
 --  SEED DATA
@@ -583,6 +580,10 @@ INSERT INTO Employee (branch_id, role_id, fullName, gender, bod, address, email,
 (1, 5, N'Trần Văn Quân',     N'Nam',  '1993-04-10', N'Hà Nội',     'quan.tv@finora.vn',      '090-100-0016', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
 (2, 5, N'Lê Thị Ráng',       N'Nữ',   '1995-09-22', N'Hồ Chí Minh','rang.lt@finora.vn',       '090-100-0017', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
 (3, 5, N'Nguyễn Văn Sơn',    N'Nam',  '1994-12-05', N'Đà Nẵng',   'son.nv2@finora.vn',       '090-100-0018', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE');
+GO
+
+-- VAT setting default: 8%
+INSERT INTO vat_setting (vat_percentage, updated_by) VALUES (8, 1);
 GO
 
 -- 4. SUPPLIERS
