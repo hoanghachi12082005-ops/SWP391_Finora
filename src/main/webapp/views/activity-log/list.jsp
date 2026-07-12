@@ -199,9 +199,40 @@
                             <li class="page-item <%= currentPage <= 1 ? "disabled" : "" %>">
                                 <a class="page-link" href="<%= baseUrl %>page=<%= currentPage - 1 %>">Trước</a>
                             </li>
-<%      for (int i = 1; i <= totalPages; i++) { %>
+<%
+        int visiblePages = 2; // số trang hiển thị mỗi bên trang hiện tại
+        int startPage = Math.max(1, currentPage - visiblePages);
+        int endPage = Math.min(totalPages, currentPage + visiblePages);
+
+        if (startPage > 1) {
+%>
+                            <li class="page-item">
+                                <a class="page-link" href="<%= baseUrl %>page=1">1</a>
+                            </li>
+<%          if (startPage > 2) { %>
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+<%          }
+        }
+
+        for (int i = startPage; i <= endPage; i++) {
+%>
                             <li class="page-item <%= i == currentPage ? "active" : "" %>">
                                 <a class="page-link" href="<%= baseUrl %>page=<%= i %>"><%= i %></a>
+                            </li>
+<%
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+%>
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+<%          } %>
+                            <li class="page-item">
+                                <a class="page-link" href="<%= baseUrl %>page=<%= totalPages %>"><%= totalPages %></a>
                             </li>
 <%      } %>
                             <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
