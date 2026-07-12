@@ -813,20 +813,13 @@ function startVNPayFlow(vnpayUrl, orderCode) {
     document.getElementById('qrStatusBadge').innerHTML = '<div class="w-4 h-4 border-2 border-warning border-t-transparent rounded-full animate-spin"></div><span>Đang chờ thanh toán...</span>';
     document.getElementById('qrStatusBadge').className = 'flex items-center justify-center gap-2 py-2.5 px-4 bg-warning/10 rounded-xl text-sm text-warning font-semibold';
 
-    // Hiện bottom bar
-    document.getElementById('vnpayBarOrderCode').textContent = orderCode;
-    document.getElementById('vnpayBarStatus').textContent = 'Đang chờ thanh toán...';
-    document.getElementById('vnpayBarSpinner').className = 'w-5 h-5 border-2 border-warning border-t-transparent rounded-full animate-spin';
-    document.getElementById('vnpayBarSpinner').textContent = '';
-    document.getElementById('vnpayBar').classList.remove('hidden');
-
     // Bắt đầu poll trạng thái
     if (vnpayPollTimer) clearInterval(vnpayPollTimer);
     vnpayPollTimer = setInterval(() => pollVNPayStatus(orderCode), 3000);
 }
 
 function openVNPayWindow() {
-    const orderCode = document.getElementById('vnpayBarOrderCode').textContent;
+    const orderCode = document.getElementById('qrOrderCode').textContent;
     window.open(CTX+'/vnpay/pay?orderCode='+orderCode, '_blank');
 }
 
@@ -842,12 +835,6 @@ async function pollVNPayStatus(orderCode) {
             document.getElementById('qrStatusBadge').innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span><span>Thanh toán thành công!</span>';
             document.getElementById('qrStatusBadge').className = 'flex items-center justify-center gap-2 py-2.5 px-4 bg-success/10 rounded-xl text-sm text-success font-semibold';
 
-            // Cập nhật bottom bar
-            document.getElementById('vnpayBarSpinner').className = 'w-5 h-5 text-success material-symbols-outlined';
-            document.getElementById('vnpayBarSpinner').textContent = 'check_circle';
-            document.getElementById('vnpayBarStatus').textContent = 'Thanh toán thành công!';
-            document.getElementById('vnpayBarStatus').className = 'text-success text-sm font-semibold';
-
             setTimeout(() => {
                 closeVNPayBar();
                 showToast('Thanh toán VNPAY thành công!', 'Mã đơn: '+orderCode);
@@ -859,11 +846,6 @@ async function pollVNPayStatus(orderCode) {
 
             document.getElementById('qrStatusBadge').innerHTML = '<span class="material-symbols-outlined text-[18px]">error</span><span>Thanh toán thất bại</span>';
             document.getElementById('qrStatusBadge').className = 'flex items-center justify-center gap-2 py-2.5 px-4 bg-error/10 rounded-xl text-sm text-error font-semibold';
-
-            document.getElementById('vnpayBarSpinner').className = 'w-5 h-5 text-error material-symbols-outlined';
-            document.getElementById('vnpayBarSpinner').textContent = 'error';
-            document.getElementById('vnpayBarStatus').textContent = 'Thanh toán thất bại';
-            document.getElementById('vnpayBarStatus').className = 'text-error text-sm font-semibold';
         }
     } catch(e) { console.error('Poll VNPay status error:', e); }
 }
@@ -874,7 +856,6 @@ function closeVNPayBar() {
     // Ẩn VNPAY panel, hiện lại cart
     document.getElementById('vnpayQRPanel').classList.add('hidden');
     document.getElementById('cartSummaryContent').classList.remove('hidden');
-    document.getElementById('vnpayBar').classList.add('hidden');
     loadCart();
 }
 
