@@ -79,9 +79,11 @@ public class VNPayReturnServlet extends HttpServlet {
         boolean isSuccess = isValidSig && "00".equals(vnp_ResponseCode)
                 && ("00".equals(vnp_TransactionStatus) || vnp_TransactionStatus == null);
 
-        // ── Cập nhật trạng thái đơn hàng nếu thanh toán thành công ──
+        // ── Cập nhật trạng thái đơn hàng ──
         if (isSuccess && vnp_TxnRef != null) {
             updateOrderSuccess(vnp_TxnRef, vnp_TransactionNo, vnp_Amount, vnp_BankCode);
+        } else if (!isSuccess && vnp_TxnRef != null) {
+            updateOrderFailed(vnp_TxnRef, vnp_ResponseCode);
         }
 
         req.setAttribute("status", isSuccess ? "success" : "error");
@@ -151,6 +153,36 @@ public class VNPayReturnServlet extends HttpServlet {
             e.printStackTrace();
         } finally {
             if (conn != null) try { conn.close(); } catch (SQLException ignored) {}
+        }
+    }
+
+    /**
+     * Cập nhật đơn hàng thất bại khi VNPay trả về lỗi hoặc người dùng hủy.
+     * - Mã 24 (khách hủy) → CANCELLED
+     * - Các mã lỗi khác → FAILED
+     */
+    private void updateOrderFailed(String orderCode, String responseCode) {
+        try (Connection conn = DBContext.getConnection()) {
+            OrderDAO orderDAO = new OrderDAO();
+            int orderId = orderDAO.findIdByCode(conn, orderCode);
+            if (orderId == 0) {
+                System.err.println("[VNPayReturn] Không tìm thấy order: " + orderCode);
+                return;
+            }
+
+            String currentStatus = orderDAO.getStatus(conn, orderId);
+            if ("COMPLETED".equals(currentStatus) || "PAID".equals(currentStatus)) {
+                System.out.println("[VNPayReturn] Order " + orderCode + " đã hoàn tất, bỏ qua.");
+                return;
+            }
+
+            String newStatus = "24".equals(responseCode) ? "CANCELLED" : "FAILED";
+            orderDAO.updateStatus(conn, orderId, newStatus);
+            System.out.println("[VNPayReturn] Đã cập nhật order " + orderCode + " -> " + newStatus
+                    + " (mã VNPay: " + responseCode + ")");
+
+        } catch (SQLException e) {
+            System.err.println("[VNPayReturn] Lỗi SQL khi cập nhật order " + orderCode + ": " + e.getMessage());
         }
     }
 
