@@ -20,6 +20,18 @@ public class StockTransfer {
     private Integer approvedBy;
     private String approvedByName;
 
+    // Grouping transient fields
+    private java.util.List<StockTransferDetail> details;
+    private java.util.List<StockTransfer> subTransfers;
+    private String displayStatus;
+
+    public java.util.List<StockTransferDetail> getDetails() { return details; }
+    public void setDetails(java.util.List<StockTransferDetail> details) { this.details = details; }
+    public java.util.List<StockTransfer> getSubTransfers() { return subTransfers; }
+    public void setSubTransfers(java.util.List<StockTransfer> subTransfers) { this.subTransfers = subTransfers; }
+    public String getDisplayStatus() { return displayStatus; }
+    public void setDisplayStatus(String displayStatus) { this.displayStatus = displayStatus; }
+
     public Integer getApprovedBy() { return approvedBy; }
     public void setApprovedBy(Integer approvedBy) { this.approvedBy = approvedBy; }
     public String getApprovedByName() { return approvedByName; }
@@ -123,4 +135,15 @@ public class StockTransfer {
     public void setTransferProgress(String transferProgress) {
         this.transferProgress = transferProgress;
     }
+
+    private int fromBranchId;
+    private int toBranchId;
+    private int creatorBranchId;
+
+    public int getFromBranchId() { return fromBranchId; }
+    public void setFromBranchId(int fromBranchId) { this.fromBranchId = fromBranchId; }
+    public int getToBranchId() { return toBranchId; }
+    public void setToBranchId(int toBranchId) { this.toBranchId = toBranchId; }
+    public int getCreatorBranchId() { return creatorBranchId; }
+    public void setCreatorBranchId(int creatorBranchId) { this.creatorBranchId = creatorBranchId; }
 }

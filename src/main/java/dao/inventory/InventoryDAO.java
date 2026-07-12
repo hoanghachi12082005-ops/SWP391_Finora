@@ -227,6 +227,7 @@ public class InventoryDAO {
         List<dto.inventory.ExchangeProductDTO> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
             "SELECT p.product_id as ProductID, p.product_name as ProductName, " +
+            "COALESCE(p.selling_price, 0) as SellingPrice, COALESCE(p.import_price, 0) as ImportPrice, " +
             "COALESCE(i1.quantity_in_stock, 0) as MyStock, " +
             "w.warehouse_id as PartnerWarehouseId, w.warehouse_name as PartnerWarehouseName, " +
             "COALESCE(i2.quantity_in_stock, 0) as PartnerStock " +
@@ -262,7 +263,10 @@ public class InventoryDAO {
                     dto.inventory.ExchangeProductDTO dto = new dto.inventory.ExchangeProductDTO();
                     dto.setProductId(rs.getInt("ProductID"));
                     dto.setProductName(rs.getString("ProductName"));
+                    dto.setSellingPrice(rs.getDouble("SellingPrice"));
+                    dto.setImportPrice(rs.getDouble("ImportPrice"));
                     dto.setMyStock(rs.getInt("MyStock"));
+                    dto.setProductId(rs.getInt("ProductID"));
                     dto.setPartnerWarehouseId(rs.getInt("PartnerWarehouseId"));
                     dto.setPartnerWarehouseName(rs.getString("PartnerWarehouseName"));
                     dto.setPartnerStock(rs.getInt("PartnerStock"));

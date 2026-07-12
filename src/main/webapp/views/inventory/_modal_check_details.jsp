@@ -11,41 +11,43 @@
     <div class="row g-3 mb-4 p-3 bg-light rounded-3 border">
         <div class="col-md-6 col-lg-3">
             <span class="text-muted small d-block">Mã Phiếu:</span>
-            <strong class="text-primary fs-6">${check.checkCode}</strong>
+            <strong class="text-primary fs-6" id="printCheckCode">${check.checkCode}</strong>
         </div>
         <div class="col-md-6 col-lg-3">
             <span class="text-muted small d-block">Trạng Thái:</span>
-            <c:choose>
-                <c:when test="${check.status == 'PENDING'}">
-                    <span class="badge bg-warning text-dark" style="border-radius: 6px; padding: 4px 8px; font-size:12px;">CHỜ DUYỆT</span>
-                </c:when>
-                <c:when test="${check.status == 'APPROVED'}">
-                    <span class="badge bg-success text-white" style="border-radius: 6px; padding: 4px 8px; font-size:12px;">ĐÃ DUYỆT</span>
-                </c:when>
-                <c:when test="${check.status == 'CANCELLED'}">
-                    <span class="badge bg-danger text-white" style="border-radius: 6px; padding: 4px 8px; font-size:12px;">ĐÃ HỦY</span>
-                </c:when>
-            </c:choose>
+            <div id="printCheckStatus">
+                <c:choose>
+                    <c:when test="${check.status == 'PENDING'}">
+                        <span class="badge bg-warning text-dark" style="border-radius: 6px; padding: 4px 8px; font-size:12px;">CHỜ DUYỆT</span>
+                    </c:when>
+                    <c:when test="${check.status == 'APPROVED'}">
+                        <span class="badge bg-success text-white" style="border-radius: 6px; padding: 4px 8px; font-size:12px;">ĐÃ DUYỆT</span>
+                    </c:when>
+                    <c:when test="${check.status == 'CANCELLED'}">
+                        <span class="badge bg-danger text-white" style="border-radius: 6px; padding: 4px 8px; font-size:12px;">ĐÃ HỦY</span>
+                    </c:when>
+                </c:choose>
+            </div>
         </div>
         <div class="col-md-6 col-lg-3">
             <span class="text-muted small d-block">Thời Gian Lập:</span>
-            <strong class="text-dark">${check.formattedCreatedAt}</strong>
+            <strong class="text-dark" id="printCheckCreatedAt">${check.formattedCreatedAt}</strong>
         </div>
         <div class="col-md-6 col-lg-3">
             <span class="text-muted small d-block">Kho Hàng:</span>
-            <strong class="text-dark">${check.warehouseName}</strong>
+            <strong class="text-dark" id="printCheckWarehouseName">${check.warehouseName}</strong>
         </div>
         <div class="col-md-6 col-lg-4 mt-2">
             <span class="text-muted small d-block">Người Lập Phiếu:</span>
-            <strong class="text-dark">${check.createdByName}</strong>
+            <strong class="text-dark" id="printCheckCreatedByName">${check.createdByName}</strong>
         </div>
         <div class="col-md-6 col-lg-4 mt-2">
             <span class="text-muted small d-block">Người Phê Duyệt:</span>
-            <strong class="text-dark">${not empty check.approvedByName ? check.approvedByName : 'Chưa có'}</strong>
+            <strong class="text-dark" id="printCheckApprovedByName">${not empty check.approvedByName ? check.approvedByName : 'Chưa có'}</strong>
         </div>
         <div class="col-md-12 col-lg-4 mt-2">
             <span class="text-muted small d-block">Tổng Sai Lệch:</span>
-            <strong class="text-danger">${check.totalDiscrepancy} SP</strong>
+            <strong class="text-danger" id="printCheckTotalDiscrepancy">${check.totalDiscrepancy} SP</strong>
         </div>
     </div>
 
@@ -109,117 +111,4 @@
         </form>
     </c:if>
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px;">Đóng</button>
-</div>
 
-<script>
-function printCheckVoucher() {
-    let printWindow = window.open('', '_blank');
-    let html = '<html>'
-             + '<head>'
-             + '    <title>Phiếu Kiểm Kho - ' + '${check.checkCode}' + '</title>'
-             + '    <style>'
-             + '        body { font-family: "Arial", sans-serif; padding: 20px; color: #333; }'
-             + '        .header { text-align: center; margin-bottom: 30px; }'
-             + '        .header h2 { margin: 0 0 10px; text-transform: uppercase; }'
-             + '        .info-table { width: 100%; margin-bottom: 20px; border-collapse: collapse; }'
-             + '        .info-table td { padding: 6px; border: none; font-size: 14px; }'
-             + '        .main-table { width: 100%; border-collapse: collapse; margin-top: 20px; }'
-             + '        .main-table th, .main-table td { border: 1px solid #333; padding: 10px; text-align: left; font-size: 13px; }'
-             + '        .main-table th { background-color: #f2f2f2; text-transform: uppercase; font-weight: bold; }'
-             + '        .text-center { text-align: center; }'
-             + '        .text-end { text-align: right; }'
-             + '        .footer-sign { margin-top: 50px; display: flex; justify-content: space-between; }'
-             + '        .sign-box { width: 45%; text-align: center; }'
-             + '        @media print {'
-             + '            @page { size: A4; margin: 15mm; }'
-             + '            body { padding: 0; }'
-             + '        }'
-             + '    </style>'
-             + '</head>'
-             + '<body>'
-             + '    <div class="header">'
-             + '        <h2>Phiếu Kiểm Kho Sản Phẩm</h2>'
-             + '        <div><strong>Mã phiếu:</strong> ' + '${check.checkCode}' + '</div>'
-             + '    </div>'
-             + '    '
-             + '    <table class="info-table">'
-             + '        <tr>'
-             + '            <td width="50%"><strong>Kho hàng:</strong> ' + '${check.warehouseName}' + '</td>'
-             + '            <td width="50%"><strong>Thời gian lập:</strong> ' + '${check.formattedCreatedAt}' + '</td>'
-             + '        </tr>'
-             + '        <tr>'
-             + '            <td><strong>Người lập:</strong> ' + '${check.createdByName}' + '</td>'
-             + '            <td><strong>Người duyệt:</strong> ' + '${not empty check.approvedByName ? check.approvedByName : "Chưa phê duyệt"}' + '</td>'
-             + '        </tr>'
-             + '        <tr>'
-             + '            <td><strong>Trạng thái:</strong> ' + '${check.status == "PENDING" ? "Chờ duyệt" : (check.status == "APPROVED" ? "Đã duyệt" : "Đã hủy")}' + '</td>'
-             + '            <td><strong>Tổng sai lệch:</strong> <span style="color: red; font-weight: bold;">' + '${check.totalDiscrepancy}' + ' SP</span></td>'
-             + '        </tr>'
-             + '    </table>'
-             + '    '
-             + '    <table class="main-table">'
-             + '        <thead>'
-             + '            <tr>'
-             + '                <th width="5%" class="text-center">STT</th>'
-             + '                <th width="35%">Sản Phẩm</th>'
-             + '                <th width="15%">Danh Mục</th>'
-             + '                <th width="15%" class="text-center">Tồn Hệ Thống</th>'
-             + '                <th width="15%" class="text-center">Tồn Thực Tế</th>'
-             + '                <th width="15%" class="text-center">Chênh Lệch</th>'
-             + '            </tr>'
-             + '        </thead>'
-             + '        <tbody>';
-             
-    const productRows = document.querySelectorAll('.modal-body tbody tr');
-    let stt = 1;
-    productRows.forEach(tr => {
-        const cols = tr.querySelectorAll('td');
-        if (cols.length < 5) return;
-        const name = cols[0].innerText.trim();
-        const cat = cols[1].innerText.trim();
-        const sys = cols[2].innerText.trim();
-        const act = cols[3].innerText.trim();
-        const diff = cols[4].innerText.trim();
-        
-        html += '<tr>'
-             + '    <td class="text-center">' + stt + '</td>'
-             + '    <td><strong>' + name + '</strong></td>'
-             + '    <td>' + cat + '</td>'
-             + '    <td class="text-center">' + sys + '</td>'
-             + '    <td class="text-center">' + act + '</td>'
-             + '    <td class="text-center" style="font-weight: bold; color: ' + (diff.includes("0") ? "green" : "red") + ';">' + diff + '</td>'
-             + '</tr>';
-        stt++;
-    });
-    
-    html += '        </tbody>'
-         + '    </table>'
-         + '    '
-         + '    <div class="footer-sign">'
-         + '        <div class="sign-box">'
-         + '            <strong>Nhân viên kiểm kho</strong><br>'
-         + '            <small>(Ký và ghi rõ họ tên)</small>'
-         + '            <br><br><br><br>'
-         + '            ....................................................'
-         + '        </div>'
-         + '        <div class="sign-box">'
-         + '            <strong>Quản lý / Người phê duyệt</strong><br>'
-         + '            <small>(Ký và ghi rõ họ tên)</small>'
-         + '            <br><br><br><br>'
-         + '            ....................................................'
-         + '        </div>'
-         + '    </div>'
-         + '    '
-         + '    <' + 'script>'
-         + '        window.onload = function() {'
-         + '            window.print();'
-         + '            setTimeout(function() { window.close(); }, 500);'
-         + '        }'
-         + '    </' + 'script>'
-         + '</body>'
-         + '</html>';
-         
-    printWindow.document.write(html);
-    printWindow.document.close();
-}
-</script>

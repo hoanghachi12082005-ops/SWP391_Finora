@@ -28,12 +28,12 @@
             <input type="hidden" name="tab" value="approval">
             
             <div class="col-md-4 col-sm-6">
-                <label class="form-label small text-muted fw-semibold mb-1 ms-1">Mã phiếu điều chuyển</label>
+                <label class="form-label small text-muted fw-semibold mb-1 ms-1">Mã phiếu</label>
                 <div class="position-relative">
                     <span class="material-icons position-absolute text-muted" style="left: 16px; top: 50%; transform: translateY(-50%); font-size: 18px; pointer-events: none;">search</span>
                     <input type="text" name="transferCodeQuery" class="form-control rounded-pill inventory-search-input w-100" 
                            style="padding-left: 48px; padding-right: 20px; padding-top: 10px; padding-bottom: 10px; font-size: 14.5px; box-shadow: none;" 
-                           placeholder="Tìm mã phiếu điều chuyển..." value="${transferCodeQuery}">
+                           placeholder="Tìm mã phiếu..." value="${transferCodeQuery}">
                 </div>
             </div>
             
