@@ -15,13 +15,14 @@ BEGIN
     ADD status NVARCHAR(20) DEFAULT 'ACTIVE'
         CHECK (status IN ('ACTIVE', 'INACTIVE'));
     
-    -- Set mặc định ACTIVE cho các product hiện có
-    UPDATE product SET status = 'ACTIVE' WHERE status IS NULL;
-    
     PRINT N'Đã thêm cột status cho bảng product.';
 END
 ELSE
     PRINT N'Cột status đã tồn tại.';
+GO
+
+-- Set mặc định ACTIVE cho các product hiện có
+UPDATE product SET status = 'ACTIVE' WHERE status IS NULL;
 GO
 
 -- 2. Trigger: khi category update status, cập nhật product theo

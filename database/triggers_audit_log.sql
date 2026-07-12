@@ -8,6 +8,26 @@ USE DBFinoraV3;
 GO
 
 -- ============================================================
+-- Ensure product table has status column (used by audit trigger)
+-- ============================================================
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns
+    WHERE object_id = OBJECT_ID(N'product') AND name = N'status'
+)
+BEGIN
+    ALTER TABLE product
+    ADD status NVARCHAR(20) DEFAULT 'ACTIVE'
+        CHECK (status IN ('ACTIVE', 'INACTIVE'));
+
+    PRINT N'Đã thêm cột status cho bảng product.';
+END
+GO
+
+-- Set mặc định ACTIVE cho các product hiện có
+UPDATE product SET status = 'ACTIVE' WHERE status IS NULL;
+GO
+
+-- ============================================================
 -- Helper: kiem tra thay doi thuc su cho UPDATE
 -- ============================================================
 CREATE OR ALTER FUNCTION fn_has_changes(@old NVARCHAR(MAX), @new NVARCHAR(MAX))
