@@ -202,8 +202,8 @@ public class PaymentDAO {
         String sql = """
             SELECT 
                 DATEPART(week, payment_date) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, payment_date), 0)) + 1 AS WeekNum,
-                SUM(CASE WHEN payment_type = 'INCOME' THEN payment_amount ELSE 0 END) AS TotalIncome,
-                SUM(CASE WHEN payment_type = 'EXPENSE' THEN payment_amount ELSE 0 END) AS TotalExpense
+                SUM(CASE WHEN PaymentType = 'INCOME' THEN payment_amount ELSE 0 END) AS TotalIncome,
+                SUM(CASE WHEN PaymentType = 'EXPENSE' THEN payment_amount ELSE 0 END) AS TotalExpense
             FROM payment
             WHERE MONTH(payment_date) = MONTH(GETDATE()) AND YEAR(payment_date) = YEAR(GETDATE())
             GROUP BY DATEPART(week, payment_date) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, payment_date), 0)) + 1
@@ -291,7 +291,7 @@ public class PaymentDAO {
      * Sinh mã giao dịch tăng tự động (ví dụ: PT00001, PC00001)
      */
     private String generateTransactionCode(String type, String prefix) {
-        String sql = "SELECT MAX(transaction_code) FROM payment WHERE payment_type = ? AND transaction_code LIKE ?";
+        String sql = "SELECT MAX(transaction_code) FROM payment WHERE PaymentType = ? AND transaction_code LIKE ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
