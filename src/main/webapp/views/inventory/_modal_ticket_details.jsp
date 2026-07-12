@@ -32,7 +32,7 @@
                 <div>
                     <c:choose>
                         <c:when test="${ticket.displayStatus == 'PENDING_OWNER'}">
-                            <span class="badge bg-warning text-dark" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">CHỜ OWNER DUYỆT</span>
+                            <span class="badge bg-warning text-dark" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">CHỜ DUYỆT</span>
                         </c:when>
                         <c:when test="${ticket.displayStatus == 'PENDING_PARTNER'}">
                             <span class="badge bg-info text-dark" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">CHỜ ĐỐI TÁC DUYỆT</span>
@@ -189,7 +189,7 @@
                     <c:forEach var="status" items="${group.statuses}">
                         <c:choose>
                             <c:when test="${status == 'PENDING_OWNER'}">
-                                <span class="badge bg-warning text-dark">Chờ Owner duyệt</span>
+                                <span class="badge bg-warning text-dark">Chờ duyệt</span>
                             </c:when>
                             <c:when test="${status == 'PENDING_PARTNER'}">
                                 <span class="badge bg-info text-dark">Chờ đối tác duyệt</span>
@@ -260,7 +260,7 @@
                                 <td class="text-center">
                                     <c:choose>
                                         <c:when test="${item.status == 'PENDING_OWNER'}">
-                                            <span class="badge bg-warning text-dark" style="font-size: 11px; padding: 4px 8px;">Chờ duyệt (Owner)</span>
+                                            <span class="badge bg-warning text-dark" style="font-size: 11px; padding: 4px 8px;">Chờ duyệt (Quản lý)</span>
                                         </c:when>
                                         <c:when test="${item.status == 'PENDING_PARTNER'}">
                                             <span class="badge bg-info text-dark" style="font-size: 11px; padding: 4px 8px;">Chờ duyệt (Đối tác)</span>
@@ -298,125 +298,116 @@
             </div>
             
             <!-- Card-specific approval actions -->
-            <%
-                java.util.Map<String, Object> groupMap = (java.util.Map<String, Object>) pageContext.getAttribute("group");
-                model.StockTransfer subRep = (model.StockTransfer) groupMap.get("repSub");
-                boolean showCardApproval = false;
-                String cardActionApprove = "";
-                String cardActionReject = "";
-                String cardApprovalTypeLabel = "";
-                
-                if (currentUser != null && subRep != null && 
-                    ("Owner".equalsIgnoreCase(currentUser.getRoleName()) || "Admin".equalsIgnoreCase(currentUser.getRoleName()) || "StoreManager".equalsIgnoreCase(currentUser.getRoleName()))) {
+            <c:set var="subRep" value="${group.repSub}" />
+            <c:set var="showCardApproval" value="false" />
+            <c:set var="cardActionApprove" value="" />
+            <c:set var="cardActionReject" value="" />
+            <c:set var="cardApprovalTypeLabel" value="" />
+
+            <c:if test="${not empty sessionScope.currentUser && not empty subRep}">
+                <c:set var="userRole" value="${sessionScope.currentUser.roleName}" />
+                <c:if test="${userRole == 'Owner' || userRole == 'Admin' || userRole == 'StoreManager'}">
                     
-                    int currentBranchId = 0;
-                    if (selectedWarehouseId != null) {
-                        if (selectedWarehouseId == subRep.getFromWarehouseId()) {
-                            currentBranchId = subRep.getFromBranchId();
-                        } else if (selectedWarehouseId == subRep.getToWarehouseId()) {
-                            currentBranchId = subRep.getToBranchId();
-                        }
-                    }
-                    
-                    boolean fromIsCreator = (subRep.getCreatorBranchId() == subRep.getFromBranchId());
-                    int partnerBranchId = fromIsCreator ? subRep.getToBranchId() : subRep.getFromBranchId();
-                    int creatorBranchId = fromIsCreator ? subRep.getFromBranchId() : subRep.getToBranchId();
-                    
-                    if ("PENDING_OWNER".equals(subRep.getStatus())) {
-                        if (isSystemOwner || (selectedWarehouseId != null && currentBranchId == creatorBranchId)) {
-                            showCardApproval = true;
-                            cardActionApprove = "approveTransfer";
-                            cardActionReject = "rejectTransfer";
-                            cardApprovalTypeLabel = "Duyệt";
-                        }
-                    } else if ("PENDING_PARTNER".equals(subRep.getStatus())) {
-                        if (isSystemOwner || (selectedWarehouseId != null && currentBranchId == partnerBranchId)) {
-                            showCardApproval = true;
-                            cardActionApprove = "partnerApproveTransfer";
-                            cardActionReject = "partnerRejectTransfer";
-                            cardApprovalTypeLabel = "Duyệt";
-                        }
-                    }
-                }
-                
-                if (showCardApproval) {
-            %>
+                    <c:set var="currentBranchId" value="0" />
+                    <c:if test="${not empty sessionScope.selectedWarehouseId}">
+                        <c:choose>
+                            <c:when test="${sessionScope.selectedWarehouseId == subRep.fromWarehouseId}">
+                                <c:set var="currentBranchId" value="${subRep.fromBranchId}" />
+                            </c:when>
+                            <c:when test="${sessionScope.selectedWarehouseId == subRep.toWarehouseId}">
+                                <c:set var="currentBranchId" value="${subRep.toBranchId}" />
+                            </c:when>
+                        </c:choose>
+                    </c:if>
+
+                    <c:set var="fromIsCreator" value="${subRep.creatorBranchId == subRep.fromBranchId}" />
+                    <c:choose>
+                        <c:when test="${fromIsCreator}">
+                            <c:set var="partnerBranchId" value="${subRep.toBranchId}" />
+                            <c:set var="creatorBranchId" value="${subRep.fromBranchId}" />
+                        </c:when>
+                        <c:otherwise>
+                            <c:set var="partnerBranchId" value="${subRep.fromBranchId}" />
+                            <c:set var="creatorBranchId" value="${subRep.toBranchId}" />
+                        </c:otherwise>
+                    </c:choose>
+
+                    <c:set var="isSystemOwner" value="${userRole == 'Owner' || userRole == 'Admin'}" />
+
+                    <c:if test="${subRep.status == 'PENDING_PARTNER'}">
+                        <c:if test="${isSystemOwner || (not empty sessionScope.currentUser && sessionScope.currentUser.branchId == partnerBranchId)}">
+                            <c:set var="showCardApproval" value="true" />
+                            <c:set var="cardActionApprove" value="partnerApproveTransfer" />
+                            <c:set var="cardActionReject" value="partnerRejectTransfer" />
+                            <c:set var="cardApprovalTypeLabel" value="Duyệt" />
+                        </c:if>
+                    </c:if>
+                </c:if>
+            </c:if>
+
+            <c:if test="${showCardApproval}">
                 <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top border-light-subtle">
                     <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
                         <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-                        <input type="hidden" name="action" value="<%= cardActionApprove %>">
-                        <input type="hidden" name="transferId" value="<%= subRep.getStockTransferId() %>">
-                        <input type="hidden" name="currentWarehouseId" value="<%= selectedWarehouseId %>">
+                        <input type="hidden" name="action" value="${cardActionApprove}">
+                        <input type="hidden" name="transferId" value="${subRep.stockTransferId}">
+                        <input type="hidden" name="currentWarehouseId" value="${sessionScope.selectedWarehouseId}">
                         <button class="btn btn-sm btn-success px-3" style="border-radius: 6px;" type="submit" onclick="return confirm('Xác nhận duyệt phần chuyển kho này?')">
                             <span class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 4px;">check</span>
-                            <%= cardApprovalTypeLabel %>
+                            ${cardApprovalTypeLabel}
                         </button>
                     </form>
                     <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
                         <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-                        <input type="hidden" name="action" value="<%= cardActionReject %>">
-                        <input type="hidden" name="transferId" value="<%= subRep.getStockTransferId() %>">
-                        <input type="hidden" name="currentWarehouseId" value="<%= selectedWarehouseId %>">
+                        <input type="hidden" name="action" value="${cardActionReject}">
+                        <input type="hidden" name="transferId" value="${subRep.stockTransferId}">
+                        <input type="hidden" name="currentWarehouseId" value="${sessionScope.selectedWarehouseId}">
                         <button class="btn btn-sm btn-danger px-3" style="border-radius: 6px;" type="submit" onclick="return confirm('Xác nhận từ chối phần chuyển kho này?')">
                             <span class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 4px;">close</span>
                             Từ Chối
                         </button>
                     </form>
                 </div>
-            <%
-                }
-            %>
+            </c:if>
         </div>
     </c:forEach>
 </div>
+
+<!-- General proposal approval (PENDING_OWNER) for Owner/Admin or Proposing Store Manager -->
+<c:set var="isSystemOwner" value="${sessionScope.currentUser.roleName == 'Owner' || sessionScope.currentUser.roleName == 'Admin'}" />
+<c:set var="isCreatorManager" value="${sessionScope.currentUser.roleName == 'StoreManager' && sessionScope.currentUser.branchId == ticket.creatorBranchId}" />
+<c:if test="${ticket.displayStatus == 'PENDING_OWNER' && (isSystemOwner || isCreatorManager)}">
+    <div class="d-flex justify-content-end gap-2 px-4 pb-3 mb-2 border-bottom border-light-subtle">
+        <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+            <input type="hidden" name="action" value="approveTransfer">
+            <input type="hidden" name="transferId" value="${ticket.stockTransferId}">
+            <input type="hidden" name="currentWarehouseId" value="${sessionScope.selectedWarehouseId}">
+            <button class="btn btn-success px-4" style="border-radius: 8px; font-weight: 500;" type="submit" onclick="return confirm('Xác nhận duyệt đề xuất chuyển kho này?')">
+                <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">check</span>
+                Duyệt Đề Xuất
+            </button>
+        </form>
+        <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+            <input type="hidden" name="action" value="rejectTransfer">
+            <input type="hidden" name="transferId" value="${ticket.stockTransferId}">
+            <input type="hidden" name="currentWarehouseId" value="${sessionScope.selectedWarehouseId}">
+            <button class="btn btn-danger px-4" style="border-radius: 8px; font-weight: 500;" type="submit" onclick="return confirm('Xác nhận từ chối đề xuất chuyển kho này?')">
+                <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">close</span>
+                Từ Chối
+            </button>
+        </form>
+    </div>
+</c:if>
+
 <div class="modal-footer border-top-0 pt-0 d-flex justify-content-end align-items-center">
     <div class="d-flex gap-2">
-        <button class="btn btn-outline-primary px-4" style="border-radius: 8px;" type="button" onclick="printTransferTicket()">
-            <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">print</span>
+        <a href="${pageContext.request.contextPath}/inventory?action=printTicket&ticketId=${ticket.stockTransferId}" target="_blank" 
+           class="btn btn-outline-primary px-4 d-inline-flex align-items-center justify-content-center" style="border-radius: 8px; text-decoration: none;">
+            <span class="material-icons me-1" style="font-size: 16px;">print</span>
             In Phiếu
-        </button>
+        </a>
         <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 8px;">Đóng</button>
     </div>
 </div>
-
-<script>
-function printTransferTicket() {
-    // Get ticket code for title
-    var ticketCode = document.querySelector('#ticketDetailsModal .modal-title')?.innerText || 'Phieu_Dieu_Chuyen';
-    var modalBody = document.querySelector('#ticketDetailsModal .modal-body').innerHTML;
-    
-    // Open a print window
-    var printWindow = window.open('', '_blank', 'width=900,height=700');
-    printWindow.document.write('<html><head><title>' + ticketCode + '</title>');
-    // Load Bootstrap style
-    printWindow.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
-    printWindow.document.write('<style>');
-    printWindow.document.write('  body { padding: 40px; font-family: "Segoe UI", system-ui, sans-serif; color: #333; }');
-    printWindow.document.write('  .badge { border: 1px solid #dee2e6; padding: 6px 12px; font-size: 12px; }');
-    printWindow.document.write('  .bg-white { background-color: #fff !important; }');
-    printWindow.document.write('  .shadow-sm { shadow: none !important; }');
-    printWindow.document.write('  .border { border: 1px solid #dee2e6 !important; }');
-    printWindow.document.write('  .table th { background-color: #f8f9fa !important; }');
-    printWindow.document.write('  @media print {');
-    printWindow.document.write('    body { padding: 0; }');
-    printWindow.document.write('    .no-print { display: none !important; }');
-    printWindow.document.write('  }');
-    printWindow.document.write('</style>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write('<div class="container">');
-    printWindow.document.write('  <div class="text-center mb-4">');
-    printWindow.document.write('    <h2 class="fw-bold">PHIẾU ĐIỀU CHUYỂN KHO</h2>');
-    printWindow.document.write('    <p class="text-muted">Mã phiếu: ' + ticketCode + '</p>');
-    printWindow.document.write('  </div>');
-    printWindow.document.write(modalBody);
-    printWindow.document.write('</div>');
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    
-    // Trigger print
-    setTimeout(function() {
-        printWindow.print();
-        printWindow.close();
-    }, 600);
-}
-</script>

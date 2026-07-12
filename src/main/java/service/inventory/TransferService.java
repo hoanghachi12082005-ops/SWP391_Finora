@@ -131,4 +131,11 @@ public class TransferService {
     public void rejectReceive(int transferId, int empId) throws Exception {
         transferDAO.updateStatus(transferId, "RECEIVE_REJECTED", empId);
     }
+
+    /**
+     * Hủy phần yêu cầu điều chuyển kho (ở kho gửi)
+     */
+    public void cancelTransfer(int transferId, int empId) throws Exception {
+        transferDAO.updateStatus(transferId, "CANCELLED", empId);
+    }
 }

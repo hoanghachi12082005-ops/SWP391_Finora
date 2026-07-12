@@ -88,7 +88,7 @@
                                 <select name="statusQuery" class="form-select rounded-pill inventory-filter-select" 
                                         style="padding-left: 42px; padding-right: 36px; padding-top: 10px; padding-bottom: 10px; font-size: 14px; box-shadow: none; appearance: none; cursor: pointer;">
                                     <option value="">Tất cả trạng thái</option>
-                                    <option value="PENDING_OWNER" ${statusQuery == 'PENDING_OWNER' ? 'selected' : ''}>Chờ Owner duyệt</option>
+                                    <option value="PENDING_OWNER" ${statusQuery == 'PENDING_OWNER' ? 'selected' : ''}>Chờ duyệt</option>
                                     <option value="PENDING_PARTNER" ${statusQuery == 'PENDING_PARTNER' ? 'selected' : ''}>Chờ đối tác duyệt</option>
                                     <option value="APPROVED_DISPATCH" ${statusQuery == 'APPROVED_DISPATCH' ? 'selected' : ''}>Đang xử lý</option>
                                     <option value="COMPLETED" ${statusQuery == 'COMPLETED' ? 'selected' : ''}>Hoàn thành</option>
@@ -169,7 +169,7 @@
                                             <td>
                                                 <c:choose>
                                                     <c:when test="${tx.displayStatus == 'PENDING_OWNER'}">
-                                                        <span class="badge bg-warning text-dark">CHỜ OWNER DUYỆT</span>
+                                                        <span class="badge bg-warning text-dark">CHỜ DUYỆT</span>
                                                     </c:when>
                                                     <c:when test="${tx.displayStatus == 'PENDING_PARTNER'}">
                                                         <span class="badge bg-info text-dark">CHỜ ĐỐI TÁC DUYỆT</span>
@@ -184,7 +184,7 @@
                                                         <span class="badge bg-success">HOÀN THÀNH</span>
                                                     </c:when>
                                                     <c:when test="${tx.displayStatus == 'PARTIAL_COMPLETE'}">
-                                                        <span class="badge bg-warning text-dark">⚠️ HOÀN THÀNH 1 PHẦN (CÓ LỖI)</span>
+                                                        <span class="badge bg-warning text-dark">⚠️ HOÀN THÀNH CÓ LỖI)</span>
                                                     </c:when>
                                                     <c:when test="${tx.displayStatus == 'CANCELLED'}">
                                                         <span class="badge bg-danger">ĐÃ HỦY / BỊ TỪ CHỐI</span>
@@ -198,7 +198,7 @@
                                                 <div class="status-timeline">
                                                     <c:choose>
                                                         <c:when test="${tx.displayStatus == 'PENDING_OWNER'}">
-                                                            <span class="status-step current">Chờ Owner</span>
+                                                            <span class="status-step current">Chờ Duyệt</span>
                                                             <span class="material-icons" style="font-size:12px;color:#cbd5e1;">arrow_forward</span>
                                                             <span class="status-step pending">Chờ đối tác</span>
                                                             <span class="material-icons" style="font-size:12px;color:#cbd5e1;">arrow_forward</span>
@@ -244,9 +244,109 @@
                                                 <fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${tx.transferDate}" />
                                             </td>
                                             <td class="text-center">
-                                                <button class="btn btn-sm btn-outline-danger" style="padding: 4px 10px; font-size: 12px; border-radius: 6px; border-color: var(--primary-color); color: var(--primary-color);" onclick="viewTicketDetails(${tx.stockTransferId})">
-                                                    Chi tiết
-                                                </button>
+                                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                                    <button class="btn btn-sm d-inline-flex align-items-center justify-content-center" 
+                                                            style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #dbeafe; background-color: #eff6ff; color: #2563eb; cursor: pointer; transition: all 0.2s;" 
+                                                            title="Xem chi tiết"
+                                                            onmouseover="this.style.backgroundColor='#dbeafe';"
+                                                            onmouseout="this.style.backgroundColor='#eff6ff';"
+                                                            onclick="viewTicketDetails(${tx.stockTransferId})">
+                                                        <span class="material-icons" style="font-size: 16px;">visibility</span>
+                                                    </button>
+                                                    <%
+                                                        model.Employee curUser = (model.Employee) session.getAttribute("currentUser");
+                                                        int curBranchId = (curUser != null && curUser.getBranchId() != null) ? curUser.getBranchId() : 0;
+                                                        model.StockTransfer currentTicket = (model.StockTransfer) pageContext.getAttribute("tx");
+                                                        Integer selectedWarehouseId = (Integer) session.getAttribute("selectedWarehouseId");
+                                                        if (currentTicket != null && selectedWarehouseId != null) {
+                                                            int selectedWarehouseBranchId = 0;
+                                                            if (currentTicket.getSubTransfers() != null) {
+                                                                for (model.StockTransfer sub : currentTicket.getSubTransfers()) {
+                                                                    if (sub.getFromWarehouseId() == selectedWarehouseId) {
+                                                                        selectedWarehouseBranchId = sub.getFromBranchId();
+                                                                        break;
+                                                                    } else if (sub.getToWarehouseId() == selectedWarehouseId) {
+                                                                        selectedWarehouseBranchId = sub.getToBranchId();
+                                                                        break;
+                                                                    }
+                                                                }
+                                                            }
+                                                            boolean isActiveViewCreator = (selectedWarehouseBranchId == currentTicket.getCreatorBranchId());
+                                                            
+                                                            if (isActiveViewCreator) {
+                                                                boolean canCancel = true;
+                                                                if (currentTicket.getSubTransfers() != null) {
+                                                                    for (model.StockTransfer sub : currentTicket.getSubTransfers()) {
+                                                                        String s = sub.getStatus();
+                                                                        if (!"PENDING_OWNER".equals(s) && !"PENDING_PARTNER".equals(s) && !"CANCELLED".equals(s) && !"PARTNER_REJECTED".equals(s)) {
+                                                                            canCancel = false;
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                } else {
+                                                                    canCancel = false;
+                                                                }
+                                                                if (canCancel) {
+                                                    %>
+                                                        <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0; display: inline-block;">
+                                                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                                            <input type="hidden" name="action" value="cancelTransfer">
+                                                            <input type="hidden" name="transferId" value="${tx.stockTransferId}">
+                                                            <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">
+                                                            <button type="submit" class="btn btn-sm d-inline-flex align-items-center justify-content-center" 
+                                                                    style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #fee2e2; background-color: #fef2f2; color: #dc2626; cursor: pointer; transition: all 0.2s;" 
+                                                                    title="Hủy toàn bộ phiếu"
+                                                                    onmouseover="this.style.backgroundColor='#fee2e2';"
+                                                                    onmouseout="this.style.backgroundColor='#fef2f2';"
+                                                                    onclick="return confirm('Xác nhận hủy toàn bộ phiếu điều chuyển này?')">
+                                                                <span class="material-icons" style="font-size: 16px;">block</span>
+                                                            </button>
+                                                        </form>
+                                                    <%
+                                                                }
+                                                            } else {
+                                                                if (currentTicket.getSubTransfers() != null) {
+                                                                    for (model.StockTransfer sub : currentTicket.getSubTransfers()) {
+                                                                        if ((sub.getFromWarehouseId() == selectedWarehouseId || sub.getToWarehouseId() == selectedWarehouseId) &&
+                                                                            "PENDING_PARTNER".equals(sub.getStatus())) {
+                                                    %>
+                                                        <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0; display: inline-block;">
+                                                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                                            <input type="hidden" name="action" value="partnerApproveTransfer">
+                                                            <input type="hidden" name="transferId" value="<%= sub.getStockTransferId() %>">
+                                                            <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">
+                                                            <button type="submit" class="btn btn-sm d-inline-flex align-items-center justify-content-center" 
+                                                                    style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #d1fae5; background-color: #ecfdf5; color: #059669; cursor: pointer; transition: all 0.2s;" 
+                                                                    title="Duyệt chặng"
+                                                                    onmouseover="this.style.backgroundColor='#d1fae5';"
+                                                                    onmouseout="this.style.backgroundColor='#ecfdf5';"
+                                                                    onclick="return confirm('Xác nhận duyệt yêu cầu chuyển kho này?')">
+                                                                <span class="material-icons" style="font-size: 16px;">check</span>
+                                                            </button>
+                                                        </form>
+                                                        <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0; display: inline-block;">
+                                                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                                            <input type="hidden" name="action" value="partnerRejectTransfer">
+                                                            <input type="hidden" name="transferId" value="<%= sub.getStockTransferId() %>">
+                                                            <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">
+                                                            <button type="submit" class="btn btn-sm d-inline-flex align-items-center justify-content-center" 
+                                                                    style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #fee2e2; background-color: #fef2f2; color: #dc2626; cursor: pointer; transition: all 0.2s;" 
+                                                                    title="Từ chối chặng"
+                                                                    onmouseover="this.style.backgroundColor='#fee2e2';"
+                                                                    onmouseout="this.style.backgroundColor='#fef2f2';"
+                                                                    onclick="return confirm('Xác nhận từ chối yêu cầu chuyển kho này?')">
+                                                                <span class="material-icons" style="font-size: 16px;">close</span>
+                                                            </button>
+                                                        </form>
+                                                    <%
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    %>
+                                                </div>
                                             </td>
                                         </tr>
                                     </c:forEach>
@@ -264,6 +364,56 @@
                         <span class="material-icons" style="font-size:18px;">info</span>
                         Thực hiện xác nhận Xuất kho (tại kho gửi) và Nhập kho (tại kho nhận) cho các phiếu đã được phê duyệt.
                     </p>
+                </div>
+
+                <!-- ================= BẢNG 1: ĐƠN HÀNG ĐANG VẬN CHUYỂN ================= -->
+                <div class="card-header border-0 bg-transparent ps-0 mt-3 mb-2">
+                    <h6 class="mb-0 fw-bold text-dark d-flex align-items-center gap-1" style="font-size: 15px;">
+                        <span class="material-icons text-info">local_shipping</span> Đơn Hàng Đang Vận Chuyển
+                    </h6>
+                </div>
+                
+                <div class="table-responsive border rounded-3 mb-4" style="overflow: hidden;">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 13.5px;">
+                        <thead class="table-light text-dark" style="border-bottom: 2px solid #e2e8f0;">
+                            <tr>
+                                <th class="text-start ps-3 py-2" style="font-weight: 600; color: #475569;">Mã Phiếu</th>
+                                <th class="text-start py-2" style="font-weight: 600; color: #475569;">Kho Gửi</th>
+                                <th class="text-start py-2" style="font-weight: 600; color: #475569;">Kho Nhận</th>
+                                <th class="text-start py-2" style="font-weight: 600; color: #475569;">Người Tạo</th>
+                                <th class="text-center py-2" style="width: 150px; font-weight: 600; color: #475569;">Thời Gian</th>
+                                <th class="text-center py-2" style="width: 120px; font-weight: 600; color: #475569;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <c:set var="hasInTransit" value="false" />
+                            <c:forEach var="tx" items="${transfers}">
+                                <c:if test="${tx.status == 'IN_TRANSIT' && (empty selectedWarehouseId || selectedWarehouseId == tx.fromWarehouseId || selectedWarehouseId == tx.toWarehouseId)}">
+                                    <c:set var="hasInTransit" value="true" />
+                                    <tr>
+                                        <td class="fw-bold ps-3 text-start" style="color: var(--primary-color);">${tx.transferCode}</td>
+                                        <td class="text-start">${tx.fromWarehouseName}</td>
+                                        <td class="text-start">${tx.toWarehouseName}</td>
+                                        <td class="text-start">${tx.createdByName}</td>
+                                        <td class="text-center"><fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${tx.transferDate}" /></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm d-inline-flex align-items-center justify-content-center" 
+                                                    style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #dbeafe; background-color: #eff6ff; color: #2563eb; cursor: pointer; transition: all 0.2s; margin: 0 auto;" 
+                                                    title="Xem chi tiết"
+                                                    onmouseover="this.style.backgroundColor='#dbeafe';"
+                                                    onmouseout="this.style.backgroundColor='#eff6ff';"
+                                                    onclick="viewTicketDetails(${tx.stockTransferId})">
+                                                <span class="material-icons" style="font-size: 16px;">visibility</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </c:if>
+                            </c:forEach>
+                            <c:if test="${!hasInTransit}">
+                                <tr><td colspan="6" class="text-center py-3 text-muted">Không có đơn hàng nào đang vận chuyển.</td></tr>
+                            </c:if>
+                        </tbody>
+                    </table>
                 </div>
 
                 <%-- Phiếu chờ Xuất kho --%>
@@ -293,28 +443,41 @@
                                         <td>${tx.createdByName}</td>
                                         <td><fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${tx.transferDate}" /></td>
                                         <td class="text-center">
-                                            <div class="d-flex gap-2 justify-content-center">
-                                                <button type="button" class="btn btn-sm btn-outline-primary fw-medium d-flex align-items-center gap-1" style="border-radius: 8px; padding: 6px 12px;" onclick="viewTicketDetails(${tx.stockTransferId})">
-                                                    <span class="material-icons" style="font-size:14px;">visibility</span> Chi Tiết
+                                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                                <button type="button" class="btn btn-sm d-inline-flex align-items-center justify-content-center" 
+                                                        style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #dbeafe; background-color: #eff6ff; color: #2563eb; cursor: pointer; transition: all 0.2s;" 
+                                                        title="Xem chi tiết"
+                                                        onmouseover="this.style.backgroundColor='#dbeafe';"
+                                                        onmouseout="this.style.backgroundColor='#eff6ff';"
+                                                        onclick="viewTicketDetails(${tx.stockTransferId})">
+                                                    <span class="material-icons" style="font-size: 16px;">visibility</span>
                                                 </button>
-                                                <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+                                                <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0; display: inline-block;">
                                                     <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="confirmDispatch">
                                                     <input type="hidden" name="transferId" value="${tx.stockTransferId}">
                                                     <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">
-                                                    <button type="submit" class="btn btn-sm btn-success fw-medium d-flex align-items-center gap-1" style="border-radius: 8px; padding: 6px 12px;" 
+                                                    <button type="submit" class="btn btn-sm d-inline-flex align-items-center justify-content-center" 
+                                                            style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #d1fae5; background-color: #ecfdf5; color: #059669; cursor: pointer; transition: all 0.2s;" 
+                                                            title="Xác nhận xuất kho"
+                                                            onmouseover="this.style.backgroundColor='#d1fae5';"
+                                                            onmouseout="this.style.backgroundColor='#ecfdf5';"
                                                             onclick="return confirm('Xác nhận xuất kho cho phiếu này? Tồn kho kho hiện tại sẽ bị trừ.')">
-                                                        <span class="material-icons" style="font-size:14px;">check</span> Xác Nhận Xuất
+                                                        <span class="material-icons" style="font-size: 16px;">check</span>
                                                     </button>
                                                 </form>
-                                                <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+                                                <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0; display: inline-block;">
                                                     <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="rejectDispatch">
                                                     <input type="hidden" name="transferId" value="${tx.stockTransferId}">
                                                     <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger fw-medium d-flex align-items-center gap-1" style="border-radius: 8px; padding: 6px 12px;" 
+                                                    <button type="submit" class="btn btn-sm d-inline-flex align-items-center justify-content-center" 
+                                                            style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #fee2e2; background-color: #fef2f2; color: #dc2626; cursor: pointer; transition: all 0.2s;" 
+                                                            title="Từ chối xuất kho"
+                                                            onmouseover="this.style.backgroundColor='#fee2e2';"
+                                                            onmouseout="this.style.backgroundColor='#fef2f2';"
                                                             onclick="return confirm('Từ chối xuất hàng cho phiếu này?')">
-                                                        <span class="material-icons" style="font-size:14px;">close</span> Từ Chối Xuất
+                                                        <span class="material-icons" style="font-size: 16px;">close</span>
                                                     </button>
                                                 </form>
                                             </div>
@@ -356,28 +519,41 @@
                                         <td>${tx.createdByName}</td>
                                         <td><fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${tx.transferDate}" /></td>
                                         <td class="text-center">
-                                            <div class="d-flex gap-2 justify-content-center">
-                                                <button type="button" class="btn btn-sm btn-outline-primary fw-medium d-flex align-items-center gap-1" style="border-radius: 8px; padding: 6px 12px;" onclick="viewTicketDetails(${tx.stockTransferId})">
-                                                    <span class="material-icons" style="font-size:14px;">visibility</span> Chi Tiết
+                                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                                <button type="button" class="btn btn-sm d-inline-flex align-items-center justify-content-center" 
+                                                        style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #dbeafe; background-color: #eff6ff; color: #2563eb; cursor: pointer; transition: all 0.2s;" 
+                                                        title="Xem chi tiết"
+                                                        onmouseover="this.style.backgroundColor='#dbeafe';"
+                                                        onmouseout="this.style.backgroundColor='#eff6ff';"
+                                                        onclick="viewTicketDetails(${tx.stockTransferId})">
+                                                    <span class="material-icons" style="font-size: 16px;">visibility</span>
                                                 </button>
-                                                <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+                                                <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0; display: inline-block;">
                                                     <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="confirmReceive">
                                                     <input type="hidden" name="transferId" value="${tx.stockTransferId}">
                                                     <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">
-                                                    <button type="submit" class="btn btn-sm btn-success fw-medium d-flex align-items-center gap-1" style="border-radius: 8px; padding: 6px 12px;" 
+                                                    <button type="submit" class="btn btn-sm d-inline-flex align-items-center justify-content-center" 
+                                                            style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #d1fae5; background-color: #ecfdf5; color: #059669; cursor: pointer; transition: all 0.2s;" 
+                                                            title="Xác nhận nhập kho"
+                                                            onmouseover="this.style.backgroundColor='#d1fae5';"
+                                                            onmouseout="this.style.backgroundColor='#ecfdf5';"
                                                             onclick="return confirm('Xác nhận nhập kho cho phiếu này? Tồn kho kho hiện tại sẽ được cộng.')">
-                                                        <span class="material-icons" style="font-size:14px;">check</span> Xác Nhận Nhập
+                                                        <span class="material-icons" style="font-size: 16px;">check</span>
                                                     </button>
                                                 </form>
-                                                <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+                                                <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0; display: inline-block;">
                                                     <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="rejectReceive">
                                                     <input type="hidden" name="transferId" value="${tx.stockTransferId}">
                                                     <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger fw-medium d-flex align-items-center gap-1" style="border-radius: 8px; padding: 6px 12px;" 
+                                                    <button type="submit" class="btn btn-sm d-inline-flex align-items-center justify-content-center" 
+                                                            style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid #fee2e2; background-color: #fef2f2; color: #dc2626; cursor: pointer; transition: all 0.2s;" 
+                                                            title="Từ chối nhập kho"
+                                                            onmouseover="this.style.backgroundColor='#fee2e2';"
+                                                            onmouseout="this.style.backgroundColor='#fef2f2';"
                                                             onclick="return confirm('Từ chối nhận hàng cho phiếu này?')">
-                                                        <span class="material-icons" style="font-size:14px;">close</span> Từ Chối Nhận
+                                                        <span class="material-icons" style="font-size: 16px;">close</span>
                                                     </button>
                                                 </form>
                                             </div>

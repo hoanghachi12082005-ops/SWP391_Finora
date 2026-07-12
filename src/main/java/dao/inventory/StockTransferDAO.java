@@ -158,7 +158,7 @@ public class StockTransferDAO {
                 "LEFT JOIN warehouse tw ON st.to_warehouse_id = tw.warehouse_id " +
                 "LEFT JOIN Employee e ON st.created_by = e.emp_id " +
                 "LEFT JOIN Employee e2 ON st.approved_by = e2.emp_id " +
-                "WHERE st.status IN ('PENDING_OWNER', 'PENDING_PARTNER', 'PENDING_DISPATCH') ");
+                "WHERE st.status IN ('PENDING_OWNER', 'PENDING_PARTNER', 'APPROVED_DISPATCH', 'IN_TRANSIT', 'PENDING_DISPATCH') ");
         
         if (transferCode != null && !transferCode.trim().isEmpty()) {
             sql.append("AND st.transfer_code LIKE ? ");
@@ -440,8 +440,7 @@ public class StockTransferDAO {
                 "MIN(e.fullName) as created_by_name " +
                 "FROM stock_transfer st " +
                 "LEFT JOIN Employee e ON st.created_by = e.emp_id " +
-                "WHERE 1=1 " +
-                "AND st.transfer_code NOT IN (SELECT DISTINCT transfer_code FROM stock_transfer WHERE status IN ('PENDING_OWNER', 'PENDING_PARTNER', 'APPROVED_DISPATCH', 'IN_TRANSIT')) ");
+                "WHERE 1=1 ");
         
         if (warehouseId > 0) {
             sql.append("AND st.transfer_code IN (SELECT DISTINCT transfer_code FROM stock_transfer WHERE from_warehouse_id = ? OR to_warehouse_id = ?) ");
@@ -500,7 +499,23 @@ public class StockTransferDAO {
         for (StockTransfer t : list) {
             List<StockTransfer> sub = findSubTransfersByCode(t.getTransferCode());
             t.setSubTransfers(sub);
-            t.setDisplayStatus(calculateDisplayStatus(sub));
+            
+            List<StockTransfer> subForStatus = sub;
+            if (warehouseId > 0) {
+                subForStatus = new ArrayList<>();
+                if (sub != null) {
+                    for (StockTransfer s : sub) {
+                        if (s.getFromWarehouseId() == warehouseId || s.getToWarehouseId() == warehouseId) {
+                            subForStatus.add(s);
+                        }
+                    }
+                }
+            }
+            t.setDisplayStatus(calculateDisplayStatus(subForStatus));
+            
+            if (sub != null && !sub.isEmpty()) {
+                t.setCreatorBranchId(sub.get(0).getCreatorBranchId());
+            }
         }
 
         return list;
@@ -549,6 +564,17 @@ public class StockTransferDAO {
             }
         }
         return list;
+    }
+
+    public boolean isFullyFinalized(String transferCode) throws Exception {
+        List<StockTransfer> subList = findSubTransfersByCode(transferCode);
+        for (StockTransfer sub : subList) {
+            String s = sub.getStatus();
+            if ("PENDING_OWNER".equals(s) || "PENDING_PARTNER".equals(s) || "APPROVED_DISPATCH".equals(s) || "IN_TRANSIT".equals(s)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public String calculateDisplayStatus(List<StockTransfer> subTransfers) {

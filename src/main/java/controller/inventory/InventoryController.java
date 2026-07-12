@@ -181,11 +181,16 @@ public class InventoryController extends BaseController {
             } else if ("printTicket".equals(action)) {
                 int ticketId = Integer.parseInt(request.getParameter("ticketId"));
                 model.StockTransfer transfer = transferDAO.findById(ticketId);
-                List<model.StockTransferDetail> details = transferDAO.getTransferDetails(ticketId);
+                List<model.StockTransfer> sub = new ArrayList<>();
+                if (transfer != null) {
+                    sub = transferDAO.findSubTransfersByCode(transfer.getTransferCode());
+                    transfer.setSubTransfers(sub);
+                    transfer.setDisplayStatus(transferDAO.calculateDisplayStatus(sub));
+                }
                 List<model.StockTransaction> txs = transactionDAO.findByReference("STOCK_TRANSFER", ticketId);
                 
                 request.setAttribute("ticket", transfer);
-                request.setAttribute("ticketDetails", details);
+                request.setAttribute("subTransfers", sub);
                 request.setAttribute("transactions", txs);
                 
                 forward(request, response, "inventory/_print_ticket");
@@ -500,6 +505,52 @@ public class InventoryController extends BaseController {
             e.printStackTrace();
         }
 
+        try {
+            List<model.StockTransfer> transfers = transferDAO.findAllGrouped(warehouseId != null ? warehouseId : 0, null, null, null);
+            if (transfers != null) {
+                for (model.StockTransfer st : transfers) {
+                    String status = st.getDisplayStatus();
+                    if ("COMPLETED".equals(status) || "PARTIAL_COMPLETE".equals(status) || "CANCELLED".equals(status)) {
+                        continue;
+                    }
+                    
+                    String partnerName = "Nhiều đối tác";
+                    if (st.getSubTransfers() != null) {
+                        if (st.getSubTransfers().size() == 1) {
+                            model.StockTransfer sub = st.getSubTransfers().get(0);
+                            boolean isExp = (sub.getFromBranchId() == st.getCreatorBranchId());
+                            partnerName = isExp ? sub.getToWarehouseName() : sub.getFromWarehouseName();
+                        } else {
+                            java.util.Set<String> partners = new java.util.LinkedHashSet<>();
+                            for (model.StockTransfer sub : st.getSubTransfers()) {
+                                boolean isExp = (sub.getFromBranchId() == st.getCreatorBranchId());
+                                partners.add(isExp ? sub.getToWarehouseName() : sub.getFromWarehouseName());
+                            }
+                            partnerName = String.join(", ", partners);
+                        }
+                    }
+                    
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", st.getStockTransferId());
+                    map.put("code", st.getTransferCode());
+                    map.put("type", "TRANSFER");
+                    map.put("typeLabel", "Điều chuyển");
+                    map.put("partner", partnerName);
+                    map.put("createdBy", st.getCreatedByName());
+                    map.put("amount", null);
+                    
+                    map.put("createdAt", st.getTransferDate() != null ? sdf.format(st.getTransferDate()) : "");
+                    map.put("rawDate", st.getTransferDate() != null ? st.getTransferDate() : new java.util.Date(0));
+                    map.put("actionCancel", "cancelTransfer");
+                    map.put("idParamName", "transferId");
+                    map.put("detailCallback", "viewTicketDetails(" + st.getStockTransferId() + ")");
+                    pendingVouchers.add(map);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         // Sort by created time descending
         pendingVouchers.sort((m1, m2) -> ((java.util.Date) m2.get("rawDate")).compareTo((java.util.Date) m1.get("rawDate")));
         request.setAttribute("pendingVouchers", pendingVouchers);
@@ -624,8 +675,8 @@ public class InventoryController extends BaseController {
                         map.put("actionReject", "rejectTransfer");
                         unifiedApprovals.add(map);
                     } else if ("PENDING_PARTNER".equals(status)) {
-                        map.put("actionApprove", "partnerApproveTransferAll");
-                        map.put("actionReject", "partnerRejectTransferAll");
+                        // Approving on behalf of partner warehouses must be done inside the ticket details modal,
+                        // so we add it to the list without quick actions.
                         unifiedApprovals.add(map);
                     } else if ("PENDING_DISPATCH".equals(status)) {
                         map.put("actionApprove", "approveTransfer");
@@ -983,7 +1034,7 @@ public class InventoryController extends BaseController {
                     map.put("statusLabel", "Đã hoàn thành");
                     map.put("statusColor", "bg-success");
                 } else if ("PARTIAL_COMPLETE".equals(s)) {
-                    map.put("statusLabel", "Hoàn thành một phần (Có lỗi)");
+                    map.put("statusLabel", "Hoàn thành (Có lỗi)");
                     map.put("statusColor", "bg-warning text-dark");
                 } else {
                     map.put("statusLabel", "Đã hủy / Bị từ chối");
@@ -1145,7 +1196,7 @@ public class InventoryController extends BaseController {
                     if (isOwner) {
                         request.getSession().setAttribute("message", "Đã tạo phiếu điều chuyển (Đã tự động duyệt, đang chờ các kho đối tác duyệt).");
                     } else {
-                        request.getSession().setAttribute("message", "Đã tạo phiếu điều chuyển (Chờ Owner duyệt).");
+                        request.getSession().setAttribute("message", "Đã tạo phiếu điều chuyển (Chờ duyệt).");
                     }
                     redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + currentWarehouseId);
                     break;
@@ -1348,7 +1399,6 @@ public class InventoryController extends BaseController {
                 }
                 case "cancelTransfer": {
                     int transferId = Integer.parseInt(request.getParameter("transferId"));
-                    int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
                     
                     model.StockTransfer st = transferDAO.findById(transferId);
                     if (st != null) {
@@ -1356,7 +1406,15 @@ public class InventoryController extends BaseController {
                     }
                     
                     request.getSession().setAttribute("message", "Đã hủy phiếu điều chuyển.");
-                    redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + currentWarehouseId);
+                    String redirectTab = request.getParameter("tab");
+                    if (redirectTab == null || redirectTab.isEmpty()) {
+                        redirectTab = "transfer";
+                    }
+                    String whIdParam = request.getParameter("warehouseId");
+                    if (whIdParam == null || whIdParam.isEmpty()) {
+                        whIdParam = request.getParameter("currentWarehouseId");
+                    }
+                    redirect(response, request.getContextPath() + "/inventory?tab=" + redirectTab + "&warehouseId=" + whIdParam);
                     break;
                 }
                 case "approveTransfer": {

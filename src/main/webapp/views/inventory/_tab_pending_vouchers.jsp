@@ -44,6 +44,9 @@
                                             <c:when test="${vo.type == 'IMPORT'}">
                                                 <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 11px; padding: 4px 10px;">Nhập</span>
                                             </c:when>
+                                            <c:when test="${vo.type == 'TRANSFER'}">
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 11px; padding: 4px 10px;">Điều chuyển</span>
+                                            </c:when>
                                             <c:otherwise>
                                                 <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 11px; padding: 4px 10px;">Xuất</span>
                                             </c:otherwise>

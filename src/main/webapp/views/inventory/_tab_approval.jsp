@@ -134,24 +134,40 @@
                                                     <span class="material-icons" style="font-size: 15px; vertical-align: middle;">visibility</span>
                                                     <span>Chi tiết</span>
                                                 </button>
-                                                <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0; display: inline-block;">
-                                                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-                                                    <input type="hidden" name="action" value="${item.actionApprove}">
-                                                    <input type="hidden" name="${item.idParamName}" value="${item.id}">
-                                                    <button class="btn btn-sm d-inline-flex align-items-center gap-1 px-2.5 py-1.5" style="border: 1px solid #d1fae5; background-color: #ecfdf5; color: #059669; font-weight: 600; font-size: 12.5px; border-radius: 6px; transition: all 0.2s; height: 32px; cursor: pointer;" onmouseover="this.style.backgroundColor='#d1fae5'; this.style.color='#047857';" onmouseout="this.style.backgroundColor='#ecfdf5'; this.style.color='#059669';" type="submit" onclick="return confirm('Xác nhận duyệt phiếu này?')">
-                                                        <span class="material-icons" style="font-size: 15px; vertical-align: middle;">check</span>
-                                                        <span>Duyệt</span>
-                                                    </button>
-                                                </form>
-                                                <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0; display: inline-block;">
-                                                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-                                                    <input type="hidden" name="action" value="${item.actionReject}">
-                                                    <input type="hidden" name="${item.idParamName}" value="${item.id}">
-                                                    <button class="btn btn-sm d-inline-flex align-items-center gap-1 px-2.5 py-1.5" style="border: 1px solid #fee2e2; background-color: #fef2f2; color: #dc2626; font-weight: 600; font-size: 12.5px; border-radius: 6px; transition: all 0.2s; height: 32px; cursor: pointer;" onmouseover="this.style.backgroundColor='#fee2e2'; this.style.color='#b91c1c';" onmouseout="this.style.backgroundColor='#fef2f2'; this.style.color='#dc2626';" type="submit" onclick="return confirm('Từ chối phiếu này?')">
-                                                        <span class="material-icons" style="font-size: 15px; vertical-align: middle;">close</span>
-                                                        <span>Từ chối</span>
-                                                    </button>
-                                                </form>
+                                                <c:if test="${not empty item.actionApprove}">
+                                                    <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0; display: inline-block;">
+                                                        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                                        <input type="hidden" name="action" value="${item.actionApprove}">
+                                                        <input type="hidden" name="${item.idParamName}" value="${item.id}">
+                                                        <button class="btn btn-sm d-inline-flex align-items-center gap-1 px-2.5 py-1.5" style="border: 1px solid #d1fae5; background-color: #ecfdf5; color: #059669; font-weight: 600; font-size: 12.5px; border-radius: 6px; transition: all 0.2s; height: 32px; cursor: pointer;" onmouseover="this.style.backgroundColor='#d1fae5'; this.style.color='#047857';" onmouseout="this.style.backgroundColor='#ecfdf5'; this.style.color='#059669';" type="submit" onclick="return confirm('Xác nhận duyệt phiếu này?')">
+                                                            <span class="material-icons" style="font-size: 15px; vertical-align: middle;">check</span>
+                                                            <span>Duyệt</span>
+                                                        </button>
+                                                    </form>
+                                                </c:if>
+                                                <c:if test="${not empty item.actionReject}">
+                                                    <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0; display: inline-block;">
+                                                        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                                        <input type="hidden" name="action" value="${item.actionReject}">
+                                                        <input type="hidden" name="${item.idParamName}" value="${item.id}">
+                                                        <button class="btn btn-sm d-inline-flex align-items-center gap-1 px-2.5 py-1.5" style="border: 1px solid #fee2e2; background-color: #fef2f2; color: #dc2626; font-weight: 600; font-size: 12.5px; border-radius: 6px; transition: all 0.2s; height: 32px; cursor: pointer;" onmouseover="this.style.backgroundColor='#fee2e2'; this.style.color='#b91c1c';" onmouseout="this.style.backgroundColor='#fef2f2'; this.style.color='#dc2626';" type="submit" onclick="return confirm('Từ chối phiếu này?')">
+                                                            <span class="material-icons" style="font-size: 15px; vertical-align: middle;">close</span>
+                                                            <span>Từ chối</span>
+                                                        </button>
+                                                    </form>
+                                                </c:if>
+                                                <c:if test="${not empty item.actionCancel}">
+                                                    <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0; display: inline-block;">
+                                                        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                                        <input type="hidden" name="action" value="${item.actionCancel}">
+                                                        <input type="hidden" name="${item.idParamName}" value="${item.id}">
+                                                        <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">
+                                                        <button class="btn btn-sm d-inline-flex align-items-center gap-1 px-2.5 py-1.5" style="border: 1px solid #fee2e2; background-color: #fef2f2; color: #dc2626; font-weight: 600; font-size: 12.5px; border-radius: 6px; transition: all 0.2s; height: 32px; cursor: pointer;" onmouseover="this.style.backgroundColor='#fee2e2'; this.style.color='#b91c1c';" onmouseout="this.style.backgroundColor='#fef2f2'; this.style.color='#dc2626';" type="submit" onclick="return confirm('Xác nhận hủy toàn bộ phiếu điều chuyển này?')">
+                                                            <span class="material-icons" style="font-size: 15px; vertical-align: middle;">block</span>
+                                                            <span>Hủy</span>
+                                                        </button>
+                                                    </form>
+                                                </c:if>
                                             </div>
                                         </td>
                                     </tr>
