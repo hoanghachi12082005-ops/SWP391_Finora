@@ -1,29 +1,113 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
+<c:set var="selectedWarehouseName" value="Kho hiện tại" />
+<c:forEach var="w" items="${warehouses}">
+    <c:if test="${w.warehouseId == selectedWarehouseId}">
+        <c:set var="selectedWarehouseName" value="${w.warehouseName}" />
+    </c:if>
+</c:forEach>
+
 <style>
     .search-box { position: relative; max-width: 800px; margin: 0 auto 30px; }
-    .search-input { width: 100%; padding: 16px 20px 16px 50px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: all 0.2s; }
-    .search-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 4px var(--primary-light-hover); }
-    .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 24px; }
-    .search-results { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); margin-top: 8px; z-index: 50; display: none; max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; }
-    .search-item { padding: 12px 20px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
-    .search-item:hover { background: #f8fafc; }
+    .search-input { width: 100%; padding: 16px 20px 16px 50px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: all 0.2s ease-in-out; }
+    .search-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 4px var(--primary-light); }
+    .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 24px; }
+    
+    /* Autocomplete dropdown styles - Premium redesign */
+    .search-results { 
+        position: absolute; 
+        top: 100%; 
+        left: 0; 
+        right: 0; 
+        background: #ffffff; 
+        border-radius: 12px; 
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+        margin-top: 8px; 
+        z-index: 100; 
+        display: none; 
+        max-height: 420px; 
+        overflow-y: auto; 
+        border: 1px solid #e2e8f0; 
+    }
+    
+    .suggestion-header { 
+        background: #fffbeb; 
+        color: #b45309; 
+        font-weight: 700; 
+        font-size: 13px; 
+        padding: 12px 20px; 
+        border-bottom: 1px solid #fef3c7; 
+        text-transform: uppercase; 
+        letter-spacing: 0.5px; 
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+
+    .normal-header {
+        background: #f8fafc; 
+        color: #475569; 
+        border-bottom: 1px solid #e2e8f0; 
+    }
+    
+    .search-item { 
+        padding: 14px 20px; 
+        border-bottom: 1px solid #f1f5f9; 
+        cursor: pointer; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        transition: all 0.2s ease-in-out; 
+    }
+    
+    .search-item:hover { 
+        background: rgba(147, 0, 11, 0.03); 
+    }
+    
     .search-item:last-child { border-bottom: none; }
-    .smart-table { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e2e8f0; }
-    .smart-table th { background: #f8fafc; color: #64748b; font-weight: 600; padding: 16px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; }
-    .smart-table td { padding: 16px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+    
+    .partner-choice-select {
+        border-radius: 8px;
+        font-size: 13.5px;
+        padding: 6px 12px;
+        border: 1px solid #cbd5e1;
+        outline: none;
+        background-color: #fff;
+        cursor: pointer;
+        transition: border-color 0.2s;
+    }
+    .partner-choice-select:focus {
+        border-color: var(--primary-color);
+    }
+    
+    .add-icon-btn {
+        color: var(--primary-color);
+        font-size: 32px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        vertical-align: middle;
+    }
+    .add-icon-btn:hover {
+        transform: scale(1.15);
+        color: #74000a;
+    }
+
+    /* Smart table */
+    .smart-table { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow-x: auto; border: 1px solid #e2e8f0; }
+    .smart-table th { background: #f8fafc; color: #475569; font-weight: 600; padding: 12px 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+    .smart-table td { padding: 12px 10px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
     .empty-state { padding: 40px; text-align: center; color: #94a3b8; }
-    .suggestion-header { padding: 10px 20px; background: #fffbeb; color: #b45309; font-size: 13px; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid #fde68a; }
 </style>
 
 <div class="dashboard-card">
-    <div class="card-header d-flex justify-content-between align-items-center mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center mb-4 border-bottom-0 pb-0">
         <div>
-            <h5 class="mb-0">Tạo Lệnh Điều Chuyển</h5>
-            <small class="text-muted">Từ: <strong>Kho hiện tại</strong></small>
+            <h5 class="mb-0 fw-bold" style="color: #93000b;">📋 Tạo Phiếu Điều Chuyển Kho</h5>
+            <small class="text-muted">Kho hiện tại: <strong>${selectedWarehouseName}</strong></small>
         </div>
-        <a href="${pageContext.request.contextPath}/inventory?tab=transfer&warehouseId=${selectedWarehouseId}" class="btn btn-outline-secondary btn-sm">
+        <a href="${pageContext.request.contextPath}/inventory?tab=transfer&warehouseId=${selectedWarehouseId}" class="btn btn-outline-secondary btn-sm" style="border-radius: 8px;">
             <span class="material-icons" style="font-size:16px; vertical-align:text-bottom;">arrow_back</span>
             Quay Lại
         </a>
@@ -46,15 +130,15 @@
             <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">
 
             <div class="smart-table mb-4">
-                <table class="table mb-0">
+                <table class="table mb-0" style="table-layout: fixed; width: 100%; min-width: 850px;">
                     <thead>
                         <tr>
-                            <th width="25%">Sản Phẩm</th>
-                            <th width="10%" class="text-center">Tồn Kho</th>
-                            <th width="25%">Chi Nhánh Đối Tác</th>
-                            <th width="15%">Loại Giao Dịch</th>
-                            <th width="20%">Số Lượng</th>
-                            <th width="5%" class="text-center">Xóa</th>
+                            <th width="20%" style="white-space: nowrap;">Sản Phẩm</th>
+                            <th width="15%" style="white-space: nowrap;">Tồn Của Bạn</th>
+                            <th width="25%" style="white-space: nowrap;">Kho Đối Tác</th>
+                            <th width="15%" style="white-space: nowrap;">Loại Giao Dịch</th>
+                            <th width="18%" style="white-space: nowrap;">Số Lượng</th>
+                            <th width="7%" class="text-center" style="white-space: nowrap;">Xóa</th>
                         </tr>
                     </thead>
                     <tbody id="transferTableBody">
@@ -72,8 +156,8 @@
             </div>
 
             <div class="d-flex justify-content-end">
-                <button type="submit" class="page-action-btn px-4 py-2" id="submitBtn" disabled>
-                    <span class="material-icons" style="font-size: 18px; vertical-align: text-bottom;">send</span>
+                <button type="submit" class="page-action-btn px-4 py-2" id="submitBtn" disabled style="background-color: var(--primary-color); border: none; color: white; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                    <span class="material-icons" style="font-size: 18px;">send</span>
                     Khởi Tạo Lệnh Điều Chuyển
                 </button>
             </div>
@@ -107,87 +191,69 @@
     });
 
     function fetchResults(keyword) {
-        fetch(`${pageContext.request.contextPath}/inventory?action=searchProductsApi&keyword=` + encodeURIComponent(keyword) + `&warehouseId=${selectedWarehouseId}`)
+        var url = contextPath + '/inventory?action=searchAllProductsApi&keyword=' + encodeURIComponent(keyword) + '&warehouseId=' + currentWarehouseId;
+        fetch(url)
             .then(res => res.json())
             .then(data => {
                 searchResults.innerHTML = '';
                 if (data.length === 0) {
-                    if (keyword === '') {
-                        searchResults.innerHTML = '<div class="p-3 text-center text-muted"><span class="material-icons" style="font-size:40px; color:#e2e8f0;">search</span><br>Gõ tên hoặc mã sản phẩm để tìm kiếm...</div>';
-                    } else {
-                        searchResults.innerHTML = '<div class="p-3 text-center text-muted">Không tìm thấy kho nào có sẵn sản phẩm này</div>';
-                    }
+                    searchResults.innerHTML = '<div class="p-3 text-center text-muted">Không tìm thấy sản phẩm nào</div>';
                 } else {
                     if (keyword === '') {
                         const header = document.createElement('div');
                         header.className = 'suggestion-header';
-                        header.innerHTML = '<span class="material-icons" style="font-size:16px; vertical-align:text-bottom;">warning</span> Gợi ý hàng sắp hết (Có thể nhập từ kho khác)';
+                        header.innerHTML = '<span class="material-icons" style="font-size:18px;">warning</span> GỢI Ý HÀNG SẮP HẾT (CÓ THỂ NHẬP TỪ KHO KHÁC)';
+                        searchResults.appendChild(header);
+                    } else {
+                        const header = document.createElement('div');
+                        header.className = 'suggestion-header normal-header';
+                        header.innerHTML = '<span class="material-icons" style="font-size:18px;">search</span> KẾT QUẢ TÌM KIẾM';
                         searchResults.appendChild(header);
                     }
-                    const grouped = {};
+                    
                     data.forEach(p => {
-                        if (!grouped[p.productId]) {
-                            grouped[p.productId] = {
+                        const item = document.createElement('div');
+                        item.className = 'search-item';
+                        item.style.cursor = 'default';
+                        
+                        const isLowStock = p.myStock <= 10;
+                        const directionType = isLowStock ? 'RECEIVE' : 'SEND';
+                        
+                        // Generate select options for all partner warehouses
+                        let selectHtml = '<select class="partner-choice-select form-select form-select-sm" style="width: 320px;">';
+                        p.partners.forEach(partner => {
+                            selectHtml += '<option value="' + partner.warehouseId + '">' + partner.warehouseName + ' (Tồn: ' + partner.stock + ')</option>';
+                        });
+                        selectHtml += '</select>';
+
+                        const stockColor = p.myStock > 0 ? 'text-success' : 'text-danger';
+                        
+                        item.innerHTML = 
+                            '<div class="flex-grow-1" style="min-width: 0; padding-right: 15px;">' +
+                                '<div class="fw-bold text-dark" style="font-size:15px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="' + p.productName + '">' +
+                                    p.productName +
+                                '</div>' +
+                                '<div class="small text-muted" style="font-size:13px;">' +
+                                    'Tồn của bạn: <span class="fw-bold ' + stockColor + '">' + p.myStock + '</span>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="d-flex align-items-center gap-3 ms-auto" style="flex-shrink: 0;">' +
+                                selectHtml +
+                                '<span class="material-icons add-icon-btn" title="Thêm vào danh sách">add_circle</span>' +
+                            '</div>';
+                        
+                        const addBtn = item.querySelector('.add-icon-btn');
+                        const partnerSelect = item.querySelector('.partner-choice-select');
+                        addBtn.onclick = () => {
+                            addRow({
                                 productId: p.productId,
                                 productName: p.productName,
                                 myStock: p.myStock,
-                                partners: []
-                            };
-                        }
-                        grouped[p.productId].partners.push({
-                            partnerWarehouseId: p.partnerWarehouseId,
-                            partnerWarehouseName: p.partnerWarehouseName,
-                            partnerStock: p.partnerStock
-                        });
-                    });
-
-                    Object.values(grouped).forEach(g => {
-                        const item = document.createElement('div');
-                        item.className = 'search-item d-flex align-items-center justify-content-between p-2 border-bottom';
-                        item.style.cursor = 'default';
-                        
-                        let optionsHtml = '';
-                        g.partners.forEach(partner => {
-                            const isZero = partner.partnerStock <= 0;
-                            const optionStyle = isZero ? 'style="color: #dc3545; font-weight: bold;"' : '';
-                            const zeroLabel = isZero ? ' (HẾT HÀNG - tồn: 0)' : ` (Tồn: ${partner.partnerStock})`;
-                            optionsHtml += `<option value="${partner.partnerWarehouseId}" ${optionStyle}>${partner.partnerWarehouseName}${zeroLabel}</option>`;
-                        });
-
-                        item.innerHTML = `
-                            <div>
-                                <div class="fw-semibold text-dark">${g.productName}</div>
-                                <div class="small text-muted mt-1">
-                                    Tồn của bạn: <strong class="${g.myStock > 0 ? 'text-success' : 'text-danger'}">${g.myStock}</strong>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <select class="form-select form-select-sm partner-select" style="width: 250px; font-size: 13px; cursor: pointer;">
-                                    ${optionsHtml}
-                                </select>
-                                <span class="material-icons text-danger add-btn" style="font-size: 28px; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Thêm vào danh sách">add_circle</span>
-                            </div>
-                        `;
-                        
-                        const selectEl = item.querySelector('.partner-select');
-                        const addBtn = item.querySelector('.add-btn');
-                        
-                        addBtn.onclick = () => {
-                            const selectedId = parseInt(selectEl.value);
-                            const partner = g.partners.find(p => p.partnerWarehouseId === selectedId);
-                            if (partner) {
-                                addRow({
-                                    productId: g.productId,
-                                    productName: g.productName,
-                                    myStock: g.myStock,
-                                    partnerWarehouseId: partner.partnerWarehouseId,
-                                    partnerWarehouseName: partner.partnerWarehouseName,
-                                    partnerStock: partner.partnerStock,
-                                    allPartners: g.partners
-                                });
-                            }
+                                partnerWarehouseId: partnerSelect.value,
+                                direction: directionType,
+                                partners: p.partners
+                            });
                         };
-                        
                         searchResults.appendChild(item);
                     });
                 }
@@ -207,16 +273,13 @@
         tableBody.querySelectorAll('tr').forEach(tr => {
             if (tr.id === 'emptyRow') return;
             const pidInput = tr.querySelector('input[name="productId[]"]');
-            const pwidInput = tr.querySelector('[name="partnerWarehouseId[]"]');
-            if (pidInput && pwidInput) {
-                if (pidInput.value == product.productId && pwidInput.value == product.partnerWarehouseId) {
-                    isDuplicate = true;
-                }
+            if (pidInput && pidInput.value == product.productId) {
+                isDuplicate = true;
             }
         });
 
         if (isDuplicate) {
-            alert('Sản phẩm này từ kho ' + product.partnerWarehouseName + ' đã được chọn!');
+            alert('Sản phẩm này đã được chọn!');
             searchResults.style.display = 'none';
             searchInput.value = '';
             return;
@@ -227,85 +290,84 @@
         searchResults.style.display = 'none';
         searchInput.value = '';
 
-        let partnerOptions = '';
-        if (product.allPartners && product.allPartners.length > 0) {
-            product.allPartners.forEach(p => {
-                const selected = p.partnerWarehouseId == product.partnerWarehouseId ? 'selected' : '';
-                const isZero = p.partnerStock <= 0;
-                const optionStyle = isZero ? 'style="color: #dc3545; font-weight: bold;"' : '';
-                const zeroLabel = isZero ? ' (HẾT - 0)' : ` (Tồn: ${p.partnerStock})`;
-                partnerOptions += `<option value="${p.partnerWarehouseId}" ${optionStyle} ${selected}>${p.partnerWarehouseName}${zeroLabel}</option>`;
-            });
-        } else {
-            const isZero = product.partnerStock <= 0;
-            const optionStyle = isZero ? 'style="color: #dc3545; font-weight: bold;"' : '';
-            const zeroLabel = isZero ? ' (HẾT - 0)' : ` (Tồn: ${product.partnerStock})`;
-            partnerOptions = `<option value="${product.partnerWarehouseId}" ${optionStyle}>${product.partnerWarehouseName}${zeroLabel}</option>`;
-        }
+        const stockColor = product.myStock > 0 ? 'text-success' : 'text-danger';
+
+        // Generate select options dynamically from the product's partners array to show stock levels!
+        let partnerOptionsHtml = '';
+        product.partners.forEach(partner => {
+            partnerOptionsHtml += '<option value="' + partner.warehouseId + '">' + partner.warehouseName + ' (Tồn: ' + partner.stock + ')</option>';
+        });
 
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>
-                <div class="fw-medium text-dark">${product.productName}</div>
-                <input type="hidden" name="productId[]" value="${product.productId}">
-            </td>
-            <td class="text-center fw-semibold ${product.myStock > 0 ? 'text-success' : 'text-danger'}">
-                ${product.myStock}
-            </td>
-            <td>
-                <select name="partnerWarehouseId[]" class="form-select form-select-sm partner-select-row" style="min-width: 180px; font-size: 13px; background-color: #f8fafc; font-weight: 500;">
-                    ${partnerOptions}
-                </select>
-            </td>
-            <td>
-                <select name="actionType[]" class="form-select action-select" style="background-color: #f8fafc;" required>
-                    <option value="RECEIVE" ${product.partnerStock > 0 ? 'selected' : ''}>Nhập</option>
-                    <option value="SEND" ${product.partnerStock <= 0 ? 'selected' : ''}>Xuất</option>
-                </select>
-            </td>
-            <td>
-                <div class="position-relative">
-                    <input type="number" name="quantity[]" class="form-control qty-input" required min="1" placeholder="Số lượng" 
-                           data-mystock="${product.myStock}" 
-                           data-partnerstock="${product.partnerStock}">
-                </div>
-            </td>
-            <td class="text-center">
-                <button type="button" class="btn btn-sm btn-light text-danger" onclick="this.closest('tr').remove(); checkEmpty();">
-                    <span class="material-icons" style="font-size: 18px;">delete</span>
-                </button>
-            </td>
-        `;
+        tr.innerHTML = 
+            '<td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 0;" title="' + product.productName + '">' +
+                '<div class="fw-bold text-dark" style="font-size:14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + product.productName + '</div>' +
+                '<input type="hidden" name="productId[]" value="' + product.productId + '">' +
+            '</td>' +
+            '<td>' +
+                '<span class="fw-bold ' + stockColor + '" style="font-size:14.5px;">' + product.myStock + '</span>' +
+            '</td>' +
+            '<td>' +
+                '<select name="partnerWarehouseId[]" class="form-select form-select-sm partner-warehouse-select" style="border-radius: 8px; font-size:13.5px; height: 38px; border: 1px solid #cbd5e1; width: 100%;" required>' +
+                    partnerOptionsHtml +
+                '</select>' +
+            '</td>' +
+            '<td>' +
+                '<select name="actionType[]" class="form-select form-select-sm action-type-select" style="border-radius: 8px; font-size:13.5px; height: 38px; border: 1px solid #cbd5e1; width: 100%;" required>' +
+                    '<option value="SEND">Xuất</option>' +
+                    '<option value="RECEIVE">Nhập</option>' +
+                '</select>' +
+            '</td>' +
+            '<td>' +
+                '<div class="position-relative" style="width: 100%;">' +
+                    '<input type="number" name="quantity[]" class="form-control qty-input form-control-sm" required min="1" placeholder="Số lượng" style="border-radius: 8px; height: 38px; font-size:13.5px; border: 1px solid #cbd5e1; width: 100%;" data-limit="0">' +
+                '</div>' +
+            '</td>' +
+            '<td class="text-center">' +
+                '<button type="button" class="btn btn-link text-danger p-0" onclick="this.closest(\'tr\').remove(); checkEmpty();" style="text-decoration: none; display:inline-flex; align-items:center; justify-content:center; height:38px; width:38px;">' +
+                    '<span class="material-icons" style="font-size: 22px;">delete</span>' +
+                '</button>' +
+            '</td>';
         tableBody.appendChild(tr);
-        
-        // Listeners for warning update
+
+        const partnerSelect = tr.querySelector('.partner-warehouse-select');
+        const actionSelect = tr.querySelector('.action-type-select');
         const qtyInput = tr.querySelector('.qty-input');
-        const actionSelect = tr.querySelector('.action-select');
-        const partnerSelectRow = tr.querySelector('.partner-select-row');
-        
+
+        if (product.partnerWarehouseId) {
+            partnerSelect.value = product.partnerWarehouseId;
+        }
+        if (product.direction) {
+            actionSelect.value = product.direction;
+        }
+
+        const updateStock = () => {
+            const partnerWId = partnerSelect.value;
+            const actionType = actionSelect.value;
+            const targetWId = actionType === 'SEND' ? currentWarehouseId : partnerWId;
+            qtyInput.setAttribute('data-limit', '0');
+
+            if (!targetWId) {
+                return;
+            }
+
+            var stockUrl = contextPath + '/inventory?action=getProductStockApi&productId=' + product.productId + '&warehouseId=' + targetWId;
+            fetch(stockUrl)
+                .then(res => res.json())
+                .then(res => {
+                    qtyInput.setAttribute('data-limit', res.stock);
+                    validateInputWarning(qtyInput);
+                });
+        };
+
+        partnerSelect.addEventListener('change', updateStock);
+        actionSelect.addEventListener('change', updateStock);
         qtyInput.addEventListener('input', function() {
             validateInputWarning(this);
         });
-        actionSelect.addEventListener('change', function() {
-            validateInputWarning(qtyInput);
-        });
-        partnerSelectRow.addEventListener('change', function() {
-            const selectedWId = parseInt(this.value);
-            const partner = product.allPartners.find(p => p.partnerWarehouseId === selectedWId);
-            if (partner) {
-                qtyInput.setAttribute('data-partnerstock', partner.partnerStock);
-                
-                // Auto adjust transaction type suggestion based on new partner's stock
-                if (partner.partnerStock > 0) {
-                    actionSelect.value = "RECEIVE";
-                } else {
-                    actionSelect.value = "SEND";
-                }
-                validateInputWarning(qtyInput);
-            }
-        });
-        
-        validateInputWarning(qtyInput);
+
+        // Trigger initial load
+        updateStock();
     }
 
     function checkEmpty() {
@@ -313,6 +375,7 @@
             emptyRow.style.display = 'table-row';
             submitBtn.disabled = true;
         } else if (tableBody.querySelectorAll('tr').length === 0) {
+            if (emptyRow) emptyRow.style.display = 'table-row';
             submitBtn.disabled = true;
         }
     }
@@ -320,15 +383,8 @@
     function validateInputWarning(input) {
         const tr = input.closest('tr');
         if (!tr || tr.id === 'emptyRow') return;
-        const action = tr.querySelector('.action-select').value;
         const qty = parseInt(input.value) || 0;
-        
-        let limit = 0;
-        if (action === 'SEND') {
-            limit = parseInt(input.getAttribute('data-mystock')) || 0;
-        } else {
-            limit = parseInt(input.getAttribute('data-partnerstock')) || 0;
-        }
+        const limit = parseInt(input.getAttribute('data-limit')) || 0;
         
         let warningEl = tr.querySelector('.qty-warning');
         if (!warningEl) {
@@ -341,7 +397,7 @@
         if (qty > limit) {
             input.style.borderColor = '#fd7e14';
             input.style.boxShadow = '0 0 0 0.2rem rgba(253, 126, 20, 0.25)';
-            warningEl.innerHTML = `<span class="material-icons" style="font-size:12px;vertical-align:text-bottom;color:#fd7e14;">warning</span> Vượt tồn nguồn (${limit})`;
+            warningEl.innerHTML = '<span class="material-icons" style="font-size:12px;vertical-align:text-bottom;color:#fd7e14;">warning</span> Vượt tồn nguồn (' + limit + ')';
             warningEl.style.color = '#fd7e14';
         } else {
             input.style.borderColor = '';
@@ -355,24 +411,15 @@
         
         let hasWarning = false;
         this.querySelectorAll('.qty-input').forEach(input => {
-            const tr = input.closest('tr');
-            if (tr && tr.id !== 'emptyRow') {
-                const action = tr.querySelector('.action-select').value;
-                const qty = parseInt(input.value) || 0;
-                let limit = 0;
-                if (action === 'SEND') {
-                    limit = parseInt(input.getAttribute('data-mystock')) || 0;
-                } else {
-                    limit = parseInt(input.getAttribute('data-partnerstock')) || 0;
-                }
-                if (qty > limit) {
-                    hasWarning = true;
-                }
+            const qty = parseInt(input.value) || 0;
+            const limit = parseInt(input.getAttribute('data-limit')) || 0;
+            if (qty > limit) {
+                hasWarning = true;
             }
         });
         
         if (hasWarning) {
-            if (confirm("Cảnh báo: Có sản phẩm có số lượng điều chuyển vượt quá số lượng tồn kho thực tế của kho nguồn (kho gửi). Bạn có chắc chắn muốn tiếp tục tạo lệnh điều chuyển này?")) {
+            if (confirm("Cảnh báo: Có sản phẩm vượt quá tồn kho thực tế của kho nguồn. Bạn có chắc chắn muốn tạo phiếu điều chuyển này?")) {
                 this.submit();
             }
         } else {

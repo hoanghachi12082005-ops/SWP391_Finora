@@ -68,8 +68,8 @@
                                        class="sidebar-submenu-item ${originalUri.contains('/inventory') && (empty activeTab || activeTab == 'stock') ? 'active' : ''}">
                                         Danh sách Kho
                                     </a>
-                                    <a href="${pageContext.request.contextPath}/approval"
-                                       class="sidebar-submenu-item ${originalUri.contains('/approval') ? 'active' : ''}">
+                                    <a href="${pageContext.request.contextPath}/inventory?tab=approval"
+                                       class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'approval' ? 'active' : ''}">
                                         Xử Lý Phiếu (Duyệt)
                                     </a>
                                     <a href="${pageContext.request.contextPath}/inventory?tab=history"
@@ -77,7 +77,33 @@
                                         Lịch sử xuất nhập kho
                                     </a>
                                 </c:when>
-                                <c:when test="${roleName == 'WarehouseStaff' || roleName == 'StoreManager'}">
+                                <c:when test="${roleName == 'StoreManager'}">
+                                    <a href="${pageContext.request.contextPath}/inventory?tab=stock&warehouseId=${sessionScope.selectedWarehouseId}"
+                                       class="sidebar-submenu-item ${originalUri.contains('/inventory') && (empty activeTab || activeTab == 'stock') ? 'active' : ''}">
+                                        Tồn Kho
+                                    </a>
+                                    <a href="${pageContext.request.contextPath}/inventory?tab=approval"
+                                       class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'approval' ? 'active' : ''}">
+                                        Xử Lý Phiếu (Duyệt)
+                                    </a>
+                                    <a href="${pageContext.request.contextPath}/inventory?tab=transfer&warehouseId=${sessionScope.selectedWarehouseId}"
+                                       class="sidebar-submenu-item ${originalUri.contains('/inventory') && (activeTab == 'transfer' || activeTab == 'createTransfer') ? 'active' : ''}">
+                                        Điều Chuyển
+                                    </a>
+                                    <a href="${pageContext.request.contextPath}/inventory?tab=check&warehouseId=${sessionScope.selectedWarehouseId}"
+                                       class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'check' ? 'active' : ''}">
+                                        Kiểm kho
+                                    </a>
+                                    <a href="${pageContext.request.contextPath}/inventory?tab=import&warehouseId=${sessionScope.selectedWarehouseId}"
+                                       class="sidebar-submenu-item ${originalUri.contains('/inventory') && (activeTab == 'import' || activeTab == 'export') ? 'active' : ''}">
+                                        Phiếu Nhập / Xuất
+                                    </a>
+                                    <a href="${pageContext.request.contextPath}/inventory?tab=history&warehouseId=${sessionScope.selectedWarehouseId}"
+                                       class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'history' ? 'active' : ''}">
+                                        Lịch sử xuất nhập kho
+                                    </a>
+                                </c:when>
+                                <c:when test="${roleName == 'WarehouseStaff'}">
                                     <a href="${pageContext.request.contextPath}/inventory?tab=stock&warehouseId=${sessionScope.selectedWarehouseId}"
                                        class="sidebar-submenu-item ${originalUri.contains('/inventory') && (empty activeTab || activeTab == 'stock') ? 'active' : ''}">
                                         Tồn Kho
@@ -89,6 +115,10 @@
                                     <a href="${pageContext.request.contextPath}/inventory?tab=check&warehouseId=${sessionScope.selectedWarehouseId}"
                                        class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'check' ? 'active' : ''}">
                                         Kiểm kho
+                                    </a>
+                                    <a href="${pageContext.request.contextPath}/inventory?tab=pending_vouchers&warehouseId=${sessionScope.selectedWarehouseId}"
+                                       class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'pending_vouchers' ? 'active' : ''}">
+                                        Phiếu Chờ Duyệt
                                     </a>
                                     <a href="${pageContext.request.contextPath}/inventory?tab=history&warehouseId=${sessionScope.selectedWarehouseId}"
                                        class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'history' ? 'active' : ''}">
