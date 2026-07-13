@@ -43,8 +43,8 @@ public class PaymentService {
         return dao.getSumExpense(paymentMethod);
     }
 
-    public List<Map<String, Object>> getWeeklyOverview() {
-        return dao.getWeeklyOverview();
+    public List<Map<String, Object>> getWeeklyOverview(String keyword, String type, String paymentMethod, String timeRange) {
+        return dao.getWeeklyOverview(keyword, type, paymentMethod, timeRange);
     }
 
     public boolean insert(Payment payment) {

@@ -312,6 +312,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="${pageContext.request.contextPath}/cashbook/create-receipt" method="post">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Số tiền (VNĐ) <span class="text-danger">*</span></label>
@@ -347,6 +348,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="${pageContext.request.contextPath}/cashbook/create-payment" method="post">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Số tiền (VNĐ) <span class="text-danger">*</span></label>

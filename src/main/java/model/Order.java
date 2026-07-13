@@ -11,7 +11,7 @@ public class Order {
     public enum OrderStatus {
         PENDING("Chờ thanh toán"),
         PAID("Đã thanh toán"),
-        CANCELLED("Đã hủy"), COMPLETED("");
+        CANCELLED("Đã hủy"), COMPLETED(""), REJECTED("Bị từ chối");
 
         private final String displayName;
         OrderStatus(String displayName) { this.displayName = displayName; }
@@ -35,9 +35,12 @@ public class Order {
     private String createdAt;       // yyyy-MM-dd HH:mm:ss
 
     // Transient fields for join queries
+    // View-only / Additional properties
     private String customerName;
     private String employeeName;
     private String branchName;
+    private String supplierName;
+    private String note;
 
     // ── Constructors ─────────────────────────────────────────
 
@@ -200,6 +203,22 @@ public class Order {
 
     public void setBranchName(String branchName) {
         this.branchName = branchName;
+    }
+
+    public String getSupplierName() {
+        return supplierName;
+    }
+
+    public void setSupplierName(String supplierName) {
+        this.supplierName = supplierName;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 
     public String getCreatedAt() {

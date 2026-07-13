@@ -48,18 +48,18 @@
 
 /* Badges override if needed */
 .badge-hout {
-    background-color: #991b1b !important;
-    color: white !important;
+    background-color: var(--danger-bg) !important;
+    color: var(--danger-text) !important;
 }
 
 .badge-saphet {
-    background-color: #f59e0b !important;
-    color: white !important;
+    background-color: var(--warning-bg) !important;
+    color: var(--warning-text) !important;
 }
 
 .badge-conhang {
-    background-color: #10b981 !important;
-    color: white !important;
+    background-color: var(--success-bg) !important;
+    color: var(--success-text) !important;
 }
 
 /* Fix product text in colored rows */
@@ -226,4 +226,152 @@
 .warehouse-card-subtitle {
     font-size: 13px;
     color: #6b7280;
+}
+
+/* Premium styling for Bootstrap badges in Inventory module */
+.page-container .badge,
+.tab-content .badge {
+    padding: 6px 12px !important;
+    border-radius: 20px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+}
+.page-container .badge.bg-success,
+.tab-content .badge.bg-success {
+    background-color: var(--success-bg) !important;
+    color: var(--success-text) !important;
+}
+.page-container .badge.bg-danger,
+.tab-content .badge.bg-danger {
+    background-color: var(--danger-bg) !important;
+    color: var(--danger-text) !important;
+}
+.page-container .badge.bg-warning,
+.tab-content .badge.bg-warning {
+    background-color: var(--warning-bg) !important;
+    color: var(--warning-text) !important;
+}
+.page-container .badge.bg-info,
+.tab-content .badge.bg-info {
+    background-color: var(--info-bg) !important;
+    color: var(--info-text) !important;
+}
+.page-container .badge.bg-secondary,
+.tab-content .badge.bg-secondary {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+}
+
+/* Inventory Inputs Focus states */
+.inventory-search-input {
+    background-color: #f8f9fa !important;
+    border: 1.5px solid #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.inventory-search-input:focus {
+    background-color: #ffffff !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px var(--primary-light) !important;
+    outline: none !important;
+}
+
+.inventory-filter-select {
+    background-color: #f8f9fa !important;
+    border: 1.5px solid #f8f9fa !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.inventory-filter-select:focus {
+    background-color: #ffffff !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px var(--primary-light) !important;
+    outline: none !important;
+}
+
+/* Premium Buttons matching the theme color */
+.inventory-btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease-in-out !important;
+    box-shadow: 0 2px 4px rgba(147, 0, 11, 0.1) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+.inventory-btn-primary:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(147, 0, 11, 0.4) !important;
+    color: white !important;
+}
+.inventory-btn-primary:disabled {
+    background: #cbd5e1 !important;
+    border-color: #cbd5e1 !important;
+    color: #64748b !important;
+    box-shadow: none !important;
+    transform: none !important;
+    cursor: not-allowed !important;
+}
+
+/* Solid brand-red pill button (e.g. Lọc button) */
+.inventory-btn-filter {
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    background-color: var(--primary-color) !important;
+    border: 1.5px solid var(--primary-color) !important;
+    color: white !important;
+    border-radius: 50px !important;
+    padding: 8px 24px !important;
+    transition: all 0.2s ease-in-out !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.inventory-btn-filter:hover {
+    background-color: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(147, 0, 11, 0.2) !important;
+    color: white !important;
+}
+
+.inventory-btn-success {
+    background-color: var(--success-color) !important;
+    border-color: var(--success-color) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.inventory-btn-success:hover {
+    background-color: #0f9f72 !important;
+    transform: translateY(-1px) !important;
+}
+
+.btn-import-submit {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s !important;
+}
+.btn-import-submit:hover:not(:disabled) {
+    background-color: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+}
+.btn-import-submit:disabled {
+    background-color: #e2e8f0 !important;
+    border-color: #e2e8f0 !important;
+    color: #94a3b8 !important;
+}
+
+/* Helper for standard page-action-btn disabled states */
+.page-action-btn:disabled {
+    background-color: #cbd5e1 !important;
+    border-color: #cbd5e1 !important;
+    color: #64748b !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+    transform: none !important;
 }

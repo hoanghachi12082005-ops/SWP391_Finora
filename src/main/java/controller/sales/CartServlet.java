@@ -1,9 +1,10 @@
 package controller.sales;
 
-import dao.sales.CustomerDAO;
-import dao.sales.InventoryDAO;
-import dao.sales.ProductDAO;
+import dao.customer.CustomerDAO;
+import dao.inventory.InventoryDAO;
+import dao.product.ProductDAO;
 import dao.sales.VoucherDAO;
+import dao.system.VatSettingDAO;
 import model.*;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -300,6 +301,9 @@ public class CartServlet extends HttpServlet {
     private void writeResponseJson(PrintWriter out, Map<Integer, OrderTab> tabs, int activeTabId) {
         OrderTab activeTab = tabs.get(activeTabId);
 
+        // Cập nhật VAT rate từ DB cho tab đang active
+        double vatRate = VatSettingDAO.getVatRate();
+        activeTab.setVatRate(vatRate);
         out.write("{");
         out.write("\"activeTabId\":" + activeTabId + ",");
 
@@ -376,6 +380,7 @@ public class CartServlet extends HttpServlet {
         out.write("\"subtotal\":" + activeTab.getSubtotal() + ",");
         out.write("\"discountAmount\":" + activeTab.getDiscountAmount() + ",");
         out.write("\"vatAmount\":" + activeTab.getVatAmount() + ",");
+        out.write("\"vatRate\":" + activeTab.getVatRate() + ",");
         out.write("\"totalAmount\":" + activeTab.getTotalAmount());
 
         out.write("}"); // end activeTab

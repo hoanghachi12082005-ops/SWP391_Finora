@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <form action="${pageContext.request.contextPath}/inventory" method="POST">
+    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
     <input type="hidden" name="action" value="confirmReceiveWithDiscrepancy">
     <input type="hidden" name="transferId" value="${ticket.ticketId}">
     <input type="hidden" name="warehouseId" value="${not empty param.warehouseId ? param.warehouseId : ticket.toWarehouseId}">
@@ -53,6 +54,6 @@
     </div>
     <div class="modal-footer border-top-0 pt-0">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 500;">Hủy</button>
-        <button type="submit" class="btn btn-success" style="border-radius: 8px; font-weight: 500;">Xác Nhận Nhập Kho</button>
+        <button type="submit" class="btn btn-import-submit" style="border-radius: 8px; font-weight: 500;">Xác Nhận Nhập Kho</button>
     </div>
 </form>

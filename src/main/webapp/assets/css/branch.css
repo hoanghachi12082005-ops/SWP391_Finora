@@ -173,6 +173,44 @@
     background:#fafafa;
 }
 
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.status-badge.active {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+.status-badge.active::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #166534;
+    display: inline-block;
+}
+
+.status-badge.locked {
+    background: var(--error-container, #fee2e2);
+    color: var(--on-error-container, #991b1b);
+    border: 1px solid rgba(186, 26, 26, 0.18);
+}
+.status-badge.locked::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--error, #991b1b);
+    display: inline-block;
+}
+
 .status-active{
     display:inline-block;
     background:#22c55e;
@@ -523,19 +561,7 @@
     background: #f2f2f2;
 }
 
-.pagination .active-page {
-    background: #183153;
-    color: white;
-    border-color: #183153;
-}
 
-.dots {
-    padding: 0 10px;
-    display: inline-flex;
-    align-items: center;
-    color: #666;
-    font-weight: 600;
-}
 
 
 .branch-avatar{
@@ -678,77 +704,5 @@
     justify-content:center;
     font-weight:bold;
 }
-
-/* New POS-like Pagination wrapper styling */
-.pagination-wrapper {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 24px;
-    padding: 12px 16px;
-    background-color: #f8fafc;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-}
-.pagination-form {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-.pagination-label {
-    font-size: 13px;
-    color: #64748b;
-    font-weight: 500;
-}
-.pagination-select {
-    font-size: 13px;
-    background-color: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 4px 8px;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.2s;
-}
-.pagination-select:focus {
-    border-color: #183153;
-}
-.pagination-text {
-    font-size: 13px;
-    color: #64748b;
-}
-.pagination-text strong {
-    color: #1e293b;
-}
-.pagination-pages {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.pagination-page-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 34px;
-    height: 34px;
-    padding: 0 8px;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    color: #475569;
-    font-size: 13px;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all 0.2s;
-    background-color: #ffffff;
-}
-.pagination-page-btn:hover {
-    background-color: #f1f5f9;
-    border-color: #94a3b8;
-    color: #183153;
-}
-.pagination-page-btn.active {
-    background-color: #183153;
-    border-color: #183153;
-    color: #ffffff;
-    font-weight: 600;
-}
+ 
+ 

@@ -31,7 +31,7 @@ public class Employee {
     private String    phone;
     private String    passwordHash;
     private String    status;
-    private int       failedLoginCount;
+
 
     private Timestamp createdAt;
     private Timestamp updatedAt;
@@ -123,13 +123,7 @@ public class Employee {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public int getFailedLoginCount() { return failedLoginCount; }
-    public void setFailedLoginCount(int failedLoginCount) { this.failedLoginCount = failedLoginCount; }
 
-    public int getRemainingAttempts() {
-        int remaining = MAX_FAILED_LOGIN - failedLoginCount;
-        return Math.max(0, remaining);
-    }
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
@@ -209,7 +203,6 @@ public class Employee {
                 + ", fullName='" + fullName + '\''
                 + ", email='" + email + '\''
                 + ", status='" + status + '\''
-                + ", failedLoginCount=" + failedLoginCount
                 + '}';
     }
 }

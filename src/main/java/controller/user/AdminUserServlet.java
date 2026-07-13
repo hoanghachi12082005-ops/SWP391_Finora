@@ -15,12 +15,16 @@ import jakarta.servlet.annotation.WebServlet;
  *
  * @author PCQN
  */
+import dao.sales.OrderDAO;
 import dao.user.UserManagementDao;
 import dao.user.ProfileDao;
 import jakarta.servlet.http.HttpSession;
 import model.Employee;
 import util.email.EmailUtil;
+import util.pagination.PaginationHelper;
+import util.pagination.PaginationHelper.PageResult;
 import util.security.PasswordUtil;
+import service.system.ActivityLogService;
 
 /**
  *
@@ -31,11 +35,13 @@ public class AdminUserServlet extends HttpServlet {
 
     private UserManagementDao adminUserDao;
     private ProfileDao profileDao;
+    private ActivityLogService activityLogService;
 
     @Override
     public void init() throws ServletException {
         adminUserDao = new UserManagementDao();
         profileDao = new ProfileDao();
+        activityLogService = new ActivityLogService();
     }   
 
     @Override
@@ -74,9 +80,9 @@ public class AdminUserServlet extends HttpServlet {
 
         loadPageData(request);
 
-        request.setAttribute("pageTitle", "Employee Management");
-        request.setAttribute("pageSubtitle", "Admin views and manages all employee accounts across branches");
-        request.setAttribute("addButtonText", "Add Employee");
+        request.setAttribute("pageTitle", "Quản lý nhân viên");
+        request.setAttribute("pageSubtitle", "Quản trị viên xem và quản lý tất cả tài khoản nhân viên trên toàn hệ thống");
+        request.setAttribute("addButtonText", "Thêm nhân viên");
         request.setAttribute("baseUrl", request.getContextPath() + "/admin/user");
 
         request.setAttribute("showBranch", true);
@@ -132,76 +138,34 @@ public class AdminUserServlet extends HttpServlet {
         String roleId = request.getParameter("roleId");
         String status = request.getParameter("status");
 
-        String pageSizeOption = getParam(request, "pageSize", "5");
+        int page = parseInt(request.getParameter("page"), 1);
+        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
 
-        int totalUsers = adminUserDao.countEmployees(keyword, branchId, roleId, status);
-        int pageSize = resolvePageSize(pageSizeOption, totalUsers);
-
-        int currentPage = parseInt(request.getParameter("page"), 1);
-
-        if (currentPage < 1) {
-            currentPage = 1;
-        }
-
-        int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
-
-        if (totalPages < 1) {
-            totalPages = 1;
-        }
-
-        if (currentPage > totalPages) {
-            currentPage = totalPages;
-        }
+        int totalUsers = adminUserDao.countAllEmployees(keyword, branchId, roleId, status);
+        PageResult pr = PaginationHelper.compute(totalUsers, page, sizeValue);
+        pr.setAttributes(request);
 
         request.setAttribute(
                 "users",
-                adminUserDao.getEmployees(keyword, branchId, roleId, status, currentPage, pageSize)
+                adminUserDao.getAllEmployees(keyword, branchId, roleId, status, pr.getCurrentPage(), pr.getPageSize())
         );
 
         request.setAttribute("branches", adminUserDao.getAllBranches());
-        request.setAttribute("roles", adminUserDao.getEmployeeRoles());
+        request.setAttribute("roles", adminUserDao.getAllRoles());
 
         request.setAttribute("keyword", keyword);
         request.setAttribute("branchFilter", parseInt(branchId, -1));
         request.setAttribute("roleFilter", parseInt(roleId, -1));
         request.setAttribute("statusFilter", status);
-
-        request.setAttribute("currentPage", currentPage);
-        request.setAttribute("pageSize", pageSize);
-        request.setAttribute("pageSizeOption", pageSizeOption);
         request.setAttribute("totalUsers", totalUsers);
-        request.setAttribute("totalPages", totalPages);
 
-        request.setAttribute("employeeOverview", adminUserDao.getOwnerEmployeeOverview());
-    }
-    private int resolvePageSize(String pageSizeOption, int totalUsers) {
-        if (isBlank(pageSizeOption)) {
-            return 5;
-        }
-
-        String option = pageSizeOption.trim().toLowerCase();
-
-        if ("30p".equals(option) || "30%".equals(option) || "30".equals(option)) {
-            return Math.max(1, (int) Math.ceil(totalUsers * 0.3));
-        }
-
-        if ("50p".equals(option) || "50%".equals(option) || "50".equals(option)) {
-            return Math.max(1, (int) Math.ceil(totalUsers * 0.5));
-        }
-
-        int size = parseInt(option, 5);
-
-        if (size != 5 && size != 10) {
-            size = 5;
-        }
-
-        return size;
+        request.setAttribute("employeeOverview", adminUserDao.getAllEmployeesOverview());
     }
     private void loadSelectedEmployee(HttpServletRequest request, String attributeName) {
         int employeeId = parseInt(request.getParameter("id"), -1);
 
         if (employeeId > 0) {
-            request.setAttribute(attributeName, adminUserDao.getEmployeeById(employeeId));
+            request.setAttribute(attributeName, adminUserDao.getEmployeeByIdAllRoles(employeeId));
         }
     }
 
@@ -210,6 +174,9 @@ public class AdminUserServlet extends HttpServlet {
         boolean isUpdate = "update".equals(action);
 
         int employeeId = parseInt(request.getParameter("employeeId"), -1);
+        if (employeeId <= 0) {
+            employeeId = parseInt(request.getParameter("employeeID"), -1);
+        }
 
         String fullName = trim(request.getParameter("fullName"));
         String email = trim(request.getParameter("email"));
@@ -251,7 +218,7 @@ public class AdminUserServlet extends HttpServlet {
         boolean success;
 
         if (isUpdate) {
-            success = adminUserDao.updateEmployee(employee);
+            success = adminUserDao.updateEmployeeByAdmin(employee);
         } else {
             String autoGeneratedPassword = EmailUtil.generateRandomPassword();
 
@@ -271,12 +238,21 @@ public class AdminUserServlet extends HttpServlet {
             success = adminUserDao.addEmployee(employee, hashedPassword);
         }
 
+        if (success) {
+            Employee currentUser = getCurrentUser(request);
+            if (isUpdate) {
+                activityLogService.log(currentUser.getEmployeeID(), "UPDATE", "Employee", employeeId, null, email);
+            } else {
+                activityLogService.log(currentUser.getEmployeeID(), "CREATE", "Employee", null, null, email);
+            }
+        }
+
         setFlash(
                 request,
                 success ? "successMessage" : "errorMessage",
                 success
-                        ? (isUpdate ? "Employee account updated successfully." : "Employee account created successfully.")
-                        : (isUpdate ? "Cannot update employee account." : "Cannot create employee account.")
+                        ? (isUpdate ? "Cập nhật tài khoản nhân viên thành công." : "Thêm tài khoản nhân viên thành công.")
+                        : (isUpdate ? "Không thể cập nhật tài khoản nhân viên." : "Không thể thêm tài khoản nhân viên.")
         );
     }
     
@@ -284,13 +260,19 @@ public class AdminUserServlet extends HttpServlet {
         throws ServletException, IOException {
 
         int employeeId = parseInt(request.getParameter("id"), -1);
+        if (employeeId <= 0) {
+            employeeId = parseInt(request.getParameter("employeeId"), -1);
+        }
+        if (employeeId <= 0) {
+            employeeId = parseInt(request.getParameter("employeeID"), -1);
+        }
 
         if (employeeId <= 0) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid employee ID.");
             return;
         }
 
-        Employee profile = adminUserDao.getEmployeeById(employeeId);
+        Employee profile = adminUserDao.getEmployeeByIdAllRoles(employeeId);
 
         if (profile == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Employee not found.");
@@ -299,10 +281,12 @@ public class AdminUserServlet extends HttpServlet {
 
         request.setAttribute("profile", profile);
         request.setAttribute("salesSummary", profileDao.getEmployeeSalesSummary(employeeId));
+        request.setAttribute("orderHistory", new OrderDAO().findByEmployeeId(employeeId));
+        request.setAttribute("showSalesSection", true);
 
         request.setAttribute("readOnlyProfile", true);
-        request.setAttribute("profileTitle", "Employee Profile");
-        request.setAttribute("profileSubtitle", "Owner views employee information and sales performance");
+        request.setAttribute("profileTitle", "Hồ sơ nhân viên");
+        request.setAttribute("profileSubtitle", "Quản trị viên xem thông tin nhân viên");
         request.setAttribute("backUrl", request.getContextPath() + "/admin/user");
 
         // FIX: Đường dẫn đúng: /views/profile/ (có chữ 's', là /views/ không phải /view/)
@@ -312,40 +296,51 @@ public class AdminUserServlet extends HttpServlet {
 
     private void updateStatus(HttpServletRequest request, String status) {
         int employeeId = parseInt(request.getParameter("employeeId"), -1);
+        if (employeeId <= 0) {
+            employeeId = parseInt(request.getParameter("employeeID"), -1);
+        }
 
         if (employeeId <= 0) {
-            setFlash(request, "errorMessage", "Invalid employee ID.");
+            setFlash(request, "errorMessage", "ID nhân viên không hợp lệ.");
             return;
         }
 
-        boolean success = adminUserDao.updateEmployeeStatus(employeeId, status);
+        boolean success = adminUserDao.updateEmployeeStatusByAdmin(employeeId, status);
+
+        if (success) {
+            Employee currentUser = getCurrentUser(request);
+            activityLogService.log(currentUser.getEmployeeID(), status.equals("ACTIVE") ? "UNLOCK" : "LOCK", "Employee", employeeId, null, null);
+        }
 
         setFlash(
                 request,
                 success ? "successMessage" : "errorMessage",
-                success ? "Employee status updated successfully." : "Cannot update employee status."
+                success ? "Cập nhật trạng thái tài khoản thành công." : "Không thể cập nhật trạng thái tài khoản."
         );
     }
 
     private void resetPassword(HttpServletRequest request) {
         int employeeId = parseInt(request.getParameter("employeeId"), -1);
+        if (employeeId <= 0) {
+            employeeId = parseInt(request.getParameter("employeeID"), -1);
+        }
 
         if (employeeId <= 0) {
-            setFlash(request, "errorMessage", "Invalid reset password data.");
+            setFlash(request, "errorMessage", "Dữ liệu đặt lại mật khẩu không hợp lệ.");
             return;
         }
 
-        Employee employee = adminUserDao.getEmployeeById(employeeId);
+        Employee employee = adminUserDao.getEmployeeByIdAllRoles(employeeId);
 
         if (employee == null) {
-            setFlash(request, "errorMessage", "Employee not found or you are not allowed to reset this account.");
+            setFlash(request, "errorMessage", "Không tìm thấy nhân viên hoặc bạn không có quyền đặt lại mật khẩu này.");
             return;
         }
 
         String autoGeneratedPassword = EmailUtil.generateRandomPassword();
         String hashedPassword = PasswordUtil.hash(autoGeneratedPassword);
 
-        boolean success = adminUserDao.resetEmployeePassword(employeeId, hashedPassword);
+        boolean success = adminUserDao.resetPasswordByAdmin(employeeId, hashedPassword);
 
         if (!success) {
             setFlash(request, "errorMessage", "Cannot reset employee password.");
@@ -364,6 +359,9 @@ public class AdminUserServlet extends HttpServlet {
         }
 
         setFlash(request, "successMessage", "Employee password reset successfully.");
+
+        Employee currentUser = getCurrentUser(request);
+        activityLogService.log(currentUser.getEmployeeID(), "RESET_PASSWORD", "Employee", employeeId, null, employee.getEmail());
     }
 
     private boolean isAdmin(HttpServletRequest request, HttpServletResponse response)
@@ -395,7 +393,10 @@ public class AdminUserServlet extends HttpServlet {
             return true;
         }
 
-
+    private Employee getCurrentUser(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        return session == null ? null : (Employee) session.getAttribute("currentUser");
+    }
 
     private void setFlash(HttpServletRequest request, String key, String message) {
         request.getSession().setAttribute(key, message);

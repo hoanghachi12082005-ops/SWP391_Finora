@@ -18,6 +18,8 @@ import java.util.Map;
 import model.Customer;
 import model.Employee;
 import service.system.ActivityLogService;
+import util.pagination.PaginationHelper;
+import util.pagination.PaginationHelper.PageResult;
 
 /**
  * CustomerController - Refactored according to role permissions and dynamic rules.
@@ -80,10 +82,16 @@ public class CustomerController extends HttpServlet {
 
         // Permissions for UI
         Employee user = getLoggedInUser(request);
-        boolean isAdmin = user != null && "Admin".equalsIgnoreCase(user.getRoleName());
-        request.setAttribute("canCreate", true);
-        request.setAttribute("canEdit", true);
-        request.setAttribute("isAdmin", isAdmin);
+        String role = user != null ? user.getRoleName() : "";
+        boolean isOwner = "Owner".equalsIgnoreCase(role);
+        boolean isStoreManager = "StoreManager".equalsIgnoreCase(role);
+
+        request.setAttribute("canCreate", isStoreManager);
+        request.setAttribute("canEdit", isStoreManager);
+        request.setAttribute("canDelete", isOwner || isStoreManager);
+        request.setAttribute("canRedeem", isOwner || isStoreManager);
+        // ponytail: isAdmin kept for modal readonly compat; only StoreManager reaches modal
+        request.setAttribute("isAdmin", isStoreManager);
 
         request.getRequestDispatcher("/views/customers/customer-list.jsp")
                 .forward(request, response);
@@ -280,67 +288,24 @@ public class CustomerController extends HttpServlet {
         String keyword = request.getParameter("keyword");
         String branchIdFilter = request.getParameter("branchId");
 
-        String pageSizeOption = getParam(request, "pageSize", "5");
+        int page = parseInt(request.getParameter("page"), 1);
+        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
 
-        int totalCustomers = customerDAO.countCustomers(keyword, branchIdFilter);
-        int pageSize = resolvePageSize(pageSizeOption, totalCustomers);
-
-        int currentPage = parseInt(request.getParameter("page"), 1);
-
-        if (currentPage < 1) {
-            currentPage = 1;
-        }
-
-        int totalPages = (int) Math.ceil((double) totalCustomers / pageSize);
-
-        if (totalPages < 1) {
-            totalPages = 1;
-        }
-
-        if (currentPage > totalPages) {
-            currentPage = totalPages;
-        }
+        int totalRecords = customerDAO.countCustomers(keyword, branchIdFilter);
+        PageResult pr = PaginationHelper.compute(totalRecords, page, sizeValue);
+        pr.setAttributes(request);
 
         request.setAttribute(
                 "customers",
-                customerDAO.getCustomers(keyword, branchIdFilter, currentPage, pageSize)
+                customerDAO.getCustomers(keyword, branchIdFilter, pr.getCurrentPage(), pr.getPageSize())
         );
 
         request.setAttribute("keyword", keyword);
         request.setAttribute("branchFilter", parseInt(branchIdFilter, -1));
-
-        request.setAttribute("currentPage", currentPage);
-        request.setAttribute("pageSize", pageSize);
-        request.setAttribute("pageSizeOption", pageSizeOption);
-        request.setAttribute("totalCustomers", totalCustomers);
-        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalCustomers", totalRecords);
 
         request.setAttribute("customerOverview", customerDAO.getCustomerOverview());
         request.setAttribute("branches", customerDAO.getAllBranches());
-    }
-
-    private int resolvePageSize(String pageSizeOption, int totalCustomers) {
-        if (isBlank(pageSizeOption)) {
-            return 5;
-        }
-
-        String option = pageSizeOption.trim().toLowerCase();
-
-        if ("30p".equals(option) || "30%".equals(option) || "30".equals(option)) {
-            return Math.max(1, (int) Math.ceil(totalCustomers * 0.3));
-        }
-
-        if ("50p".equals(option) || "50%".equals(option) || "50".equals(option)) {
-            return Math.max(1, (int) Math.ceil(totalCustomers * 0.5));
-        }
-
-        int size = parseInt(option, 5);
-
-        if (size != 5 && size != 10) {
-            size = 5;
-        }
-
-        return size;
     }
 
     // =====================================================
@@ -412,7 +377,7 @@ public class CustomerController extends HttpServlet {
         customer.setDateOfBirth(parseDate(dateOfBirthStr));
 
         Employee user = getLoggedInUser(request);
-        boolean isAdmin = user != null && "Admin".equalsIgnoreCase(user.getRoleName());
+        boolean isAdmin = user != null && ("Admin".equalsIgnoreCase(user.getRoleName()) || "Owner".equalsIgnoreCase(user.getRoleName()) || "StoreManager".equalsIgnoreCase(user.getRoleName()));
 
         boolean success;
         if (isUpdate) {
@@ -532,18 +497,49 @@ public class CustomerController extends HttpServlet {
             return false;
         }
 
-        String roleLower = roleName.trim().toLowerCase();
+        String action = getParam(request, "action", "list");
+        boolean isPost = "POST".equalsIgnoreCase(request.getMethod());
 
-        // Allowed roles for Customer Management: Admin, Owner, StoreManager, SalesStaff
-        if (!"admin".equals(roleLower)
-                && !"owner".equals(roleLower)
-                && !"storemanager".equals(roleLower)
-                && !"salesstaff".equals(roleLower)) {
+        // Sales staff is authorized ONLY for the API search/create/edit endpoints used in POS
+        boolean isApiCall = "search-api".equals(action) || "create-api".equals(action) || "update-api".equals(action);
+        boolean isSales = roleName.toLowerCase().contains("sales");
+
+        if (isSales) {
+            if (isApiCall) {
+                return true;
+            } else {
+                response.sendRedirect(request.getContextPath() + "/pos/sale");
+                return false;
+            }
+        }
+
+        // Admin: redeem/sync POST only, no customer UI access
+        if ("Admin".equalsIgnoreCase(roleName)) {
+            if (isPost && ("sync-loyalty".equals(action) || "redeem-points".equals(action))) {
+                return true;
+            }
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
             return false;
         }
 
-        return true;
+        // Owner: view, search, filter, soft-delete, detail, redeem/sync. No create/edit.
+        if ("Owner".equalsIgnoreCase(roleName)) {
+            boolean isWriteAction = "create".equals(action) || "update".equals(action)
+                    || "create-api".equals(action) || "update-api".equals(action);
+            if (isWriteAction) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Owner cannot create or edit customers.");
+                return false;
+            }
+            return true;
+        }
+
+        // StoreManager: full access
+        if ("StoreManager".equalsIgnoreCase(roleName)) {
+            return true;
+        }
+
+        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
+        return false;
     }
 
     private Employee getLoggedInUser(HttpServletRequest request) {

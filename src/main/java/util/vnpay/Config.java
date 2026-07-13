@@ -21,7 +21,7 @@ public final class Config {
     public static String vnp_HashSecret = "TCE83JZ6EZP79YVT7IMN8I57472WFQ07";
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
     public static String vnp_Returnurl = "http://localhost:8080/vnpay_return";
-    public static String vnp_IpnUrl = "http://localhost:8080/vnpay_ipn";
+    public static String vnp_IpnUrl = "http://localhost:8080/vnpay/ipn";
 
     private Config() {
     }

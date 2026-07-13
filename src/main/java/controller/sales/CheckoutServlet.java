@@ -1,6 +1,8 @@
 package controller.sales;
 
 import dao.sales.*;
+import dao.inventory.InventoryDAO;
+import dao.finance.PaymentDAO;
 import model.*;
 import util.database.DBContext;
 import jakarta.servlet.annotation.WebServlet;
@@ -91,8 +93,78 @@ public class CheckoutServlet extends HttpServlet {
         Integer customerId = tab.getSelectedCustomer() != null ? tab.getSelectedCustomer().getCusId() : null;
 
         double totalBeforeTax = subtotal - discountAmount;
-        double vat = totalBeforeTax * 0.08;
+        double vatRate = tab.getVatRate();
+        double vat = totalBeforeTax * vatRate;
         double totalAmount = totalBeforeTax + vat;
+
+        // ══════════════════════════════════════════════════════════
+        // Chuyển khoản: tạo đơn hàng chờ → VNPAY QR
+        // ══════════════════════════════════════════════════════════
+        if ("BANK_TRANSFER".equals(paymentMethod)) {
+            Connection conn = null;
+            try {
+                conn = DBContext.getConnection();
+                conn.setAutoCommit(false);
+
+                OrderDAO orderDao = new OrderDAO();
+                OrderDetailDAO detailDao = new OrderDetailDAO();
+
+                String orderCode = "HD" + System.currentTimeMillis();
+                Order order = new Order();
+                order.setOrderCode(orderCode);
+                order.setOrderType("SALE");
+                order.setCustomerId(customerId);
+                order.setBranchId(emp.getBranchId());
+                order.setEmpId(emp.getEmpId());
+                order.setVoucherId(voucher != null ? voucher.getVoucherId() : null);
+                order.setWarehouseId(warehouseId);
+                order.setSubtotal(subtotal);
+                order.setDiscountAmount(discountAmount);
+                order.setTotalAmount(totalAmount);
+                order.setPaymentMethod("BANK_TRANSFER"); // Dùng giá trị có sẵn trong DB constraint
+                order.setStatus(Order.OrderStatus.PENDING);
+
+                int orderId = orderDao.createOrderInTransaction(conn, order);
+                detailDao.insertBatch(conn, orderId, cart);
+
+                // Trừ kho - giống như CASH flow
+                InventoryDAO inventoryDao = new InventoryDAO();
+                for (CartItem item : cart) {
+                    int beforeQty = inventoryDao.getStockInTransaction(conn, item.getProductId(), warehouseId);
+                    int deducted = inventoryDao.deductStock(conn, item.getProductId(), warehouseId, item.getQuantity());
+                    if (deducted == 0) {
+                        throw new SQLException("Không trừ được tồn kho sản phẩm: " + item.getProductName());
+                    }
+                    inventoryDao.logStockTransaction(conn, warehouseId, item.getProductId(),
+                            orderId, item.getQuantity(), beforeQty, emp.getEmpId());
+                }
+
+                // Cập nhật voucher (nếu có)
+                if (voucher != null) {
+                    VoucherDAO voucherDao = new VoucherDAO();
+                    voucherDao.incrementUsedQuantity(conn, voucher.getVoucherId());
+                }
+
+                conn.commit();
+
+                // Xóa tab khỏi session
+                tabs.remove(tabId);
+                if (tabs.isEmpty()) {
+                    tabs.put(1, new OrderTab(1));
+                }
+
+                String vnpayUrl = req.getContextPath() + "/vnpay/pay";
+                out.write("{\"status\":\"vnpay\",\"vnpayUrl\":\"" + vnpayUrl + "\",\"orderCode\":\"" + orderCode + "\"}");
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                if (conn != null) { try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); } }
+                out.write("{\"status\":\"error\",\"message\":\"Lỗi hệ thống: " + escJson(e.getMessage()) + "\"}");
+            } finally {
+                if (conn != null) { try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {} }
+            }
+            return;
+        }
 
         // Kiểm tra tiền mặt đủ
         if ("CASH".equals(paymentMethod) && cashReceived < totalAmount) {
@@ -154,6 +226,11 @@ public class CheckoutServlet extends HttpServlet {
             payment.setPaymentAmount(totalAmount);
             payment.setPaymentStatus("PAID");
             payment.setTransactionCode(paymentMethod.equals("CASH") ? "CASH-" + orderId : "BANK-" + orderId);
+            payment.setPaymentType("INCOME");
+            payment.setMethod(paymentMethod);
+            payment.setDescription("Thanh toán đơn hàng " + orderCode);
+            payment.setEmployeeId(emp.getEmpId());
+            payment.setBranchId(emp.getBranchId());
             paymentDao.insert(conn, payment);
 
             // 5. Trừ kho + log stock_transaction

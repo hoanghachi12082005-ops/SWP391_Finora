@@ -14,10 +14,15 @@
      *
      * @author PCQN
      */
-    import dao.user.UserManagementDao;
-    import dao.user.ProfileDao;
-    import jakarta.servlet.http.HttpSession;
-    import model.Employee;
+     import dao.sales.OrderDAO;
+     import dao.user.UserManagementDao;
+     import dao.user.ProfileDao;
+     import jakarta.servlet.http.HttpSession;
+     import java.util.List;
+     import model.Order;
+     import model.Employee;
+     import util.pagination.PaginationHelper;
+     import util.pagination.PaginationHelper.PageResult;
 
     @WebServlet(name = "OwnerUserServlet", urlPatterns = {"/owner/emp"})
     public class OwnerUserServlet extends HttpServlet {
@@ -77,30 +82,16 @@
             String roleId = request.getParameter("roleId");
             String status = request.getParameter("status");
 
-            String pageSizeOption = getParam(request, "pageSize", "5");
+            int page = parseInt(request.getParameter("page"), 1);
+            int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
 
-            int totalUsers = ownerUserDao.countEmployees(keyword, branchId, roleId, status);
-            int pageSize = resolvePageSize(pageSizeOption, totalUsers);
-
-            int currentPage = parseInt(request.getParameter("page"), 1);
-
-            if (currentPage < 1) {
-                currentPage = 1;
-            }
-
-            int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
-
-            if (totalPages < 1) {
-                totalPages = 1;
-            }
-
-            if (currentPage > totalPages) {
-                currentPage = totalPages;
-            }
+            int totalRecords = ownerUserDao.countEmployees(keyword, branchId, roleId, status);
+            PageResult pr = PaginationHelper.compute(totalRecords, page, sizeValue);
+            pr.setAttributes(request);
 
             request.setAttribute(
                     "users",
-                    ownerUserDao.getEmployees(keyword, branchId, roleId, status, currentPage, pageSize)
+                    ownerUserDao.getEmployees(keyword, branchId, roleId, status, pr.getCurrentPage(), pr.getPageSize())
             );
 
             request.setAttribute("branches", ownerUserDao.getAllBranches());
@@ -111,127 +102,8 @@
             request.setAttribute("roleFilter", parseInt(roleId, -1));
             request.setAttribute("statusFilter", status);
 
-            request.setAttribute("currentPage", currentPage);
-            request.setAttribute("pageSize", pageSize);
-            request.setAttribute("pageSizeOption", pageSizeOption);
-            request.setAttribute("totalUsers", totalUsers);
-            request.setAttribute("totalPages", totalPages);
-
             request.setAttribute("employeeOverview", ownerUserDao.getOwnerEmployeeOverview());
         }
-        private int resolvePageSize(String pageSizeOption, int totalUsers) {
-            if (isBlank(pageSizeOption)) {
-                return 5;
-            }
-
-            String option = pageSizeOption.trim().toLowerCase();
-
-            if ("30p".equals(option) || "30%".equals(option) || "30".equals(option)) {
-                return Math.max(1, (int) Math.ceil(totalUsers * 0.3));
-            }
-
-            if ("50p".equals(option) || "50%".equals(option) || "50".equals(option)) {
-                return Math.max(1, (int) Math.ceil(totalUsers * 0.5));
-            }
-
-            int size = parseInt(option, 5);
-
-            if (size != 5 && size != 10) {
-                size = 5;
-            }
-
-            return size;
-        }
-
-    //    private int[] getSelectedRoleIds(HttpServletRequest request) {
-    //        int employeeId = parseInt(request.getParameter("id"), -1);
-    //
-    //        if (employeeId <= 0) {
-    //            return new int[0];
-    //        }
-    //
-    //        
-    //        int[] roleIds = new int[roleIdList.size()];
-    //
-    //        for (int i = 0; i < roleIdList.size(); i++) {
-    //            roleIds[i] = roleIdList.get(i);
-    //        }
-    //
-    //        return roleIds;
-    //    }
-    //    private void saveEmployee(HttpServletRequest request, String action) {
-    //        boolean isUpdate = "update".equals(action);
-    //
-    //        int employeeId = parseInt(request.getParameter("employeeId"), -1);
-    //
-    //        String fullName = trim(request.getParameter("fullName"));
-    //        String email = trim(request.getParameter("email"));
-    //        String phone = trim(request.getParameter("phone"));
-    //        String status = trim(request.getParameter("status"));
-    //
-    //        int branchId = parseInt(request.getParameter("branchId"), -1);
-    //        int[] roleIds = parseRoleIds(request.getParameterValues("roleIds"));
-    //
-    //        if (isUpdate && employeeId <= 0) {
-    //            setFlash(request, "errorMessage", "Invalid employee ID.");
-    //            return;
-    //        }
-    //
-    //        if (isBlank(fullName) || isBlank(email) || branchId <= 0 || roleIds.length == 0) {
-    //            setFlash(request, "errorMessage", "Please enter full name, email, branch and at least one role.");
-    //            return;
-    //        }
-    //
-    //        Integer excludeEmployeeId = isUpdate ? employeeId : null;
-    //
-    //        if (ownerUserDao.isEmailExists(email, phone, excludeEmployeeId)) {
-    //            setFlash(request, "errorMessage", "Email/Phone already exists.");
-    //            return;
-    //        }
-    //
-    //        Employee employee = new Employee();
-    //
-    //        if (isUpdate) {
-    //            employee.setEmployeeID(employeeId);
-    //        }
-    //
-    //        employee.setFullName(fullName);
-    //        employee.setEmail(email);
-    //        employee.setPhone(phone);
-    //        employee.setBranchID(branchId);
-    //        employee.setStatus(isBlank(status) ? "active" : status);
-    //
-    //        boolean success;
-    //
-    //        if (isUpdate) {
-    //            success = ownerUserDao.updateEmployee(employee, roleIds);
-    //        } else {
-    //            String autoGeneratedPassword = EmailUtil.generateRandomPassword();
-    //
-    //            boolean isMailSent = EmailUtil.sendPasswordEmail(
-    //                    email.trim(),
-    //                    fullName.trim(),
-    //                    autoGeneratedPassword
-    //            );
-    //
-    //            if (!isMailSent) {
-    //                setFlash(request, "errorMessage", "Cannot send password email. Please check email configuration.");
-    //                return;
-    //            }
-    //
-    //            String hashedPassword = PasswordUtil.hash(autoGeneratedPassword);
-    //
-    //            success = ownerUserDao.addEmployee(employee, hashedPassword, roleIds);
-    //        }
-    //
-    //        setFlash(
-    //                request,
-    //                success ? "successMessage" : "errorMessage",
-    //                success
-    //                        ? (isUpdate ? "Employee account updated successfully." : "Employee account created successfully.")
-    //                        : (isUpdate ? "Cannot update employee account." : "Cannot create employee account.")
-    //        );
-    //    }
 
         private void viewEmployeeProfile(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -252,6 +124,8 @@
 
             request.setAttribute("profile", profile);
             request.setAttribute("salesSummary", profileDao.getEmployeeSalesSummary(employeeId));
+            request.setAttribute("orderHistory", new OrderDAO().findByEmployeeId(employeeId));
+            request.setAttribute("showSalesSection", true);
 
             request.setAttribute("readOnlyProfile", true);
             request.setAttribute("profileTitle", "Employee Profile");
@@ -262,62 +136,6 @@
             request.getRequestDispatcher("/views/profile/profile.jsp")
                     .forward(request, response);
         }
-
-    //    private void updateStatus(HttpServletRequest request, String status) {
-    //        int employeeId = parseInt(request.getParameter("employeeId"), -1);
-    //
-    //        if (employeeId <= 0) {
-    //            setFlash(request, "errorMessage", "Invalid employee ID.");
-    //            return;
-    //        }
-    //
-    //        boolean success = ownerUserDao.updateEmployeeStatus(employeeId, status);
-    //
-    //        setFlash(
-    //                request,
-    //                success ? "successMessage" : "errorMessage",
-    //                success ? "Employee status updated successfully." : "Cannot update employee status."
-    //        );
-    //    }
-
-    //    private void resetPassword(HttpServletRequest request) {
-    //        int employeeId = parseInt(request.getParameter("employeeId"), -1);
-    //
-    //        if (employeeId <= 0) {
-    //            setFlash(request, "errorMessage", "Invalid reset password data.");
-    //            return;
-    //        }
-    //
-    //        Employee employee = ownerUserDao.getEmployeeById(employeeId);
-    //
-    //        if (employee == null) {
-    //            setFlash(request, "errorMessage", "Employee not found or you are not allowed to reset this account.");
-    //            return;
-    //        }
-    //
-    //        String autoGeneratedPassword = EmailUtil.generateRandomPassword();
-    //        String hashedPassword = PasswordUtil.hash(autoGeneratedPassword);
-    //
-    //        boolean success = ownerUserDao.resetEmployeePassword(employeeId, hashedPassword);
-    //
-    //        if (!success) {
-    //            setFlash(request, "errorMessage", "Cannot reset employee password.");
-    //            return;
-    //        }
-    //
-    //        boolean isMailSent = EmailUtil.sendPasswordEmail(
-    //                employee.getEmail(),
-    //                employee.getFullName(),
-    //                autoGeneratedPassword
-    //        );
-    //
-    //        if (!isMailSent) {
-    //            setFlash(request, "errorMessage", "Password was reset, but email could not be sent. Please check email configuration.");
-    //            return;
-    //        }
-    //
-    //        setFlash(request, "successMessage", "Employee password reset successfully.");
-    //    }
 
         private boolean isOwner(HttpServletRequest request, HttpServletResponse response)
         throws IOException {

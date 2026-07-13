@@ -1,9 +1,10 @@
 package controller.sales;
 
-import dao.sales.ProductDAO;
-import dao.sales.CustomerDAO;
+import dao.product.ProductDAO;
+import dao.customer.CustomerDAO;
 import dao.sales.VoucherDAO;
 import dao.sales.ShiftDAO;
+import dao.system.VatSettingDAO;
 import model.Employee;
 import model.Product;
 import model.Shift;
@@ -125,6 +126,11 @@ public class SalesServlet extends HttpServlet {
         req.setAttribute("productList", productList);
         req.setAttribute("customerList", customerDao.getAll());
         req.setAttribute("warehouseId", warehouseId);
+
+        // VAT rate cho hiển thị
+        double vatPercentage = VatSettingDAO.getVatPercentage();
+        req.setAttribute("vatPercentage", vatPercentage);
+
         req.getRequestDispatcher("/views/sales/sales.jsp").forward(req, resp);
     }
 
@@ -147,7 +153,7 @@ public class SalesServlet extends HttpServlet {
             c.setAddress(req.getParameter("address"));
             c.setCusType("REGULAR");
 
-            int cusId = customerDao.insert(c);
+            int cusId = customerDao.insertSales(c);
             if (cusId > 0) {
                 resp.getWriter().write("{\"cusId\":" + cusId + ",\"fullName\":\"" + escJson(c.getFullName()) + "\"}");
             } else {

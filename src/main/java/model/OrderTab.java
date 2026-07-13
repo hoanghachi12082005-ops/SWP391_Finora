@@ -13,6 +13,7 @@ public class OrderTab implements Serializable {
     private String note = "";
     private Voucher appliedVoucher;
     private String status = "ACTIVE"; // ACTIVE, HOLD
+    private double vatRate = 0.08; // tỷ lệ VAT mặc định 8%
 
     public OrderTab() {}
 
@@ -52,7 +53,7 @@ public class OrderTab implements Serializable {
     public double getVatAmount() {
         double subtotal = getSubtotal();
         double discount = getDiscountAmount();
-        return (subtotal - discount) * 0.08;
+        return (subtotal - discount) * this.vatRate;
     }
 
     public double getTotalAmount() {
@@ -80,4 +81,7 @@ public class OrderTab implements Serializable {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public double getVatRate() { return vatRate; }
+    public void setVatRate(double vatRate) { this.vatRate = vatRate; }
 }

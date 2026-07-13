@@ -16,14 +16,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400" rel="stylesheet">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link href="${pageContext.request.contextPath}/assets/css/theme.css" rel="stylesheet">
-    <link href="${pageContext.request.contextPath}/assets/css/components.css?v=2" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/assets/css/theme.css?v=20260713" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/assets/css/components.css?v=20260713" rel="stylesheet">
 
     <c:if test="${param.additionalCSS != null}">
-        <link href="${pageContext.request.contextPath}/assets/css/${param.additionalCSS}" rel="stylesheet">
+        <link href="${pageContext.request.contextPath}/assets/css/${param.additionalCSS}?v=20260713" rel="stylesheet">
     </c:if>
+    <meta name="csrf-token" content="${sessionScope.csrfToken}">
 </head>
 <body>

@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.Employee;
+import util.database.DBContext;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
@@ -20,7 +21,8 @@ public class SecurityFilter implements Filter {
 
     private static final Set<String> PUBLIC_PATHS = Set.of(
         "/login", "/logout", "/forgot-password", "/register", "/role-selection",
-        "/assets/", "/css/", "/js/", "/static/"
+        "/assets/", "/css/", "/js/", "/static/",
+        "/vnpay/ipn", "/vnpay/return", "/order/status"
     );
 
     private static final Map<String, Set<String>> ROLE_MAP = new LinkedHashMap<>();
@@ -28,21 +30,24 @@ public class SecurityFilter implements Filter {
         ROLE_MAP.put("/system/",         Set.of("admin", "owner"));
         ROLE_MAP.put("/management/",     Set.of("admin", "owner", "storemanager", "warehousestaff"));
         ROLE_MAP.put("/pos/",            Set.of("admin", "owner", "storemanager", "salesstaff"));
-        ROLE_MAP.put("/owner/",          Set.of("owner"));
+        ROLE_MAP.put("/owner/",          Set.of("owner", "storemanager", "salesstaff", "warehousestaff"));
         ROLE_MAP.put("/admin/",          Set.of("admin", "owner"));
         ROLE_MAP.put("/manager/",        Set.of("admin", "owner", "storemanager"));
-        ROLE_MAP.put("/branch/",         Set.of("admin", "owner"));
+        ROLE_MAP.put("/branch",          Set.of("admin", "owner"));
         ROLE_MAP.put("/supplier/",       Set.of("admin", "owner", "storemanager", "warehousestaff"));
         ROLE_MAP.put("/purchase/",       Set.of("admin", "owner", "storemanager", "warehousestaff"));
         ROLE_MAP.put("/finance/",        Set.of("admin", "owner"));
+        ROLE_MAP.put("/activity-log",    Set.of("admin", "owner"));
         ROLE_MAP.put("/activity/",       Set.of("admin", "owner"));
         ROLE_MAP.put("/settings",        Set.of("admin", "owner"));
         ROLE_MAP.put("/report/",         Set.of("admin", "owner", "storemanager"));
-        ROLE_MAP.put("/inventory/",      Set.of("admin", "owner", "storemanager", "warehousestaff"));
-        ROLE_MAP.put("/warehouse/",      Set.of("admin", "owner", "storemanager", "warehousestaff"));
-        ROLE_MAP.put("/product/",        Set.of("admin", "owner", "storemanager", "salesstaff"));
+        ROLE_MAP.put("/inventory/",      Set.of("owner", "storemanager", "warehousestaff"));
+        ROLE_MAP.put("/warehouse/",      Set.of("owner", "storemanager", "warehousestaff"));
+        ROLE_MAP.put("/product/",        Set.of("owner"));
+        ROLE_MAP.put("/products",        Set.of("owner"));
         ROLE_MAP.put("/category/",       Set.of("admin", "owner", "storemanager"));
         ROLE_MAP.put("/customer/",       Set.of("admin", "owner", "storemanager", "salesstaff"));
+        ROLE_MAP.put("/configuration/",  Set.of("admin", "owner"));
         ROLE_MAP.put("/sales/",          Set.of("admin", "owner", "storemanager", "salesstaff"));
         ROLE_MAP.put("/cart/",           Set.of("admin", "owner", "storemanager", "salesstaff"));
         ROLE_MAP.put("/checkout/",       Set.of("admin", "owner", "storemanager", "salesstaff"));
@@ -50,7 +55,7 @@ public class SecurityFilter implements Filter {
         ROLE_MAP.put("/print/",          Set.of("admin", "owner", "storemanager", "salesstaff"));
         ROLE_MAP.put("/search-product",  Set.of("admin", "owner", "storemanager", "salesstaff"));
         ROLE_MAP.put("/cash-transaction",Set.of("admin", "owner", "storemanager"));
-        ROLE_MAP.put("/dashboard/",      Set.of("admin", "owner", "storemanager"));
+        ROLE_MAP.put("/dashboard/",      Set.of("admin", "owner", "storemanager", "salesstaff", "warehousestaff"));
         ROLE_MAP.put("/revenue/",        Set.of("admin", "owner", "storemanager"));
         ROLE_MAP.put("/shift/",          Set.of("admin", "owner", "storemanager", "salesstaff"));
         ROLE_MAP.put("/profile/",        Set.of("admin", "owner", "storemanager", "salesstaff", "warehousestaff"));
@@ -91,7 +96,7 @@ public class SecurityFilter implements Filter {
         resp.setHeader("Referrer-Policy", "same-origin");
 
         // 5. Ensure CSRF token exists in session (generated on first GET or login)
-        if ("GET".equalsIgnoreCase(req.getMethod()) && session.getAttribute("csrfToken") == null) {
+        if (session.getAttribute("csrfToken") == null) {
             byte[] csrfBytes = new byte[32];
             new SecureRandom().nextBytes(csrfBytes);
             session.setAttribute("csrfToken", Base64.getEncoder().encodeToString(csrfBytes));
@@ -101,22 +106,40 @@ public class SecurityFilter implements Filter {
         String role = employee.getRoleName() != null ? employee.getRoleName().trim().toLowerCase() : "";
         Set<String> allowedRoles = findRequiredRoles(path);
 
+        System.out.println("[SecurityFilter] Path: " + path + ", Role: " + role + ", Allowed: " + allowedRoles);
+
         if (allowedRoles != null && !allowedRoles.contains(role)) {
             resp.sendError(403, "Bạn không có quyền truy cập chức năng này.");
             return;
         }
 
-        // 7. CSRF check for state-changing methods
-        if ("POST".equalsIgnoreCase(req.getMethod()) && !isCsrfExempt(path)) {
-            String csrfToken = req.getParameter("csrfToken");
-            String sessionToken = (String) req.getSession().getAttribute("csrfToken");
-            if (csrfToken == null || !csrfToken.equals(sessionToken)) {
-                resp.sendError(403, "CSRF token không hợp lệ. Vui lòng tải lại trang.");
-                return;
-            }
+        // 7. Set employee context cho trigger audit log
+        Integer empId = employee.getEmployeeId();
+        if (empId != null) {
+            DBContext.setCurrentEmployeeId(empId);
         }
 
-        chain.doFilter(request, response);
+        try {
+            // 8. CSRF check for state-changing methods
+            if ("POST".equalsIgnoreCase(req.getMethod()) && !isCsrfExempt(path)) {
+                String csrfToken = req.getParameter("csrfToken");
+                if (csrfToken == null) {
+                    csrfToken = req.getHeader("X-CSRF-Token");
+                }
+                if (csrfToken == null) {
+                    csrfToken = req.getHeader("X-Csrf-Token");
+                }
+                String sessionToken = (String) req.getSession().getAttribute("csrfToken");
+                if (csrfToken == null || !csrfToken.equals(sessionToken)) {
+                    resp.sendError(403, "CSRF token không hợp lệ. Vui lòng tải lại trang.");
+                    return;
+                }
+            }
+
+            chain.doFilter(request, response);
+        } finally {
+            DBContext.clearCurrentEmployeeId();
+        }
     }
 
     private boolean isPublicPath(String path) {

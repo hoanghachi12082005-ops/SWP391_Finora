@@ -60,6 +60,48 @@ public class OrderDAO {
         return list;
     }
 
+    public List<Order> getPendingInventoryOrders(int branchId) {
+        List<Order> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+            SELECT o.*, 
+                   s.supplier_name AS supplierName, 
+                   e.fullName AS employeeName, 
+                   w.warehouse_name AS warehouseName
+            FROM [order] o
+            LEFT JOIN Supplier s ON o.supplier_id = s.supplier_id
+            JOIN Employee e ON o.emp_id = e.emp_id
+            JOIN Warehouse w ON o.warehouse_id = w.warehouse_id
+            WHERE o.order_type IN ('PURCHASE', 'EXPORT') AND o.status = 'PENDING'
+            """);
+        
+        if (branchId > 0) {
+            sql.append(" AND o.branch_id = ?");
+        }
+        sql.append(" ORDER BY o.created_at ASC");
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+             
+            if (branchId > 0) {
+                ps.setInt(1, branchId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Order o = mapRow(rs);
+                    o.setSupplierName(rs.getString("supplierName"));
+                    o.setEmployeeName(rs.getString("employeeName"));
+                    // We can reuse getCustomerName to store warehouseName or add warehouseName field.
+                    // For simplicity, let's reuse setCustomerName for warehouse name in the approval screen.
+                    o.setCustomerName(rs.getString("warehouseName")); 
+                    list.add(o);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public List<OrderDetail> getOrderDetailById(int orderId) {
         return findDetailsByOrderId(orderId);
     }
@@ -67,9 +109,10 @@ public class OrderDAO {
     public List<OrderDetail> findDetailsByOrderId(int orderId) {
         List<OrderDetail> list = new ArrayList<>();
         String sql = """
-            SELECT od.*, p.product_name, p.product_codebar 
+            SELECT od.*, p.product_name, p.product_codebar, s.supplier_name 
             FROM order_detail od 
             JOIN Product p ON od.product_id = p.product_id 
+            LEFT JOIN supplier s ON od.supplier_id = s.supplier_id
             WHERE od.order_id = ?
             """;
         
@@ -85,8 +128,10 @@ public class OrderDAO {
                     od.setQuantity(rs.getInt("quantity"));
                     od.setUnitPrice(rs.getDouble("unit_price"));
                     od.setTotalPrice(rs.getDouble("total_price"));
+                    od.setImportPrice(rs.getDouble("import_price"));
                     od.setProductName(rs.getString("product_name"));
                     od.setProductCode(rs.getString("product_codebar"));
+                    od.setSupplierName(rs.getString("supplier_name"));
                     list.add(od);
                 }
             }
@@ -131,6 +176,39 @@ public class OrderDAO {
         return null;
     }
 
+    public List<Order> findByEmployeeId(int empId) {
+        List<Order> list = new ArrayList<>();
+        String sql = """
+            SELECT o.*,
+                   c.full_name AS customerName,
+                   c.phone AS customerPhone,
+                   e.fullName AS employeeName,
+                   b.branch_name AS branchName
+            FROM [order] o
+            LEFT JOIN Customer c ON o.customer_id = c.cus_id
+            JOIN Employee e ON o.emp_id = e.emp_id
+            JOIN Branch b ON o.branch_id = b.branch_id
+            WHERE o.emp_id = ?
+            ORDER BY o.created_at DESC
+            """;
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, empId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Order o = mapRow(rs);
+                    o.setCustomerName(rs.getString("customerName"));
+                    o.setEmployeeName(rs.getString("employeeName"));
+                    o.setBranchName(rs.getString("branchName"));
+                    list.add(o);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public boolean updateStatus(int orderId, String status) {
         String sql = "UPDATE [order] SET status = ? WHERE order_id = ?";
         try (Connection conn = DBContext.getConnection();
@@ -153,13 +231,101 @@ public class OrderDAO {
         }
     }
 
+    public boolean updateStatus(int orderId, String status, Integer approvedBy) {
+        String sql = "UPDATE [order] SET status = ?, approved_by = ? WHERE order_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            if (approvedBy != null) {
+                ps.setInt(2, approvedBy);
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }
+            ps.setInt(3, orderId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public void updateStatus(Connection conn, int orderId, String status, Integer approvedBy) throws SQLException {
+        String sql = "UPDATE [order] SET status = ?, approved_by = ? WHERE order_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            if (approvedBy != null) {
+                ps.setInt(2, approvedBy);
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }
+            ps.setInt(3, orderId);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Tìm ID đơn hàng theo mã đơn hàng (dùng cho VNPay IPN)
+     */
+    public int findIdByCode(Connection conn, String orderCode) throws SQLException {
+        String sql = "SELECT order_id FROM [order] WHERE order_code = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, orderCode);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt("order_id");
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Tìm đơn hàng theo mã đơn hàng (dùng cho VNPay)
+     */
+    public Order findByCode(Connection conn, String orderCode) throws SQLException {
+        String sql = "SELECT * FROM [order] WHERE order_code = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, orderCode);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapRow(rs);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Lấy trạng thái đơn hàng theo ID (dùng cho VNPay IPN)
+     */
+    public String getStatus(Connection conn, int orderId) throws SQLException {
+        String sql = "SELECT status FROM [order] WHERE order_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString("status");
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Lấy trạng thái đơn hàng theo mã đơn hàng (dùng cho polling VNPAY)
+     */
+    public String getStatusByCode(Connection conn, String orderCode) throws SQLException {
+        String sql = "SELECT status FROM [order] WHERE order_code = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, orderCode);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString("status");
+            }
+        }
+        return null;
+    }
+
     public int createOrderInTransaction(Connection conn, Order order) throws SQLException {
         String sql = """
             INSERT INTO [order] 
             (order_code, order_type, customer_id, branch_id, supplier_id, emp_id, 
              voucher_id, warehouse_id, subtotal, discount_amount, total_amount, 
              payment_method, status, created_at) 
-            VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
             """;
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, order.getOrderCode());
@@ -170,18 +336,23 @@ public class OrderDAO {
                 ps.setNull(3, java.sql.Types.INTEGER);
             }
             ps.setInt(4, order.getBranchId());
-            ps.setInt(5, order.getEmpId());
-            if (order.getVoucherId() != null && order.getVoucherId() > 0) {
-                ps.setInt(6, order.getVoucherId());
+            if (order.getSupplierId() != null && order.getSupplierId() > 0) {
+                ps.setInt(5, order.getSupplierId());
             } else {
-                ps.setNull(6, java.sql.Types.INTEGER);
+                ps.setNull(5, java.sql.Types.INTEGER);
             }
-            ps.setInt(7, order.getWarehouseId());
-            ps.setDouble(8, order.getSubtotal());
-            ps.setDouble(9, order.getDiscountAmount());
-            ps.setDouble(10, order.getTotalAmount());
-            ps.setString(11, order.getPaymentMethod());
-            ps.setString(12, order.getStatus() != null ? order.getStatus().name() : "PENDING");
+            ps.setInt(6, order.getEmpId());
+            if (order.getVoucherId() != null && order.getVoucherId() > 0) {
+                ps.setInt(7, order.getVoucherId());
+            } else {
+                ps.setNull(7, java.sql.Types.INTEGER);
+            }
+            ps.setInt(8, order.getWarehouseId());
+            ps.setDouble(9, order.getSubtotal());
+            ps.setDouble(10, order.getDiscountAmount());
+            ps.setDouble(11, order.getTotalAmount());
+            ps.setString(12, order.getPaymentMethod());
+            ps.setString(13, order.getStatus() != null ? order.getStatus().name() : "PENDING");
 
             int affected = ps.executeUpdate();
             if (affected == 0) {

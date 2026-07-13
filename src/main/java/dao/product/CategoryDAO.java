@@ -213,8 +213,9 @@ public class CategoryDAO {
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND (LOWER(c.category_name) LIKE ? OR LOWER(c.description) LIKE ? OR LOWER(p.category_name) LIKE ?)");
+            sql.append(" AND (LOWER(c.category_name) LIKE ? OR LOWER(c.description) LIKE ? OR LOWER(p.category_name) LIKE ? OR EXISTS (SELECT 1 FROM product pr2 WHERE pr2.category_id = c.category_id AND LOWER(pr2.product_name) LIKE ?))");
             String kwPattern = "%" + keyword.trim().toLowerCase() + "%";
+            params.add(kwPattern);
             params.add(kwPattern);
             params.add(kwPattern);
             params.add(kwPattern);
@@ -266,8 +267,9 @@ public class CategoryDAO {
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND (LOWER(c.category_name) LIKE ? OR LOWER(c.description) LIKE ? OR LOWER(p.category_name) LIKE ?)");
+            sql.append(" AND (LOWER(c.category_name) LIKE ? OR LOWER(c.description) LIKE ? OR LOWER(p.category_name) LIKE ? OR EXISTS (SELECT 1 FROM product pr2 WHERE pr2.category_id = c.category_id AND LOWER(pr2.product_name) LIKE ?))");
             String kwPattern = "%" + keyword.trim().toLowerCase() + "%";
+            params.add(kwPattern);
             params.add(kwPattern);
             params.add(kwPattern);
             params.add(kwPattern);

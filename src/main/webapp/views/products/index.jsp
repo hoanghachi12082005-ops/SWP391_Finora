@@ -182,23 +182,46 @@
                     </table>
 
                     <!-- Pagination -->
-<%  if (totalPages > 1) { %>
-                    <div class="d-flex justify-content-between align-items-center mt-4">
-                        <div class="text-muted small">
-                            Trang <strong><%= currentPage %></strong> / <strong><%= totalPages %></strong>
-                        </div>
-<%      String baseUrl = ctx + "/products?"
-                + (keyword != null && !keyword.isBlank() ? "keyword=" + keyword + "&" : "")
+<%  if (totalPages > 1) {
+        String pageUrl = ctx + "/products?"
+                + (keyword != null && !keyword.isBlank() ? "keyword=" + java.net.URLEncoder.encode(keyword, "UTF-8") + "&" : "")
                 + (filterStatus != null && !filterStatus.isBlank() ? "status=" + filterStatus + "&" : "")
                 + (filterCategoryID != null ? "categoryID=" + filterCategoryID + "&" : "")
-                + (filterUnitID != null ? "unitID=" + filterUnitID + "&" : "")
-                + "page=";
+                + (filterUnitID != null ? "unitID=" + filterUnitID + "&" : "");
 %>
-                        <jsp:include page="../common/pagination.jsp">
-                            <jsp:param name="currentPage" value="<%= currentPage %>"/>
-                            <jsp:param name="totalPages" value="<%= totalPages %>"/>
-                            <jsp:param name="url" value="<%= baseUrl %>"/>
-                        </jsp:include>
+                    <div class="d-flex justify-content-center mt-4">
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item <%= currentPage <= 1 ? "disabled" : "" %>">
+                                    <a class="page-link" href="<%= pageUrl %>page=<%= currentPage - 1 %>">&laquo;</a>
+                                </li>
+<%
+        int startPage = Math.max(1, currentPage - 2);
+        int endPage = Math.min(totalPages, currentPage + 2);
+        if (startPage > 1) {
+%>
+                                <li class="page-item"><a class="page-link" href="<%= pageUrl %>page=1">1</a></li>
+                                <% if (startPage > 2) { %><li class="page-item disabled"><span class="page-link">...</span></li><% } %>
+<%
+        }
+        for (int i = startPage; i <= endPage; i++) {
+%>
+                                <li class="page-item <%= i == currentPage ? "active" : "" %>">
+                                    <a class="page-link" href="<%= pageUrl %>page=<%= i %>"><%= i %></a>
+                                </li>
+<%
+        }
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) { %><li class="page-item disabled"><span class="page-link">...</span></li><% } %>
+                                <li class="page-item"><a class="page-link" href="<%= pageUrl %>page=<%= totalPages %>"><%= totalPages %></a></li>
+<%
+        }
+%>
+                                <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
+                                    <a class="page-link" href="<%= pageUrl %>page=<%= currentPage + 1 %>">&raquo;</a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
 <%  } %>
                 </div>

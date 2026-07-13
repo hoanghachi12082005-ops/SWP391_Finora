@@ -1,6 +1,6 @@
 package controller.sales;
 
-import dao.sales.ProductDAO;
+import dao.product.ProductDAO;
 import model.Employee;
 import model.Product;
 import jakarta.servlet.ServletException;
@@ -24,7 +24,11 @@ public class ProductSearchServlet extends HttpServlet {
         resp.setCharacterEncoding("UTF-8");
 
         String keyword = req.getParameter("keyword");
-        if (keyword == null) keyword = "";
+        if (keyword == null) {
+            keyword = "";
+        } else {
+            keyword = keyword.trim().replaceAll("\\s+", " ");
+        }
 
         HttpSession session = req.getSession();
         Employee emp = (Employee) session.getAttribute("employee");

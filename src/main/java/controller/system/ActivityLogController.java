@@ -125,9 +125,9 @@ public class ActivityLogController extends BaseController {
         }
         Employee emp = (Employee) user;
         String role = emp.getRoleName();
-        if (role == null || !"Owner".equalsIgnoreCase(role.trim())) {
+        if (role == null || (!"Owner".equalsIgnoreCase(role.trim()) && !"Admin".equalsIgnoreCase(role.trim()))) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN,
-                    "Bạn không có quyền xem Activity Log. Chỉ Owner mới được truy cập.");
+                    "Bạn không có quyền xem Activity Log. Chỉ Owner và Admin mới được truy cập.");
             return false;
         }
         return true;
