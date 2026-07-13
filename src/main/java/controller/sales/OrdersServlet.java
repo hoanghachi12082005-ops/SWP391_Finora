@@ -3,6 +3,7 @@ package controller.sales;
 import dao.sales.OrderDAO;
 import dao.inventory.InventoryDAO;
 import dao.sales.CustomerPointDAO;
+import dao.system.VatSettingDAO;
 import model.Order;
 import model.OrderDetail;
 import model.Employee;
@@ -108,6 +109,10 @@ public class OrdersServlet extends HttpServlet {
         req.setAttribute("startRecord", startRecord);
         req.setAttribute("endRecord", endRecord);
 
+        // VAT percentage cho hiển thị
+        double vatPercentage = VatSettingDAO.getVatPercentage();
+        req.setAttribute("vatPercentage", vatPercentage);
+
         req.getRequestDispatcher("/views/sales/orders.jsp").forward(req, resp);
     }
 
@@ -154,6 +159,7 @@ public class OrdersServlet extends HttpServlet {
         json.append("\"subtotal\":").append(order.getSubtotal()).append(",");
         json.append("\"discountAmount\":").append(order.getDiscountAmount()).append(",");
         json.append("\"totalAmount\":").append(order.getTotalAmount()).append(",");
+        json.append("\"vatPercentage\":").append(VatSettingDAO.getVatPercentage()).append(",");
         json.append("\"paymentMethod\":\"").append(escJson(order.getPaymentMethod())).append("\",");
         json.append("\"status\":\"").append(escJson(order.getStatus().name())).append("\",");
         json.append("\"items\":[");

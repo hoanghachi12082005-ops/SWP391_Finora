@@ -93,7 +93,8 @@ public class CheckoutServlet extends HttpServlet {
         Integer customerId = tab.getSelectedCustomer() != null ? tab.getSelectedCustomer().getCusId() : null;
 
         double totalBeforeTax = subtotal - discountAmount;
-        double vat = totalBeforeTax * 0.08;
+        double vatRate = tab.getVatRate();
+        double vat = totalBeforeTax * vatRate;
         double totalAmount = totalBeforeTax + vat;
 
         // ══════════════════════════════════════════════════════════
@@ -125,6 +126,18 @@ public class CheckoutServlet extends HttpServlet {
 
                 int orderId = orderDao.createOrderInTransaction(conn, order);
                 detailDao.insertBatch(conn, orderId, cart);
+
+                // Trừ kho - giống như CASH flow
+                InventoryDAO inventoryDao = new InventoryDAO();
+                for (CartItem item : cart) {
+                    int beforeQty = inventoryDao.getStockInTransaction(conn, item.getProductId(), warehouseId);
+                    int deducted = inventoryDao.deductStock(conn, item.getProductId(), warehouseId, item.getQuantity());
+                    if (deducted == 0) {
+                        throw new SQLException("Không trừ được tồn kho sản phẩm: " + item.getProductName());
+                    }
+                    inventoryDao.logStockTransaction(conn, warehouseId, item.getProductId(),
+                            orderId, item.getQuantity(), beforeQty, emp.getEmpId());
+                }
 
                 // Cập nhật voucher (nếu có)
                 if (voucher != null) {

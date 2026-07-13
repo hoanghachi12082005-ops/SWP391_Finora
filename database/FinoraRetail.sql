@@ -508,6 +508,18 @@ GO
 
 
 -- ============================================================
+--  VAT_SETTING — Cấu hình VAT chung cho bán hàng
+-- ============================================================
+CREATE TABLE vat_setting (
+    setting_id       INT           IDENTITY(1,1) PRIMARY KEY,
+    vat_percentage   DECIMAL(5,2)  NOT NULL DEFAULT 8,
+    updated_by       INT           REFERENCES employee(emp_id),
+    updated_at       DATETIME      DEFAULT GETDATE()
+);
+GO
+
+
+-- ============================================================
 --  INDEXES
 -- ============================================================
 CREATE INDEX IX_Employee_BranchID ON Employee(branch_id);
@@ -526,6 +538,7 @@ GO
 -- ============================================================
 INSERT INTO loyalty_point_setting (amount_per_point, point_to_currency) VALUES (100000, 0);
 GO
+
 
 -- ============================================================
 --  SEED DATA
@@ -567,6 +580,10 @@ INSERT INTO Employee (branch_id, role_id, fullName, gender, bod, address, email,
 (1, 5, N'Trần Văn Quân',     N'Nam',  '1993-04-10', N'Hà Nội',     'quan.tv@finora.vn',      '090-100-0016', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
 (2, 5, N'Lê Thị Ráng',       N'Nữ',   '1995-09-22', N'Hồ Chí Minh','rang.lt@finora.vn',       '090-100-0017', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE'),
 (3, 5, N'Nguyễn Văn Sơn',    N'Nam',  '1994-12-05', N'Đà Nẵng',   'son.nv2@finora.vn',       '090-100-0018', '$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q', 'ACTIVE');
+GO
+
+-- VAT setting default: 8%
+INSERT INTO vat_setting (vat_percentage, updated_by) VALUES (8, 1);
 GO
 
 -- 4. SUPPLIERS
@@ -749,7 +766,9 @@ INSERT INTO voucher (voucher_code, voucher_name, discount_type, discount_value, 
 ('WELCOME',  N'Khách hàng mới giảm 10%',        'PERCENT', 10,   10, '2026-01-01','2026-12-31','ACTIVE'),
 ('FIXED20',  N'Giảm 20,000đ',                    'FIXED',   20000,12, '2026-03-01','2026-12-31','ACTIVE'),
 ('FIXED100', N'Giảm 100,000đ đơn từ 1 triệu',   'FIXED',   100000,2, '2026-04-01','2026-09-30','ACTIVE'),
-('SALE5',    N'Giảm 5% đơn hàng',               'PERCENT', 5,    15, '2026-01-01','2026-12-31','ACTIVE');
+('SALE5',    N'Giảm 5% đơn hàng',               'PERCENT', 5,    15, '2026-01-01','2026-12-31','ACTIVE'),
+('POINT_CONFIG', N'Cấu hình đổi điểm ra tiền', 'FIXED',   1,    0,  NULL, NULL, 'ACTIVE'),
+('POINT_EARN_CONFIG', N'Cấu hình tích điểm',   'FIXED',   100000,0,  NULL, NULL, 'ACTIVE');
 GO
 
 -- 13. ORDERS (100 SALE orders, Jan-Jun 2026)

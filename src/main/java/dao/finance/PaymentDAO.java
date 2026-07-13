@@ -31,16 +31,16 @@ public class PaymentDAO {
                 p.payment_date AS PaymentDate,
                 p.payment_status AS PaymentStatus,
                 p.transaction_code AS TransactionCode,
-                p.payment_type AS PaymentType,
-                p.description AS Description,
-                p.emp_id AS EmployeeID,
-                p.branch_id AS BranchID,
+                p.PaymentType AS PaymentType,
+                p.Description AS Description,
+                p.EmployeeID AS EmployeeID,
+                p.BranchID AS BranchID,
                 p.payment_method AS PaymentMethod,
                 e.fullName AS CreatorName,
                 b.branch_name AS BranchName
             FROM payment p
-            LEFT JOIN Employee e ON p.emp_id = e.emp_id
-            LEFT JOIN Branch b ON p.branch_id = b.branch_id
+            LEFT JOIN Employee e ON p.EmployeeID = e.emp_id
+            LEFT JOIN Branch b ON p.BranchID = b.branch_id
             WHERE 1=1
         """);
 
@@ -53,7 +53,7 @@ public class PaymentDAO {
         }
 
         if (type != null && !type.isBlank()) {
-            sql.append(" AND p.payment_type = ? ");
+            sql.append(" AND p.PaymentType = ? ");
             params.add(type);
         }
 
@@ -114,7 +114,7 @@ public class PaymentDAO {
         }
 
         if (type != null && !type.isBlank()) {
-            sql.append(" AND p.payment_type = ? ");
+            sql.append(" AND p.PaymentType = ? ");
             params.add(type);
         }
 
@@ -151,7 +151,7 @@ public class PaymentDAO {
      */
     public double getTotalCashBalance() {
         String sql = """
-            SELECT SUM(CASE WHEN payment_type = 'INCOME' THEN payment_amount ELSE -payment_amount END)
+            SELECT SUM(CASE WHEN PaymentType = 'INCOME' THEN payment_amount ELSE -payment_amount END)
             FROM payment
             WHERE payment_method = 'CASH'
         """;
@@ -163,7 +163,7 @@ public class PaymentDAO {
      */
     public double getTotalBankBalance() {
         String sql = """
-            SELECT SUM(CASE WHEN payment_type = 'INCOME' THEN payment_amount ELSE -payment_amount END)
+            SELECT SUM(CASE WHEN PaymentType = 'INCOME' THEN payment_amount ELSE -payment_amount END)
             FROM payment
             WHERE payment_method = 'BANK_TRANSFER'
         """;
@@ -177,7 +177,7 @@ public class PaymentDAO {
         String sql = """
             SELECT SUM(payment_amount)
             FROM payment
-            WHERE payment_type = 'INCOME' AND payment_method = ?
+            WHERE PaymentType = 'INCOME' AND payment_method = ?
         """;
         return getDoubleScalarWithParam(sql, paymentMethod);
     }
@@ -189,7 +189,7 @@ public class PaymentDAO {
         String sql = """
             SELECT SUM(payment_amount)
             FROM payment
-            WHERE payment_type = 'EXPENSE' AND payment_method = ?
+            WHERE PaymentType = 'EXPENSE' AND payment_method = ?
         """;
         return getDoubleScalarWithParam(sql, paymentMethod);
     }
@@ -202,8 +202,8 @@ public class PaymentDAO {
         String sql = """
             SELECT 
                 DATEPART(week, payment_date) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, payment_date), 0)) + 1 AS WeekNum,
-                SUM(CASE WHEN payment_type = 'INCOME' THEN payment_amount ELSE 0 END) AS TotalIncome,
-                SUM(CASE WHEN payment_type = 'EXPENSE' THEN payment_amount ELSE 0 END) AS TotalExpense
+                SUM(CASE WHEN PaymentType = 'INCOME' THEN payment_amount ELSE 0 END) AS TotalIncome,
+                SUM(CASE WHEN PaymentType = 'EXPENSE' THEN payment_amount ELSE 0 END) AS TotalExpense
             FROM payment
             WHERE MONTH(payment_date) = MONTH(GETDATE()) AND YEAR(payment_date) = YEAR(GETDATE())
             GROUP BY DATEPART(week, payment_date) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, payment_date), 0)) + 1
@@ -245,8 +245,8 @@ public class PaymentDAO {
         String sql = """
             INSERT INTO payment (
                 order_id, payment_method, payment_amount, payment_date, 
-                payment_status, transaction_code, payment_type, description, 
-                emp_id, branch_id
+                payment_status, transaction_code, PaymentType, Description, 
+                EmployeeID, BranchID
             )
             VALUES (?, ?, ?, GETDATE(), 'PAID', ?, ?, ?, ?, ?)
         """;
@@ -291,7 +291,7 @@ public class PaymentDAO {
      * Sinh mã giao dịch tăng tự động (ví dụ: PT00001, PC00001)
      */
     private String generateTransactionCode(String type, String prefix) {
-        String sql = "SELECT MAX(transaction_code) FROM payment WHERE payment_type = ? AND transaction_code LIKE ?";
+        String sql = "SELECT MAX(transaction_code) FROM payment WHERE PaymentType = ? AND transaction_code LIKE ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -395,7 +395,7 @@ public class PaymentDAO {
 
     // --- Compatibility method for sales/POS transaction ---
     public void insert(Connection conn, Payment p) throws SQLException {
-        String sql = "INSERT INTO payment (order_id, payment_amount, payment_date, payment_status, transaction_code, payment_type, description, emp_id, branch_id, payment_method) "
+        String sql = "INSERT INTO payment (order_id, payment_amount, payment_date, payment_status, transaction_code, PaymentType, Description, EmployeeID, BranchID, payment_method) "
                    + "VALUES (?, ?, GETDATE(), ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, p.getOrderId());

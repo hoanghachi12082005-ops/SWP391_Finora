@@ -50,6 +50,12 @@ public class ProductController extends BaseController {
             keyword = keyword.trim().replaceAll("\\s+", " ");
         }
         String status   = request.getParameter("status");
+        if (status != null) {
+            status = status.trim().toUpperCase();
+            if (status.isEmpty() || (!"ACTIVE".equals(status) && !"INACTIVE".equals(status))) {
+                status = null;
+            }
+        }
         String categoryParam = request.getParameter("categoryID");
         String unitParam = request.getParameter("unitID");
 
