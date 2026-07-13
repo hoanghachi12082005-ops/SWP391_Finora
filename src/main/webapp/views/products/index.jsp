@@ -267,11 +267,8 @@
             </div>
             <div class="mb-3">
                 <label class="form-label">Ảnh sản phẩm</label>
-                <input type="file" id="modal-image" name="imageFile" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,image/*" onchange="previewProductImage(event)">
+                <input type="file" id="modal-image" name="imageFile" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,image/*">
                 <div class="form-text">Chỉ chấp nhận file ảnh: JPG, JPEG, PNG, WEBP, GIF, BMP. Tối đa 3MB. Có thể bỏ trống khi tạo mới.</div>
-                <div class="mt-2">
-                    <img id="modal-image-preview" src="" alt="preview" style="display:none;max-width:160px;max-height:160px;object-fit:cover;border-radius:8px;border:1px solid #eee;">
-                </div>
             </div>
             <div class="d-flex justify-content-end">
                 <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal" onclick="closeProductModal()">Huỷ</button>
@@ -335,7 +332,6 @@
     function openProductModal(action, id, catId, name, unitId, sellingPrice, status, imageUrl) {
         document.getElementById('modal-action').value = action;
         const fileInput = document.getElementById('modal-image');
-        const preview = document.getElementById('modal-image-preview');
         if (fileInput) fileInput.value = '';
         if (action === 'edit') {
             document.getElementById('modal-title').innerText = 'Chỉnh sửa sản phẩm';
@@ -354,14 +350,6 @@
                 }
             }
             document.getElementById('modal-status').value = normStatus;
-
-            if (imageUrl && imageUrl.length > 0) {
-                preview.src = imageUrl;
-                preview.style.display = 'inline-block';
-            } else {
-                preview.src = '';
-                preview.style.display = 'none';
-            }
         } else {
             document.getElementById('modal-title').innerText = 'Thêm sản phẩm mới';
             document.getElementById('modal-submit').innerText = 'Lưu sản phẩm';
@@ -371,10 +359,6 @@
             document.getElementById('modal-unit').value = '1';
             document.getElementById('modal-sellingPrice').value = '0';
             document.getElementById('modal-status').value = 'Active';
-            if (preview) {
-                preview.src = '';
-                preview.style.display = 'none';
-            }
         }
         if(bsModal) bsModal.show();
     }
@@ -396,38 +380,6 @@
         // kiểm tra thêm MIME type nếu có
         if (file.type && file.type.indexOf('image/') !== 0) return false;
         return true;
-    }
-
-    function previewProductImage(event) {
-        const file = event.target.files && event.target.files[0];
-        const preview = document.getElementById('modal-image-preview');
-        if (!file) {
-            preview.src = '';
-            preview.style.display = 'none';
-            return;
-        }
-        // 1) Kiểm tra đuôi file phải là ảnh
-        if (!isValidImageFile(file)) {
-            alert('File tải lên không phải ảnh hợp lệ. Chỉ chấp nhận: ' + ALLOWED_IMAGE_EXT.join(', ') + '.');
-            event.target.value = '';
-            preview.src = '';
-            preview.style.display = 'none';
-            return;
-        }
-        // 2) Chặn sớm phía client nếu vượt 3MB
-        if (file.size > 3 * 1024 * 1024) {
-            alert('Ảnh vượt quá 3MB. Vui lòng chọn ảnh khác.');
-            event.target.value = '';
-            preview.src = '';
-            preview.style.display = 'none';
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'inline-block';
-        };
-        reader.readAsDataURL(file);
     }
 
     function closeProductModal() {
