@@ -151,14 +151,14 @@
                                         ${s.address}
                                     </td>
                                     <td>
-                                        <c:choose>
-                                            <c:when test="${fn:toUpperCase(s.status) eq 'ACTIVE'}">
-                                                <span class="badge bg-success">Hoạt động</span>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="badge bg-secondary">Ngưng hoạt động</span>
-                                            </c:otherwise>
-                                        </c:choose>
+                                         <c:choose>
+                                             <c:when test="${fn:toUpperCase(s.status) eq 'ACTIVE'}">
+                                                 <span class="status-badge active">Hoạt động</span>
+                                             </c:when>
+                                             <c:otherwise>
+                                                 <span class="status-badge locked">Ngưng hoạt động</span>
+                                             </c:otherwise>
+                                         </c:choose>
                                     </td>
 
                                     <td>

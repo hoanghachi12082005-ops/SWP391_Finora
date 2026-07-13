@@ -1272,7 +1272,7 @@
     font-weight: 700;
 }
 
-.user-page .status-badge {
+.status-badge {
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -1282,12 +1282,12 @@
     font-weight: 700;
 }
 
-.user-page .status-badge.active {
+.status-badge.active {
     background: #dcfce7;
     color: #166534;
     border: 1px solid #bbf7d0;
 }
-.user-page .status-badge.active::before {
+.status-badge.active::before {
     content: '';
     width: 7px;
     height: 7px;
@@ -1296,12 +1296,12 @@
     display: inline-block;
 }
 
-.user-page .status-badge.locked {
+.status-badge.locked {
     background: var(--error-container);
     color: var(--on-error-container);
     border: 1px solid rgba(186, 26, 26, 0.18);
 }
-.user-page .status-badge.locked::before {
+.status-badge.locked::before {
     content: '';
     width: 7px;
     height: 7px;
