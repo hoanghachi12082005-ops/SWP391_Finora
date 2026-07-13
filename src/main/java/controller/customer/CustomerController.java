@@ -499,10 +499,20 @@ public class CustomerController extends HttpServlet {
 
         String action = getParam(request, "action", "list");
         boolean isPost = "POST".equalsIgnoreCase(request.getMethod());
+        String roleLower = roleName.trim().toLowerCase();
+
+        // Allowed roles for Customer Management: Admin, Owner, StoreManager, SalesStaff
+        if (!"admin".equals(roleLower)
+                && !"owner".equals(roleLower)
+                && !"storemanager".equals(roleLower)
+                && !"salesstaff".equals(roleLower)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
+            return false;
+        }
 
         // Sales staff is authorized ONLY for the API search/create/edit endpoints used in POS
         boolean isApiCall = "search-api".equals(action) || "create-api".equals(action) || "update-api".equals(action);
-        boolean isSales = roleName.toLowerCase().contains("sales");
+        boolean isSales = roleLower.contains("sales");
 
         if (isSales) {
             if (isApiCall) {
@@ -514,12 +524,13 @@ public class CustomerController extends HttpServlet {
         }
 
         // Admin: redeem/sync POST only, no customer UI access
-        if ("Admin".equalsIgnoreCase(roleName)) {
+        if ("admin".equals(roleLower)) {
             if (isPost && ("sync-loyalty".equals(action) || "redeem-points".equals(action))) {
                 return true;
+            } else {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
+                return false;
             }
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
-            return false;
         }
 
         // Owner: view, search, filter, soft-delete, detail, redeem/sync. No create/edit.

@@ -5,6 +5,7 @@
 <c:set var="fullName" value="${sessionScope.currentUser.fullName != null ? sessionScope.currentUser.fullName : 'Lê Minh Quân'}" />
 <c:set var="originalUri" value="${requestScope['jakarta.servlet.forward.request_uri'] != null ? requestScope['jakarta.servlet.forward.request_uri'] : pageContext.request.requestURI}" />
 
+
 <div id="comingSoonToast">
     <span class="material-icons">construction</span>
     <span>Chức năng đang hoàn thiện</span>

@@ -348,6 +348,7 @@
 </div>
 </div>
 
+
 <!-- ═══════════════════════════════════════════════════════ -->
 <!-- ═══════════════ CUSTOMER MODAL ════════════════════════ -->
 <!-- ═══════════════════════════════════════════════════════ -->
@@ -739,12 +740,14 @@ function openPaymentModal() {
         showAlert('Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán.');
         return;
     }
-    selectModalPayMethod(currentPayMethod);
     const total = cartState.activeTab.totalAmount;
     document.getElementById('modalTotalDisplay').innerHTML = fmt(total).replace('₫','') + ' <span class="text-headline-md text-outline">₫</span>';
     document.getElementById('modalCashInput').value = Math.ceil(total);
+    selectModalPayMethod(currentPayMethod);
     document.getElementById('paymentModal').classList.remove('hidden');
-    calcChange();
+    if (currentPayMethod === 'CASH') {
+        calcChange();
+    }
 }
 
 function closePaymentModal() { document.getElementById('paymentModal').classList.add('hidden'); }
@@ -759,7 +762,7 @@ function selectModalPayMethod(method) {
     if (isCash) {
         calcChange();
     } else {
-        document.getElementById('changeDisplay').textContent = 'VNPAY';
+        document.getElementById('changeDisplay').textContent = '0 ₫';
     }
 }
 

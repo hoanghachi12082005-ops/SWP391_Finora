@@ -18,7 +18,6 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <!-- Custom CSS -->
     <link href="${pageContext.request.contextPath}/assets/css/theme.css?v=20260713" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/assets/css/components.css?v=20260713" rel="stylesheet">
 
