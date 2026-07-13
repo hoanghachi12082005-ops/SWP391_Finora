@@ -222,6 +222,7 @@ public class CheckoutServlet extends HttpServlet {
                 try {
                     conn.setAutoCommit(true);
                     conn.close();
+                    
                 } catch (SQLException ignored) {
                 }
             }
