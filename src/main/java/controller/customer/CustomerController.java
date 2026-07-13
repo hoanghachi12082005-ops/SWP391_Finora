@@ -86,8 +86,8 @@ public class CustomerController extends HttpServlet {
         boolean isOwner = "Owner".equalsIgnoreCase(role);
         boolean isStoreManager = "StoreManager".equalsIgnoreCase(role);
 
-        request.setAttribute("canCreate", isStoreManager);
-        request.setAttribute("canEdit", isStoreManager);
+        request.setAttribute("canCreate", isOwner || isStoreManager);
+        request.setAttribute("canEdit", isOwner || isStoreManager);
         request.setAttribute("canDelete", isOwner || isStoreManager);
         request.setAttribute("canRedeem", isOwner || isStoreManager);
         // ponytail: isAdmin kept for modal readonly compat; only StoreManager reaches modal
@@ -533,19 +533,8 @@ public class CustomerController extends HttpServlet {
             }
         }
 
-        // Owner: view, search, filter, soft-delete, detail, redeem/sync. No create/edit.
-        if ("Owner".equalsIgnoreCase(roleName)) {
-            boolean isWriteAction = "create".equals(action) || "update".equals(action)
-                    || "create-api".equals(action) || "update-api".equals(action);
-            if (isWriteAction) {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Owner cannot create or edit customers.");
-                return false;
-            }
-            return true;
-        }
-
-        // StoreManager: full access
-        if ("StoreManager".equalsIgnoreCase(roleName)) {
+        // Owner/StoreManager: full access
+        if ("Owner".equalsIgnoreCase(roleName) || "StoreManager".equalsIgnoreCase(roleName)) {
             return true;
         }
 
