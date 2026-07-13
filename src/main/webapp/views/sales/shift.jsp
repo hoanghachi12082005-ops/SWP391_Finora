@@ -22,7 +22,7 @@
 <div class="flex h-screen w-screen pl-[var(--sidebar-width,260px)] pr-6">
 
     <!-- Include POS Sidebar -->
-    <jsp:include page="/views/common/sidebar-pos.jsp" />
+    <jsp:include page="/views/common/sidebar.jsp" />
 
     <!-- Main Workspace -->
     <div class="flex-1 flex flex-col min-w-0 h-screen relative">
