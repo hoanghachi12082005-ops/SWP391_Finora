@@ -1,5 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 
 <jsp:include page="../common/header.jsp">
     <jsp:param name="title" value="Danh sách nhà cung cấp"/>
@@ -151,7 +152,7 @@
                                     </td>
                                     <td>
                                         <c:choose>
-                                            <c:when test="${s.status eq 'active'}">
+                                            <c:when test="${fn:toUpperCase(s.status) eq 'ACTIVE'}">
                                                 <span class="badge bg-success">Hoạt động</span>
                                             </c:when>
                                             <c:otherwise>
