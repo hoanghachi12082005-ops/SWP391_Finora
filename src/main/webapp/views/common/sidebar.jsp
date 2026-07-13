@@ -7,10 +7,12 @@
             <c:set var="fullName"
                 value="${sessionScope.currentUser.fullName != null ? sessionScope.currentUser.fullName : 'Lê Minh Quân'}" />
             <c:set var="originalUri"
-                value="${requestScope['jakarta.servlet.forward.request_uri'] != null ? requestScope['jakarta.servlet.forward.request_uri'] : pageContext.request.requestURI}" />
+                value="${requestScope['jakarta.servlet.forward.request_uri'] != null ? requestScope['jakarta.servlet.forward.request_uri'] : (requestScope['jakarta.servlet.include.request_uri'] != null ? requestScope['jakarta.servlet.include.request_uri'] : pageContext.request.requestURI)}" />
+            <c:set var="currentPath"
+                value="${requestScope['jakarta.servlet.forward.servlet_path'] != null ? requestScope['jakarta.servlet.forward.servlet_path'] : pageContext.request.servletPath}" />
 
             <%-- Xác định chế độ xem POS (Chỉ hiển thị cho SalesStaff) --%>
-            <c:set var="isPosView" value="${roleName == 'SalesStaff'}" />
+                <c:set var="isPosView" value="${roleName == 'SalesStaff'}" />
 
                 <!-- Toast thông báo tính năng chưa hoàn thiện (Chỉ hiển thị khi dùng POS) -->
                 <c:if test="${isPosView}">
@@ -21,6 +23,10 @@
                 </c:if>
 
                 <aside class="sidebar" id="${isPosView ? 'posSidebar' : ''}">
+                    <!-- DEBUG: originalUri = "${originalUri}" -->
+                    <!-- Đảm bảo styles cho sidebar luôn sẵn sàng -->
+                    <link href="${pageContext.request.contextPath}/assets/css/components.css?v=20260714-2"
+                        rel="stylesheet">
                     <!-- Brand Logo -->
                     <div class="sidebar-brand">
                         <div class="sidebar-brand-icon">
@@ -132,29 +138,35 @@
 
                                 <!-- Dropdown Bán hàng (Owner, StoreManager) -->
                                 <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
-                                    <c:set var="isSalesActive" value="${originalUri.contains('/sales') || originalUri.contains('/shift') || (originalUri.contains('/orders') && !originalUri.contains('/orders/list'))}" />
+                                    <c:set var="isSalesPage"
+                                        value="${originalUri.contains('/sales.jsp') || (!originalUri.contains('/views/') && originalUri.contains('/sales'))}" />
+                                    <c:set var="isOrdersPage"
+                                        value="${originalUri.contains('/orders.jsp') || (!originalUri.contains('/views/') && originalUri.contains('/orders'))}" />
+                                    <c:set var="isShiftPage"
+                                        value="${originalUri.contains('/shift.jsp') || (!originalUri.contains('/views/') && originalUri.contains('/shift'))}" />
+                                    <c:set var="isSalesActive" value="${isSalesPage || isOrdersPage || isShiftPage}" />
+
                                     <a href="#salesCollapse" data-bs-toggle="collapse" role="button"
                                         aria-expanded="${isSalesActive ? 'true' : 'false'}"
                                         aria-controls="salesCollapse"
-                                        class="sidebar-menu-item ${isSalesActive ? 'active' : ''} d-flex align-items-center"
-                                        style="background-color: rgba(175, 16, 26, 0.05); color: var(--primary-color); font-weight: 600;">
-                                        <span class="material-icons" style="color: var(--primary-color);">storefront</span>
+                                        class="sidebar-menu-item ${isSalesActive ? 'active' : ''} d-flex align-items-center">
+                                        <span class="material-icons">storefront</span>
                                         <span>Bán hàng</span>
                                         <span class="material-icons ms-auto transition-icon"
-                                            style="font-size: 1.2rem; color: var(--primary-color);">expand_more</span>
+                                            style="font-size: 1.2rem;">expand_more</span>
                                     </a>
                                     <div class="collapse ${isSalesActive ? 'show' : ''}" id="salesCollapse">
                                         <div class="sidebar-submenu">
                                             <a href="${pageContext.request.contextPath}/sales"
-                                                class="sidebar-submenu-item ${originalUri.contains('/sales') ? 'active' : ''}">
+                                                class="sidebar-submenu-item ${isSalesPage ? 'active' : ''}">
                                                 Bán hàng (POS)
                                             </a>
                                             <a href="${pageContext.request.contextPath}/orders"
-                                                class="sidebar-submenu-item ${originalUri.contains('/orders') && !originalUri.contains('/orders/list') ? 'active' : ''}">
+                                                class="sidebar-submenu-item ${isOrdersPage ? 'active' : ''}">
                                                 Lịch sử đơn hàng
                                             </a>
                                             <a href="${pageContext.request.contextPath}/shift"
-                                                class="sidebar-submenu-item ${originalUri.contains('/shift') ? 'active' : ''}">
+                                                class="sidebar-submenu-item ${isShiftPage ? 'active' : ''}">
                                                 Ca làm việc
                                             </a>
                                         </div>
@@ -428,8 +440,33 @@
 
                     <!-- Hỗ trợ đóng mở Collapse dropdown (Dùng chung) -->
                     <style>
+                        /* Ghi đè Tailwind CSS .collapse { visibility: collapse } */
+                        .collapse {
+                            visibility: visible !important;
+                        }
+
                         .collapse:not(.show) {
                             display: none !important;
+                        }
+
+                        .collapse.show {
+                            display: block !important;
+                            visibility: visible !important;
+                        }
+
+                        .collapsing {
+                            height: 0;
+                            overflow: hidden;
+                            transition: height 0.35s ease;
+                        }
+
+                        /* Reset sales.css max-height overrides */
+                        .sidebar-submenu {
+                            max-height: none !important;
+                            overflow: visible !important;
+                            display: flex !important;
+                            flex-direction: column !important;
+                            gap: 4px !important;
                         }
                     </style>
 
@@ -446,14 +483,12 @@
                             }
                         }
 
-                        // JS dự phòng cho các trang quản trị không có Bootstrap JS
                         document.addEventListener("DOMContentLoaded", function () {
+                            if (typeof bootstrap !== 'undefined') return;
+
                             const toggles = document.querySelectorAll('[data-bs-toggle="collapse"]');
                             toggles.forEach(function (toggle) {
                                 toggle.addEventListener('click', function (e) {
-                                    if (typeof bootstrap !== 'undefined') {
-                                        return;
-                                    }
                                     e.preventDefault();
                                     const targetSelector = toggle.getAttribute('href') || toggle.getAttribute('data-bs-target');
                                     if (targetSelector) {
