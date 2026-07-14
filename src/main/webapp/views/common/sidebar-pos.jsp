@@ -5,12 +5,6 @@
 <c:set var="fullName" value="${sessionScope.currentUser.fullName != null ? sessionScope.currentUser.fullName : 'Lê Minh Quân'}" />
 <c:set var="originalUri" value="${requestScope['jakarta.servlet.forward.request_uri'] != null ? requestScope['jakarta.servlet.forward.request_uri'] : pageContext.request.requestURI}" />
 
-
-<div id="comingSoonToast">
-    <span class="material-icons">construction</span>
-    <span>Chức năng đang hoàn thiện</span>
-</div>
-
 <aside class="sidebar" id="posSidebar">
     <div class="sidebar-brand">
         <div class="sidebar-brand-icon"><span class="material-icons">store</span></div>
@@ -42,58 +36,29 @@
         </c:if>
 
         <!-- Danh sách sản phẩm -->
-        <a href="${pageContext.request.contextPath}/products" class="sidebar-menu-item ${originalUri.contains('/products') ? 'active' : ''}">
+        <a href="${pageContext.request.contextPath}/products" class="sidebar-menu-item ${originalUri.endsWith('/products') ? 'active' : ''}">
             <span class="material-icons">shopping_bag</span><span>Danh sách sản phẩm</span>
         </a>
 
-        <!-- Hàng hóa Dropdown -->
-        <c:set var="isHangHoaActive" value="${originalUri.contains('/products') || originalUri.contains('/category')}" />
-        <div class="sidebar-menu-item sidebar-menu-item-dropdown ${isHangHoaActive ? 'open' : ''}" onclick="toggleDropdown(this)">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span class="material-icons">shopping_bag</span>
-                <span>Hàng hóa</span>
-            </div>
-            <span class="material-icons sidebar-dropdown-arrow">expand_more</span>
-        </div>
-        <div class="sidebar-submenu ${isHangHoaActive ? 'open' : ''}">
-            <a href="${pageContext.request.contextPath}/products" class="sidebar-submenu-item ${originalUri.endsWith('/products') ? 'active' : ''}">
-                <span>Danh sách sản phẩm</span>
+        <!-- Khách hàng (Ẩn đối với Admin) -->
+        <c:if test="${roleName != 'Admin'}">
+            <a href="${pageContext.request.contextPath}/customers" class="sidebar-menu-item ${originalUri.contains('/customers') ? 'active' : ''}">
+                <span class="material-icons">people</span><span>Khách hàng</span>
             </a>
-            <a href="${pageContext.request.contextPath}/products/categories" class="sidebar-submenu-item ${originalUri.contains('/products/categories') || originalUri.contains('/category') ? 'active' : ''}">
-                <span>Danh mục sản phẩm</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/products/units" class="sidebar-submenu-item ${originalUri.contains('/products/units') ? 'active' : ''}">
-                <span>Đơn vị tính</span>
-            </a>
-        </div>
-
+        </c:if>
 
         <!-- Chi nhánh (Admin, Owner) -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
-            <a href="${pageContext.request.contextPath}/branch" class="sidebar-menu-item ${originalUri.contains('/branch') ? 'active' : ''}">
+            <a href="${pageContext.request.contextPath}/branches" class="sidebar-menu-item ${originalUri.contains('/branches') || originalUri.contains('/branch') ? 'active' : ''}">
                 <span class="material-icons">store</span><span>Chi nhánh</span>
             </a>
         </c:if>
 
         <!-- Nhân viên (Admin, Owner, StoreManager) -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
-            <c:choose>
-                <c:when test="${roleName == 'Admin'}">
-                    <a href="${pageContext.request.contextPath}/admin/user" class="sidebar-menu-item ${originalUri.contains('/admin/user') ? 'active' : ''}">
-                        <span class="material-icons">badge</span><span>Nhân viên</span>
-                    </a>
-                </c:when>
-                <c:when test="${roleName == 'Owner'}">
-                    <a href="${pageContext.request.contextPath}/owner/emp" class="sidebar-menu-item ${originalUri.contains('/owner/emp') ? 'active' : ''}">
-                        <span class="material-icons">badge</span><span>Nhân viên</span>
-                    </a>
-                </c:when>
-                <c:when test="${roleName == 'StoreManager'}">
-                    <a href="${pageContext.request.contextPath}/manager/emp" class="sidebar-menu-item ${originalUri.contains('/manager/emp') ? 'active' : ''}">
-                        <span class="material-icons">badge</span><span>Nhân viên</span>
-                    </a>
-                </c:when>
-            </c:choose>
+            <a href="${pageContext.request.contextPath}/employees" class="sidebar-menu-item ${originalUri.contains('/employees') || originalUri.contains('/emp') || originalUri.contains('/user') ? 'active' : ''}">
+                <span class="material-icons">badge</span><span>Nhân viên</span>
+            </a>
         </c:if>
 
         <!-- Báo cáo doanh thu (Admin, Owner, StoreManager) -->
@@ -102,6 +67,7 @@
                 <span class="material-icons">trending_up</span><span>Báo cáo doanh thu</span>
             </a>
         </c:if>
+
     </nav>
     <div class="sidebar-user">
         <div class="sidebar-user-info">
@@ -112,22 +78,3 @@
         <a href="${pageContext.request.contextPath}/logout" class="sidebar-user-logout" title="Đăng xuất"><span class="material-icons">logout</span></a>
     </div>
 </aside>
-
-<script>
-    function toggleDropdown(el) {
-        el.classList.toggle('open');
-        const submenu = el.nextElementSibling;
-        if (submenu && submenu.classList.contains('sidebar-submenu')) {
-            submenu.classList.toggle('open');
-        }
-    }
-
-    function showComingSoon(event) {
-        if (event) event.preventDefault();
-        const toast = document.getElementById('comingSoonToast');
-        toast.classList.add('show');
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 2500);
-    }
-</script>
