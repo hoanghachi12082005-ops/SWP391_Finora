@@ -94,10 +94,10 @@
                                 </a>
 
                                 <!-- Khách hàng -->
-                                <a href="${pageContext.request.contextPath}/customers"
+<!--                                <a href="${pageContext.request.contextPath}/customers"
                                     class="sidebar-menu-item ${originalUri.contains('/customers') ? 'active' : ''}">
                                     <span class="material-icons">people</span><span>Khách hàng</span>
-                                </a>
+                                </a>-->
 
                                 <!-- Chi nhánh (Owner) -->
                                 <c:if test="${roleName == 'Owner'}">
