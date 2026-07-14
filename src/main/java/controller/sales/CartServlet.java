@@ -296,6 +296,9 @@ public class CartServlet extends HttpServlet {
         double vatRate = VatSettingDAO.getVatRate();
         activeTab.setVatRate(vatRate);
 
+        // Cập nhật VAT rate từ DB cho tab đang active
+        double vatRate = VatSettingDAO.getVatRate();
+        activeTab.setVatRate(vatRate);
         out.write("{");
         out.write("\"activeTabId\":" + activeTabId + ",");
 

@@ -392,10 +392,35 @@
                 .collapse:not(.show) {
                     display: none !important;
                 }
+                .collapsing {
+                    height: 0;
+                    overflow: hidden;
+                    transition: height 0.35s ease;
+                }
+                /* Reset sales.css max-height overrides */
+                .sidebar-submenu {
+                    max-height: none !important;
+                    overflow: visible !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 4px !important;
+                }
             </style>
 
             <!-- Fallback script for pages without Bootstrap JS -->
             <script>
+                // JS hiển thị toast "chức năng đang phát triển" cho POS
+                function showComingSoon(event) {
+                    if (event) event.preventDefault();
+                    const toast = document.getElementById('comingSoonToast');
+                    if (toast) {
+                        toast.classList.add('show');
+                        setTimeout(() => {
+                            toast.classList.remove('show');
+                        }, 2500);
+                    }
+                }
+
                 document.addEventListener("DOMContentLoaded", function() {
                     const toggles = document.querySelectorAll('[data-bs-toggle="collapse"]');
                     toggles.forEach(function(toggle) {
