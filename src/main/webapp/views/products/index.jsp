@@ -364,7 +364,7 @@
     }
 
     // Các đuôi ảnh hợp lệ ở client
-    const ALLOWED_IMAGE_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'];
+    const ALLOWED_IMAGE_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'docx'];
 
     function getFileExt(filename) {
         if (!filename) return '';
