@@ -330,7 +330,7 @@ public class ProductController extends BaseController {
             String prefix = "product_" + p.getProductID() + ".";
             for (File f : files) {
                 if (f.isFile() && f.getName().toLowerCase().startsWith(prefix)) {
-                    // thêm timestamp để bust cache khi cập nhật
+                    // thêm timestamp
                     p.setImageUrl(ctx + IMAGE_DIR + f.getName() + "?v=" + f.lastModified());
                     break;
                 }
