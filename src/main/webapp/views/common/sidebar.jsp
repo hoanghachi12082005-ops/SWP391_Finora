@@ -318,10 +318,6 @@
                     </a>
                     <div class="collapse ${isReportsActive ? 'show' : ''}" id="reportsCollapse">
                         <div class="sidebar-submenu">
-                            <a href="${pageContext.request.contextPath}/reports/export"
-                               class="sidebar-submenu-item ${originalUri.contains('/reports/export') ? 'active' : ''}">
-                                Xuất báo cáo
-                            </a>
                             <a href="${pageContext.request.contextPath}/reports/employee-sales"
                                class="sidebar-submenu-item ${originalUri.contains('/reports/employee-sales') ? 'active' : ''}">
                                 <span class="material-icons"

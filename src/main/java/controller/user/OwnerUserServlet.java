@@ -77,7 +77,7 @@ import service.system.ActivityLogService;
 
             request.setAttribute("pageTitle", "Nhân viên toàn chi nhánh");
             request.setAttribute("pageSubtitle", "Danh sách nhân viên toàn bộ các chi nhánh");
-            request.setAttribute("addButtonText", "Add Employee");
+            request.setAttribute("addButtonText", "Thêm nhân viên");
             request.setAttribute("baseUrl", request.getContextPath() + "/owner/emp");
 
             request.setAttribute("showBranch", true);
@@ -179,7 +179,7 @@ import service.system.ActivityLogService;
             request.setAttribute("showSalesSection", true);
 
             request.setAttribute("readOnlyProfile", true);
-            request.setAttribute("profileTitle", "Employee Profile");
+            request.setAttribute("profileTitle", "Hồ sơ nhân viên");
             request.setAttribute("profileSubtitle", "Owner views employee information and sales performance");
             request.setAttribute("backUrl", request.getContextPath() + "/owner/emp");
 
