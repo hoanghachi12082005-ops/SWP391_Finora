@@ -21,6 +21,103 @@
                 <div class="sidebar-brand-text">
                     <h4>FINORA</h4>
                     <small>Hệ thống Quản trị Bán hàng</small>
+        <div class="sidebar-menu-title">Chức năng chính</div>
+
+        <c:set var="originalUri"
+               value="${requestScope['jakarta.servlet.forward.request_uri'] != null ? requestScope['jakarta.servlet.forward.request_uri'] : pageContext.request.requestURI}" />
+
+        <!-- Dashboard Owner Overview (Admin, Owner, StoreManager) -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+            <a href="${pageContext.request.contextPath}/dashboard/owner"
+               class="sidebar-menu-item ${originalUri.contains('/dashboard/owner') ? 'active' : ''}">
+                <span class="material-icons">dashboard</span>
+                <span>Tổng quan</span>
+            </a>
+        </c:if>
+
+        <!-- Customer Management (Owner, StoreManager) -->
+        <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
+            <a href="${pageContext.request.contextPath}/customers" 
+               class="sidebar-menu-item ${originalUri.contains('/customers') ? 'active' : ''}">
+                <span class="material-icons">people</span>
+                <span>Khách hàng</span>
+            </a>
+        </c:if>
+
+        <!-- Inventory Management (Owner, WarehouseStaff, StoreManager, Admin) -->
+        <c:if test="${roleName == 'Owner' || roleName == 'WarehouseStaff' || roleName == 'StoreManager' || roleName == 'Admin'}">
+            <c:set var="isInventoryActive" value="${originalUri.contains('/inventory') || originalUri.contains('/approval')}" />
+            <a href="#inventoryCollapse" data-bs-toggle="collapse" role="button"
+               aria-expanded="${isInventoryActive ? 'true' : 'false'}" aria-controls="inventoryCollapse"
+               class="sidebar-menu-item ${isInventoryActive ? 'active' : ''} d-flex align-items-center">
+                <span class="material-icons">inventory_2</span>
+                <span>Kho hàng</span>
+                <span class="material-icons ms-auto transition-icon"
+                      style="font-size: 1.2rem;">expand_more</span>
+            </a>
+            <div class="collapse ${isInventoryActive ? 'show' : ''}" id="inventoryCollapse">
+                <div class="sidebar-submenu">
+                    <c:choose>
+                        <c:when test="${roleName == 'Owner' || roleName == 'Admin'}">
+                            <a href="${pageContext.request.contextPath}/inventory?tab=stock"
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && (empty activeTab || activeTab == 'stock') ? 'active' : ''}">
+                                Danh sách Kho
+                            </a>
+                            <a href="${pageContext.request.contextPath}/inventory?tab=approval"
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'approval' ? 'active' : ''}">
+                                Xử Lý Phiếu (Duyệt)
+                            </a>
+                            <a href="${pageContext.request.contextPath}/inventory?tab=history"
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'history' ? 'active' : ''}">
+                                Lịch sử
+                            </a>
+                        </c:when>
+                        <c:when test="${roleName == 'StoreManager'}">
+                            <a href="${pageContext.request.contextPath}/inventory?tab=stock&warehouseId=${sessionScope.selectedWarehouseId}"
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && (empty activeTab || activeTab == 'stock') ? 'active' : ''}">
+                                Tồn Kho
+                            </a>
+                            <a href="${pageContext.request.contextPath}/inventory?tab=approval"
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'approval' ? 'active' : ''}">
+                                Xử Lý Phiếu (Duyệt)
+                            </a>
+                            <a href="${pageContext.request.contextPath}/inventory?tab=transfer&warehouseId=${sessionScope.selectedWarehouseId}"
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && (activeTab == 'transfer' || activeTab == 'createTransfer') ? 'active' : ''}">
+                                Điều Chuyển
+                            </a>
+                            <a href="${pageContext.request.contextPath}/inventory?tab=check&warehouseId=${sessionScope.selectedWarehouseId}"
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'check' ? 'active' : ''}">
+                                Kiểm kho
+                            </a>
+                            <a href="${pageContext.request.contextPath}/inventory?tab=history&warehouseId=${sessionScope.selectedWarehouseId}"
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'history' ? 'active' : ''}">
+                                Lịch sử
+                            </a>
+                        </c:when>
+                        <c:when test="${roleName == 'WarehouseStaff'}">
+                            <a href="${pageContext.request.contextPath}/inventory?tab=stock&warehouseId=${sessionScope.selectedWarehouseId}"
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && (empty activeTab || activeTab == 'stock') ? 'active' : ''}">
+                                Tồn Kho
+                            </a>
+                            <a href="${pageContext.request.contextPath}/inventory?tab=transfer&warehouseId=${sessionScope.selectedWarehouseId}"
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && (activeTab == 'transfer' || activeTab == 'createTransfer') ? 'active' : ''}">
+                                Điều Chuyển
+                            </a>
+                            <a href="${pageContext.request.contextPath}/inventory?tab=check&warehouseId=${sessionScope.selectedWarehouseId}"
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'check' ? 'active' : ''}">
+                                Kiểm kho
+                            </a>
+                            <a href="${pageContext.request.contextPath}/inventory?tab=pending_vouchers&warehouseId=${sessionScope.selectedWarehouseId}"
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'pending_vouchers' ? 'active' : ''}">
+                                Phiếu Chờ Duyệt
+                            </a>
+                            <a href="${pageContext.request.contextPath}/inventory?tab=history&warehouseId=${sessionScope.selectedWarehouseId}"
+                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'history' ? 'active' : ''}">
+                                Lịch sử
+                            </a>
+                        </c:when>
+                    </c:choose>
+>>>>>>> origin/Thắng
                 </div>
             </div>
 
@@ -167,7 +264,7 @@
                 </c:if>
 
                 <!-- Suppliers / Partners -->
-                <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+                <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'WarehouseStaff'}">
                     <a href="${pageContext.request.contextPath}/suppliers"
                        class="sidebar-menu-item ${pageContext.request.requestURI.contains('/suppliers') ? 'active' : ''}">
                         <span class="material-icons">handshake</span>

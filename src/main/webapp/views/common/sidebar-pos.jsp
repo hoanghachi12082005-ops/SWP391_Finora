@@ -47,6 +47,13 @@
             </a>
         </c:if>
 
+        <!-- Nhà cung cấp (Admin, Owner, StoreManager, WarehouseStaff) -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'WarehouseStaff'}">
+            <a href="${pageContext.request.contextPath}/suppliers" class="sidebar-menu-item ${originalUri.contains('/suppliers') ? 'active' : ''}">
+                <span class="material-icons">handshake</span><span>Nhà cung cấp</span>
+            </a>
+        </c:if>
+
         <!-- Chi nhánh (Admin, Owner) -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
             <a href="${pageContext.request.contextPath}/branches" class="sidebar-menu-item ${originalUri.contains('/branches') || originalUri.contains('/branch') ? 'active' : ''}">
