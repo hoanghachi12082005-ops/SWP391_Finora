@@ -820,12 +820,12 @@ public class CustomerDAO {
 
     public List<Customer> findAllActive() {
         List<Customer> list = new ArrayList<>();
-        String sql = "SELECT * FROM Customer WHERE status = 'ACTIVE' ORDER BY cus_id DESC";
+        String sql = CUSTOMER_SELECT + "WHERE c.status = 'ACTIVE' ORDER BY c.cus_id DESC";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                list.add(mapRowSales(rs));
+                list.add(mapRow(rs));
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi findAllActive", e);

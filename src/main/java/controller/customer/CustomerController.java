@@ -227,11 +227,28 @@ public class CustomerController extends HttpServlet {
 
     private void handleUpdateApi(HttpServletRequest request, HttpServletResponse response) throws IOException {
         int customerId = parseInt(request.getParameter("customerId"), -1);
+        String fullName = trim(request.getParameter("fullName"));
         String phone = trim(request.getParameter("phone"));
         String email = trim(request.getParameter("email"));
+        String address = trim(request.getParameter("address"));
+        String dateOfBirthStr = trim(request.getParameter("dateOfBirth"));
+        String gender = trim(request.getParameter("gender"));
 
-        if (customerId <= 0 || isBlank(phone)) {
+        if (customerId <= 0) {
             sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Dữ liệu khách hàng không hợp lệ.\"}");
+            return;
+        }
+
+        if (isBlank(phone)) {
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Số điện thoại không được để trống.\",\"field\":\"phone\"}");
+            return;
+        }
+        if (!phone.matches("^0[0-9]{9,10}$")) {
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Số điện thoại không hợp lệ (phải bắt đầu bằng 0 và 10-11 số).\",\"field\":\"phone\"}");
+            return;
+        }
+        if (email != null && !email.isBlank() && !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Email không hợp lệ.\",\"field\":\"email\"}");
             return;
         }
 
@@ -250,33 +267,39 @@ public class CustomerController extends HttpServlet {
         boolean isSales = user != null && user.getRoleName().toLowerCase().contains("sales");
 
         if (isSales) {
-            // Sales Staff can ONLY edit phone and email
+            if (!isBlank(fullName)) existing.setFullName(fullName);
             existing.setPhone(phone);
             existing.setEmail(email);
-            boolean ok = customerDAO.update(existing, false, 0, 0);
-            if (ok) {
-                Employee user2 = getLoggedInUser(request);
-                if (user2 != null) activityLogService.log(user2.getEmployeeID(), "UPDATE", "Customer", customerId, null, phone);
-                sendJsonResponse(response, "{\"status\":\"success\",\"message\":\"Cập nhật khách hàng thành công (Chỉ điện thoại và email).\"}");
-            } else {
-                sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Không thể cập nhật khách hàng.\"}");
-            }
         } else {
-            // Admin, Owner, Manager can edit everything in update-api too
+            if (!isBlank(fullName)) existing.setFullName(fullName);
             existing.setPhone(phone);
             existing.setEmail(email);
-            String fullName = trim(request.getParameter("fullName"));
-            if (!isBlank(fullName)) {
-                existing.setFullName(fullName);
-            }
-            boolean ok = customerDAO.update(existing, false, 0, 0);
-            if (ok) {
-                Employee user2 = getLoggedInUser(request);
-                if (user2 != null) activityLogService.log(user2.getEmployeeID(), "UPDATE", "Customer", customerId, null, phone);
-                sendJsonResponse(response, "{\"status\":\"success\",\"message\":\"Cập nhật khách hàng thành công.\"}");
-            } else {
-                sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Không thể cập nhật khách hàng.\"}");
-            }
+            existing.setAddress(address);
+            existing.setDateOfBirth(parseDate(dateOfBirthStr));
+            if (!isBlank(gender)) existing.setGender(gender);
+        }
+
+        boolean ok = customerDAO.update(existing, false, 0, 0);
+        if (ok) {
+            if (user != null) activityLogService.log(user.getEmployeeID(), "UPDATE", "Customer", customerId, null, phone);
+
+            Customer updated = customerDAO.findById(customerId);
+            sendJsonResponse(response, String.format(
+                "{\"status\":\"success\",\"message\":\"Cập nhật khách hàng thành công.\"," +
+                "\"customer\":{\"customerId\":%d,\"fullName\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\"," +
+                "\"address\":\"%s\",\"gender\":\"%s\",\"totalSpent\":%s,\"loyaltyPoint\":%d,\"lifetimePoints\":%d}}",
+                updated.getCustomerId(),
+                escapeJson(updated.getFullName()),
+                escapeJson(updated.getPhone()),
+                escapeJson(updated.getEmail() != null ? updated.getEmail() : ""),
+                escapeJson(updated.getAddress() != null ? updated.getAddress() : ""),
+                escapeJson(updated.getGender() != null ? updated.getGender() : ""),
+                updated.getTotalSpent().toString(),
+                updated.getLoyaltyPoint(),
+                updated.getLifetimePoints()
+            ));
+        } else {
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Không thể cập nhật khách hàng.\"}");
         }
     }
 

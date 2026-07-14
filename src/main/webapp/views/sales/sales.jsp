@@ -163,12 +163,25 @@
                     <div class="flex-1 min-w-0">
                         <div class="text-caption text-outline">Khách hàng</div>
                         <div id="selectedCustomerName" class="text-label-md text-on-surface truncate">Khách vãng lai</div>
+                        <div id="customerDetails" class="hidden text-caption text-on-surface-variant space-y-0.5 mt-0.5">
+                            <div id="customerPhoneDisplay" class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[12px]">call</span>
+                                <span id="customerPhoneValue"></span>
+                            </div>
+                            <div id="customerEmailDisplay" class="flex items-center gap-1 hidden">
+                                <span class="material-symbols-outlined text-[12px]">mail</span>
+                                <span id="customerEmailValue"></span>
+                            </div>
+                        </div>
                         <div id="customerPointsDisplay" class="text-caption text-primary hidden mt-0.5">
                             <span class="material-symbols-outlined text-[12px] align-text-bottom">stars</span>
                             Điểm khả dụng: <span id="customerPointsValue">0</span>
                         </div>
                     </div>
-                    <button onclick="openCustomerModal()" class="text-primary text-label-md hover:underline">Thay đổi</button>
+                    <div class="flex flex-col gap-1">
+                        <button onclick="openCustomerModal()" class="text-primary text-label-md hover:underline">Thay đổi</button>
+                        <button id="editCustomerBtn" onclick="openEditCustomerModal()" class="text-outline text-label-md hover:text-primary hidden">Sửa</button>
+                    </div>
                 </div>
                 <input type="hidden" id="selectedCustomerId" value="">
             </div>
@@ -448,6 +461,73 @@
 </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- ═══════════════ EDIT CUSTOMER MODAL ═══════════════════ -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="editCustomerModal" class="hidden fixed inset-0 z-[60] modal-blur flex items-center justify-center">
+<div class="bg-surface-container-lowest rounded-xl shadow-2xl w-[640px] max-h-[85vh] flex flex-col animate-fadeIn">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
+        <h3 class="text-title-lg font-bold">Chỉnh sửa thông tin khách hàng</h3>
+        <button onclick="closeEditCustomerModal()" class="w-10 h-10 rounded-full hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="flex-1 overflow-y-auto px-6 py-5">
+        <input type="hidden" id="editCusId">
+        <div class="grid grid-cols-2 gap-x-8 gap-y-6">
+            <div>
+                <label class="text-label-md text-on-surface-variant block mb-1.5">Họ tên <span class="text-error">*</span></label>
+                <input id="editCusName" type="text" class="w-full rounded-xl border border-outline-variant px-4 py-2.5 text-body-md focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none" placeholder="Nhập họ tên">
+                <div id="editCusNameError" class="text-caption text-error hidden mt-1"></div>
+            </div>
+            <div>
+                <label class="text-label-md text-on-surface-variant block mb-1.5">Số điện thoại <span class="text-error">*</span></label>
+                <input id="editCusPhone" type="text" class="w-full rounded-xl border border-outline-variant px-4 py-2.5 text-body-md focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none" placeholder="0912 345 678">
+                <div id="editCusPhoneError" class="text-caption text-error hidden mt-1"></div>
+            </div>
+            <div>
+                <label class="text-label-md text-on-surface-variant block mb-1.5">Email</label>
+                <input id="editCusEmail" type="email" class="w-full rounded-xl border border-outline-variant px-4 py-2.5 text-body-md focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none" placeholder="email@example.com">
+                <div id="editCusEmailError" class="text-caption text-error hidden mt-1"></div>
+            </div>
+            <div>
+                <label class="text-label-md text-on-surface-variant block mb-1.5">Ngày sinh</label>
+                <input id="editCusBod" type="date" class="w-full rounded-xl border border-outline-variant px-4 py-2.5 text-body-md focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none">
+            </div>
+            <div>
+                <label class="text-label-md text-on-surface-variant block mb-1.5">Giới tính</label>
+                <div class="flex gap-4 mt-1.5">
+                    <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="editCusGender" value="Nam" class="text-primary focus:ring-primary"><span class="text-body-md">Nam</span></label>
+                    <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="editCusGender" value="Nữ" class="text-primary focus:ring-primary"><span class="text-body-md">Nữ</span></label>
+                    <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="editCusGender" value="Khác" class="text-primary focus:ring-primary"><span class="text-body-md">Khác</span></label>
+                </div>
+            </div>
+            <div>
+                <label class="text-label-md text-on-surface-variant block mb-1.5">Điểm tích lũy</label>
+                <div class="flex items-center gap-2 px-4 py-2.5 bg-surface-container-low rounded-xl text-body-md text-primary font-semibold">
+                    <span class="material-symbols-outlined text-[18px]">stars</span>
+                    <span id="editCusPoints">0</span>
+                </div>
+            </div>
+            <div class="col-span-2">
+                <label class="text-label-md text-on-surface-variant block mb-1.5">Địa chỉ</label>
+                <input id="editCusAddress" type="text" class="w-full rounded-xl border border-outline-variant px-4 py-2.5 text-body-md focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none" placeholder="Nhập địa chỉ">
+            </div>
+            <div id="editCusErrorContainer" class="col-span-2 hidden">
+                <div class="bg-error-container text-on-error-container px-4 py-3 rounded-xl text-caption flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">error</span>
+                    <span id="editCusErrorMessage"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="flex justify-end gap-3 px-6 py-4 border-t border-outline-variant">
+        <button onclick="closeEditCustomerModal()" class="px-5 py-2.5 rounded-xl border border-primary text-primary font-button-text hover:bg-primary-fixed transition-colors">Hủy</button>
+        <button onclick="saveEditCustomer()" id="editCustomerSaveBtn" class="px-6 py-2.5 rounded-xl bg-primary text-on-primary font-button-text flex items-center gap-2 hover:bg-secondary transition-colors">
+            <span class="material-symbols-outlined text-[18px]">save</span> Lưu thay đổi
+        </button>
+    </div>
+</div>
+</div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- ═══════════════ SUCCESS TOAST ═══════════════ -->
@@ -663,15 +743,34 @@ function renderUI() {
     const customerIdInput = document.getElementById('selectedCustomerId');
     const pointsDisplay = document.getElementById('customerPointsDisplay');
     const pointsValue = document.getElementById('customerPointsValue');
+    const customerDetails = document.getElementById('customerDetails');
+    const customerPhoneDisplay = document.getElementById('customerPhoneDisplay');
+    const customerPhoneValue = document.getElementById('customerPhoneValue');
+    const customerEmailDisplay = document.getElementById('customerEmailDisplay');
+    const customerEmailValue = document.getElementById('customerEmailValue');
+    const editCustomerBtn = document.getElementById('editCustomerBtn');
     if (activeTab.selectedCustomer) {
-        customerNameDiv.textContent = activeTab.selectedCustomer.fullName + ' - ' + activeTab.selectedCustomer.phone;
-        customerIdInput.value = activeTab.selectedCustomer.cusId;
-        pointsValue.textContent = activeTab.selectedCustomer.loyaltyPoint || 0;
+        const c = activeTab.selectedCustomer;
+        customerNameDiv.textContent = c.fullName + ' - ' + c.phone;
+        customerIdInput.value = c.cusId;
+        pointsValue.textContent = c.loyaltyPoint || 0;
         pointsDisplay.classList.remove('hidden');
+
+        customerPhoneValue.textContent = c.phone;
+        customerDetails.classList.remove('hidden');
+        if (c.email) {
+            customerEmailValue.textContent = c.email;
+            customerEmailDisplay.classList.remove('hidden');
+        } else {
+            customerEmailDisplay.classList.add('hidden');
+        }
+        editCustomerBtn.classList.remove('hidden');
     } else {
         customerNameDiv.textContent = 'Khách vãng lai';
         customerIdInput.value = '';
         pointsDisplay.classList.add('hidden');
+        customerDetails.classList.add('hidden');
+        editCustomerBtn.classList.add('hidden');
     }
 
     document.getElementById('summaryItemCount').textContent = activeTab.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -924,9 +1023,124 @@ async function saveNewCustomer() {
     } catch(e) { showAlert('Lỗi kết nối.'); console.error(e); }
 }
 
+// ── Edit Customer ──────────────────────────────────────
+function openEditCustomerModal() {
+    const c = cartState.activeTab.selectedCustomer;
+    if (!c) return;
+    document.getElementById('editCusId').value = c.cusId;
+    document.getElementById('editCusName').value = c.fullName || '';
+    document.getElementById('editCusPhone').value = c.phone || '';
+    document.getElementById('editCusEmail').value = c.email || '';
+    document.getElementById('editCusAddress').value = c.address || '';
+    document.getElementById('editCusPoints').textContent = (c.loyaltyPoint || 0).toLocaleString('vi-VN') + ' pts';
+
+    // Clear previous errors
+    document.querySelectorAll('#editCustomerModal .text-error').forEach(el => el.classList.add('hidden'));
+    document.getElementById('editCusErrorContainer').classList.add('hidden');
+    document.getElementById('editCustomerSaveBtn').disabled = false;
+    document.getElementById('editCustomerSaveBtn').innerHTML = '<span class="material-symbols-outlined text-[18px]">save</span> Lưu thay đổi';
+
+    document.getElementById('editCustomerModal').classList.remove('hidden');
+}
+function closeEditCustomerModal() { document.getElementById('editCustomerModal').classList.add('hidden'); }
+
+async function saveEditCustomer() {
+    const btn = document.getElementById('editCustomerSaveBtn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span> Đang lưu...';
+
+    // Clear previous errors
+    document.querySelectorAll('#editCustomerModal .text-error').forEach(el => el.classList.add('hidden'));
+    document.getElementById('editCusErrorContainer').classList.add('hidden');
+
+    const cusId = document.getElementById('editCusId').value;
+    const fullName = document.getElementById('editCusName').value.trim();
+    const phone = document.getElementById('editCusPhone').value.trim();
+    const email = document.getElementById('editCusEmail').value.trim();
+    const address = document.getElementById('editCusAddress').value.trim();
+    const bod = document.getElementById('editCusBod').value;
+    const gender = document.querySelector('input[name="editCusGender"]:checked').value;
+
+    // Client-side validation
+    let hasError = false;
+    if (!fullName) {
+        showFieldError('editCusName', 'Họ tên không được để trống.');
+        hasError = true;
+    }
+    if (!phone) {
+        showFieldError('editCusPhone', 'Số điện thoại không được để trống.');
+        hasError = true;
+    } else if (!/^0[0-9]{9,10}$/.test(phone)) {
+        showFieldError('editCusPhone', 'Số điện thoại không hợp lệ (phải bắt đầu bằng 0 và 10-11 số).');
+        hasError = true;
+    }
+    if (email && !/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) {
+        showFieldError('editCusEmail', 'Email không hợp lệ.');
+        hasError = true;
+    }
+    if (hasError) { btn.disabled = false; btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">save</span> Lưu thay đổi'; return; }
+
+    try {
+        const body = new URLSearchParams({
+            action: 'update-api',
+            customerId: cusId,
+            fullName: fullName,
+            phone: phone,
+            email: email,
+            address: address,
+            dateOfBirth: bod,
+            gender: gender,
+            csrfToken: CSRF_TOKEN
+        });
+        const res = await fetch(CTX+'/customers', {method:'POST', body});
+        const data = await res.json();
+        if (data.status === 'success') {
+            // Refresh the customer in the active tab
+            if (cartState.activeTab.selectedCustomer) {
+                cartState.activeTab.selectedCustomer.fullName = data.customer.fullName;
+                cartState.activeTab.selectedCustomer.phone = data.customer.phone;
+                cartState.activeTab.selectedCustomer.email = data.customer.email;
+                cartState.activeTab.selectedCustomer.address = data.customer.address;
+                cartState.activeTab.selectedCustomer.loyaltyPoint = data.customer.loyaltyPoint;
+            }
+            renderUI();
+            closeEditCustomerModal();
+            showToast('Cập nhật thành công!', fullName + ' — ' + phone);
+        } else {
+            if (data.field) {
+                showFieldError('editCus' + data.field.charAt(0).toUpperCase() + data.field.slice(1), data.message);
+            } else {
+                showGlobalError(data.message || 'Không thể cập nhật.');
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">save</span> Lưu thay đổi';
+        }
+    } catch(e) {
+        showGlobalError('Lỗi kết nối.');
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">save</span> Lưu thay đổi';
+        console.error(e);
+    }
+}
+
+function showFieldError(inputId, message) {
+    const errorEl = document.getElementById(inputId + 'Error');
+    if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.classList.remove('hidden');
+    }
+}
+function showGlobalError(message) {
+    const container = document.getElementById('editCusErrorContainer');
+    const msgEl = document.getElementById('editCusErrorMessage');
+    container.classList.remove('hidden');
+    msgEl.textContent = message;
+}
+
 // ── Keyboard shortcuts ──────────────────────────────────
 window.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closePaymentModal(); closeCustomerModal(); closeAddCustomerModal(); }
+    if (e.key === 'Escape') { closePaymentModal(); closeCustomerModal(); closeAddCustomerModal(); closeEditCustomerModal(); }
     if (e.key === 'F12') { e.preventDefault(); if (!document.getElementById('paymentModal').classList.contains('hidden')) submitCheckout(); else openPaymentModal(); }
     if (e.key === 'F4') { e.preventDefault(); openCustomerModal(); }
 });

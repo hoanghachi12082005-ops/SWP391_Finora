@@ -78,17 +78,7 @@
                                 <p>Nhân viên hoạt động</p>
                                 <h3>${employeeOverview.activeEmployees}</h3>
                             </div>
-                        </div>
-
-                        <div class="overview-card">
-                            <div class="overview-icon overview-icon-orders">
-                                <span class="material-symbols-outlined">receipt_long</span>
-                            </div>
-                            <div class="overview-info">
-                                <p>Tổng đơn hàng</p>
-                                <h3>${employeeOverview.totalOrders}</h3>
-                            </div>
-                        </div>
+                        </div>  
 
                         <div class="overview-card">
                             <div class="overview-icon overview-icon-revenue">

@@ -67,25 +67,6 @@
             </a>
         </div>
 
-        <!-- Đối tác Dropdown -->
-        <c:set var="isDoiTacActive" value="${originalUri.contains('/customers') || originalUri.contains('/suppliers')}" />
-        <div class="sidebar-menu-item sidebar-menu-item-dropdown ${isDoiTacActive ? 'open' : ''}" onclick="toggleDropdown(this)">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span class="material-icons">handshake</span>
-                <span>Đối tác</span>
-            </div>
-            <span class="material-icons sidebar-dropdown-arrow">expand_more</span>
-        </div>
-        <div class="sidebar-submenu ${isDoiTacActive ? 'open' : ''}">
-            <c:if test="${roleName != 'Admin'}">
-            <a href="${pageContext.request.contextPath}/customers" class="sidebar-submenu-item ${originalUri.contains('/customers') ? 'active' : ''}">
-                <span>Khách hàng</span>
-            </a>
-            </c:if>
-            <a href="${pageContext.request.contextPath}/suppliers" class="sidebar-submenu-item ${originalUri.contains('/suppliers') ? 'active' : ''}">
-                <span>Nhà cung cấp</span>
-            </a>
-        </div>
 
         <!-- Chi nhánh (Admin, Owner) -->
         <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">

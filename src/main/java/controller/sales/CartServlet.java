@@ -106,15 +106,7 @@ public class CartServlet extends HttpServlet {
                             targetTab.setSelectedCustomer(null);
                         } else {
                             CustomerDAO customerDao = new CustomerDAO();
-                            List<Customer> allCus = customerDao.getAll();
-                            Customer selected = null;
-                            for (Customer c : allCus) {
-                                if (c.getCusId() == cusId) {
-                                    selected = c;
-                                    break;
-                                }
-                            }
-                            targetTab.setSelectedCustomer(selected);
+                            targetTab.setSelectedCustomer(customerDao.findById(cusId));
                         }
                     }
                 }
@@ -338,6 +330,9 @@ public class CartServlet extends HttpServlet {
             out.write("\"cusId\":" + c.getCusId() + ",");
             out.write("\"fullName\":\"" + escJson(c.getFullName()) + "\",");
             out.write("\"phone\":\"" + escJson(c.getPhone()) + "\",");
+            out.write("\"email\":\"" + escJson(c.getEmail()) + "\",");
+            out.write("\"address\":\"" + escJson(c.getAddress() != null ? c.getAddress() : "") + "\",");
+            out.write("\"status\":\"" + escJson(c.getStatus() != null ? c.getStatus() : "") + "\",");
             out.write("\"loyaltyPoint\":" + c.getLoyaltyPoint());
             out.write("},");
         } else {
