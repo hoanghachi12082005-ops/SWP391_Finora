@@ -12,7 +12,6 @@
     <jsp:include page="/views/common/sidebar.jsp"/>
 
     <main class="main-content">
-        <jsp:include page="/views/common/topbar.jsp"/>
         
         <div class="container-fluid py-4">
             <div class="page-header">
