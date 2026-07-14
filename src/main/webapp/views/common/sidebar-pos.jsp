@@ -135,9 +135,11 @@
                 <span>Khách hàng</span>
             </a>
             </c:if>
+            <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
             <a href="${pageContext.request.contextPath}/suppliers" class="sidebar-submenu-item ${originalUri.contains('/suppliers') ? 'active' : ''}">
                 <span>Nhà cung cấp</span>
             </a>
+            </c:if>
         </div>
 
         <!-- Chi nhánh (Admin, Owner) -->

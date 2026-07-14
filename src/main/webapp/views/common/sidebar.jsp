@@ -88,10 +88,6 @@
                                class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'check' ? 'active' : ''}">
                                 Kiểm kho
                             </a>
-                            <a href="${pageContext.request.contextPath}/inventory?tab=import&warehouseId=${sessionScope.selectedWarehouseId}"
-                               class="sidebar-submenu-item ${originalUri.contains('/inventory') && (activeTab == 'import' || activeTab == 'export') ? 'active' : ''}">
-                                Phiếu Nhập / Xuất
-                            </a>
                             <a href="${pageContext.request.contextPath}/inventory?tab=history&warehouseId=${sessionScope.selectedWarehouseId}"
                                class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'history' ? 'active' : ''}">
                                 Lịch sử
@@ -200,7 +196,7 @@
         </c:if>
 
         <!-- Suppliers / Partners -->
-        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'WarehouseStaff'}">
             <a href="${pageContext.request.contextPath}/suppliers"
                class="sidebar-menu-item ${pageContext.request.requestURI.contains('/suppliers') ? 'active' : ''}">
                 <span class="material-icons">handshake</span>
