@@ -39,9 +39,8 @@ import util.report.PdfReportUtil;
         "/reports/sales-by-store-export",
         "/reports/inventory",
         "/reports/inventory-preview",
-        "/reports/inventory-export",
-        "/reports/export"
-})
+        "/reports/inventory-export"
+    })
 public class ReportController extends BaseController {
 
     private EmployeeSalesReportDAO employeeSalesReportDAO;
@@ -154,9 +153,6 @@ public class ReportController extends BaseController {
         }
 
         switch (path) {
-            case "/reports/export":
-                forward(request, response, "reports/export");
-                break;
             default:
                 response.sendRedirect(request.getContextPath() + "/reports/employee-sales");
                 break;
