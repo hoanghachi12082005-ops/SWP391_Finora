@@ -36,7 +36,7 @@
 <div class="flex h-screen pl-[var(--sidebar-width,260px)] pr-6">
 
 <!-- ═══════════════ SIDEBAR POS ═══════════════ -->
-<jsp:include page="/views/common/sidebar-pos.jsp" />
+<jsp:include page="/views/common/sidebar.jsp" />
 <div class="flex-1 flex flex-col min-w-0">
 
     <!-- ─── HEADER (72px) ─── -->

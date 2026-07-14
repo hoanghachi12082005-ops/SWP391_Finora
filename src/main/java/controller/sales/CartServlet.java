@@ -292,9 +292,6 @@ public class CartServlet extends HttpServlet {
 
     private void writeResponseJson(PrintWriter out, Map<Integer, OrderTab> tabs, int activeTabId) {
         OrderTab activeTab = tabs.get(activeTabId);
-        // Cập nhật VAT rate từ DB cho tab đang active
-        double vatRate = VatSettingDAO.getVatRate();
-        activeTab.setVatRate(vatRate);
 
         // Cập nhật VAT rate từ DB cho tab đang active
         double vatRate = VatSettingDAO.getVatRate();
