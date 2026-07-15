@@ -103,11 +103,15 @@ public class CheckoutServlet extends HttpServlet {
         if ("BANK_TRANSFER".equals(paymentMethod)) {
             // ── Chống duplicate: lock session ──────────────
             String lockKey = "checkout_lock_" + tabId;
-            if (Boolean.TRUE.equals(session.getAttribute(lockKey))) {
+            boolean lockExists = Boolean.TRUE.equals(session.getAttribute(lockKey));
+            System.out.println("[DEBUG] BANK_TRANSFER tabId=" + tabId + " | lockExists=" + lockExists);
+            if (lockExists) {
+                System.out.println("[DEBUG]  LOCK FOUND — từ chối request (double-click)");
                 out.write("{\"status\":\"error\",\"message\":\"Đơn hàng đang được xử lý, vui lòng chờ...\"}");
                 return;
             }
             session.setAttribute(lockKey, true);
+            System.out.println("[DEBUG] 🔒 LOCK SET — request được xử lý");
 
             Connection conn = null;
             try {
@@ -170,11 +174,13 @@ public class CheckoutServlet extends HttpServlet {
                 out.write("{\"status\":\"error\",\"message\":\"Lỗi hệ thống: " + escJson(e.getMessage()) + "\"}");
             } finally {
                 session.removeAttribute(lockKey);
+                System.out.println("[DEBUG]  LOCK REMOVED — session lock đã được giải phóng");
                 if (conn != null) { try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {} }
             }
             return;
         }
 
+        System.out.println("[DEBUG] CASH flow — KHÔNG có session lock, chỉ dùng frontend disable button");
         // Kiểm tra tiền mặt đủ
         if ("CASH".equals(paymentMethod) && cashReceived < totalAmount) {
             out.write("{\"status\":\"error\",\"message\":\"Số tiền khách thanh toán không đủ. Cần: "
