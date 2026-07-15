@@ -1,17 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
-<%--
-  Shared pagination links component.
-  Requires these request attributes (set by PaginationHelper.setAttributes):
-    currentPage, totalPages, sizeValue, startRecord, endRecord, totalRecords
-
-  Parameters (passed via jsp:include jsp:param):
-    baseUrl     — the base action URL for links
-    queryString — URL-encoded filter params (e.g., "&keyword=abc&branchId=1")
-
-  Also renders the pagination-info bar (dropdown + summary).
---%>
+ 
 <div class="table-footer" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
     <div class="pagination-info">
         <form method="get" action="${baseUrl}">
@@ -41,7 +31,7 @@
                 <option value="30" ${sizeValue == 30 ? 'selected' : ''}>${option30}</option>
                 <option value="50" ${sizeValue == 50 ? 'selected' : ''}>${option50}</option>
                 <option value="70" ${sizeValue == 70 ? 'selected' : ''}>${option70}</option>
-                <option value="100" ${sizeValue == 100 ? 'selected' : ''}>${option100}</option>
+                <option value="100" ${sizeValue == 100 ? 'selected' : ''}>Tất cả</option>
             </select>
             <span class="pagination-summary">
                 ${startRecord} - ${endRecord} trong số ${totalRecords}
