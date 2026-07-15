@@ -149,28 +149,4 @@ public class OrderVoucherController extends InventoryBaseController {
             redirect(response, request.getContextPath() + "/inventory");
         }
     }
-
-    /**
-     * Chuẩn bị dữ liệu hiển thị cho Tab Nhập Kho hàng hóa.
-     * Nếu tài khoản là Nhân viên kho, chỉ lọc các phiếu ở trạng thái PENDING (chờ duyệt).
-     */
-    void handleImportTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
-        List<PurchaseOrder> imports = purchaseOrderDAO.findAllByWarehouseAndType(warehouseId != null ? warehouseId : 0, "PURCHASE", null);
-        if ("WarehouseStaff".equalsIgnoreCase(role)) {
-            imports.removeIf(po -> !"PENDING".equals(po.getStatus()));
-        }
-        request.setAttribute("imports", imports);
-    }
-
-    /**
-     * Chuẩn bị dữ liệu hiển thị cho Tab Xuất Kho hàng hóa.
-     * Nếu tài khoản là Nhân viên kho, chỉ lọc các phiếu ở trạng thái PENDING (chờ duyệt).
-     */
-    void handleExportTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
-        List<PurchaseOrder> exports = purchaseOrderDAO.findAllByWarehouseAndType(warehouseId != null ? warehouseId : 0, "EXPORT", null);
-        if ("WarehouseStaff".equalsIgnoreCase(role)) {
-            exports.removeIf(po -> !"PENDING".equals(po.getStatus()));
-        }
-        request.setAttribute("exports", exports);
-    }
 }

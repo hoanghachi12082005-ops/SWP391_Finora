@@ -77,9 +77,6 @@
             <a href="${pageContext.request.contextPath}/orders" class="sidebar-submenu-item ${originalUri.contains('/orders') ? 'active' : ''}">
                 <span>Lịch sử đơn hàng</span>
             </a>
-            <a href="${pageContext.request.contextPath}/warehouse/import" class="sidebar-submenu-item ${originalUri.contains('/import') ? 'active' : ''}">
-                <span>Nhập hàng</span>
-            </a>
         </div>
 
         <!-- Ca làm việc -->

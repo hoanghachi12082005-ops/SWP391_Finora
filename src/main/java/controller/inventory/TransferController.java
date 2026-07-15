@@ -127,6 +127,12 @@ public class TransferController extends InventoryBaseController {
             switch (action) {
                 // case "saveTransfer" → [MOVED FROM InventoryController] - Original lines 1309-1372
                 case "saveTransfer": {
+                    if (request.getContentLengthLong() > 5 * 1024 * 1024) {
+                        request.getSession().setAttribute("error", "Dung lượng dữ liệu gửi lên quá lớn (vượt quá 5MB).");
+                        int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
+                        redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + currentWarehouseId);
+                        return;
+                    }
                     String[] productIds = request.getParameterValues("productId[]");
                     String[] partnerWarehouseIds = request.getParameterValues("partnerWarehouseId[]");
                     String[] quantities = request.getParameterValues("quantity[]");

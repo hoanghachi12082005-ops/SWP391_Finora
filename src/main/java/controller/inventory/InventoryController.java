@@ -205,12 +205,7 @@ public class InventoryController extends BaseController {
                 case "history":
                     new HistoryController().handleHistoryTab(request, selectedWarehouseId, allowedWarehouseIds);
                     break;
-                case "import":
-                    new OrderVoucherController().handleImportTab(request, selectedWarehouseId, role);
-                    break;
-                case "export":
-                    new OrderVoucherController().handleExportTab(request, selectedWarehouseId, role);
-                    break;
+
                 case "pending_vouchers":
                     new PendingVouchersController().handlePendingVouchersTab(request, selectedWarehouseId, role);
                     break;

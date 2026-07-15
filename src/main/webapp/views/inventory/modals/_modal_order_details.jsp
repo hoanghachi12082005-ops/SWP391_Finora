@@ -3,9 +3,9 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt"%>
 <%-- 
   ==========================================================================
-  MODAL HIỂN THỊ CHI TIẾT ĐƠN HÀNG NHẬP/XUẤT (_modal_order_details.jsp)
+  MODAL HIỂN THỊ CHI TIẾT ĐƠN HÀNG NHẬP (_modal_order_details.jsp)
   - Được load qua AJAX từ `OrderVoucherController` (action=viewOrderDetails).
-  - Hiển thị danh sách sản phẩm, nhà cung cấp, đơn giá, tổng tiền của đơn nhập/xuất kho.
+  - Hiển thị danh sách sản phẩm, nhà cung cấp, đơn giá, tổng tiền của đơn nhậpkho.
   ==========================================================================
 --%>
 <div class="modal-header bg-light border-bottom-0 pb-0">

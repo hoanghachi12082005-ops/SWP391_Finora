@@ -257,6 +257,13 @@ public class StockController extends InventoryBaseController {
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     boolean isOwner = "Owner".equals(currentUser.getRoleName()) || "StoreManager".equals(currentUser.getRoleName());
                     
+                    // Kiểm tra dung lượng yêu cầu gửi lên (Request Payload) phải dưới 5MB
+                    if (request.getContentLengthLong() > 5 * 1024 * 1024) {
+                        request.getSession().setAttribute("errorMessage", "Dung lượng dữ liệu gửi lên quá lớn (vượt quá 5MB).");
+                        redirect(response, request.getContextPath() + "/inventory?tab=stock&warehouseId=" + currentWarehouseId);
+                        break;
+                    }
+                    
                     if (productIds != null && productIds.length > 0) {
                         List<model.OrderDetail> allDetails = new ArrayList<>();
                         double totalCost = 0.0;
@@ -342,70 +349,6 @@ public class StockController extends InventoryBaseController {
                         request.getSession().setAttribute("message", "Đã tạo phiếu nhập hàng (Chờ duyệt).");
                     }
                     redirect(response, request.getContextPath() + "/inventory?tab=stock&warehouseId=" + currentWarehouseId);
-                    break;
-                }
-                // [MOVED FROM InventoryController] - Original lines 1471-1533
-                case "saveExport": {
-                    int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
-                    String note = request.getParameter("note");
-                    String[] productIds = request.getParameterValues("productId[]");
-                    String[] quantities = request.getParameterValues("quantity[]");
-                    String[] importPrices = request.getParameterValues("importPrice[]"); // Used for value estimation
-                    
-                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
-                    
-                    if (productIds != null && productIds.length > 0) {
-                        List<model.OrderDetail> exportDetails = new ArrayList<>();
-                        double totalValue = 0.0;
-                        for (int i = 0; i < productIds.length; i++) {
-                            int pId = Integer.parseInt(productIds[i]);
-                            int qty = Integer.parseInt(quantities[i]);
-                            double price = 0.0;
-                            if (importPrices != null && importPrices.length > i) {
-                                try { price = Double.parseDouble(importPrices[i]); } catch (Exception e) {}
-                            }
-                            if (qty > 0) {
-                                model.OrderDetail detail = new model.OrderDetail();
-                                detail.setProductId(pId);
-                                detail.setQuantity(qty);
-                                detail.setUnitPrice(price);
-                                detail.setTotalPrice(qty * price);
-                                detail.setImportPrice(price);
-                                exportDetails.add(detail);
-                                totalValue += (qty * price);
-                            }
-                        }
-                        
-                        if (!exportDetails.isEmpty()) {
-                            model.Order exportOrder = new model.Order();
-                            exportOrder.setOrderCode("EX-" + System.currentTimeMillis());
-                            exportOrder.setOrderType("EXPORT");
-                            exportOrder.setEmpId(currentUser.getEmployeeId());
-                            exportOrder.setBranchId(currentUser.getBranchId() != null ? currentUser.getBranchId() : 1);
-                            exportOrder.setWarehouseId(currentWarehouseId);
-                            exportOrder.setSubtotal(totalValue);
-                            exportOrder.setDiscountAmount(0.0);
-                            exportOrder.setTotalAmount(totalValue);
-                            exportOrder.setPaymentMethod("NONE");
-                            exportOrder.setStatus(model.Order.OrderStatus.PENDING); // Staff creates as PENDING
-                            
-                            try (java.sql.Connection conn = util.database.DBContext.getConnection()) {
-                                conn.setAutoCommit(false);
-                                try {
-                                    int orderId = orderDAO.createOrderInTransaction(conn, exportOrder);
-                                    dao.sales.OrderDetailDAO detailDao = new dao.sales.OrderDetailDAO();
-                                    detailDao.insertBatchPurchase(conn, orderId, exportDetails); // Reuse method since schema is identical
-                                    conn.commit();
-                                } catch (Exception ex) {
-                                    conn.rollback();
-                                    throw ex;
-                                }
-                            }
-                        }
-                    }
-
-                    request.getSession().setAttribute("message", "Đã tạo phiếu xuất hàng (Chờ duyệt).");
-                    redirect(response, request.getContextPath() + "/inventory?tab=export&warehouseId=" + currentWarehouseId);
                     break;
                 }
                 // [MOVED FROM InventoryController] - Original lines 1871-1885

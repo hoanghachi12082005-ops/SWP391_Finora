@@ -91,6 +91,12 @@ public class InventoryCheckController extends InventoryBaseController {
             switch (action) {
                 // case "saveCheck" → [MOVED FROM InventoryController] - Original lines 1752-1818
                 case "saveCheck": {
+                    if (request.getContentLengthLong() > 5 * 1024 * 1024) {
+                        request.getSession().setAttribute("error", "Dung lượng dữ liệu gửi lên quá lớn (vượt quá 5MB).");
+                        int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
+                        redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
+                        return;
+                    }
                     int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
                     String[] productIds = request.getParameterValues("productId[]");
                     String[] systemQtys = request.getParameterValues("systemQty[]");
@@ -160,6 +166,12 @@ public class InventoryCheckController extends InventoryBaseController {
                 }
                 // case "updateCheck" → [MOVED FROM InventoryController] - Original lines 1886-1946
                 case "updateCheck": {
+                    if (request.getContentLengthLong() > 5 * 1024 * 1024) {
+                        request.getSession().setAttribute("error", "Dung lượng dữ liệu gửi lên quá lớn (vượt quá 5MB).");
+                        int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
+                        redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
+                        return;
+                    }
                     int checkId = Integer.parseInt(request.getParameter("checkId"));
                     int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
                     String[] productIds = request.getParameterValues("productId[]");

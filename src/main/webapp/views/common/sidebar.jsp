@@ -45,7 +45,7 @@
 
         <!-- Inventory Management (Owner, WarehouseStaff, StoreManager, Admin) -->
         <c:if test="${roleName == 'Owner' || roleName == 'WarehouseStaff' || roleName == 'StoreManager' || roleName == 'Admin'}">
-            <c:set var="isInventoryActive" value="${originalUri.contains('/inventory') || originalUri.contains('/approval')}" />
+            <c:set var="isInventoryActive" value="${originalUri.contains('/inventory')}" />
             <a href="#inventoryCollapse" data-bs-toggle="collapse" role="button"
                aria-expanded="${isInventoryActive ? 'true' : 'false'}" aria-controls="inventoryCollapse"
                class="sidebar-menu-item ${isInventoryActive ? 'active' : ''} d-flex align-items-center">

@@ -5,7 +5,6 @@
 
 function initModals() {
     initImportStockModal();
-    initExportStockModal();
 }
 
 if (document.readyState === 'loading') {
@@ -383,6 +382,12 @@ function handleExcelUpload(event) {
         return;
     }
 
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Dung lượng tệp quá lớn! Vui lòng tải lên tệp Excel có dung lượng nhỏ hơn 5MB.');
+        event.target.value = '';
+        return;
+    }
+
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
@@ -681,138 +686,4 @@ function checkExcelImportState() {
     }
 }
 
-/* ==========================================================================
-   MODAL: CREATE EXPORT
-   ========================================================================== */
-function initExportStockModal() {
-    const eSearchInput = document.getElementById('exportSearchInput');
-    const eSearchResults = document.getElementById('exportSearchResults');
-    const eTableBody = document.getElementById('exportProductTableBody');
-    const eEmptyRow = document.getElementById('exportEmptyRow');
-    const eSubmitBtn = document.getElementById('exportSubmitBtn');
 
-    if (!eSearchInput || !eSearchResults || !eTableBody) return;
-
-    let eSearchTimeout;
-    let eSearchActive = false;
-
-    eSearchInput.addEventListener('focus', function() {
-        eSearchActive = true;
-        triggerExportSearch(this.value.trim());
-    });
-
-    eSearchInput.addEventListener('input', function() {
-        eSearchActive = true;
-        clearTimeout(eSearchTimeout);
-        const keyword = this.value.trim();
-        eSearchTimeout = setTimeout(() => {
-            triggerExportSearch(keyword);
-        }, 300);
-    });
-
-    function triggerExportSearch(keyword) {
-        const url = getContextPath() + '/inventory?action=searchAllProductsApi&keyword=' + encodeURIComponent(keyword);
-        
-        fetch(url)
-            .then(res => res.json())
-            .then(data => {
-                eSearchResults.innerHTML = '';
-                if(data.length === 0) {
-                    eSearchResults.innerHTML = '<div class="p-3 text-center text-muted small">Không tìm thấy sản phẩm nào</div>';
-                } else {
-                    data.forEach(p => {
-                        const item = document.createElement('div');
-                        item.className = 'import-search-item';
-                        item.style.cursor = 'pointer';
-                        
-                        item.innerHTML = `
-                            <div>
-                                <div class="fw-bold text-dark" style="font-size: 14.5px;">${p.productName}</div>
-                                <div class="text-muted small">Mã: SP${p.productId}</div>
-                            </div>
-                            <button type="button" class="btn-add-import i-add-btn">
-                                <span class="material-icons" style="font-size: 16px;">add</span> Thêm
-                            </button>
-                        `;
-
-                        item.onclick = () => {
-                            addExportRow(p);
-                            eSearchActive = false;
-                            eSearchResults.style.display = 'none';
-                            eSearchInput.value = '';
-                            eSearchInput.focus();
-                        };
-
-                        eSearchResults.appendChild(item);
-                    });
-                }
-                if (eSearchActive) {
-                    eSearchResults.style.display = 'block';
-                }
-            });
-    }
-
-    document.addEventListener('click', function(e) {
-        if (!eSearchInput.contains(e.target) && !eSearchResults.contains(e.target)) {
-            eSearchActive = false;
-            eSearchResults.style.display = 'none';
-        }
-    });
-}
-
-function addExportRow(product) {
-    const eTableBody = document.getElementById('exportProductTableBody');
-    const eEmptyRow = document.getElementById('exportEmptyRow');
-    const eSubmitBtn = document.getElementById('exportSubmitBtn');
-    if (!eTableBody) return;
-
-    let isDuplicate = false;
-    eTableBody.querySelectorAll('tr').forEach(tr => {
-        if (tr.id === 'exportEmptyRow') return;
-        const pidInput = tr.querySelector('input[name="productId[]"]');
-        if (pidInput && pidInput.value == product.productId) {
-            isDuplicate = true;
-            tr.style.backgroundColor = '#fef3c7';
-            setTimeout(() => tr.style.backgroundColor = '', 600);
-        }
-    });
-
-    if (isDuplicate) return;
-    if (eEmptyRow) eEmptyRow.style.display = 'none';
-    if (eSubmitBtn) eSubmitBtn.disabled = false;
-
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-        <td class="ps-3 py-3">
-            <div class="fw-bold text-dark">${product.productName}</div>
-            <div class="text-muted small" style="font-size: 11px;">Mã SP: ${product.productId}</div>
-            <input type="hidden" name="productId[]" value="${product.productId}">
-        </td>
-        <td>
-            <input type="number" name="importPrice[]" class="form-control form-control-sm text-end fw-bold" placeholder="0" min="0" step="1000" style="border-radius: 8px;">
-        </td>
-        <td>
-            <input type="number" name="quantity[]" class="form-control form-control-sm text-center fw-bold e-qty-input" required value="1" min="1" style="width: 80px; margin: 0 auto; border-radius: 8px;">
-        </td>
-        <td class="text-center">
-            <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-circle p-1" onclick="this.closest('tr').remove(); checkExportEmpty();" title="Xóa khỏi phiếu" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
-                <span class="material-icons" style="font-size: 18px;">delete</span>
-            </button>
-        </td>
-    `;
-    
-    eTableBody.appendChild(tr);
-}
-
-function checkExportEmpty() {
-    const eTableBody = document.getElementById('exportProductTableBody');
-    const eEmptyRow = document.getElementById('exportEmptyRow');
-    const eSubmitBtn = document.getElementById('exportSubmitBtn');
-    if (!eTableBody) return;
-
-    const rowCount = eTableBody.querySelectorAll('tr:not(#exportEmptyRow)').length;
-    if (rowCount === 0) {
-        if (eEmptyRow) eEmptyRow.style.display = 'table-row';
-        if (eSubmitBtn) eSubmitBtn.disabled = true;
-    }
-}

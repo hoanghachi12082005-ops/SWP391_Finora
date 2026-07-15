@@ -230,12 +230,6 @@
                             <c:when test="${activeTab == 'stock'}">
                                 <jsp:include page="tabs/_tab_stock.jsp" />
                             </c:when>
-                            <c:when test="${activeTab == 'import'}">
-                                <jsp:include page="tabs/_tab_import.jsp" />
-                            </c:when>
-                            <c:when test="${activeTab == 'export'}">
-                                <jsp:include page="tabs/_tab_export.jsp" />
-                            </c:when>
                             <c:when test="${activeTab == 'transfer'}">
                                 <jsp:include page="tabs/_tab_transfer.jsp" />
                             </c:when>
@@ -267,7 +261,6 @@
 </div>
 
 <jsp:include page="modals/_modal_create_import.jsp" />
-<jsp:include page="modals/_modal_create_export.jsp" />
 
 <!-- Edit Warehouse Modal -->
 <div class="modal fade" id="editWarehouseModal" tabindex="-1" aria-hidden="true">
