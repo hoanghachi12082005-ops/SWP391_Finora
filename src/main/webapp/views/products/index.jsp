@@ -124,6 +124,8 @@
                 String imgUrl = p.getImageUrl();
                 List<String> imgUrls = p.getImageUrlList();
                 int imgCount = imgUrls.size();
+                String imgUrlsJson = Product.toJsonArray(imgUrls);
+                String encodedImgUrlsJson = (imgUrlsJson != null) ? java.net.URLEncoder.encode(imgUrlsJson, "UTF-8") : "";
 %>
                             <tr>
                                 <td>#<%= p.getProductID() %></td>
@@ -162,7 +164,7 @@
                                         '<%= p.getUnitID() %>',
                                         '<%= p.getSellingPrice() != null ? p.getSellingPrice().toPlainString() : "0" %>',
                                         '<%= p.getStatus() != null ? p.getStatus() : "Active" %>',
-                                        '<%= java.util.Optional.ofNullable(Product.toJsonArray(p.getImageUrlList())).orElse("").replace("'", "\\\\'") %>'
+                                        '<%= encodedImgUrlsJson %>'
                                     )">Sửa</button>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="deleteProduct('<%= p.getProductID() %>')">Xóa</button>
                                 </td>
@@ -360,7 +362,8 @@
         container.innerHTML = '';
         if (imageUrlsJson && imageUrlsJson !== '') {
             try {
-                const urls = JSON.parse(imageUrlsJson);
+                const decoded = decodeURIComponent(imageUrlsJson);
+                const urls = JSON.parse(decoded);
                 urls.forEach(function(url) {
                     if (!url) return;
                     const img = document.createElement('img');
