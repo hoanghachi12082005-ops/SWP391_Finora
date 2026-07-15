@@ -878,6 +878,10 @@ function calcChange() {
 
 async function submitCheckout() {
     if (!cartState) return;
+    const btn = document.querySelector('#paymentModal .bg-primary');
+    if (btn && btn.disabled) return; // chống double-click
+    if (btn) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); }
+
     const body = new URLSearchParams();
     body.append('paymentMethod', modalPayMethod);
     body.append('cashReceived', modalPayMethod === 'CASH' ? document.getElementById('modalCashInput').value : '999999999');
@@ -897,6 +901,7 @@ async function submitCheckout() {
             window.open(CTX+'/vnpay/pay?orderCode='+data.orderCode, '_blank');
         } else { showAlert(data.message || 'Lỗi thanh toán.'); }
     } catch(e) { console.error(e); }
+    if (btn) { btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
 }
 
 // ── VNPAY Flow ──────────────────────────────────────────
