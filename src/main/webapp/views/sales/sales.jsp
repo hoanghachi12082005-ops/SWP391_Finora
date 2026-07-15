@@ -154,34 +154,37 @@
         <!-- ═══ RIGHT: CART PANEL (340px) ═══ -->
         <aside class="w-[340px] bg-white border-l border-outline-variant flex flex-col shrink-0">
 
-            <!-- Customer Section -->
-            <div class="p-4 border-b border-outline-variant">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
-                        <span class="material-symbols-outlined text-[20px]">person</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-caption text-outline">Khách hàng</div>
-                        <div id="selectedCustomerName" class="text-label-md text-on-surface truncate">Khách vãng lai</div>
-                        <div id="customerDetails" class="hidden text-caption text-on-surface-variant space-y-0.5 mt-0.5">
-                            <div id="customerPhoneDisplay" class="flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[12px]">call</span>
-                                <span id="customerPhoneValue"></span>
-                            </div>
-                            <div id="customerEmailDisplay" class="flex items-center gap-1 hidden">
-                                <span class="material-symbols-outlined text-[12px]">mail</span>
-                                <span id="customerEmailValue"></span>
-                            </div>
+            <!-- Customer Section - Phone Search -->
+            <div class="p-4 border-b border-outline-variant space-y-2">
+                <div class="text-caption text-outline">Khách hàng</div>
+                <div class="flex items-center gap-2">
+                    <div class="flex-1 relative">
+                        <div class="flex items-center bg-surface-container-low rounded-xl px-3 h-10 gap-2 border border-transparent focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/10 transition-all">
+                            <span class="material-symbols-outlined text-outline text-[18px]">phone</span>
+                            <input id="posPhoneSearch" type="text" placeholder="Nhập SĐT khách hàng..." class="bg-transparent outline-none flex-1 text-body-md" autocomplete="off">
+                            <button id="posClearSearch" class="text-outline hover:text-error transition-colors hidden text-[18px] leading-none">&times;</button>
+                            <span id="posSearchSpinner" class="hidden w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
                         </div>
-                        <div id="customerPointsDisplay" class="text-caption text-primary hidden mt-0.5">
+                        <div id="posSearchDropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant search-dropdown z-50 animate-fadeIn"></div>
+                    </div>
+                </div>
+                <div id="posCustomerInfo" class="hidden flex items-center justify-between p-2 bg-surface-container-low rounded-xl">
+                    <div class="min-w-0">
+                        <div id="posCustName" class="text-label-md font-semibold truncate"></div>
+                        <div id="posCustPhone" class="text-caption text-outline"></div>
+                        <div id="posCustPoints" class="text-caption text-primary hidden mt-0.5">
                             <span class="material-symbols-outlined text-[12px] align-text-bottom">stars</span>
-                            Điểm khả dụng: <span id="customerPointsValue">0</span>
+                            Điểm khả dụng: <span id="posCustPointsValue">0</span>
                         </div>
                     </div>
-                    <div class="flex flex-col gap-1">
-                        <button onclick="openCustomerModal()" class="text-primary text-label-md hover:underline">Thay đổi</button>
-                        <button id="editCustomerBtn" onclick="openEditCustomerModal()" class="text-outline text-label-md hover:text-primary hidden">Sửa</button>
+                    <div class="flex items-center gap-1">
+                        <button id="posRemoveCustomerBtn" class="text-outline hover:text-error transition-colors hidden text-[18px] leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-error-container/30" title="Bỏ chọn khách hàng">&times;</button>
+                        <button id="posEditCustomerBtn" class="text-label-md text-outline hover:text-primary transition-colors hidden shrink-0">Sửa</button>
                     </div>
+                </div>
+                <div id="posNoCustomer" class="hidden p-2 bg-surface-container-low rounded-xl text-center">
+                    <p class="text-caption text-outline">Không tìm thấy khách hàng</p>
+                    <button id="posAddCustomerBtn" class="text-label-md text-primary hover:underline mt-0.5">+ Thêm khách hàng mới</button>
                 </div>
                 <input type="hidden" id="selectedCustomerId" value="">
             </div>
@@ -361,51 +364,6 @@
 </div>
 </div>
 
-
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- ═══════════════ CUSTOMER MODAL ════════════════════════ -->
-<!-- ═══════════════════════════════════════════════════════ -->
-<div id="customerModal" class="hidden fixed inset-0 z-50 modal-blur flex items-center justify-center">
-<div class="bg-surface-container-lowest rounded-xl shadow-2xl w-[600px] max-h-[80vh] flex flex-col animate-fadeIn">
-    <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
-        <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary">group</span><h3 class="text-title-lg font-bold">Chọn khách hàng</h3></div>
-        <button onclick="closeCustomerModal()" class="w-10 h-10 rounded-full hover:bg-surface-container-high flex items-center justify-center text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
-    </div>
-    <div class="px-6 py-4 border-b border-outline-variant flex gap-3">
-        <div class="flex-1 flex items-center bg-surface-container-low rounded-xl px-4 h-11 gap-2 border border-transparent focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/10">
-            <span class="material-symbols-outlined text-outline text-[18px]">search</span>
-            <input id="customerSearchInput" type="text" placeholder="Tìm theo tên, số điện thoại hoặc mã khách hàng (F4)" class="bg-transparent outline-none flex-1 text-body-md">
-        </div>
-        <button onclick="openAddCustomerModal()" class="px-4 h-11 bg-primary text-on-primary rounded-xl font-label-md flex items-center gap-2 hover:bg-secondary transition-colors">
-            <span class="material-symbols-outlined text-[18px]">person_add</span> Thêm mới
-        </button>
-    </div>
-    <div class="flex-1 overflow-y-auto scrollbar-thin px-2 py-2" id="customerListContainer">
-        <!-- Khách vãng lai -->
-        <button onclick="pickCustomer(0, 'Khách vãng lai')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-high transition-colors group">
-            <div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-outline font-bold text-sm">?</div>
-            <div class="flex-1 text-left"><div class="text-label-md">Khách vãng lai</div><div class="text-caption text-outline">Không lưu thông tin</div></div>
-            <span class="text-label-md text-primary opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1 rounded-lg">Chọn</span>
-        </button>
-        <c:forEach items="${customerList}" var="c">
-        <button onclick="pickCustomer(${c.cusId}, '${fn:escapeXml(c.fullName)}')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-high transition-colors group" data-search="${fn:toLowerCase(c.fullName)} ${c.phone}">
-            <div class="w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center font-bold text-sm">${fn:substring(c.fullName, 0, 1)}</div>
-            <div class="flex-1 text-left min-w-0">
-                <div class="text-label-md truncate">${c.fullName}</div>
-                <div class="flex items-center gap-3 text-caption text-outline">
-                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">call</span>${c.phone}</span>
-                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">stars</span>${c.loyaltyPoint} điểm</span>
-                </div>
-            </div>
-            <span class="text-label-md text-primary opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-lg group-hover:bg-primary group-hover:text-white">Chọn</span>
-        </button>
-        </c:forEach>
-    </div>
-    <div class="flex justify-end gap-3 px-6 py-4 border-t border-outline-variant">
-        <button onclick="closeCustomerModal()" class="px-5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant font-button-text hover:bg-surface-container-high transition-colors">Hủy</button>
-    </div>
-</div>
-</div>
 
 <!-- ═══════════════════════════════════════════════════════ -->
 <!-- ═══════════════ ADD CUSTOMER MODAL ════════════════════ -->
@@ -739,38 +697,34 @@ function renderUI() {
         });
     }
 
-    const customerNameDiv = document.getElementById('selectedCustomerName');
+    const posCustName = document.getElementById('posCustName');
+    const posCustPhone = document.getElementById('posCustPhone');
+    const posCustPoints = document.getElementById('posCustPoints');
+    const posCustPointsValue = document.getElementById('posCustPointsValue');
+    const posCustomerInfo = document.getElementById('posCustomerInfo');
+    const posEditCustomerBtn = document.getElementById('posEditCustomerBtn');
+    const posRemoveCustomerBtn = document.getElementById('posRemoveCustomerBtn');
     const customerIdInput = document.getElementById('selectedCustomerId');
-    const pointsDisplay = document.getElementById('customerPointsDisplay');
-    const pointsValue = document.getElementById('customerPointsValue');
-    const customerDetails = document.getElementById('customerDetails');
-    const customerPhoneDisplay = document.getElementById('customerPhoneDisplay');
-    const customerPhoneValue = document.getElementById('customerPhoneValue');
-    const customerEmailDisplay = document.getElementById('customerEmailDisplay');
-    const customerEmailValue = document.getElementById('customerEmailValue');
-    const editCustomerBtn = document.getElementById('editCustomerBtn');
+    const posPhoneSearch = document.getElementById('posPhoneSearch');
     if (activeTab.selectedCustomer) {
         const c = activeTab.selectedCustomer;
-        customerNameDiv.textContent = c.fullName + ' - ' + c.phone;
+        posCustName.textContent = c.fullName;
+        posCustPhone.textContent = c.phone;
+        posCustPointsValue.textContent = c.loyaltyPoint || 0;
+        posCustPoints.classList.remove('hidden');
+        posCustomerInfo.classList.remove('hidden');
+        posEditCustomerBtn.classList.remove('hidden');
+        posRemoveCustomerBtn.classList.remove('hidden');
         customerIdInput.value = c.cusId;
-        pointsValue.textContent = c.loyaltyPoint || 0;
-        pointsDisplay.classList.remove('hidden');
-
-        customerPhoneValue.textContent = c.phone;
-        customerDetails.classList.remove('hidden');
-        if (c.email) {
-            customerEmailValue.textContent = c.email;
-            customerEmailDisplay.classList.remove('hidden');
-        } else {
-            customerEmailDisplay.classList.add('hidden');
+        if (posPhoneSearch && !posPhoneSearch.value) {
+            posPhoneSearch.value = c.phone;
         }
-        editCustomerBtn.classList.remove('hidden');
     } else {
-        customerNameDiv.textContent = 'Khách vãng lai';
+        posCustomerInfo.classList.add('hidden');
+        posCustPoints.classList.add('hidden');
+        posEditCustomerBtn.classList.add('hidden');
+        posRemoveCustomerBtn.classList.add('hidden');
         customerIdInput.value = '';
-        pointsDisplay.classList.add('hidden');
-        customerDetails.classList.add('hidden');
-        editCustomerBtn.classList.add('hidden');
     }
 
     document.getElementById('summaryItemCount').textContent = activeTab.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -970,15 +924,152 @@ function cancelVNPayQR() {
     loadCart();
 }
 
-// ── Customer Modal ──────────────────────────────────────
-function openCustomerModal() { document.getElementById('customerModal').classList.remove('hidden'); }
-function closeCustomerModal() { document.getElementById('customerModal').classList.add('hidden'); }
+// ── POS Phone Search ────────────────────────────────────
+(function() {
+    const searchInput = document.getElementById('posPhoneSearch');
+    const clearBtn = document.getElementById('posClearSearch');
+    const spinner = document.getElementById('posSearchSpinner');
+    const dropdown = document.getElementById('posSearchDropdown');
+    const customerInfo = document.getElementById('posCustomerInfo');
+    const noCustomer = document.getElementById('posNoCustomer');
+    const custName = document.getElementById('posCustName');
+    const custPhone = document.getElementById('posCustPhone');
+    const custPoints = document.getElementById('posCustPoints');
+    const custPointsValue = document.getElementById('posCustPointsValue');
+    const addBtn = document.getElementById('posAddCustomerBtn');
+    const editBtn = document.getElementById('posEditCustomerBtn');
+    const removeBtn = document.getElementById('posRemoveCustomerBtn');
+    let searchTimeout = null;
+    let selectedIndex = -1;
+
+    function resetSearchUI() {
+        dropdown.classList.add('hidden');
+        dropdown.innerHTML = '';
+        customerInfo.classList.add('hidden');
+        noCustomer.classList.add('hidden');
+        selectedIndex = -1;
+    }
+
+    function buildDropdown(customers) {
+        dropdown.innerHTML = '';
+        if (customers.length === 0) {
+            var div = document.createElement('div');
+            div.className = 'px-4 py-3 text-caption text-outline text-center';
+            div.textContent = 'Không tìm thấy khách hàng';
+            dropdown.appendChild(div);
+            var btn = document.createElement('button');
+            btn.className = 'w-full flex items-center gap-2 px-4 py-3 text-label-md text-primary hover:bg-surface-container-high transition-colors border-t border-outline-variant/50';
+            btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">person_add</span> + Thêm khách hàng mới';
+            btn.onclick = function() {
+                document.getElementById('newCusPhone').value = searchInput.value.trim();
+                dropdown.classList.add('hidden');
+                openAddCustomerModal();
+            };
+            dropdown.appendChild(btn);
+        } else {
+            customers.forEach(function(c, i) {
+                var item = document.createElement('button');
+                item.className = 'w-full flex flex-col gap-0.5 px-4 py-3 hover:bg-surface-container-high transition-colors text-left border-b border-outline-variant/30 last:border-0';
+                item.dataset.index = i;
+                item.innerHTML =
+                    '<div class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-outline">person</span><span class="text-label-md font-semibold">' + esc(c.fullName) + '</span></div>' +
+                    '<div class="flex items-center gap-2 pl-6"><span class="material-symbols-outlined text-[14px] text-outline">call</span><span class="text-caption text-outline">' + esc(c.phone) + '</span></div>' +
+                    '<div class="flex items-center gap-2 pl-6"><span class="material-symbols-outlined text-[14px] text-primary">stars</span><span class="text-caption text-primary font-semibold">' + (c.loyaltyPoint || 0) + ' Loyalty Points</span></div>';
+                item.onclick = function() { selectCustomer(c); };
+                dropdown.appendChild(item);
+            });
+        }
+        dropdown.classList.remove('hidden');
+    }
+
+    function selectCustomer(c) {
+        dropdown.classList.add('hidden');
+        searchInput.value = c.phone;
+        clearBtn.classList.remove('hidden');
+        pickCustomer(c.customerId || c.cusId, c.fullName);
+    }
+
+    function doSearch(phone) {
+        if (!phone.trim()) { resetSearchUI(); clearBtn.classList.add('hidden'); return; }
+        clearBtn.classList.remove('hidden');
+        spinner.classList.remove('hidden');
+        resetSearchUI();
+        fetch(CTX + '/customers?action=search-pos&phone=' + encodeURIComponent(phone.trim()))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                spinner.classList.add('hidden');
+                buildDropdown(data || []);
+            })
+            .catch(function() { spinner.classList.add('hidden'); resetSearchUI(); });
+    }
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        var val = this.value.trim();
+        if (val === '') { resetSearchUI(); clearBtn.classList.add('hidden'); return; }
+        searchTimeout = setTimeout(function() { doSearch(val); }, 300);
+    });
+
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            clearTimeout(searchTimeout);
+            var items = dropdown.querySelectorAll('button[data-index]');
+            if (selectedIndex >= 0 && selectedIndex < items.length) {
+                items[selectedIndex].click();
+            } else {
+                doSearch(this.value);
+            }
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            var items = dropdown.querySelectorAll('button[data-index]');
+            if (items.length === 0) return;
+            selectedIndex = (selectedIndex + 1) % items.length;
+            items.forEach(function(el, i) { el.classList.toggle('bg-surface-container-high', i === selectedIndex); });
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            var items = dropdown.querySelectorAll('button[data-index]');
+            if (items.length === 0) return;
+            selectedIndex = selectedIndex <= 0 ? items.length - 1 : selectedIndex - 1;
+            items.forEach(function(el, i) { el.classList.toggle('bg-surface-container-high', i === selectedIndex); });
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!dropdown.classList.contains('hidden') && !searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    clearBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        searchInput.focus();
+        resetSearchUI();
+        clearBtn.classList.add('hidden');
+    });
+
+    addBtn.addEventListener('click', function() {
+        document.getElementById('newCusPhone').value = searchInput.value.trim();
+        openAddCustomerModal();
+    });
+
+    editBtn.addEventListener('click', openEditCustomerModal);
+
+    removeBtn.addEventListener('click', function() {
+        pickCustomer(0, '');
+        searchInput.value = '';
+        resetSearchUI();
+        clearBtn.classList.add('hidden');
+        searchInput.focus();
+    });
+})();
+
 async function pickCustomer(id, name) {
+    if (!cartState) return;
     try {
         const res = await fetch(CTX+'/cart', {method:'POST', body: new URLSearchParams({action:'selectCustomer', customerId:id, tabId:cartState.activeTabId, csrfToken: CSRF_TOKEN})});
         cartState = await res.json();
         renderUI();
-        closeCustomerModal();
     } catch(e) { console.error(e); }
 }
 
@@ -1001,26 +1092,8 @@ async function saveNewCustomer() {
         const res = await fetch(CTX+'/sales', {method:'POST', body});
         const data = await res.json();
         if (data.cusId) {
-            const listContainer = document.getElementById('customerListContainer');
-            if (listContainer) {
-                const btn = document.createElement('button');
-                btn.onclick = () => pickCustomer(data.cusId, name);
-                btn.className = 'w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-high transition-colors group';
-                btn.setAttribute('data-search', name.toLowerCase() + ' ' + phone);
-                btn.innerHTML = '<div class="w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center font-bold text-sm">' + name.substring(0, 1) + '</div>' +
-                    '<div class="flex-1 text-left min-w-0">' +
-                        '<div class="text-label-md truncate">' + esc(name) + '</div>' +
-                        '<div class="flex items-center gap-3 text-caption text-outline">' +
-                            '<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">call</span>' + esc(phone) + '</span>' +
-                            '<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">stars</span>Thường</span>' +
-                        '</div>' +
-                    '</div>' +
-                    '<span class="text-label-md text-primary opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-lg group-hover:bg-primary group-hover:text-white">Chọn</span>';
-                listContainer.appendChild(btn);
-            }
             pickCustomer(data.cusId, name);
             closeAddCustomerModal();
-            closeCustomerModal();
             showToast('Thêm khách hàng thành công!', name + ' — ' + phone);
         } else {
             showAlert(data.error || 'Không thể thêm khách hàng.');
@@ -1145,9 +1218,9 @@ function showGlobalError(message) {
 
 // ── Keyboard shortcuts ──────────────────────────────────
 window.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closePaymentModal(); closeCustomerModal(); closeAddCustomerModal(); closeEditCustomerModal(); }
+    if (e.key === 'Escape') { closePaymentModal(); closeAddCustomerModal(); closeEditCustomerModal(); }
     if (e.key === 'F12') { e.preventDefault(); if (!document.getElementById('paymentModal').classList.contains('hidden')) submitCheckout(); else openPaymentModal(); }
-    if (e.key === 'F4') { e.preventDefault(); openCustomerModal(); }
+    if (e.key === 'F4') { e.preventDefault(); var inp = document.getElementById('posPhoneSearch'); if (inp) inp.focus(); }
 });
 
 // ── Helpers ─────────────────────────────────────────────

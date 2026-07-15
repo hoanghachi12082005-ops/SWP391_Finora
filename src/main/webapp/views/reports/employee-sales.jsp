@@ -26,10 +26,15 @@
     <div class="main-wrapper">
         <main class="page-content">
 
-            <section class="page-header">
+                    <section class="page-header">
                 <div>
                     <h2>${pageTitle}</h2>
                     <p>${pageSubtitle}</p>
+                </div>
+                <div class="filter-actions">
+                    <a class="btn-primary" style="font-size:13px;padding:6px 14px;" href="${pageContext.request.contextPath}/reports/employee-sales-export-excel?keyword=${empty keyword ? '' : keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}&dateFrom=${empty dateFrom ? '' : dateFrom}&dateTo=${empty dateTo ? '' : dateTo}">
+                        <span class="material-symbols-outlined" style="font-size:16px;">file_download</span> Xuất Excel
+                    </a>
                 </div>
             </section>
 
@@ -154,13 +159,14 @@
                             <th class="text-right">Đơn hàng</th>
                             <th class="text-right">Doanh thu</th>
                             <th class="text-right">TB Đơn hàng</th>
+                            <th>Thao tác</th>
                         </tr>
                         </thead>
                         <tbody>
                         <c:choose>
                             <c:when test="${empty salesReports}">
                                 <tr>
-                                        <td colspan="7" class="empty-row">
+                                        <td colspan="8" class="empty-row">
                                             <div class="empty-state">
                                                 <span class="material-symbols-outlined">bar_chart</span>
                                                 <h4>Không tìm thấy dữ liệu doanh số</h4>
@@ -198,6 +204,13 @@
                                         </td>
                                         <td class="text-right">
                                             <fmt:formatNumber value="${row.averageOrderValue}" type="number" groupingUsed="true" maxFractionDigits="0"/> ₫
+                                        </td>
+                                        <td>
+                                            <div class="table-actions">
+                                                <a href="${pageContext.request.contextPath}/reports/employee-sales-detail?empId=${row.employeeId}&dateFrom=${empty dateFrom ? '' : dateFrom}&dateTo=${empty dateTo ? '' : dateTo}" title="Xem chi tiết">
+                                                    <span class="material-symbols-outlined">visibility</span>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 </c:forEach>

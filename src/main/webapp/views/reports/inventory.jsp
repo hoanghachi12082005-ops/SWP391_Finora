@@ -31,6 +31,11 @@
                     <h2>${pageTitle}</h2>
                     <p>${pageSubtitle}</p>
                 </div>
+                <div class="filter-actions">
+                    <a class="btn-primary" style="font-size:13px;padding:6px 14px;" href="${pageContext.request.contextPath}/reports/inventory-export-excel?keyword=${empty keyword ? '' : keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}">
+                        <span class="material-symbols-outlined" style="font-size:16px;">file_download</span> Xuất Excel
+                    </a>
+                </div>
             </section>
 
             <c:if test="${not empty reportOverview}">
