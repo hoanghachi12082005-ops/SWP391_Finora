@@ -342,6 +342,7 @@ public class ProductController extends BaseController {
         try (InputStream in = imagePart.getInputStream()) {
             Files.copy(in, target.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
+        System.out.println("SAVE IMAGE: " + target.getAbsolutePath());
         return uniqueName;
     }
 
@@ -385,7 +386,8 @@ public class ProductController extends BaseController {
         File dir = ensureImageDir(request);
         File file = new File(dir, filename);
         if (file.exists()) {
-            try { file.delete(); } catch (Exception ignored) {}
+            boolean deleted = file.delete();
+            System.out.println("DELETE IMAGE: " + file.getAbsolutePath() + " -> " + (deleted ? "OK" : "FAILED"));
         }
     }
 }
