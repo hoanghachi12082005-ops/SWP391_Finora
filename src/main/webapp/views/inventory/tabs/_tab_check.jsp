@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : ''}" />
 
@@ -6,7 +6,7 @@
 <div class="dashboard-card">
     <div class="card-header border-bottom-0 pb-0 d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0 fw-bold text-dark">Lịch Sử Kiểm Kho</h5>
-        <c:if test="${roleName == 'WarehouseStaff' || roleName == 'Admin' || roleName == 'Owner'}">
+        <c:if test="${roleName == 'WarehouseStaff' || roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
             <a href="${pageContext.request.contextPath}/inventory?tab=createCheck&warehouseId=${selectedWarehouseId}" class="page-action-btn text-decoration-none d-flex align-items-center gap-1">
                 <span class="material-icons" style="font-size:18px;">add</span>
                 <span>Nhập Phiếu Kiểm Kho</span>

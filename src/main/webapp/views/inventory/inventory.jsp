@@ -142,7 +142,7 @@
                     <link href="${pageContext.request.contextPath}/assets/css/inventory/inventory-main.css?v=<%= System.currentTimeMillis() %>" rel="stylesheet">
                     <link href="${pageContext.request.contextPath}/assets/css/inventory/inventory-tabs.css?v=<%= System.currentTimeMillis() %>" rel="stylesheet">
 
-                    <c:if test="${roleName == 'Owner'}">
+                    <c:if test="${roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'WarehouseStaff'}">
                         <div class="subtab-nav mb-4">
                             <a href="${pageContext.request.contextPath}/inventory?tab=stock&warehouseId=${selectedWarehouseId}"
                                 class="subtab-link ${empty activeTab || activeTab == 'stock' ? 'active' : ''}">
@@ -157,6 +157,12 @@
                                 class="subtab-link ${activeTab == 'check' || activeTab == 'createCheck' || activeTab == 'editCheck' ? 'active' : ''}">
                                 Kiểm kho
                             </a>
+                            <c:if test="${roleName == 'WarehouseStaff'}">
+                                <a href="${pageContext.request.contextPath}/inventory?tab=pending_vouchers&warehouseId=${selectedWarehouseId}"
+                                    class="subtab-link ${activeTab == 'pending_vouchers' ? 'active' : ''}">
+                                    Phiếu Chờ Duyệt
+                                </a>
+                            </c:if>
                             <a href="${pageContext.request.contextPath}/inventory?tab=history&warehouseId=${selectedWarehouseId}"
                                 class="subtab-link ${activeTab == 'history' ? 'active' : ''}">
                                 Lịch sử

@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : ''}" />
@@ -239,7 +239,7 @@
                                                             title="Xem chi tiết"
                                                             onmouseover="this.style.backgroundColor='#dbeafe';"
                                                             onmouseout="this.style.backgroundColor='#eff6ff';"
-                                                            onclick="viewTicketDetails(${tx.stockTransferId})">
+                                                            onclick="viewTicketDetails(${tx.stockTransferId}, true)">
                                                         <span class="material-icons" style="font-size: 16px;">visibility</span>
                                                     </button>
                                                     <%

@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt"%>
 
@@ -97,14 +97,38 @@
 
         boolean showAll = Boolean.TRUE.equals(request.getAttribute("showAll"));
 
+        int userBranchId = (currentUser != null && currentUser.getBranchId() != null) ? currentUser.getBranchId() : 0;
+        boolean isCreatorBranch = (ticket != null && ticket.getCreatorBranchId() == userBranchId);
+
         // Filter subTransfers to only show those involving the selectedWarehouseId for non-system Owner/Admin
         // For Owner/Admin, filter by the clickedPartnerId if it is a partner-pending approval ticket, unless showAll is true (clicked from approval)
         java.util.List<model.StockTransfer> filteredSubTransfers = new java.util.ArrayList<>();
         if (subTransfers != null) {
             for (model.StockTransfer sub : subTransfers) {
                 if (selectedWarehouseId > 0) {
-                    if (sub.getFromWarehouseId() == selectedWarehouseId || 
-                        sub.getToWarehouseId() == selectedWarehouseId) {
+                    boolean keep = false;
+                    if (isCreatorBranch) {
+                        // Kho tạo phiếu luôn được xem đầy đủ cả 2 chiều nhập/xuất liên quan đến kho
+                        keep = (sub.getFromWarehouseId() == selectedWarehouseId || 
+                                sub.getToWarehouseId() == selectedWarehouseId);
+                    } else {
+                        // Kho đối tác: phân biệt chiều xuất/nhập khi xử lý, hoặc hiện cả 2 chiều (nhưng giới hạn kho mình) khi xem ở tab danh sách chính
+                        if (!showAll && ticket != null) {
+                            String tStatus = ticket.getStatus();
+                            if ("APPROVED_DISPATCH".equals(tStatus) || "DISPATCH_REJECTED".equals(tStatus)) {
+                                keep = (sub.getFromWarehouseId() == selectedWarehouseId);
+                            } else if ("IN_TRANSIT".equals(tStatus) || "RECEIVE_REJECTED".equals(tStatus)) {
+                                keep = (sub.getToWarehouseId() == selectedWarehouseId);
+                            } else {
+                                keep = (sub.getFromWarehouseId() == selectedWarehouseId || 
+                                        sub.getToWarehouseId() == selectedWarehouseId);
+                            }
+                        } else {
+                            keep = (sub.getFromWarehouseId() == selectedWarehouseId || 
+                                    sub.getToWarehouseId() == selectedWarehouseId);
+                        }
+                    }
+                    if (keep) {
                         filteredSubTransfers.add(sub);
                     }
                 } else {
