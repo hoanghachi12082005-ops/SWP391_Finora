@@ -1,19 +1,26 @@
 package dao.branch;
 
-import model.Branch;
-import util.database.DBContext;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import model.Branch;
+import util.database.DBContext;
+
 public class BranchDAO {
 
-    // ── Lấy tất cả (kèm số nhân viên) ───────────────────────────
+    // ── Lấy tất cả (kèm số nhân viên + tên quản lý) ──────────────
     public List<Branch> findAll() {
         List<Branch> list = new ArrayList<>();
         String sql = """
             SELECT b.*,
-                   (SELECT COUNT(*) FROM employee e WHERE e.branch_id = b.branch_id) AS employee_count
+                   (SELECT COUNT(*) FROM employee e WHERE e.branch_id = b.branch_id) AS employee_count,
+                   (SELECT TOP 1 e2.fullName FROM employee e2 INNER JOIN role r ON e2.role_id = r.role_id WHERE e2.branch_id = b.branch_id AND r.role_name = 'StoreManager' AND e2.status = 'ACTIVE') AS manager_name
             FROM branch b
             ORDER BY b.branch_id
             """;
@@ -29,11 +36,12 @@ public class BranchDAO {
         return list;
     }
 
-    // ── Tìm theo ID (kèm số nhân viên) ──────────────────────────
+    // ── Tìm theo ID (kèm số nhân viên + tên quản lý) ────────────
     public Branch findById(int id) {
         String sql = """
             SELECT b.*,
-                   (SELECT COUNT(*) FROM employee e WHERE e.branch_id = b.branch_id) AS employee_count
+                   (SELECT COUNT(*) FROM employee e WHERE e.branch_id = b.branch_id) AS employee_count,
+                   (SELECT TOP 1 e2.fullName FROM employee e2 INNER JOIN role r ON e2.role_id = r.role_id WHERE e2.branch_id = b.branch_id AND r.role_name = 'StoreManager' AND e2.status = 'ACTIVE') AS manager_name
             FROM branch b
             WHERE b.branch_id = ?
             """;
@@ -321,7 +329,14 @@ public class BranchDAO {
     // ── Lấy danh sách chi nhánh đang active ─────────────────────
     public List<Branch> findAllActive() {
         List<Branch> list = new ArrayList<>();
-        String sql = "SELECT * FROM branch WHERE status = 'ACTIVE' ORDER BY branch_id";
+        String sql = """
+            SELECT b.*,
+                   (SELECT COUNT(*) FROM employee e WHERE e.branch_id = b.branch_id) AS employee_count,
+                   (SELECT TOP 1 e2.fullName FROM employee e2 INNER JOIN role r ON e2.role_id = r.role_id WHERE e2.branch_id = b.branch_id AND r.role_name = 'StoreManager' AND e2.status = 'ACTIVE') AS manager_name
+            FROM branch b
+            WHERE b.status = 'ACTIVE'
+            ORDER BY b.branch_id
+            """;
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
@@ -343,7 +358,8 @@ public class BranchDAO {
         SELECT b.*,
                (SELECT COUNT(*)
                 FROM employee e
-                WHERE e.branch_id = b.branch_id) AS employee_count
+                WHERE e.branch_id = b.branch_id) AS employee_count,
+               (SELECT TOP 1 e2.fullName FROM employee e2 INNER JOIN role r ON e2.role_id = r.role_id WHERE e2.branch_id = b.branch_id AND r.role_name = 'StoreManager' AND e2.status = 'ACTIVE') AS manager_name
         FROM branch b
         WHERE branch_name LIKE ?
            OR branch_code LIKE ?
@@ -431,7 +447,8 @@ public class BranchDAO {
         SELECT b.*,
                (SELECT COUNT(*)
                 FROM employee e
-                WHERE e.branch_id = b.branch_id) AS employee_count
+                WHERE e.branch_id = b.branch_id) AS employee_count,
+               (SELECT TOP 1 e2.fullName FROM employee e2 INNER JOIN role r ON e2.role_id = r.role_id WHERE e2.branch_id = b.branch_id AND r.role_name = 'StoreManager' AND e2.status = 'ACTIVE') AS manager_name
         FROM branch b
         WHERE 1=1
         """);
@@ -562,6 +579,11 @@ public class BranchDAO {
             b.setEmployeeCount(rs.getInt("employee_count"));
         } catch (SQLException ignored) {
             // Truy vấn không có cột employee_count
+        }
+        try {
+            b.setManagerName(rs.getString("manager_name"));
+        } catch (SQLException ignored) {
+            // Truy vấn không có cột manager_name
         }
         return b;
     }
