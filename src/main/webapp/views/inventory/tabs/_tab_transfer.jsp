@@ -1,6 +1,14 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%-- 
+  ==========================================================================
+  TAB ĐIỀU CHUYỂN KHO HÀNG (_tab_transfer.jsp)
+  - Quản lý các phiếu điều chuyển nội bộ giữa các kho (Stock Transfer).
+  - Có các subtab: Danh sách phiếu, phiếu chuyển đi, phiếu nhận hàng.
+  - Cho phép tạo mới phiếu chuyển kho, hiển thị chi tiết và thay đổi trạng thái phiếu.
+  ==========================================================================
+--%>
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : ''}" />
 <c:set var="currentSubtab" value="${not empty param.subtab ? param.subtab : 'transfer_list'}" />
 

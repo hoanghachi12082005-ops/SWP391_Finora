@@ -1,6 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%-- 
+  ==========================================================================
+  MODAL TẠO PHIẾU NHẬP KHO (_modal_create_import.jsp)
+  - Được nhúng trực tiếp trong `inventory.jsp`.
+  - Hỗ trợ nhân viên chọn nhà cung cấp, sản phẩm, số lượng và tạo phiếu nhập kho (Action: saveImport).
+  ==========================================================================
+--%>
 <link href="${pageContext.request.contextPath}/assets/css/inventory/inventory-modals.css?v=<%= System.currentTimeMillis() %>" rel="stylesheet">
 
 <!-- Modal Nhập Hàng -->

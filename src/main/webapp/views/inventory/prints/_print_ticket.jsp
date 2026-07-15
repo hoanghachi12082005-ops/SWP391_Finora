@@ -1,6 +1,12 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt"%>
+<%-- 
+  ==========================================================================
+  TRANG IN PHIẾU ĐIỀU CHUYỂN KHO (_print_ticket.jsp)
+  - Cung cấp giao diện in chuyên dùng cho phiếu chuyển kho (không màu mè, khoảng cách tối ưu để in hóa đơn giấy).
+  ==========================================================================
+--%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>

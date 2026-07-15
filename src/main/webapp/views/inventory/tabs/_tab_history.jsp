@@ -1,7 +1,14 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%-- 
+  ==========================================================================
+  TAB NHẬT KÝ BIẾN ĐỘNG KHO TỔNG HỢP (_tab_history.jsp)
+  - Hiển thị lịch sử chi tiết mọi giao dịch thay đổi hàng tồn kho (thẻ kho).
+  - Cho phép người dùng tìm kiếm theo tên sản phẩm, lọc theo loại giao dịch (Nhập, Xuất, Trả hàng, Chuyển đi, Chuyển đến, Kiểm kho) và lọc theo khoảng thời gian.
+  ==========================================================================
+--%>
 
 <div class="dashboard-card mb-4">
     <div class="card-header mb-3">

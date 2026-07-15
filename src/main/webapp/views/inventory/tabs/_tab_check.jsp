@@ -1,5 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%-- 
+  ==========================================================================
+  TAB LỊCH SỬ VÀ PHIẾU KIỂM KHO (_tab_check.jsp)
+  - Quản lý các phiếu kiểm kê kho hàng (Stocktaking / Inventory Check).
+  - Hiển thị danh sách các phiếu kiểm với thông tin ngày tạo, người tạo, kho và số lượng chênh lệch thực tế.
+  - Cho phép điều hướng đến trang Tạo phiếu kiểm kho mới (`tab=createCheck`).
+  ==========================================================================
+--%>
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : ''}" />
 
 

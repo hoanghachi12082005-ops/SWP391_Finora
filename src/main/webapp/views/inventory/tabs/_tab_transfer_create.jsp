@@ -1,6 +1,12 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-
+<%-- 
+  ==========================================================================
+  TAB GIAO DIỆN TẠO PHIẾU ĐIỀU CHUYỂN KHO (_tab_transfer_create.jsp)
+  - Cung cấp form giao diện để nhân viên chọn kho đối tác, tìm kiếm sản phẩm và nhập số lượng điều chuyển.
+  - Sau khi thêm các mặt hàng vào bảng, nhân viên bấm lưu để gửi yêu cầu đi (Action: saveTransfer).
+  ==========================================================================
+--%>
 <c:set var="selectedWarehouseName" value="Kho hiện tại" />
 <c:forEach var="w" items="${warehouses}">
     <c:if test="${w.warehouseId == selectedWarehouseId}">

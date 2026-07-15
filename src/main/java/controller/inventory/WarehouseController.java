@@ -10,11 +10,18 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+/**
+ * Controller xử lý các thiết lập liên quan đến Kho hàng vật lý (Warehouse).
+ * Hỗ trợ tạo kho hàng đầu tiên và cập nhật thông tin kho (tên, địa chỉ).
+ */
 @WebServlet(name = "WarehouseController", urlPatterns = {"/inventory-warehouse"})
 public class WarehouseController extends InventoryBaseController {
 
     private final WarehouseDAO warehouseDAO = new WarehouseDAO();
 
+    /**
+     * Xử lý yêu cầu POST: thiết lập kho đầu tiên (setupWarehouse) hoặc cập nhật kho (updateWarehouse).
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

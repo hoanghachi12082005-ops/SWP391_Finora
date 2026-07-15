@@ -38,7 +38,15 @@ public class PendingVouchersController extends InventoryBaseController {
         doGet(request, response);
     }
 
-    // [MOVED FROM InventoryController] - Original lines 421-560
+    /**
+     * Chuẩn bị dữ liệu hiển thị cho Tab "Phiếu Chờ Duyệt" của Nhân viên kho.
+     * Hàm này thực hiện thu thập tất cả các phiếu ở trạng thái PENDING (chờ duyệt) bao gồm:
+     * - Phiếu nhập kho (IMPORT)
+     * - Phiếu xuất kho (EXPORT)
+     * - Phiếu kiểm kho (CHECK)
+     * - Phiếu điều chuyển kho (TRANSFER)
+     * Sau đó gộp chung (unified) vào một danh sách và sắp xếp theo ngày tạo giảm dần.
+     */
     void handlePendingVouchersTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
         List<PurchaseOrder> pendingImports = purchaseOrderDAO.findAllByWarehouseAndType(warehouseId != null ? warehouseId : 0, "PURCHASE", "PENDING");
         List<PurchaseOrder> pendingExports = purchaseOrderDAO.findAllByWarehouseAndType(warehouseId != null ? warehouseId : 0, "EXPORT", "PENDING");

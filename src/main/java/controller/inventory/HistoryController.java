@@ -43,7 +43,12 @@ public class HistoryController extends InventoryBaseController {
         doGet(request, response);
     }
 
-    // [MOVED FROM InventoryController] - Original lines 862-1108
+    /**
+     * Xử lý và chuẩn bị dữ liệu cho Tab Lịch sử.
+     * Hàm này thực hiện:
+     * 1. Lọc và phân trang lịch sử biến động số lượng (Stock Transactions - thẻ kho).
+     * 2. Lấy toàn bộ phiếu nhập/xuất/điều chuyển/kiểm kho đã hoàn thành, lọc theo ngày và gộp chung thành một danh sách duy nhất (Unified Voucher History).
+     */
     void handleHistoryTab(HttpServletRequest request, Integer warehouseId, List<Integer> allowedWarehouseIds) throws Exception {
         String typeFilter = request.getParameter("typeFilter");
         String fromDate = request.getParameter("fromDate");
@@ -54,12 +59,12 @@ public class HistoryController extends InventoryBaseController {
         if (request.getParameter("page") != null) page = Integer.parseInt(request.getParameter("page"));
         int offset = (page - 1) * 20;
 
-        // Clean & validate text filter
+        // Chuẩn hóa chuỗi truy vấn tên sản phẩm
         if (productNameQuery != null) {
             productNameQuery = productNameQuery.trim();
         }
 
-        // Validate date years and ranges
+        // Kiểm tra năm 'Từ ngày' tránh lỗi tràn năm SQL Server (giới hạn từ 1000 đến 9999)
         if (fromDate != null && !fromDate.trim().isEmpty()) {
             try {
                 String[] parts = fromDate.split("-");
@@ -76,10 +81,11 @@ public class HistoryController extends InventoryBaseController {
                     }
                 }
             } catch (Exception e) {
-                // Ignore format exception here
+                // Bỏ qua lỗi định dạng ở đây
             }
         }
         
+        // Kiểm tra năm 'Đến ngày' tránh lỗi tràn năm SQL Server (giới hạn từ 1000 đến 9999)
         if (toDate != null && !toDate.trim().isEmpty()) {
             try {
                 String[] parts = toDate.split("-");
@@ -96,10 +102,11 @@ public class HistoryController extends InventoryBaseController {
                     }
                 }
             } catch (Exception e) {
-                // Ignore format exception here
+                // Bỏ qua lỗi định dạng ở đây
             }
         }
 
+        // Đảm bảo Từ ngày không được sau Đến ngày
         if (fromDate != null && !fromDate.trim().isEmpty() && toDate != null && !toDate.trim().isEmpty()) {
             if (fromDate.compareTo(toDate) > 0) {
                 request.setAttribute("error", "Khoảng ngày lọc không hợp lệ! Từ ngày phải trước hoặc bằng Đến ngày.");
@@ -112,6 +119,7 @@ public class HistoryController extends InventoryBaseController {
             }
         }
 
+        // Lấy danh sách giao dịch tồn kho thực tế (Stock Transactions)
         List<StockTransaction> history = transactionDAO.findAllFiltered(
             warehouseId != null ? warehouseId : 0,
             allowedWarehouseIds,
@@ -129,6 +137,7 @@ public class HistoryController extends InventoryBaseController {
         request.setAttribute("productNameQuery", productNameQuery);
         request.setAttribute("history", history);
 
+        // BẮT ĐẦU: Gom nhóm và xây dựng danh sách phiếu gộp (Unified Voucher History)
         List<PurchaseOrder> completedImports = purchaseOrderDAO.findAllByWarehouseAndType(warehouseId != null ? warehouseId : 0, "PURCHASE", null);
         List<PurchaseOrder> completedExports = purchaseOrderDAO.findAllByWarehouseAndType(warehouseId != null ? warehouseId : 0, "EXPORT", null);
         List<StockTransfer> completedTransfers = new ArrayList<>();

@@ -1,7 +1,15 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%-- 
+  ==========================================================================
+  TAB THÔNG TIN TỒN KHO HÀNG HÓA (_tab_stock.jsp)
+  - Hiển thị danh sách các sản phẩm và số lượng tồn tương ứng của từng sản phẩm.
+  - Cung cấp tính năng tìm kiếm sản phẩm theo tên/SKU, lọc theo bộ lọc tồn kho (Tồn thấp, Hết hàng).
+  - Có các nút Export Excel và Import Excel (hỗ trợ nhập kho qua file mẫu).
+  ==========================================================================
+--%>
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : ''}" />
 
 

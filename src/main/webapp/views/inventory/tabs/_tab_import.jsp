@@ -1,6 +1,13 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%-- 
+  ==========================================================================
+  TAB DANH SÁCH PHIẾU NHẬP KHO (_tab_import.jsp)
+  - Hiển thị danh sách lịch sử phiếu nhập hàng của kho hàng được chọn.
+  - Cung cấp thanh menu phụ để chuyển đổi qua lại giữa Phiếu nhập và Phiếu xuất (tab=export).
+  ==========================================================================
+--%>
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : ''}" />
 
 <div class="dashboard-card">

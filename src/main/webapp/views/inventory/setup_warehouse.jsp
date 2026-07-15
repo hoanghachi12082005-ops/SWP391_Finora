@@ -1,5 +1,12 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%-- 
+  ==========================================================================
+  TRANG THIẾT LẬP KHO HÀNG ĐẦU TIÊN (setup_warehouse.jsp)
+  - Được kích hoạt từ `InventoryController` khi chi nhánh hiện tại của người dùng chưa cấu hình bất kỳ kho hàng nào.
+  - Hiển thị giao diện chào mừng và form tạo nhanh kho hàng đầu tiên để đi vào hoạt động.
+  ==========================================================================
+--%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>

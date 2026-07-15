@@ -1,6 +1,12 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-
+<%-- 
+  ==========================================================================
+  MODAL HIỂN THỊ CHI TIẾT PHIẾU KIỂM KHO (_modal_check_details.jsp)
+  - Được load qua AJAX từ `InventoryCheckController` (action=viewCheckDetails).
+  - Hiển thị danh sách sản phẩm đã kiểm kê, số tồn hệ thống, số thực tế và chênh lệch thừa/thiếu.
+  ==========================================================================
+--%>
 <div class="modal-header border-bottom-0 pb-0">
     <h5 class="modal-title fw-bold text-dark" id="modalTitle">Chi Tiết Phiếu Kiểm Kê</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

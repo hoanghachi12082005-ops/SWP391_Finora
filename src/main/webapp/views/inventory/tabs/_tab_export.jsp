@@ -1,6 +1,13 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%-- 
+  ==========================================================================
+  TAB DANH SÁCH PHIẾU XUẤT KHO (_tab_export.jsp)
+  - Hiển thị danh sách lịch sử phiếu xuất hàng (xuất huỷ, trả hàng NCC) của kho hàng.
+  - Cung cấp thanh menu phụ để chuyển sang Phiếu nhập (tab=import).
+  ==========================================================================
+--%>
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : ''}" />
 
 <div class="dashboard-card">

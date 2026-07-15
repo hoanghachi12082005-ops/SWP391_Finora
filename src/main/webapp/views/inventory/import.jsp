@@ -1,7 +1,13 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
-
+<%-- 
+  ==========================================================================
+  TRANG TẠO PHIẾU NHẬP KHO ĐỘC LẬP (views/inventory/import.jsp)
+  - Được gọi khi người dùng truy cập vào URL `/warehouse/import`.
+  - Hỗ trợ chọn nhà cung cấp, lọc danh sách sản phẩm liên kết với NCC, tự động tính tổng giá trị đơn nhập và số lượng.
+  ==========================================================================
+--%>
 <jsp:include page="../common/header.jsp">
     <jsp:param name="title" value="Nhập Kho - Nhập hàng từ nhà cung cấp"/>
 </jsp:include>

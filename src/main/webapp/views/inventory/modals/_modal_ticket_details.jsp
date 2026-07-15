@@ -1,7 +1,13 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt"%>
-
+<%-- 
+  ==========================================================================
+  MODAL HIỂN THỊ CHI TIẾT PHIẾU ĐIỀU CHUYỂN KHO (_modal_ticket_details.jsp)
+  - Được load qua AJAX từ `TransferController` (action=viewTicket).
+  - Hiển thị danh sách sản phẩm chuyển kho nội bộ, kho gửi, kho nhận và trạng thái phê duyệt.
+  ==========================================================================
+--%>
 <div class="modal-header bg-light border-bottom-0 pb-0">
     <h5 class="modal-title fw-bold text-dark d-flex align-items-center" style="font-size: 18px;">
         <span class="material-icons text-primary me-2" style="font-size: 24px;">swap_horiz</span>

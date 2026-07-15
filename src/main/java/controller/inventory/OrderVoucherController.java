@@ -23,6 +23,9 @@ public class OrderVoucherController extends InventoryBaseController {
     private final PurchaseOrderDAO purchaseOrderDAO = new PurchaseOrderDAO();
     private final StockTransactionDAO transactionDAO = new StockTransactionDAO();
 
+    /**
+     * Xử lý yêu cầu GET: hiển thị các popup chi tiết phiếu nhập/xuất hoặc tạo bản in hóa đơn.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -34,11 +37,12 @@ public class OrderVoucherController extends InventoryBaseController {
         }
 
         try {
-            // [MOVED FROM InventoryController] - Original lines 172-183
+            // Xem chi tiết phiếu nhập/xuất kho
             if ("viewOrderDetails".equals(action)) {
                 int orderId = Integer.parseInt(request.getParameter("orderId"));
                 model.Order order = orderDAO.findById(orderId);
                 List<model.OrderDetail> details = orderDAO.findDetailsByOrderId(orderId);
+                // Tìm kiếm vết lịch sử tăng/giảm tồn kho thực tế gắn với phiếu này
                 List<model.StockTransaction> txs = transactionDAO.findByReference("PURCHASE_ORDER", orderId);
                 
                 request.setAttribute("order", order);
@@ -47,7 +51,7 @@ public class OrderVoucherController extends InventoryBaseController {
                 
                 forward(request, response, "inventory/modals/_modal_order_details");
                 return;
-            // [MOVED FROM InventoryController] - Original lines 201-212
+            // In phiếu nhập/xuất kho
             } else if ("printOrder".equals(action)) {
                 int orderId = Integer.parseInt(request.getParameter("orderId"));
                 model.Order order = orderDAO.findById(orderId);
@@ -67,6 +71,9 @@ public class OrderVoucherController extends InventoryBaseController {
         }
     }
 
+    /**
+     * Xử lý yêu cầu POST: Thực thi phê duyệt, từ chối hoặc hủy bỏ phiếu nhập/xuất hàng.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -78,7 +85,7 @@ public class OrderVoucherController extends InventoryBaseController {
 
         try {
             switch (action) {
-                // [MOVED FROM InventoryController] - Original lines 1706-1718
+                // Duyệt phiếu nhập/xuất hàng (Chỉ dành cho Owner hoặc StoreManager)
                 case "approveOrder": {
                     int orderId = Integer.parseInt(request.getParameter("orderId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
@@ -86,13 +93,14 @@ public class OrderVoucherController extends InventoryBaseController {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
                     }
+                    // Gọi service thực thi cập nhật tăng/giảm tồn kho trực tiếp và đổi trạng thái phiếu
                     service.inventory.InventoryExecutionService executionService = new service.inventory.InventoryExecutionService();
                     executionService.executeOrder(orderId, currentUser.getEmployeeId());
                     request.getSession().setAttribute("message", "Đã phê duyệt phiếu và cập nhật tồn kho thành công.");
                     redirect(response, request.getContextPath() + "/inventory?tab=history&subtab=voucher");
                     break;
                 }
-                // [MOVED FROM InventoryController] - Original lines 1719-1729
+                // Từ chối duyệt phiếu nhập/xuất hàng
                 case "rejectOrder": {
                     int orderId = Integer.parseInt(request.getParameter("orderId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
@@ -100,12 +108,13 @@ public class OrderVoucherController extends InventoryBaseController {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
                     }
+                    // Đổi trạng thái phiếu thành REJECTED (từ chối)
                     orderDAO.updateStatus(orderId, "REJECTED", currentUser.getEmployeeId());
                     request.getSession().setAttribute("message", "Đã từ chối phiếu.");
                     redirect(response, request.getContextPath() + "/inventory?tab=history&subtab=voucher");
                     break;
                 }
-                // [MOVED FROM InventoryController] - Original lines 1731-1751
+                // Hủy phiếu nhập/xuất hàng (Nhân viên tự hủy phiếu của mình khi còn chờ duyệt)
                 case "cancelOrder": {
                     int orderId = Integer.parseInt(request.getParameter("orderId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
@@ -117,6 +126,7 @@ public class OrderVoucherController extends InventoryBaseController {
                     if (po == null || !"PENDING".equals(po.getStatus())) {
                         request.getSession().setAttribute("error", "Không thể hủy phiếu này vì phiếu không tồn tại hoặc đã được xử lý.");
                     } else {
+                        // Đổi trạng thái phiếu thành CANCELLED (Đã hủy)
                         orderDAO.updateStatus(orderId, "CANCELLED");
                         request.getSession().setAttribute("message", "Đã hủy phiếu thành công.");
                     }
@@ -140,7 +150,10 @@ public class OrderVoucherController extends InventoryBaseController {
         }
     }
 
-    // [MOVED FROM InventoryController] - Original lines 405-411
+    /**
+     * Chuẩn bị dữ liệu hiển thị cho Tab Nhập Kho hàng hóa.
+     * Nếu tài khoản là Nhân viên kho, chỉ lọc các phiếu ở trạng thái PENDING (chờ duyệt).
+     */
     void handleImportTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
         List<PurchaseOrder> imports = purchaseOrderDAO.findAllByWarehouseAndType(warehouseId != null ? warehouseId : 0, "PURCHASE", null);
         if ("WarehouseStaff".equalsIgnoreCase(role)) {
@@ -149,7 +162,10 @@ public class OrderVoucherController extends InventoryBaseController {
         request.setAttribute("imports", imports);
     }
 
-    // [MOVED FROM InventoryController] - Original lines 413-419
+    /**
+     * Chuẩn bị dữ liệu hiển thị cho Tab Xuất Kho hàng hóa.
+     * Nếu tài khoản là Nhân viên kho, chỉ lọc các phiếu ở trạng thái PENDING (chờ duyệt).
+     */
     void handleExportTab(HttpServletRequest request, Integer warehouseId, String role) throws Exception {
         List<PurchaseOrder> exports = purchaseOrderDAO.findAllByWarehouseAndType(warehouseId != null ? warehouseId : 0, "EXPORT", null);
         if ("WarehouseStaff".equalsIgnoreCase(role)) {

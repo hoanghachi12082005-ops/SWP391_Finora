@@ -1,7 +1,13 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
-
+<%-- 
+  ==========================================================================
+  MODAL TẠO PHIẾU XUẤT KHO (_modal_create_export.jsp)
+  - Được nhúng trực tiếp trong `inventory.jsp`.
+  - Hiển thị form cho phép nhân viên chọn sản phẩm và tạo phiếu xuất kho (Action: saveExport).
+  ==========================================================================
+--%>
 <!-- Modal Xuất Hàng -->
 <div class="modal fade" id="exportStockModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">

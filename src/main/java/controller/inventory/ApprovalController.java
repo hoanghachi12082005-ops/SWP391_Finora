@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import service.inventory.InventoryExecutionService;
 
+/**
+ * Controller xử lý màn hình duyệt phiếu độc lập phục vụ cho trang duyệt riêng biệt của Owner (/approval).
+ */
 @WebServlet(name = "ApprovalController", urlPatterns = {"/approval"})
 public class ApprovalController extends HttpServlet {
 
@@ -23,6 +26,9 @@ public class ApprovalController extends HttpServlet {
     private StockTransferDAO transferDAO = new StockTransferDAO();
     private InventoryExecutionService executionService = new InventoryExecutionService();
 
+    /**
+     * Xử lý yêu cầu GET: hiển thị danh sách các phiếu điều chuyển đang chờ xuất kho (PENDING_DISPATCH).
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -53,6 +59,9 @@ public class ApprovalController extends HttpServlet {
         request.getRequestDispatcher("/views/inventory/approval.jsp").forward(request, response);
     }
 
+    /**
+     * Xử lý yêu cầu POST: Thực hiện duyệt/từ chối đơn hàng hoặc phiếu chuyển kho.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

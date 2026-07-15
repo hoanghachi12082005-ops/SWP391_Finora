@@ -1,6 +1,14 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%-- 
+  ==========================================================================
+  TAB DUYỆT PHIẾU KHO CHO QUẢN LÝ (_tab_approval.jsp)
+  - Hiển thị danh sách hợp nhất tất cả các phiếu chờ phê duyệt của chi nhánh/kho.
+  - Bao gồm: phiếu điều chuyển, phiếu nhập hàng, phiếu xuất hàng, phiếu kiểm kho.
+  - Quản lý có thể xem chi tiết từng phiếu qua nút Xem chi tiết (Modal) và phê duyệt/từ chối trực tiếp.
+  ==========================================================================
+--%>
 
 
 

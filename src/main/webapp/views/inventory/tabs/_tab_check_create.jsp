@@ -1,6 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%-- 
+  ==========================================================================
+  TAB GIAO DIỆN TẠO/SỬA PHIẾU KIỂM KHO (_tab_check_create.jsp)
+  - Cung cấp form giao diện để nhân viên đếm hàng thực tế.
+  - Cho phép quét mã/tìm kiếm sản phẩm, nhập số lượng tồn thực tế. Hệ thống tự động tính toán chênh lệch (lệch thừa/thiếu) so với tồn lý thuyết trong Database.
+  ==========================================================================
+--%>
 
 
 

@@ -1,6 +1,12 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt"%>
+<%-- 
+  ==========================================================================
+  TRANG IN PHIẾU NHẬP/XUẤT (_print_order.jsp)
+  - Cung cấp giao diện sạch sẽ, chỉ có text đen trắng và kẻ bảng để tối ưu hóa khi xuất bản in hóa đơn nhập/xuất ra máy in giấy.
+  ==========================================================================
+--%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>

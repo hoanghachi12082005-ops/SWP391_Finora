@@ -1,6 +1,13 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%-- 
+  ==========================================================================
+  TAB DANH SÁCH PHIẾU CHỜ DUYỆT CỦA NHÂN VIÊN (_tab_pending_vouchers.jsp)
+  - Hiển thị danh sách các phiếu (nhập, xuất, chuyển, kiểm) do nhân viên kho tạo ra và đang đợi quản lý duyệt.
+  - Chỉ hiển thị cho vai trò `WarehouseStaff`. Nhân viên có quyền xem chi tiết hoặc Hủy các phiếu đang chờ duyệt này.
+  ==========================================================================
+--%>
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : ''}" />
 
 <div class="dashboard-card">

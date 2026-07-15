@@ -1,6 +1,17 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%-- 
+  ==========================================================================
+  TRANG BỐ CỤC CHÍNH CỦA PHÂN HỆ KHO HÀNG (inventory.jsp)
+  - Sử dụng header.jsp và footer.jsp làm khung giao diện.
+  - Sidebar và Topbar được nhúng động qua jsp:include.
+  - Phân chia làm 2 trạng thái chính:
+    1. DASHBOARD CHUNG: Khi chưa chọn kho hàng (selectedWarehouseId trống).
+    2. CHI TIẾT KHO: Khi đã chọn kho cụ thể (hiển thị các tab Tồn kho, Chuyển kho, Kiểm kho, Phê duyệt...).
+  - Load các file JS bổ trợ ở cuối trang: inventory-main.js, inventory-tabs.js, inventory-modals.js.
+  ==========================================================================
+--%>
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : ''}" />
 <jsp:include page="/views/common/header.jsp">
     <jsp:param name="title" value="Quản Lý Kho Hàng"/>
