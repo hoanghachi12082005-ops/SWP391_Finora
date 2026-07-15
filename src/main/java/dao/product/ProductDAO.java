@@ -135,7 +135,7 @@ public class ProductDAO {
             stmt.setObject(2, product.getCategoryID() > 0 ? product.getCategoryID() : null, java.sql.Types.INTEGER);
             stmt.setObject(3, product.getUnitID() > 0 ? product.getUnitID() : null, java.sql.Types.INTEGER);
             stmt.setBigDecimal(4, product.getSellingPrice());
-            stmt.setString(5, product.getImageUrl());
+            stmt.setString(5, product.getImageUrlRaw());
             stmt.setString(6, product.getStatus() != null ? product.getStatus() : "ACTIVE");
             stmt.executeUpdate();
 
@@ -165,7 +165,7 @@ public class ProductDAO {
             stmt.setObject(2, product.getCategoryID() > 0 ? product.getCategoryID() : null, java.sql.Types.INTEGER);
             stmt.setObject(3, product.getUnitID() > 0 ? product.getUnitID() : null, java.sql.Types.INTEGER);
             stmt.setBigDecimal(4, product.getSellingPrice());
-            stmt.setString(5, product.getImageUrl());
+            stmt.setString(5, product.getImageUrlRaw());
             stmt.setString(6, product.getStatus() != null ? product.getStatus() : "ACTIVE");
             stmt.setInt(7, product.getProductID());
             stmt.executeUpdate();

@@ -22,6 +22,8 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -109,27 +111,30 @@ public class ProductController extends BaseController {
             if (action == null) action = "";
             if ("add".equals(action)) {
                 Product p = buildProductFromRequest(request);
-                Part imagePart = safeGetPart(request, "imageFile");
+                List<Part> imageParts = getImageParts(request);
 
-                // verify image
-                String verifyError = (imagePart != null && imagePart.getSize() > 0)
-                        ? verifyImage(imagePart) : null;
-                if (verifyError != null) {
-                    session.setAttribute("message", verifyError);
-                    session.setAttribute("messageType", "danger");
-                    response.sendRedirect(buildRedirectUrl(request));
-                    return;
+                // verify tất cả ảnh
+                for (Part part : imageParts) {
+                    String error = verifyImage(part);
+                    if (error != null) {
+                        session.setAttribute("message", error);
+                        session.setAttribute("messageType", "danger");
+                        response.sendRedirect(buildRedirectUrl(request));
+                        return;
+                    }
                 }
 
                 int newId = productDAO.insert(p);
 
-                if (newId > 0 && imagePart != null && imagePart.getSize() > 0) {
+                if (newId > 0 && !imageParts.isEmpty()) {
                     try {
-                        String savedPath = saveProductImageFile(request, imagePart, newId);
-                        String imageUrl = request.getContextPath() + IMAGE_DIR + savedPath;
+                        List<String> savedUrls = new ArrayList<>();
+                        for (Part part : imageParts) {
+                            String savedPath = saveProductImageFile(request, part, newId);
+                            savedUrls.add(request.getContextPath() + IMAGE_DIR + savedPath);
+                        }
                         p.setProductID(newId);
-                        // Lưu dạng JSON array: ["url"]
-                        p.setImageUrl("[\"" + imageUrl + "\"]");
+                        p.setImageUrlList(savedUrls);
                         productDAO.update(p);
                     } catch (IOException ioe) {
                         session.setAttribute("message", "Thêm thành công, nhưng lưu ảnh thất bại: " + ioe.getMessage());
@@ -145,36 +150,56 @@ public class ProductController extends BaseController {
                 Product p = buildProductFromRequest(request);
                 p.setProductID(productID);
 
-                Part imagePart = safeGetPart(request, "imageFile");
-                String verifyError = (imagePart != null && imagePart.getSize() > 0)
-                        ? verifyImage(imagePart) : null;
-                if (verifyError != null) {
-                    session.setAttribute("message", verifyError);
-                    session.setAttribute("messageType", "danger");
-                    response.sendRedirect(buildRedirectUrl(request));
-                    return;
-                }
+                List<Part> imageParts = getImageParts(request);
 
-                if (imagePart != null && imagePart.getSize() > 0) {
-                    try {
-                        // Xoá ảnh cũ trên ổ cứng
-                        deleteProductImageFiles(request, productID);
-                        // Lưu file ảnh mới
-                        String savedPath = saveProductImageFile(request, imagePart, productID);
-                        String imageUrl = request.getContextPath() + IMAGE_DIR + savedPath;
-                        // Lưu dạng JSON array: ["url"]
-                        p.setImageUrl("[\"" + imageUrl + "\"]");
-                    } catch (IOException ioe) {
-                        session.setAttribute("message", "Cập nhật thành công, nhưng lưu ảnh thất bại: " + ioe.getMessage());
-                        session.setAttribute("messageType", "warning");
+                // verify tất cả ảnh
+                for (Part part : imageParts) {
+                    String error = verifyImage(part);
+                    if (error != null) {
+                        session.setAttribute("message", error);
+                        session.setAttribute("messageType", "danger");
                         response.sendRedirect(buildRedirectUrl(request));
                         return;
                     }
-                } else {
-                    // Giữ nguyên ảnh cũ — lấy từ DB
-                    Product old = productDAO.findById(productID);
-                    if (old != null) p.setImageUrl(old.getImageUrl());
                 }
+
+                if (!imageParts.isEmpty() || 
+                        (request.getParameter("deletedImages") != null && !request.getParameter("deletedImages").isBlank())) {
+                     try {
+                         // Lấy ảnh cũ từ DB
+                         Product old = productDAO.findById(productID);
+                         List<String> existingUrls = (old != null) ? old.getImageUrlList() : new ArrayList<>();
+
+                         // Xoá các ảnh được đánh dấu
+                         String deletedJson = request.getParameter("deletedImages");
+                         if (deletedJson != null && !deletedJson.isBlank()) {
+                             List<String> toDelete = Product.parseJsonArray(deletedJson);
+                             for (String url : toDelete) {
+                                 deleteImageFileByUrl(request, url);
+                             }
+                             existingUrls.removeAll(toDelete);
+                         }
+
+                         // Nếu có upload mới, thêm vào danh sách ảnh hiện tại (không xoá ảnh cũ)
+                         if (!imageParts.isEmpty()) {
+                             for (Part part : imageParts) {
+                                 String savedPath = saveProductImageFile(request, part, productID);
+                                 existingUrls.add(request.getContextPath() + IMAGE_DIR + savedPath);
+                             }
+                         }
+
+                         p.setImageUrlList(existingUrls);
+                     } catch (IOException ioe) {
+                         session.setAttribute("message", "Cập nhật ảnh thất bại: " + ioe.getMessage());
+                         session.setAttribute("messageType", "warning");
+                         response.sendRedirect(buildRedirectUrl(request));
+                         return;
+                     }
+                 } else {
+                     // Giữ nguyên ảnh cũ
+                     Product old = productDAO.findById(productID);
+                     if (old != null) p.setImageUrl(old.getImageUrlRaw());
+                 }
 
                 productDAO.update(p);
                 session.setAttribute("message", "Cập nhật sản phẩm thành công!");
@@ -311,11 +336,30 @@ public class ProductController extends BaseController {
         File dir = ensureImageDir(request);
         String ext = resolveExtension(imagePart);
         String uniqueName = "product_" + productId + "_" + System.currentTimeMillis() + "." + ext;
+        // Sleep 1ms để tránh trùng tên file khi upload nhiều ảnh cùng lúc
+        try { Thread.sleep(1); } catch (InterruptedException ignored) {}
         File target = new File(dir, uniqueName);
         try (InputStream in = imagePart.getInputStream()) {
             Files.copy(in, target.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
+        System.out.println("SAVE IMAGE: " + target.getAbsolutePath());
         return uniqueName;
+    }
+
+    /** Lấy tất cả Part có name="imageFile" và có nội dung */
+    private List<Part> getImageParts(HttpServletRequest request) {
+        List<Part> parts = new ArrayList<>();
+        try {
+            Collection<Part> allParts = request.getParts();
+            for (Part part : allParts) {
+                if ("imageFile".equals(part.getName()) && part.getSize() > 0) {
+                    parts.add(part);
+                }
+            }
+        } catch (Exception e) {
+            // Không có file nào được upload
+        }
+        return parts;
     }
 
     /** Xoá tất cả file ảnh của sản phẩm trong thư mục upload */
@@ -329,6 +373,21 @@ public class ProductController extends BaseController {
             for (File f : files) {
                 try { f.delete(); } catch (Exception ignored) {}
             }
+        }
+    }
+
+    /** Xoá 1 file ảnh cụ thể theo URL */
+    private void deleteImageFileByUrl(HttpServletRequest request, String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) return;
+        String filename = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+        // Bỏ query string ?v=... nếu có
+        int qmark = filename.indexOf('?');
+        if (qmark >= 0) filename = filename.substring(0, qmark);
+        File dir = ensureImageDir(request);
+        File file = new File(dir, filename);
+        if (file.exists()) {
+            boolean deleted = file.delete();
+            System.out.println("DELETE IMAGE: " + file.getAbsolutePath() + " -> " + (deleted ? "OK" : "FAILED"));
         }
     }
 }

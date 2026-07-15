@@ -92,6 +92,9 @@ public class Product {
     /** Set raw JSON value (dùng cho DAO đọc từ DB) */
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
+    /** Trả về giá trị RAW từ DB (JSON array hoặc URL đơn) — dùng cho DAO ghi DB */
+    public String getImageUrlRaw() { return this.imageUrl; }
+
     /**
      * Trả về URL ảnh đầu tiên để hiển thị.
      * Parse JSON array nếu cần, trả về null nếu không có ảnh.
