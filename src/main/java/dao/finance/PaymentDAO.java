@@ -422,15 +422,15 @@ public class PaymentDAO {
         return p;
     }
 
-    // --- Compatibility method for sales/POS transaction ---
+    // --- Dùng trong transaction (sales/POS/VNPay) ---
     public void insert(Connection conn, Payment p) throws SQLException {
         String sql = "INSERT INTO payment (order_id, payment_amount, payment_date, payment_status, transaction_code, PaymentType, Description, EmployeeID, BranchID, payment_method) "
                    + "VALUES (?, ?, GETDATE(), ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, p.getOrderId());
-            ps.setDouble(2, p.getPaymentAmount());
-            ps.setString(3, p.getPaymentStatus() != null ? p.getPaymentStatus() : "PAID");
-            ps.setString(4, p.getTransactionCode());
+            ps.setDouble(2, p.getAmount());
+            ps.setString(3, p.getStatus() != null ? p.getStatus() : "PAID");
+            ps.setString(4, p.getName());
             ps.setString(5, p.getPaymentType() != null ? p.getPaymentType() : "INCOME");
             ps.setString(6, p.getDescription() != null ? p.getDescription() : "Thanh toán đơn hàng " + p.getOrderId());
             if (p.getEmployeeId() != null) {

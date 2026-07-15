@@ -157,9 +157,6 @@
                                                 </span>
                                             <% } %>
                                         </div>
-                                <td class="text-center">
-                                    <% if (imgUrl != null && !imgUrl.isBlank()) { %>
-                                        <img src="<%= imgUrl %>" alt="product" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #eee;">
                                     <% } else { %>
                                         <span class="text-muted" style="font-size:12px;">No image</span>
                                     <% } %>
@@ -175,28 +172,16 @@
                                         <span class="badge bg-secondary">Ngừng hoạt động</span>
                                     <% } %>
                                 </td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning" onclick="openProductModal('edit',
-                                        '<%= p.getProductID() %>',
-                                        '<%= p.getCategoryID() %>',
-                                        '<%= (p.getName() != null ? p.getName() : "").replace("'", "\\'") %>',
-                                        '<%= p.getUnitID() %>',
-                                        '<%= p.getSellingPrice() != null ? p.getSellingPrice().toPlainString() : "0" %>',
-                                        '<%= p.getStatus() != null ? p.getStatus() : "Active" %>',
-                                        '<%= encodedImgUrlsJson %>'
-                                    )">Sửa</button>
-                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteProduct('<%= p.getProductID() %>')">Xóa</button>
-                                </td>
                                 <c:if test="${canManage}">
-                                    <td class="text-center">
-                                        <button class="btn btn-sm btn-warning me-1" onclick="openProductModal('edit',
+                                    <td>
+                                        <button class="btn btn-sm btn-warning" onclick="openProductModal('edit',
                                             '<%= p.getProductID() %>',
                                             '<%= p.getCategoryID() %>',
                                             '<%= (p.getName() != null ? p.getName() : "").replace("'", "\\'") %>',
                                             '<%= p.getUnitID() %>',
                                             '<%= p.getSellingPrice() != null ? p.getSellingPrice().toPlainString() : "0" %>',
                                             '<%= p.getStatus() != null ? p.getStatus() : "Active" %>',
-                                            '<%= imgUrl != null ? imgUrl : "" %>'
+                                            '<%= encodedImgUrlsJson %>'
                                         )">Sửa</button>
                                         <button type="button" class="btn btn-sm btn-danger" onclick="deleteProduct('<%= p.getProductID() %>')">Xóa</button>
                                     </td>
