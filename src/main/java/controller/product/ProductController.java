@@ -346,17 +346,17 @@ public class ProductController extends BaseController {
         return parts;
     }
 
-    /** Xoá tất cả file ảnh của sản phẩm trong thư mục upload */
+    /** Xoá tất cả file ảnh của sản phẩm theo path trong DB */
     private void deleteProductImageFiles(HttpServletRequest request, int productId) {
-        File dir = ensureImageDir(request);
-        if (dir == null || !dir.exists()) return;
-        File[] files = dir.listFiles((d, name) -> {
-            return name.toLowerCase().startsWith("product_" + productId + "_");
-        });
-        if (files != null) {
-            for (File f : files) {
-                try { f.delete(); } catch (Exception ignored) {}
+        try {
+            Product product = productDAO.findById(productId);
+            if (product == null) return;
+            List<String> urls = product.getImageUrlList();
+            for (String url : urls) {
+                deleteImageFileByUrl(request, url);
             }
+        } catch (SQLException e) {
+            System.out.println("ERROR: Không thể đọc ảnh từ DB để xoá: " + e.getMessage());
         }
     }
 
