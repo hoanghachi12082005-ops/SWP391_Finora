@@ -282,13 +282,14 @@
                 <label class="form-label">Ảnh sản phẩm</label>
                 <input type="file" id="modal-image" name="imageFile" class="form-control" 
                        accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,image/*" multiple>
-                <div class="form-text">Chọn nhiều ảnh (giữ Ctrl để chọn nhiều). Chỉ chấp nhận file ảnh, tối đa 3MB mỗi ảnh. Có thể bỏ trống khi tạo mới.</div>
+                <div class="form-text">Giữ Ctrl để chọn nhiều ảnh. Tối đa 3MB mỗi ảnh.</div>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Ảnh hiện tại</label>
+            <div class="mb-3" id="currentImagesSection" style="display:none;">
+                <label class="form-label">Ảnh hiện tại <small class="text-muted">(nhấn X để xoá)</small></label>
                 <div id="currentImages" class="d-flex flex-wrap gap-2">
                     <!-- JS sẽ render ảnh hiện tại ở đây -->
                 </div>
+                <input type="hidden" name="deletedImages" id="deletedImagesInput" value="">
             </div>
             <div class="d-flex justify-content-end">
                 <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal" onclick="closeProductModal()">Huỷ</button>
@@ -352,33 +353,75 @@
         }
     });
 
+    // Biến toàn cục để track ảnh bị xoá
+    let deletedImageUrls = [];
+
     function openProductModal(action, id, catId, name, unitId, sellingPrice, status, imageUrlsJson) {
         document.getElementById('modal-action').value = action;
         const fileInput = document.getElementById('modal-image');
         if (fileInput) fileInput.value = '';
+        document.getElementById('deletedImagesInput').value = '';
+        deletedImageUrls = [];
 
         // Hiển thị ảnh hiện tại (khi sửa)
+        const section = document.getElementById('currentImagesSection');
         const container = document.getElementById('currentImages');
         container.innerHTML = '';
-        if (imageUrlsJson && imageUrlsJson !== '') {
+        let urls = [];
+
+        if (action === 'edit' && imageUrlsJson && imageUrlsJson !== '') {
             try {
                 const decoded = decodeURIComponent(imageUrlsJson);
-                const urls = JSON.parse(decoded);
-                urls.forEach(function(url) {
-                    if (!url) return;
-                    const img = document.createElement('img');
-                    img.src = url;
-                    img.alt = 'product';
-                    img.title = url;
-                    img.style.width = '64px';
-                    img.style.height = '64px';
-                    img.style.objectFit = 'cover';
-                    img.style.borderRadius = '6px';
-                    img.style.border = '1px solid #ddd';
-                    img.style.cursor = 'pointer';
-                    container.appendChild(img);
-                });
-            } catch(e) { /* ignore - không parse được thì bỏ qua */ }
+                urls = JSON.parse(decoded);
+            } catch(e) { urls = []; }
+        }
+
+        if (urls.length > 0) {
+            section.style.display = 'block';
+            urls.forEach(function(url) {
+                if (!url) return;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'position-relative';
+                wrapper.style.width = '80px';
+                wrapper.style.display = 'inline-block';
+
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = 'product';
+                img.title = url;
+                img.style.width = '80px';
+                img.style.height = '80px';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '6px';
+                img.style.border = '1px solid #ddd';
+
+                // Nút Xoá
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.innerHTML = '&times;';
+                delBtn.className = 'btn btn-danger btn-sm';
+                delBtn.style.position = 'absolute';
+                delBtn.style.top = '-8px';
+                delBtn.style.right = '-8px';
+                delBtn.style.width = '22px';
+                delBtn.style.height = '22px';
+                delBtn.style.padding = '0';
+                delBtn.style.fontSize = '14px';
+                delBtn.style.lineHeight = '1';
+                delBtn.style.borderRadius = '50%';
+                delBtn.onclick = function() {
+                    deletedImageUrls.push(url);
+                    document.getElementById('deletedImagesInput').value = JSON.stringify(deletedImageUrls);
+                    wrapper.remove();
+                    if (container.children.length === 0) section.style.display = 'none';
+                };
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(delBtn);
+                container.appendChild(wrapper);
+            });
+        } else {
+            section.style.display = 'none';
         }
 
         if (action === 'edit') {
