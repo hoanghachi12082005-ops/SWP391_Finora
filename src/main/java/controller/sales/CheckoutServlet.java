@@ -111,7 +111,7 @@ public class CheckoutServlet extends HttpServlet {
                 return;
             }
             session.setAttribute(lockKey, true);
-            System.out.println("[DEBUG] 🔒 LOCK SET — request được xử lý");
+            System.out.println("[DEBUG]  LOCK SET — request được xử lý");
 
             Connection conn = null;
             try {
