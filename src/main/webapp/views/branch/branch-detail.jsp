@@ -11,8 +11,7 @@
 <div class="app-container">
     <jsp:include page="/views/common/sidebar.jsp"/>
 
-    <main class="main-content">
-        <jsp:include page="/views/common/topbar.jsp"/>
+    <main class="main-content"> 
         
         <div class="container-fluid py-4"> 
             <c:if test="${param.success == 'add'}">
