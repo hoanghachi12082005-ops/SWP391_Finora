@@ -145,8 +145,8 @@
             + '    <span>' + p.systemStock + '</span>'
             + '</td>'
             + '<td>'
-            + '    <input type="number" name="actualQty[]" class="form-control form-control-sm text-center mx-auto actual-input actual-qty-input" '
-            + '           value="' + p.systemStock + '" min="0" required style="width: 100px; border-radius: 6px;">'
+            + '    <input type="text" name="actualQty[]" class="form-control form-control-sm text-center mx-auto actual-input actual-qty-input" '
+            + '           value="' + p.systemStock + '" required style="width: 100px; border-radius: 6px;">'
             + '</td>'
             + '<td class="text-center discrepancy-cell fw-bold text-success">'
             + '    0'
@@ -164,40 +164,102 @@
         const discrepancyCell = row.querySelector('.discrepancy-cell');
         
         actualInput.addEventListener('input', function() {
-            const actVal = parseInt(this.value) || 0;
-            const sysVal = p.systemStock;
-            const diff = actVal - sysVal;
-            discrepancyCell.textContent = diff > 0 ? '+' + diff : diff;
+            const rawVal = this.value;
+            const trimmed = rawVal.trim();
+            const isValid = /^\d+$/.test(trimmed);
             
-            if (diff === 0) {
-                discrepancyCell.className = "text-center discrepancy-cell fw-bold text-success";
-            } else {
-                discrepancyCell.className = "text-center discrepancy-cell fw-bold text-danger";
+            // Remove existing error message
+            const existingError = row.querySelector('.qty-error-msg');
+            if (existingError) {
+                existingError.remove();
             }
+            actualInput.classList.remove('border-danger', 'text-danger');
+            row.classList.remove('table-danger');
+
+            if (!isValid) {
+                // Mark invalid
+                row.classList.add('table-danger');
+                actualInput.classList.add('border-danger', 'text-danger');
+                discrepancyCell.textContent = 'Lỗi';
+                discrepancyCell.className = "text-center discrepancy-cell fw-bold text-danger";
+                
+                // Add error message label
+                const errMsg = document.createElement('div');
+                errMsg.className = 'text-danger small mt-1 qty-error-msg';
+                errMsg.style.fontSize = '11px';
+                errMsg.style.fontWeight = '500';
+                
+                if (/[a-zA-Z]/.test(rawVal) && /\d/.test(rawVal)) {
+                    errMsg.textContent = '⚠️ Không nhập chữ và số';
+                } else if (/[a-zA-Z]/.test(rawVal)) {
+                    errMsg.textContent = '⚠️ Không nhập chữ cái';
+                } else if (/\s/.test(trimmed)) {
+                    errMsg.textContent = '⚠️ Không có khoảng trắng';
+                } else if (trimmed === '') {
+                    errMsg.textContent = '⚠️ Không được để trống';
+                } else {
+                    errMsg.textContent = '⚠️ Số lượng không hợp lệ';
+                }
+                actualInput.parentNode.appendChild(errMsg);
+            } else {
+                const actVal = parseInt(trimmed, 10);
+                const sysVal = p.systemStock;
+                const diff = actVal - sysVal;
+                discrepancyCell.textContent = diff > 0 ? '+' + diff : diff;
+                
+                if (diff === 0) {
+                    discrepancyCell.className = "text-center discrepancy-cell fw-bold text-success";
+                } else {
+                    discrepancyCell.className = "text-center discrepancy-cell fw-bold text-danger";
+                }
+            }
+            
+            validateFormState();
         });
 
         row.querySelector('.remove-btn').addEventListener('click', function() {
             row.remove();
             selectedProductIds.delete(p.productId);
-            checkEmpty();
+            validateFormState();
         });
 
         tableBody.appendChild(row);
-        checkEmpty();
+        validateFormState();
     }
 
     const addProductToTable = addProduct;
 
-    function checkEmpty() {
-        if (selectedProductIds.size === 0) {
+    function validateFormState() {
+        const hasErrors = tableBody.querySelectorAll('.table-danger').length > 0;
+        const isEmpty = selectedProductIds.size === 0;
+
+        if (isEmpty) {
             if (emptyRow) emptyRow.style.display = 'table-row';
             submitBtn.disabled = true;
+            submitBtn.title = '';
+        } else if (hasErrors) {
+            submitBtn.disabled = true;
+            submitBtn.title = 'Vui lòng sửa các dòng bị báo lỗi đỏ trước khi lưu phiếu.';
         } else {
             submitBtn.disabled = false;
+            submitBtn.title = '';
         }
     }
 
     document.getElementById('checkForm').addEventListener('submit', function(e) {
+        // Check for any validation errors first
+        const hasErrors = tableBody.querySelectorAll('.table-danger').length > 0;
+        if (hasErrors) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Dữ liệu không hợp lệ',
+                text: 'Vui lòng sửa hoặc xóa các sản phẩm bị báo đỏ trước khi lưu phiếu.',
+                confirmButtonColor: '#1e293b'
+            });
+            return;
+        }
+
         let hasDiscrepancy = false;
         const discrepancyCells = document.querySelectorAll('.discrepancy-cell');
         discrepancyCells.forEach(cell => {
@@ -315,6 +377,32 @@ function importCheckExcel(event) {
     const file = event.target.files[0];
     if (!file) return;
     
+    // Validate file type (Excel only)
+    const allowedExtensions = /(\.xlsx|\.xls)$/i;
+    if (!allowedExtensions.exec(file.name)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Định dạng file không hợp lệ',
+            text: 'Vui lòng chọn đúng định dạng file Excel (.xlsx hoặc .xls).',
+            confirmButtonColor: '#1e293b'
+        });
+        event.target.value = '';
+        return;
+    }
+    
+    // Validate file size (under 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Kích thước file quá lớn',
+            text: 'Dung lượng tệp tải lên không được vượt quá 5MB. Vui lòng chọn file nhỏ hơn.',
+            confirmButtonColor: '#1e293b'
+        });
+        event.target.value = '';
+        return;
+    }
+    
     // Check if the user is uploading the old .xls template
     if (file.name.toLowerCase().endsWith('.xls')) {
         Swal.fire({
@@ -420,24 +508,21 @@ function parseCheckRows(rows) {
                 const note = noteIdx > -1 && rowData[noteIdx] !== undefined ? String(rowData[noteIdx]).trim() : '';
                 
                 if (actualQtyStr !== '' && productName !== '') {
-                    const actualQty = parseInt(actualQtyStr);
-                    if (!isNaN(actualQty)) {
-                        const p = products.find(prod => (sku && prod.productCodebar === sku) || prod.productName === productName);
-                        if (p) {
-                            addProductToTable({
-                                productId: p.productId,
-                                productName: p.productName,
-                                categoryName: p.categoryName || '-',
-                                systemStock: p.systemStock
-                            });
-                            
-                            const row = document.querySelector('tr[data-id="' + p.productId + '"]');
-                            if (row) {
-                                row.querySelector('.actual-qty-input').value = actualQty;
-                                row.querySelector('.note-input').value = note;
-                                row.querySelector('.actual-qty-input').dispatchEvent(new Event('input'));
-                                count++;
-                            }
+                    const p = products.find(prod => (sku && prod.productCodebar === sku) || prod.productName === productName);
+                    if (p) {
+                        addProductToTable({
+                            productId: p.productId,
+                            productName: p.productName,
+                            categoryName: p.categoryName || '-',
+                            systemStock: p.systemStock
+                        });
+                        
+                        const row = document.querySelector('tr[data-id="' + p.productId + '"]');
+                        if (row) {
+                            row.querySelector('.actual-qty-input').value = actualQtyStr;
+                            row.querySelector('.note-input').value = note;
+                            row.querySelector('.actual-qty-input').dispatchEvent(new Event('input'));
+                            count++;
                         }
                     }
                 }

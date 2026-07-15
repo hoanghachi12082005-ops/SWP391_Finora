@@ -151,6 +151,9 @@ public class InventoryController extends BaseController {
             } else if ("searchImportProductsApi".equals(action)) {
                 handleSearchImportProductsApi(request, response);
                 return;
+            } else if ("getImportTemplateDataApi".equals(action)) {
+                handleGetImportTemplateDataApi(request, response);
+                return;
             } else if ("viewTicket".equals(action)) {
                 int ticketId = Integer.parseInt(request.getParameter("ticketId"));
                 String showAll = request.getParameter("showAll");
@@ -1115,7 +1118,173 @@ public class InventoryController extends BaseController {
 
         try {
             switch (action) {
+                case "checkImportExcel": {
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+
+                    String data = request.getParameter("data");
+                    int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
+                    dao.inventory.InventoryDAO dao = new dao.inventory.InventoryDAO();
+
+                    List<String> errors = new ArrayList<>();
+                    List<String> rowJsons = new ArrayList<>();
+
+                    if (data != null && !data.trim().isEmpty()) {
+                        String[] lines = data.split("\\|");
+                        for (int lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+                            String line = lines[lineIdx].trim();
+                            if (line.isEmpty()) continue;
+                            String[] parts = line.split("\\t", 3);
+                            int excelRow = lineIdx + 2; // Excel row number (header=1, data starts at 2)
+
+                            if (parts.length < 3) {
+                                errors.add("Dòng " + excelRow + ": Thiếu dữ liệu (cần Tên sản phẩm, Mã NCC, Số lượng).");
+                                continue;
+                            }
+
+                            String productName = parts[0].trim();
+                            String supplierIdStr = parts[1].trim();
+                            String quantityStr = parts[2].trim();
+
+                            // Product name empty → skip (can't recover)
+                            if (productName.isEmpty()) {
+                                errors.add("Dòng " + excelRow + ": Tên sản phẩm trống.");
+                                continue;
+                            }
+
+                            // Lookup product by exact name first
+                            dto.inventory.ImportProductDTO product = dao.getImportProductByName(warehouseId, productName);
+                            if (product == null) {
+                                errors.add("Dòng " + excelRow + ": Không tìm thấy sản phẩm '" + productName + "'.");
+                                continue;
+                            }
+
+                            // --- From here, product exists → row ALWAYS goes into table ---
+                            boolean isErrorRow = false;
+                            List<String> rowErrors = new ArrayList<>();
+
+                            // Validate supplierId
+                            int supplierId = -1;
+                            boolean supplierIdValid = false;
+                            try {
+                                supplierId = Integer.parseInt(supplierIdStr);
+                                if (supplierId <= 0) throw new NumberFormatException();
+                                supplierIdValid = true;
+                            } catch (NumberFormatException e) {
+                                isErrorRow = true;
+                                rowErrors.add("Mã NCC '" + supplierIdStr + "' không hợp lệ");
+                            }
+
+                            // Validate quantity
+                            int quantity = 1;
+                            boolean quantityValid = false;
+                            try {
+                                quantity = Integer.parseInt(quantityStr);
+                                if (quantity <= 0) throw new NumberFormatException();
+                                quantityValid = true;
+                            } catch (NumberFormatException e) {
+                                isErrorRow = true;
+                                quantity = 1; // default
+                                rowErrors.add("Số lượng '" + quantityStr + "' không hợp lệ");
+                            }
+
+                            // Check supplier linkage
+                            dto.inventory.ImportProductDTO.SupplierInfo matchedSupplier = null;
+                            boolean supplierLinked = false;
+                            if (supplierIdValid) {
+                                boolean supplierExists = false;
+                                for (dto.inventory.ImportProductDTO.SupplierInfo si : product.getSuppliers()) {
+                                    if (si.getSupplierId() == supplierId) {
+                                        supplierExists = true;
+                                        matchedSupplier = si;
+                                        if (si.getImportPrice() != null && si.getImportPrice().doubleValue() > 0) {
+                                            supplierLinked = true;
+                                        }
+                                        break;
+                                    }
+                                }
+                                if (!supplierExists) {
+                                    isErrorRow = true;
+                                    String sName = dao.getSupplierName(supplierId);
+                                    if (sName == null) {
+                                        rowErrors.add("Mã NCC " + supplierId + " không tồn tại");
+                                    } else {
+                                        rowErrors.add("NCC '" + sName + "' (ID:" + supplierId + ") không hoạt động");
+                                    }
+                                } else if (!supplierLinked) {
+                                    isErrorRow = true;
+                                    rowErrors.add("Nhà cung cấp không có sản phẩm.");
+                                }
+                            }
+
+                            // Use first supplier as fallback if supplier ID invalid or not found
+                            if (matchedSupplier == null && !product.getSuppliers().isEmpty()) {
+                                matchedSupplier = product.getSuppliers().get(0);
+                            }
+
+                            double price = (matchedSupplier != null && matchedSupplier.getImportPrice() != null && supplierLinked) 
+                                ? matchedSupplier.getImportPrice().doubleValue() : 0;
+                            String rowErrorMsg = String.join("; ", rowErrors);
+
+                            // Build row JSON
+                            StringBuilder rowJson = new StringBuilder("{");
+                            rowJson.append("\"product\":{");
+                            rowJson.append("\"productId\":").append(product.getProductId()).append(",");
+                            rowJson.append("\"productName\":\"").append(escapeJson(product.getProductName())).append("\",");
+                            rowJson.append("\"myStock\":").append(product.getMyStock());
+                            rowJson.append("},");
+                            rowJson.append("\"supplier\":{");
+                            if (matchedSupplier != null) {
+                                rowJson.append("\"supplierId\":").append(matchedSupplier.getSupplierId()).append(",");
+                                rowJson.append("\"supplierName\":\"").append(escapeJson(matchedSupplier.getSupplierName())).append("\",");
+                                rowJson.append("\"importPrice\":").append(price);
+                            } else {
+                                rowJson.append("\"supplierId\":0,\"supplierName\":\"\",\"importPrice\":0");
+                            }
+                            rowJson.append("},");
+                            // All active suppliers for the dropdown
+                            rowJson.append("\"allSuppliers\":[");
+                            for (int s = 0; s < product.getSuppliers().size(); s++) {
+                                dto.inventory.ImportProductDTO.SupplierInfo si = product.getSuppliers().get(s);
+                                rowJson.append("{\"supplierId\":").append(si.getSupplierId());
+                                rowJson.append(",\"supplierName\":\"").append(escapeJson(si.getSupplierName())).append("\"");
+                                rowJson.append(",\"importPrice\":").append(si.getImportPrice() != null ? si.getImportPrice() : 0);
+                                rowJson.append("}");
+                                if (s < product.getSuppliers().size() - 1) rowJson.append(",");
+                            }
+                            rowJson.append("],");
+                            rowJson.append("\"price\":").append(price).append(",");
+                            rowJson.append("\"quantity\":").append(quantity).append(",");
+                            rowJson.append("\"isErrorRow\":").append(isErrorRow).append(",");
+                            rowJson.append("\"rowError\":\"").append(escapeJson(rowErrorMsg)).append("\"");
+                            rowJson.append("}");
+
+                            rowJsons.add(rowJson.toString());
+                        }
+                    }
+
+                    // Build final response JSON
+                    StringBuilder result = new StringBuilder("{");
+                    result.append("\"success\":true,");
+                    result.append("\"errors\":[");
+                    for (int i = 0; i < errors.size(); i++) {
+                        result.append("\"").append(escapeJson(errors.get(i))).append("\"");
+                        if (i < errors.size() - 1) result.append(",");
+                    }
+                    result.append("],");
+                    result.append("\"rows\":[");
+                    for (int i = 0; i < rowJsons.size(); i++) {
+                        result.append(rowJsons.get(i));
+                        if (i < rowJsons.size() - 1) result.append(",");
+                    }
+                    result.append("]");
+                    result.append("}");
+
+                    response.getWriter().write(result.toString());
+                    return;
+                }
                 case "setupWarehouse": {
+
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     Warehouse newW = new Warehouse();
                     newW.setWarehouseName(request.getParameter("warehouseName"));
@@ -1581,6 +1750,20 @@ public class InventoryController extends BaseController {
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
 
                     if (productIds != null && productIds.length > 0) {
+                        if (actualQtys == null || actualQtys.length != productIds.length) {
+                            request.getSession().setAttribute("error", "Lỗi: Dữ liệu kiểm kho không hợp lệ.");
+                            redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
+                            return;
+                        }
+
+                        for (String qty : actualQtys) {
+                            if (qty == null || qty.trim().isEmpty() || !qty.trim().matches("^\\d+$")) {
+                                request.getSession().setAttribute("error", "Lỗi: Số lượng thực tế phải là số nguyên dương hợp lệ và không chứa ký tự khác.");
+                                redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
+                                return;
+                            }
+                        }
+
                         List<model.InventoryCheckDetail> details = new ArrayList<>();
                         int totalDiscrepancy = 0;
 
@@ -1706,6 +1889,20 @@ public class InventoryController extends BaseController {
                     }
 
                     if (productIds != null && productIds.length > 0) {
+                        if (actualQtys == null || actualQtys.length != productIds.length) {
+                            request.getSession().setAttribute("error", "Lỗi: Dữ liệu kiểm kho không hợp lệ.");
+                            redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
+                            return;
+                        }
+
+                        for (String qty : actualQtys) {
+                            if (qty == null || qty.trim().isEmpty() || !qty.trim().matches("^\\d+$")) {
+                                request.getSession().setAttribute("error", "Lỗi: Số lượng thực tế phải là số nguyên dương hợp lệ và không chứa ký tự khác.");
+                                redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
+                                return;
+                            }
+                        }
+
                         List<model.InventoryCheckDetail> details = new ArrayList<>();
                         int totalDiscrepancy = 0;
 
@@ -1875,6 +2072,25 @@ public class InventoryController extends BaseController {
         }
         json.append("]");
         
+        response.getWriter().write(json.toString());
+    }
+
+    private void handleGetImportTemplateDataApi(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        dao.inventory.InventoryDAO dao = new dao.inventory.InventoryDAO();
+        List<String[]> rows = dao.getAllProductsWithSuppliers();
+
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < rows.size(); i++) {
+            String[] r = rows.get(i);
+            json.append("[\"").append(escapeJson(r[0])).append("\",");
+            json.append(r[1]).append(",");
+            json.append("\"").append(escapeJson(r[2])).append("\"]");
+            if (i < rows.size() - 1) json.append(",");
+        }
+        json.append("]");
         response.getWriter().write(json.toString());
     }
 

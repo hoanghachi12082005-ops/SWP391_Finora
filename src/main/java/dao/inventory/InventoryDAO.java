@@ -650,4 +650,100 @@ public class InventoryDAO {
         }
         return list;
     }
+
+    /**
+     * Lookup a single product by exact product name for Excel import validation.
+     * Returns the product with ALL active suppliers (including those without purchase history → price=0).
+     */
+    public dto.inventory.ImportProductDTO getImportProductByName(int warehouseId, String productName) throws SQLException {
+        if (productName == null || productName.trim().isEmpty()) return null;
+
+        String sql =
+            "WITH LatestPurchase AS ( " +
+            "    SELECT o.supplier_id, od.product_id, od.import_price, " +
+            "           ROW_NUMBER() OVER (PARTITION BY o.supplier_id, od.product_id ORDER BY o.created_at DESC) as rn " +
+            "    FROM [order] o " +
+            "    JOIN order_detail od ON o.order_id = od.order_id " +
+            "    WHERE o.order_type = 'PURCHASE' AND o.status = 'COMPLETED' " +
+            ") " +
+            "SELECT p.product_id AS ProductID, p.product_name AS ProductName, " +
+            "COALESCE(i.quantity_in_stock, 0) AS MyStock, " +
+            "s.supplier_id AS SupplierID, s.supplier_name AS SupplierName, " +
+            "COALESCE(lp.import_price, 0) AS ImportPrice " +
+            "FROM product p " +
+            "LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? " +
+            "CROSS JOIN supplier s " +
+            "LEFT JOIN LatestPurchase lp ON p.product_id = lp.product_id AND s.supplier_id = lp.supplier_id AND lp.rn = 1 " +
+            "WHERE p.product_name = ? AND s.status = 'ACTIVE' " +
+            "ORDER BY CASE WHEN lp.import_price IS NOT NULL AND lp.import_price > 0 THEN 0 ELSE 1 END, s.supplier_name ASC";
+
+        dto.inventory.ImportProductDTO dto = null;
+
+        try (java.sql.Connection conn = util.database.DBContext.getConnection();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, warehouseId);
+            stmt.setNString(2, productName.trim());
+            try (java.sql.ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    if (dto == null) {
+                        dto = new dto.inventory.ImportProductDTO();
+                        dto.setProductId(rs.getInt("ProductID"));
+                        dto.setProductName(rs.getString("ProductName"));
+                        dto.setMyStock(rs.getInt("MyStock"));
+                        dto.setSuppliers(new java.util.ArrayList<>());
+                    }
+                    int supplierId = rs.getInt("SupplierID");
+                    if (!rs.wasNull()) {
+                        String supplierName = rs.getString("SupplierName");
+                        java.math.BigDecimal importPrice = rs.getBigDecimal("ImportPrice");
+                        dto.getSuppliers().add(new dto.inventory.ImportProductDTO.SupplierInfo(
+                            supplierId, supplierName, importPrice != null ? importPrice : java.math.BigDecimal.ZERO));
+                    }
+                }
+            }
+        }
+        return dto;
+    }
+
+    /**
+     * Get supplier name by ID (for Excel import error messages).
+     */
+    public String getSupplierName(int supplierId) throws SQLException {
+        String sql = "SELECT supplier_name FROM supplier WHERE supplier_id = ?";
+        try (java.sql.Connection conn = util.database.DBContext.getConnection();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, supplierId);
+            try (java.sql.ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getString("supplier_name");
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get all products with all active suppliers for Excel import template.
+     * Returns a flat list of [productName, supplierId, supplierName] tuples.
+     */
+    public List<String[]> getAllProductsWithSuppliers() throws SQLException {
+        List<String[]> rows = new java.util.ArrayList<>();
+        String sql =
+            "SELECT TOP 5 p.product_name, s.supplier_id, s.supplier_name " +
+            "FROM product p " +
+            "CROSS JOIN supplier s " +
+            "WHERE s.status = 'ACTIVE' " +
+            "ORDER BY p.product_name ASC, s.supplier_id ASC";
+
+        try (java.sql.Connection conn = util.database.DBContext.getConnection();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(sql);
+             java.sql.ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                rows.add(new String[]{
+                    rs.getString("product_name"),
+                    String.valueOf(rs.getInt("supplier_id")),
+                    rs.getString("supplier_name")
+                });
+            }
+        }
+        return rows;
+    }
 }
