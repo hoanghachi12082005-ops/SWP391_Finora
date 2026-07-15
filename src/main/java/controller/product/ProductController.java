@@ -81,8 +81,7 @@ public class ProductController extends BaseController {
             page = Math.max(1, Math.min(page, totalPages > 0 ? totalPages : 1));
 
             List<Product> products = productDAO.findAll((page - 1) * ITEMS_PER_PAGE, ITEMS_PER_PAGE, keyword, status, categoryID, unitID);
-            // gắn imageUrl cho từng sản phẩm dựa trên file thực tế trong /asset/product/
-            attachImageUrls(request, products);
+            // ImageUrl đã được load từ DB trong ProductDAO (cột ImageUrl + bảng product_image)
 
             request.setAttribute("products",    products);
             request.setAttribute("categories",  productDAO.findAllCategories());
@@ -125,8 +124,14 @@ public class ProductController extends BaseController {
                 int newId = productDAO.insert(p);
 
                 if (newId > 0 && imagePart != null && imagePart.getSize() > 0) {
-                    try { saveProductImage(request, imagePart, newId); }
-                    catch (IOException ioe) {
+                    try {
+                        String savedPath = saveProductImageFile(request, imagePart, newId);
+                        String imageUrl = request.getContextPath() + IMAGE_DIR + savedPath;
+                        p.setProductID(newId);
+                        // Lưu dạng JSON array: ["url"]
+                        p.setImageUrl("[\"" + imageUrl + "\"]");
+                        productDAO.update(p);
+                    } catch (IOException ioe) {
                         session.setAttribute("message", "Thêm thành công, nhưng lưu ảnh thất bại: " + ioe.getMessage());
                         session.setAttribute("messageType", "warning");
                         response.sendRedirect(buildRedirectUrl(request));
@@ -136,8 +141,8 @@ public class ProductController extends BaseController {
                 session.setAttribute("message", "Thêm sản phẩm thành công!");
                 session.setAttribute("messageType", "success");
             } else if ("edit".equals(action)) {
-                Product p = buildProductFromRequest(request);
                 int productID = Integer.parseInt(request.getParameter("productID"));
+                Product p = buildProductFromRequest(request);
                 p.setProductID(productID);
 
                 Part imagePart = safeGetPart(request, "imageFile");
@@ -150,27 +155,37 @@ public class ProductController extends BaseController {
                     return;
                 }
 
-                productDAO.update(p);
-
-
                 if (imagePart != null && imagePart.getSize() > 0) {
                     try {
-                        deleteProductImage(request, productID);
-                        saveProductImage(request, imagePart, productID);
+                        // Xoá ảnh cũ trên ổ cứng
+                        deleteProductImageFiles(request, productID);
+                        // Lưu file ảnh mới
+                        String savedPath = saveProductImageFile(request, imagePart, productID);
+                        String imageUrl = request.getContextPath() + IMAGE_DIR + savedPath;
+                        // Lưu dạng JSON array: ["url"]
+                        p.setImageUrl("[\"" + imageUrl + "\"]");
                     } catch (IOException ioe) {
                         session.setAttribute("message", "Cập nhật thành công, nhưng lưu ảnh thất bại: " + ioe.getMessage());
                         session.setAttribute("messageType", "warning");
                         response.sendRedirect(buildRedirectUrl(request));
                         return;
                     }
+                } else {
+                    // Giữ nguyên ảnh cũ — lấy từ DB
+                    Product old = productDAO.findById(productID);
+                    if (old != null) p.setImageUrl(old.getImageUrl());
                 }
+
+                productDAO.update(p);
                 session.setAttribute("message", "Cập nhật sản phẩm thành công!");
                 session.setAttribute("messageType", "success");
             } else if ("delete".equals(action)) {
                 try {
                     int id = Integer.parseInt(request.getParameter("id"));
+                    // Xoá file ảnh trên ổ cứng
+                    deleteProductImageFiles(request, id);
+                    // Xoá DB (product_image cascade qua FK + DAO delete đã xử lý)
                     productDAO.delete(id);
-                    deleteProductImage(request, id);
                     session.setAttribute("message", "Xóa sản phẩm thành công!");
                     session.setAttribute("messageType", "success");
                 } catch (Exception e) {
@@ -288,52 +303,31 @@ public class ProductController extends BaseController {
         return dir;
     }
 
-    private void saveProductImage(HttpServletRequest request, Part imagePart, int productId) throws IOException {
+    /**
+     * Lưu file ảnh xuống ổ cứng.
+     * @return tên file đã lưu (vd: "product_1_1712345678.jpg")
+     */
+    private String saveProductImageFile(HttpServletRequest request, Part imagePart, int productId) throws IOException {
         File dir = ensureImageDir(request);
         String ext = resolveExtension(imagePart);
-        File target = new File(dir, "product_" + productId + "." + ext);
-        deleteProductImageFiles(dir, productId);
+        String uniqueName = "product_" + productId + "_" + System.currentTimeMillis() + "." + ext;
+        File target = new File(dir, uniqueName);
         try (InputStream in = imagePart.getInputStream()) {
             Files.copy(in, target.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
+        return uniqueName;
     }
 
-    private void deleteProductImage(HttpServletRequest request, int productId) {
+    /** Xoá tất cả file ảnh của sản phẩm trong thư mục upload */
+    private void deleteProductImageFiles(HttpServletRequest request, int productId) {
         File dir = ensureImageDir(request);
-        deleteProductImageFiles(dir, productId);
-    }
-
-    private void deleteProductImageFiles(File dir, int productId) {
         if (dir == null || !dir.exists()) return;
         File[] files = dir.listFiles((d, name) -> {
-            String lower = name.toLowerCase();
-            int dot = lower.lastIndexOf('.');
-            String base = dot >= 0 ? lower.substring(0, dot) : lower;
-            return base.equals("product_" + productId);
+            return name.toLowerCase().startsWith("product_" + productId + "_");
         });
         if (files != null) {
             for (File f : files) {
                 try { f.delete(); } catch (Exception ignored) {}
-            }
-        }
-    }
-
-
-    private void attachImageUrls(HttpServletRequest request, List<Product> products) {
-        if (products == null || products.isEmpty()) return;
-        File dir = ensureImageDir(request);
-        if (!dir.exists()) return;
-        File[] files = dir.listFiles();
-        if (files == null) return;
-        String ctx = request.getContextPath();
-        for (Product p : products) {
-            String prefix = "product_" + p.getProductID() + ".";
-            for (File f : files) {
-                if (f.isFile() && f.getName().toLowerCase().startsWith(prefix)) {
-                    // thêm timestamp
-                    p.setImageUrl(ctx + IMAGE_DIR + f.getName() + "?v=" + f.lastModified());
-                    break;
-                }
             }
         }
     }
