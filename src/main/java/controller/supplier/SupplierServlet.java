@@ -165,48 +165,36 @@ public class SupplierServlet extends HttpServlet {
 
         int total = service.countSuppliers(keyword, status);
 
-        String pageSizeOption = request.getParameter("pageSize");
-        if (pageSizeOption == null || pageSizeOption.trim().isEmpty()) {
-            pageSizeOption = "10";
-        }
+        int page = parseInt(request.getParameter("page"), 1);
+        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
 
-        int pageSize = 10;
-        String option = pageSizeOption.trim().toLowerCase();
-        if ("30p".equals(option)) {
-            pageSize = Math.max(1, (int) Math.ceil(total * 0.3));
-        } else if ("50p".equals(option)) {
-            pageSize = Math.max(1, (int) Math.ceil(total * 0.5));
-        } else {
-            try {
-                pageSize = Integer.parseInt(option);
-            } catch (NumberFormatException e) {
-                pageSize = 10;
-            }
-        }
+        util.pagination.PaginationHelper.PageResult pr = util.pagination.PaginationHelper.compute(total, page, sizeValue);
+        pr.setAttributes(request);
 
-        int page = 1;
-        try {
-            page = Integer.parseInt(request.getParameter("page"));
-        } catch (Exception ignored) {
-        }
-
-        int totalPage = (int) Math.ceil((double) total / pageSize);
         int activeCount = service.countActiveSuppliers();
         int inactiveCount = service.countInactiveSuppliers();
 
-        List<Supplier> list = service.getSuppliersPaging(keyword, status, page, pageSize);
+        List<Supplier> list = service.getSuppliersPaging(keyword, status, pr.getCurrentPage(), pr.getPageSize());
 
         request.setAttribute("list", list);
-        request.setAttribute("page", page);
-        request.setAttribute("totalPage", totalPage);
+        request.setAttribute("page", pr.getCurrentPage());
+        request.setAttribute("totalPage", pr.getTotalPages());
         request.setAttribute("keyword", keyword);
         request.setAttribute("status", status);
-        request.setAttribute("pageSizeOption", pageSizeOption);
         request.setAttribute("totalSupplier", total);
         request.setAttribute("activeCount", activeCount);
         request.setAttribute("inactiveCount", inactiveCount);
+        request.setAttribute("baseUrl", request.getContextPath() + "/suppliers");
 
         request.getRequestDispatcher("/views/suppliers/list.jsp").forward(request, response);
+    }
+
+    private int parseInt(String value, int defaultValue) {
+        try {
+            return Integer.parseInt(value);
+        } catch (Exception e) {
+            return defaultValue;
+        }
     }
 
     @Override

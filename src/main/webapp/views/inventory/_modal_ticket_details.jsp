@@ -4,8 +4,8 @@
 
 <div class="modal-header bg-light border-bottom-0 pb-0">
     <h5 class="modal-title fw-bold text-dark d-flex align-items-center" style="font-size: 18px;">
-        <span class="material-icons text-primary me-2" style="font-size: 24px;">description</span>
-        Chi Tiết Chứng Từ: <span class="text-primary ms-1">${ticket.ticketCode}</span>
+        <span class="material-icons text-primary me-2" style="font-size: 24px;">swap_horiz</span>
+        Chi Tiết Phiếu Điều Chuyển Gộp: <span class="text-primary ms-1">${ticket.transferCode}</span>
     </h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
@@ -14,320 +14,400 @@
     <div class="card border-0 bg-light p-3 mb-4" style="border-radius: 12px;">
         <div class="row g-3">
             <div class="col-6 col-md-3">
+                <div class="text-muted small mb-1">Kho Đề Xuất</div>
+                <div class="fw-bold text-primary" style="font-size: 14.5px;">${ticket.creatorBranchId == ticket.fromBranchId ? ticket.fromWarehouseName : ticket.toWarehouseName}</div>
+            </div>
+            <div class="col-6 col-md-3 text-md-center">
                 <div class="text-muted small mb-1">Người Lập Phiếu</div>
                 <div class="fw-bold text-dark" style="font-size: 14.5px;">${ticket.createdByName}</div>
             </div>
             <div class="col-6 col-md-3 text-md-center">
-                <div class="text-muted small mb-1">Thời Gian Hoàn Tất</div>
+                <div class="text-muted small mb-1">Thời Gian Tạo</div>
                 <div class="fw-bold text-dark" style="font-size: 14.5px;">
-                    <fmt:parseDate value="${ticket.createdAt}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedDateTime" type="both" />
-                    <fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${parsedDateTime}" />
+                    <fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${ticket.transferDate}" />
                 </div>
             </div>
-            <div class="col-6 col-md-3 text-md-center">
-                <div class="text-muted small mb-1">Trạng Thái</div>
+            <div class="col-6 col-md-3 text-md-end">
+                <div class="text-muted small mb-1">Trạng Thái Tổng Hợp</div>
                 <div>
                     <c:choose>
-                        <c:when test="${ticket.status == 'COMPLETED'}">
-                            <span class="badge bg-success" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">HOÀN TẤT</span>
+                        <c:when test="${ticket.displayStatus == 'PENDING_OWNER'}">
+                            <span class="badge bg-warning text-dark" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">CHỜ DUYỆT</span>
                         </c:when>
-                        <c:when test="${ticket.status == 'COMPLETED_WITH_ERROR'}">
-                            <span class="badge bg-warning text-dark" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">HOÀN TẤT (LỆCH)</span>
+                        <c:when test="${ticket.displayStatus == 'PENDING_PARTNER'}">
+                            <span class="badge bg-info text-dark" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">CHỜ ĐỐI TÁC DUYỆT</span>
                         </c:when>
-                        <c:when test="${ticket.status == 'REJECTED' || ticket.status == 'CANCELLED'}">
-                            <span class="badge bg-danger" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">ĐÃ HỦY / TỪ CHỐI</span>
+                        <c:when test="${ticket.displayStatus == 'APPROVED_DISPATCH' || ticket.displayStatus == 'IN_PROGRESS'}">
+                            <span class="badge bg-primary" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">ĐANG XỬ LÝ</span>
+                        </c:when>
+                        <c:when test="${ticket.displayStatus == 'IN_TRANSIT'}">
+                            <span class="badge bg-primary" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">ĐANG TRUNG CHUYỂN</span>
+                        </c:when>
+                        <c:when test="${ticket.displayStatus == 'COMPLETED'}">
+                            <span class="badge bg-success" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">HOÀN THÀNH</span>
+                        </c:when>
+                        <c:when test="${ticket.displayStatus == 'PARTIAL_COMPLETE'}">
+                            <span class="badge bg-warning text-dark" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">⚠️ HOÀN THÀNH 1 PHẦN (CÓ LỖI)</span>
+                        </c:when>
+                        <c:when test="${ticket.displayStatus == 'CANCELLED'}">
+                            <span class="badge bg-danger" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">ĐÃ HỦY / BỊ TỪ CHỐI</span>
                         </c:when>
                         <c:otherwise>
-                            <span class="badge bg-secondary" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">${ticket.status}</span>
+                            <span class="badge bg-secondary" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">${ticket.displayStatus}</span>
                         </c:otherwise>
                     </c:choose>
                 </div>
             </div>
-            <div class="col-6 col-md-3 text-end">
-                <div class="text-muted small mb-1">Mã Phiếu</div>
-                <div class="fw-bold text-dark" style="font-size: 14.5px;">#${ticket.ticketId}</div>
-            </div>
         </div>
-        <hr class="my-3 text-muted" style="opacity: 0.15;">
-        <div class="row g-3">
-            <div class="col-6">
-                <div class="text-muted small mb-1">
-                    <c:choose>
-                        <c:when test="${ticket.ticketType == 'IMPORT'}">Nguồn / Nhà Cung Cấp</c:when>
-                        <c:otherwise>Kho Chuyển (Nguồn)</c:otherwise>
-                    </c:choose>
-                </div>
-                <div class="fw-bold text-primary" style="font-size: 14.5px;">
-                    <c:choose>
-                        <c:when test="${ticket.ticketType == 'IMPORT'}">
-                            <span class="material-icons" style="font-size: 16px; vertical-align: text-bottom; margin-right: 4px;">local_shipping</span>
-                        </c:when>
-                        <c:otherwise>
-                            <span class="material-icons" style="font-size: 16px; vertical-align: text-bottom; margin-right: 4px;">storefront</span>
-                        </c:otherwise>
-                    </c:choose>
-                    ${ticket.fromWarehouseName}
+        <c:if test="${not empty ticket.note}">
+            <hr class="my-3 text-muted" style="opacity: 0.15;">
+            <div class="row">
+                <div class="col-12">
+                    <div class="text-muted small mb-1">Ghi Chú</div>
+                    <div class="text-dark" style="font-size: 13.5px;">${ticket.note}</div>
                 </div>
             </div>
-            <div class="col-6 text-end">
-                <div class="text-muted small mb-1">
-                    <c:choose>
-                        <c:when test="${ticket.ticketType == 'IMPORT'}">Kho Nhập (Đích)</c:when>
-                        <c:otherwise>Kho Nhận (Đích)</c:otherwise>
-                    </c:choose>
-                </div>
-                <div class="fw-bold text-success" style="font-size: 14.5px;">
-                    <span class="material-icons" style="font-size: 16px; vertical-align: text-bottom; margin-right: 4px;">storefront</span>
-                    ${ticket.toWarehouseName}
-                </div>
-            </div>
-        </div>
+        </c:if>
     </div>
     
-    <!-- Danh sách sản phẩm -->
-    <h6 class="fw-bold mb-3 text-dark d-flex align-items-center" style="font-size: 14.5px;">
-        <span class="material-icons text-secondary me-1" style="font-size: 18px;">list</span>
-        Chi Tiết Hàng Hóa Giao Dịch
+    <!-- Danh sách phiếu con chi tiết theo từng kho đối tác -->
+    <h6 class="fw-bold mb-3 text-dark d-flex align-items-center" style="font-size: 15px;">
+        <span class="material-icons text-secondary me-1" style="font-size: 20px;">account_tree</span>
+        Chi Tiết Từng Kho Đối Tác
     </h6>
-    <div class="table-responsive border rounded-3 mb-4 shadow-sm" style="overflow: hidden;">
-        <table class="table table-hover align-middle mb-0" style="font-size: 13.5px;">
-            <thead class="table-light text-dark" style="border-bottom: 2px solid #e2e8f0;">
-                <tr>
-                    <th class="text-start ps-3 py-3" style="font-weight: 600; color: #475569;">Sản Phẩm</th>
-                    <th class="text-center py-3" style="width: 130px; font-weight: 600; color: #475569;">Loại GD</th>
-                    <th class="text-end py-3" style="width: 110px; font-weight: 600; color: #475569;">Tồn Trước</th>
-                    <th class="text-center py-3" style="width: 100px; font-weight: 600; color: #475569;">Số Lượng</th>
-                    <th class="text-end pe-3 py-3" style="width: 110px; font-weight: 600; color: #475569;">Tồn Sau</th>
-                </tr>
-            </thead>
-            <tbody>
-                <c:forEach var="d" items="${ticketDetails}">
-                    <c:set var="myTx" value="${null}"/>
-                    <c:if test="${not empty transactions}">
-                        <c:forEach var="tx" items="${transactions}">
-                            <c:if test="${tx.productId == d.productId && (empty selectedWarehouseId || tx.warehouseId == selectedWarehouseId)}">
-                                <c:set var="myTx" value="${tx}"/>
-                            </c:if>
-                        </c:forEach>
-                        <c:if test="${empty myTx}">
-                            <c:forEach var="tx" items="${transactions}">
-                                <c:if test="${tx.productId == d.productId}">
-                                    <c:set var="myTx" value="${tx}"/>
-                                </c:if>
-                            </c:forEach>
-                        </c:if>
-                    </c:if>
-                    <tr>
-                        <td class="text-start fw-semibold ps-3 py-3 text-dark">${d.productName}</td>
-                        <td class="text-center">
-                            <c:choose>
-                                <c:when test="${ticket.ticketType == 'IMPORT'}">
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle" style="padding: 4px 8px; font-size: 11px;">NHẬP HÀNG</span>
-                                </c:when>
-                                <c:otherwise>
-                                    <c:set var="trueSourceId" value="${ticket.fromWarehouseId}" />
-                                    <c:if test="${ticket.ticketType == 'TRANSFER_REQUEST' && d.actionType == 'RECEIVE'}">
-                                        <c:set var="trueSourceId" value="${ticket.toWarehouseId}" />
-                                    </c:if>
-                                    
+
+    <%
+        model.StockTransfer ticket = (model.StockTransfer) request.getAttribute("ticket");
+        java.util.List<model.StockTransfer> subTransfers = (java.util.List<model.StockTransfer>) request.getAttribute("subTransfers");
+        Integer selectedWarehouseId = (Integer) request.getSession().getAttribute("selectedWarehouseId");
+        if (selectedWarehouseId == null) {
+            selectedWarehouseId = 0;
+        }
+        
+        model.Employee currentUser = (model.Employee) session.getAttribute("currentUser");
+        boolean isSystemOwner = currentUser != null && 
+            ("Owner".equalsIgnoreCase(currentUser.getRoleName()) || "Admin".equalsIgnoreCase(currentUser.getRoleName()));
+            
+        // Determine the clicked partner warehouse
+        int clickedPartnerId = 0;
+        if (ticket != null) {
+            boolean fromIsCreator = (ticket.getCreatorBranchId() == ticket.getFromBranchId());
+            clickedPartnerId = fromIsCreator ? ticket.getToWarehouseId() : ticket.getFromWarehouseId();
+        }
+
+        boolean showAll = Boolean.TRUE.equals(request.getAttribute("showAll"));
+
+        // Filter subTransfers to only show those involving the selectedWarehouseId for non-system Owner/Admin
+        // For Owner/Admin, filter by the clickedPartnerId if it is a partner-pending approval ticket, unless showAll is true (clicked from approval)
+        java.util.List<model.StockTransfer> filteredSubTransfers = new java.util.ArrayList<>();
+        if (subTransfers != null) {
+            for (model.StockTransfer sub : subTransfers) {
+                if (selectedWarehouseId > 0) {
+                    if (sub.getFromWarehouseId() == selectedWarehouseId || 
+                        sub.getToWarehouseId() == selectedWarehouseId) {
+                        filteredSubTransfers.add(sub);
+                    }
+                } else {
+                    if (isSystemOwner) {
+                        if (!showAll && ticket != null && "PENDING_PARTNER".equals(ticket.getStatus())) {
+                            boolean subFromIsCreator = (sub.getFromBranchId() == ticket.getCreatorBranchId());
+                            int subPartnerId = subFromIsCreator ? sub.getToWarehouseId() : sub.getFromWarehouseId();
+                            if (subPartnerId == clickedPartnerId) {
+                                filteredSubTransfers.add(sub);
+                            }
+                        } else {
+                            filteredSubTransfers.add(sub);
+                        }
+                    } else {
+                        filteredSubTransfers.add(sub);
+                    }
+                }
+            }
+        }
+        
+        // Group filteredSubTransfers by partner warehouse ID using standard Maps to avoid EL access restrictions
+        java.util.Map<Integer, java.util.Map<String, Object>> groups = new java.util.LinkedHashMap<>();
+        int ticketCreatorBranchId = (ticket != null) ? ticket.getCreatorBranchId() : 0;
+        
+        for (model.StockTransfer sub : filteredSubTransfers) {
+            boolean isExp;
+            int partnerId;
+            String partnerName;
+            
+            if (selectedWarehouseId > 0) {
+                // Perspective of the selected warehouse
+                isExp = (sub.getFromWarehouseId() == selectedWarehouseId);
+                partnerId = isExp ? sub.getToWarehouseId() : sub.getFromWarehouseId();
+                partnerName = isExp ? sub.getToWarehouseName() : sub.getFromWarehouseName();
+            } else {
+                // Perspective of the creator (global Owner/Admin view)
+                isExp = (sub.getFromBranchId() == ticketCreatorBranchId);
+                partnerId = isExp ? sub.getToWarehouseId() : sub.getFromWarehouseId();
+                partnerName = isExp ? sub.getToWarehouseName() : sub.getFromWarehouseName();
+            }
+            
+            java.util.Map<String, Object> group = groups.get(partnerId);
+            if (group == null) {
+                group = new java.util.HashMap<>();
+                group.put("partnerId", partnerId);
+                group.put("partnerName", partnerName);
+                group.put("items", new java.util.ArrayList<java.util.Map<String, Object>>());
+                group.put("statuses", new java.util.ArrayList<String>());
+                group.put("repSub", sub);
+                groups.put(partnerId, group);
+            }
+            
+            java.util.List<String> statuses = (java.util.List<String>) group.get("statuses");
+            if (!statuses.contains(sub.getStatus())) {
+                statuses.add(sub.getStatus());
+            }
+            
+            java.util.List<java.util.Map<String, Object>> items = (java.util.List<java.util.Map<String, Object>>) group.get("items");
+            if (sub.getDetails() != null) {
+                for (model.StockTransferDetail d : sub.getDetails()) {
+                    java.util.Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("productName", d.getProductName());
+                    item.put("productCodebar", d.getProductCodebar());
+                    item.put("quantity", d.getQuantity());
+                    item.put("unitName", d.getUnitName());
+                    item.put("direction", isExp ? "SEND" : "RECEIVE");
+                    item.put("status", sub.getStatus());
+                    items.add(item);
+                }
+            }
+        }
+        pageContext.setAttribute("partnerGroups", groups.values());
+    %>
+
+    <c:forEach var="group" items="${partnerGroups}">
+        <div class="border rounded-3 mb-4 p-3 shadow-sm bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="fw-bold text-dark fs-6">🏢 Kho đối tác: ${group.partnerName}</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <c:forEach var="status" items="${group.statuses}">
+                        <c:choose>
+                            <c:when test="${status == 'PENDING_OWNER'}">
+                                <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                            </c:when>
+                            <c:when test="${status == 'PENDING_PARTNER'}">
+                                <span class="badge bg-info text-dark">Chờ đối tác duyệt</span>
+                            </c:when>
+                            <c:when test="${status == 'APPROVED_DISPATCH'}">
+                                <span class="badge bg-primary">Chờ xuất kho</span>
+                            </c:when>
+                            <c:when test="${status == 'DISPATCH_REJECTED'}">
+                                <span class="badge bg-danger">Từ chối xuất hàng</span>
+                            </c:when>
+                            <c:when test="${status == 'IN_TRANSIT'}">
+                                <span class="badge bg-primary">Đang trung chuyển</span>
+                            </c:when>
+                            <c:when test="${status == 'RECEIVE_REJECTED'}">
+                                <span class="badge bg-danger">Từ chối nhận hàng</span>
+                            </c:when>
+                            <c:when test="${status == 'COMPLETED'}">
+                                <span class="badge bg-success">Hoàn thành</span>
+                            </c:when>
+                            <c:when test="${status == 'PARTNER_REJECTED'}">
+                                <span class="badge bg-danger">Đối tác từ chối</span>
+                            </c:when>
+                            <c:when test="${status == 'CANCELLED'}">
+                                <span class="badge bg-danger">Đã hủy</span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="badge bg-secondary">${status}</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </c:forEach>
+                </div>
+            </div>
+
+            <!-- Bảng sản phẩm của kho này -->
+            <div class="table-responsive border rounded-3 mb-0" style="overflow: hidden;">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13.5px;">
+                    <thead class="table-light text-dark" style="border-bottom: 2px solid #e2e8f0;">
+                        <tr>
+                            <th class="text-start ps-3 py-2" style="font-weight: 600; color: #475569;">Sản Phẩm</th>
+                            <th class="text-center py-2" style="width: 150px; font-weight: 600; color: #475569;">Mã Vạch</th>
+                            <th class="text-center py-2" style="width: 180px; font-weight: 600; color: #475569;">Loại Giao Dịch</th>
+                            <th class="text-center py-2" style="width: 100px; font-weight: 600; color: #475569;">Số Lượng</th>
+                            <th class="text-center py-2" style="width: 100px; font-weight: 600; color: #475569;">Đơn Vị</th>
+                            <th class="text-center py-2" style="width: 150px; font-weight: 600; color: #475569;">Trạng Thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <c:forEach var="item" items="${group.items}">
+                            <tr>
+                                <td class="text-start fw-semibold ps-3 py-2 text-dark">${item.productName}</td>
+                                <td class="text-center text-muted">${item.productCodebar}</td>
+                                <td class="text-center">
                                     <c:choose>
-                                        <c:when test="${not empty selectedWarehouseId and selectedWarehouseId == trueSourceId}">
-                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="padding: 4px 8px; font-size: 11px;">XUẤT KHO</span>
-                                        </c:when>
-                                        <c:when test="${not empty selectedWarehouseId and selectedWarehouseId != trueSourceId}">
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="padding: 4px 8px; font-size: 11px;">NHẬP KHO</span>
+                                        <c:when test="${item.direction == 'SEND'}">
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 11px; padding: 4px 8px; font-weight: 600;">
+                                                XUẤT (Đi kho đối tác)
+                                            </span>
                                         </c:when>
                                         <c:otherwise>
-                                            <c:choose>
-                                                <c:when test="${trueSourceId == ticket.fromWarehouseId}">
-                                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="padding: 4px 8px; font-size: 11px;">XUẤT KHO</span>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <span class="badge bg-success-subtle text-success border border-success-subtle" style="padding: 4px 8px; font-size: 11px;">NHẬP KHO</span>
-                                                </c:otherwise>
-                                            </c:choose>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 11px; padding: 4px 8px; font-weight: 600;">
+                                                NHẬP (Từ kho đối tác)
+                                            </span>
                                         </c:otherwise>
                                     </c:choose>
-                                </c:otherwise>
-                            </c:choose>
-                        </td>
-                        <td class="text-end fw-semibold text-muted">
-                            ${myTx != null ? myTx.beforeQuantity : '-'}
-                        </td>
-                        <td class="fw-bold text-center text-primary" style="font-size: 14.5px;">
-                            ${d.quantity}
-                        </td>
-                        <td class="fw-bold text-end text-success pe-3">
-                            ${myTx != null ? myTx.afterQuantity : '-'}
-                        </td>
-                    </tr>
-                </c:forEach>
-            </tbody>
-        </table>
-    </div>
-    
-    <!-- Thông tin điều chuyển chi tiết (Xuất / Nhập thực tế) -->
-    <c:if test="${not empty txTicket}">
-        <div class="card mt-4 border shadow-sm" style="border-radius: 8px; overflow: hidden; border-color: #dee2e6;">
-            <div class="card-header bg-light-subtle py-3 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid #e2e8f0; background-color: #f8fafc;">
-                <div class="fw-bold text-primary d-flex align-items-center" style="font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.5px;">
-                    <span class="material-icons me-1" style="font-size: 18px; vertical-align: text-bottom;">call_made</span>
-                    Bước 1: Chi Tiết Thực Tế Xuất Kho
-                </div>
-                <div style="font-size: 13px; font-weight: 500;" class="text-muted">
-                    Từ: <strong class="text-dark">${txTicket.fromWarehouseName}</strong> ➜ Đến: <strong class="text-dark">${txTicket.toWarehouseName}</strong>
-                </div>
-            </div>
-            <div class="card-body p-0">
-                <table class="table table-hover text-center align-middle mb-0" style="font-size: 13px; border-style: hidden;">
-                    <thead class="table-light text-dark" style="border-bottom: 2px solid #e2e8f0;">
-                        <tr>
-                            <th class="text-start ps-3 py-2" style="font-weight: 600; color: #475569;">Sản Phẩm</th>
-                            <th style="width: 100px;" class="fw-bold py-2 text-end pe-3">Tồn Trước</th>
-                            <th style="width: 100px;" class="fw-bold py-2 text-center">Yêu Cầu</th>
-                            <th style="width: 110px;" class="fw-bold py-2 text-center text-danger">Thực Tế Xuất</th>
-                            <th style="width: 100px;" class="fw-bold py-2 text-end pe-3">Tồn Sau</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <c:forEach var="td" items="${txDetails}">
-                            <c:set var="myTx" value="${null}"/>
-                            <c:if test="${not empty txTransactions}">
-                                <c:forEach var="trx" items="${txTransactions}">
-                                    <c:if test="${trx.productId == td.productId}">
-                                        <c:set var="myTx" value="${trx}"/>
-                                    </c:if>
-                                </c:forEach>
-                            </c:if>
-                            <tr>
-                                <td class="text-start fw-medium ps-3 text-dark">${td.productName}</td>
-                                <c:choose>
-                                    <c:when test="${not empty myTx}">
-                                        <td class="text-end text-muted pe-3">${myTx.beforeQuantity}</td>
-                                        <td class="text-center">${td.quantity}</td>
-                                        <td class="fw-bold text-center text-danger">${td.actualQuantity != null ? td.actualQuantity : (txTicket.status == 'COMPLETED' ? td.quantity : '-')}</td>
-                                        <td class="fw-bold text-end text-success pe-3">${myTx.afterQuantity}</td>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <td class="text-end text-muted pe-3">${txCurrentStock[td.productId] != null ? txCurrentStock[td.productId] : '-'}</td>
-                                        <td class="text-center">${td.quantity}</td>
-                                        <td class="fw-bold text-center text-danger">${td.actualQuantity != null ? td.actualQuantity : (txTicket.status == 'COMPLETED' ? td.quantity : '-')}</td>
-                                        <td class="fw-bold text-end text-success pe-3">${txCurrentStock[td.productId] != null ? txCurrentStock[td.productId] - td.quantity : '-'}</td>
-                                    </c:otherwise>
-                                </c:choose>
+                                </td>
+                                <td class="fw-bold text-center text-primary" style="font-size: 14px;">${item.quantity}</td>
+                                <td class="text-center text-muted">${not empty item.unitName ? item.unitName : 'Cái'}</td>
+                                <td class="text-center">
+                                    <c:choose>
+                                        <c:when test="${item.status == 'PENDING_OWNER'}">
+                                            <span class="badge bg-warning text-dark" style="font-size: 11px; padding: 4px 8px;">Chờ duyệt (Quản lý)</span>
+                                        </c:when>
+                                        <c:when test="${item.status == 'PENDING_PARTNER'}">
+                                            <span class="badge bg-info text-dark" style="font-size: 11px; padding: 4px 8px;">Chờ duyệt (Đối tác)</span>
+                                        </c:when>
+                                        <c:when test="${item.status == 'APPROVED_DISPATCH'}">
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 11px; padding: 4px 8px;">Chờ xuất kho</span>
+                                        </c:when>
+                                        <c:when test="${item.status == 'DISPATCH_REJECTED'}">
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 11px; padding: 4px 8px;">Từ chối xuất</span>
+                                        </c:when>
+                                        <c:when test="${item.status == 'IN_TRANSIT'}">
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 11px; padding: 4px 8px;">Đang chuyển</span>
+                                        </c:when>
+                                        <c:when test="${item.status == 'RECEIVE_REJECTED'}">
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 11px; padding: 4px 8px;">Từ chối nhận</span>
+                                        </c:when>
+                                        <c:when test="${item.status == 'COMPLETED'}">
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 11px; padding: 4px 8px;">Thành công</span>
+                                        </c:when>
+                                        <c:when test="${item.status == 'PARTNER_REJECTED'}">
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 11px; padding: 4px 8px;">Đối tác từ chối</span>
+                                        </c:when>
+                                        <c:when test="${item.status == 'CANCELLED'}">
+                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size: 11px; padding: 4px 8px;">Đã hủy</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="badge bg-secondary" style="font-size: 11px; padding: 4px 8px;">${item.status}</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
                             </tr>
                         </c:forEach>
                     </tbody>
                 </table>
             </div>
             
-            <c:set var="exportTime" value="${null}"/>
-            <c:if test="${not empty txTransactions}">
-                <c:forEach var="trx" items="${txTransactions}" end="0">
-                    <c:set var="exportTime" value="${trx.createdAt}"/>
-                </c:forEach>
-            </c:if>
-            
-            <div class="card-footer bg-light-subtle py-2 px-3 d-flex justify-content-between align-items-center" style="font-size: 12.5px; border-top: 1px dashed #e2e8f0; background-color: #f8fafc;">
-                <span class="text-muted">Nhân sự xuất: <strong class="text-dark">${txTicket.createdByName}</strong></span>
-                <c:if test="${not empty exportTime}">
-                    <span class="text-muted">Thời gian xuất: <strong class="text-dark">
-                        <fmt:parseDate value="${exportTime}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedTxTime" type="both" />
-                        <fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${parsedTxTime}" />
-                    </strong></span>
-                </c:if>
-                <span class="text-muted">Trạng thái xuất: 
-                    <strong class="${txTicket.status == 'COMPLETED' ? 'text-success' : 'text-warning'}">
-                        ${txTicket.status == 'COMPLETED' ? 'Đã xuất kho' : (txTicket.status == 'COMPLETED_WITH_ERROR' ? 'Xuất lệch' : txTicket.status)}
-                    </strong>
-                </span>
-            </div>
-        </div>
-    </c:if>
+            <!-- Card-specific approval actions -->
+            <c:set var="subRep" value="${group.repSub}" />
+            <c:set var="showCardApproval" value="false" />
+            <c:set var="cardActionApprove" value="" />
+            <c:set var="cardActionReject" value="" />
+            <c:set var="cardApprovalTypeLabel" value="" />
 
-    <c:if test="${not empty tiTicket}">
-        <div class="card mt-4 border shadow-sm" style="border-radius: 8px; overflow: hidden; border-color: #dee2e6;">
-            <div class="card-header bg-light-subtle py-3 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid #e2e8f0; background-color: #f8fafc;">
-                <div class="fw-bold text-success d-flex align-items-center" style="font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.5px;">
-                    <span class="material-icons me-1" style="font-size: 18px; vertical-align: text-bottom;">call_received</span>
-                    Bước 2: Chi Tiết Thực Tế Nhập Kho
-                </div>
-                <div style="font-size: 13px; font-weight: 500;" class="text-muted">
-                    Nhập tại kho: <strong class="text-dark">${tiTicket.toWarehouseName}</strong>
-                </div>
-            </div>
-            <div class="card-body p-0">
-                <table class="table table-hover text-center align-middle mb-0" style="font-size: 13px; border-style: hidden;">
-                    <thead class="table-light text-dark" style="border-bottom: 2px solid #e2e8f0;">
-                        <tr>
-                            <th class="text-start ps-3 py-2" style="font-weight: 600; color: #475569;">Sản Phẩm</th>
-                            <th style="width: 100px;" class="fw-bold py-2 text-end pe-3">Tồn Trước</th>
-                            <th style="width: 100px;" class="fw-bold py-2 text-center">Yêu Cầu</th>
-                            <th style="width: 110px;" class="fw-bold py-2 text-center text-success">Thực Tế Nhập</th>
-                            <th style="width: 100px;" class="fw-bold py-2 text-end pe-3">Tồn Sau</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <c:forEach var="tid" items="${tiDetails}">
-                            <c:set var="myTi" value="${null}"/>
-                            <c:if test="${not empty tiTransactions}">
-                                <c:forEach var="trx" items="${tiTransactions}">
-                                    <c:if test="${trx.productId == tid.productId}">
-                                        <c:set var="myTi" value="${trx}"/>
-                                    </c:if>
-                                </c:forEach>
-                            </c:if>
-                            <tr>
-                                <td class="text-start fw-medium ps-3 text-dark">${tid.productName}</td>
-                                <c:choose>
-                                    <c:when test="${not empty myTi}">
-                                        <td class="text-end text-muted pe-3">${myTi.beforeQuantity}</td>
-                                        <td class="text-center">${tid.quantity}</td>
-                                        <td class="fw-bold text-center text-success">${tid.actualQuantity != null ? tid.actualQuantity : (tiTicket.status == 'COMPLETED' ? tid.quantity : '-')}</td>
-                                        <td class="fw-bold text-end text-success pe-3">${myTi.afterQuantity}</td>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <td class="text-end text-muted pe-3">${tiCurrentStock[tid.productId] != null ? tiCurrentStock[tid.productId] : '-'}</td>
-                                        <td class="text-center">${tid.quantity}</td>
-                                        <td class="fw-bold text-center text-success">${tid.actualQuantity != null ? tid.actualQuantity : (tiTicket.status == 'COMPLETED' ? tid.quantity : '-')}</td>
-                                        <td class="fw-bold text-end text-success pe-3">${tiCurrentStock[tid.productId] != null ? tiCurrentStock[tid.productId] + tid.quantity : '-'}</td>
-                                    </c:otherwise>
-                                </c:choose>
-                            </tr>
-                        </c:forEach>
-                    </tbody>
-                </table>
-            </div>
-            
-            <c:set var="importTime" value="${null}"/>
-            <c:if test="${not empty tiTransactions}">
-                <c:forEach var="trx" items="${tiTransactions}" end="0">
-                    <c:set var="importTime" value="${trx.createdAt}"/>
-                </c:forEach>
-            </c:if>
-            
-            <div class="card-footer bg-light-subtle py-2 px-3 d-flex justify-content-between align-items-center" style="font-size: 12.5px; border-top: 1px dashed #e2e8f0; background-color: #f8fafc;">
-                <span class="text-muted">Nhân sự nhập: <strong class="text-dark">${tiTicket.createdByName}</strong></span>
-                <c:if test="${not empty importTime}">
-                    <span class="text-muted">Thời gian nhập: <strong class="text-dark">
-                        <fmt:parseDate value="${importTime}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedTiTime" type="both" />
-                        <fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${parsedTiTime}" />
-                    </strong></span>
-                </c:if>
-                <span class="text-muted">Trạng thái nhập: 
-                    <strong class="${tiTicket.status == 'COMPLETED' ? 'text-success' : 'text-warning'}">
-                        ${tiTicket.status == 'COMPLETED' ? 'Đã nhập kho' : (tiTicket.status == 'COMPLETED_WITH_ERROR' ? 'Nhập lệch' : tiTicket.status)}
-                    </strong>
-                </span>
-            </div>
-        </div>
-    </c:if>
+            <c:if test="${not empty sessionScope.currentUser && not empty subRep}">
+                <c:set var="userRole" value="${sessionScope.currentUser.roleName}" />
+                <c:if test="${userRole == 'Owner' || userRole == 'Admin' || userRole == 'StoreManager'}">
+                    
+                    <c:set var="currentBranchId" value="0" />
+                    <c:if test="${not empty sessionScope.selectedWarehouseId}">
+                        <c:choose>
+                            <c:when test="${sessionScope.selectedWarehouseId == subRep.fromWarehouseId}">
+                                <c:set var="currentBranchId" value="${subRep.fromBranchId}" />
+                            </c:when>
+                            <c:when test="${sessionScope.selectedWarehouseId == subRep.toWarehouseId}">
+                                <c:set var="currentBranchId" value="${subRep.toBranchId}" />
+                            </c:when>
+                        </c:choose>
+                    </c:if>
 
+                    <c:set var="fromIsCreator" value="${subRep.creatorBranchId == subRep.fromBranchId}" />
+                    <c:choose>
+                        <c:when test="${fromIsCreator}">
+                            <c:set var="partnerBranchId" value="${subRep.toBranchId}" />
+                            <c:set var="creatorBranchId" value="${subRep.fromBranchId}" />
+                        </c:when>
+                        <c:otherwise>
+                            <c:set var="partnerBranchId" value="${subRep.fromBranchId}" />
+                            <c:set var="creatorBranchId" value="${subRep.toBranchId}" />
+                        </c:otherwise>
+                    </c:choose>
+
+                    <c:set var="isSystemOwner" value="${userRole == 'Owner' || userRole == 'Admin'}" />
+
+                    <c:if test="${subRep.status == 'PENDING_PARTNER'}">
+                        <c:if test="${isSystemOwner || (not empty sessionScope.currentUser && sessionScope.currentUser.branchId == partnerBranchId)}">
+                            <c:set var="showCardApproval" value="true" />
+                            <c:set var="cardActionApprove" value="partnerApproveTransfer" />
+                            <c:set var="cardActionReject" value="partnerRejectTransfer" />
+                            <c:set var="cardApprovalTypeLabel" value="Duyệt" />
+                        </c:if>
+                    </c:if>
+                </c:if>
+            </c:if>
+
+            <c:if test="${showCardApproval}">
+                <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top border-light-subtle">
+                    <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+                        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                        <input type="hidden" name="action" value="${cardActionApprove}">
+                        <input type="hidden" name="transferId" value="${subRep.stockTransferId}">
+                        <input type="hidden" name="currentWarehouseId" value="${sessionScope.selectedWarehouseId}">
+                        <button class="btn btn-sm btn-success px-3" style="border-radius: 6px;" type="submit" onclick="return confirm('Xác nhận duyệt phần chuyển kho này?')">
+                            <span class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 4px;">check</span>
+                            ${cardApprovalTypeLabel}
+                        </button>
+                    </form>
+                    <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+                        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                        <input type="hidden" name="action" value="${cardActionReject}">
+                        <input type="hidden" name="transferId" value="${subRep.stockTransferId}">
+                        <input type="hidden" name="currentWarehouseId" value="${sessionScope.selectedWarehouseId}">
+                        <button class="btn btn-sm btn-danger px-3" style="border-radius: 6px;" type="submit" onclick="return confirm('Xác nhận từ chối phần chuyển kho này?')">
+                            <span class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 4px;">close</span>
+                            Từ Chối
+                        </button>
+                    </form>
+                </div>
+            </c:if>
+        </div>
+    </c:forEach>
 </div>
-<div class="modal-footer border-top-0 pt-0">
-    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 8px;">Đóng</button>
-    <a href="${pageContext.request.contextPath}/inventory?action=printTicket&ticketId=${ticket.ticketId}" target="_blank" class="btn btn-primary px-4 d-inline-flex align-items-center" style="border-radius: 8px;">
-        <span class="material-icons me-1" style="font-size: 18px;">print</span>
-        In Phiếu
-    </a>
+
+<!-- General proposal approval (PENDING_OWNER) for Owner/Admin or Proposing Store Manager -->
+<c:set var="isSystemOwner" value="${sessionScope.currentUser.roleName == 'Owner' || sessionScope.currentUser.roleName == 'Admin'}" />
+<c:set var="isCreatorManager" value="${sessionScope.currentUser.roleName == 'StoreManager' && sessionScope.currentUser.branchId == ticket.creatorBranchId}" />
+<c:if test="${ticket.displayStatus == 'PENDING_OWNER' && (isSystemOwner || isCreatorManager)}">
+    <div class="d-flex justify-content-end gap-2 px-4 pb-3 mb-2 border-bottom border-light-subtle">
+        <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+            <input type="hidden" name="action" value="approveTransfer">
+            <input type="hidden" name="transferId" value="${ticket.stockTransferId}">
+            <input type="hidden" name="currentWarehouseId" value="${sessionScope.selectedWarehouseId}">
+            <button class="btn btn-success px-4" style="border-radius: 8px; font-weight: 500;" type="submit" onclick="return confirm('Xác nhận duyệt đề xuất chuyển kho này?')">
+                <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">check</span>
+                Duyệt Đề Xuất
+            </button>
+        </form>
+        <form action="${pageContext.request.contextPath}/inventory" method="POST" style="margin:0;">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+            <input type="hidden" name="action" value="rejectTransfer">
+            <input type="hidden" name="transferId" value="${ticket.stockTransferId}">
+            <input type="hidden" name="currentWarehouseId" value="${sessionScope.selectedWarehouseId}">
+            <button class="btn btn-danger px-4" style="border-radius: 8px; font-weight: 500;" type="submit" onclick="return confirm('Xác nhận từ chối đề xuất chuyển kho này?')">
+                <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">close</span>
+                Từ Chối
+            </button>
+        </form>
+    </div>
+</c:if>
+
+<div class="modal-footer border-top-0 pt-0 d-flex justify-content-end align-items-center">
+    <div class="d-flex gap-2">
+        <a href="${pageContext.request.contextPath}/inventory?action=printTicket&ticketId=${ticket.stockTransferId}" target="_blank" 
+           class="btn btn-outline-primary px-4 d-inline-flex align-items-center justify-content-center" style="border-radius: 8px; text-decoration: none;">
+            <span class="material-icons me-1" style="font-size: 16px;">print</span>
+            In Phiếu
+        </a>
+        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 8px;">Đóng</button>
+    </div>
 </div>

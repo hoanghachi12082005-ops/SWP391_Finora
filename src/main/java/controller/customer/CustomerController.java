@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
-import java.util.Map;
 import model.Customer;
 import model.Employee;
 import service.system.ActivityLogService;
@@ -86,8 +85,8 @@ public class CustomerController extends HttpServlet {
         boolean isOwner = "Owner".equalsIgnoreCase(role);
         boolean isStoreManager = "StoreManager".equalsIgnoreCase(role);
 
-        request.setAttribute("canCreate", isStoreManager);
-        request.setAttribute("canEdit", isStoreManager);
+        request.setAttribute("canCreate", isOwner || isStoreManager);
+        request.setAttribute("canEdit", isOwner || isStoreManager);
         request.setAttribute("canDelete", isOwner || isStoreManager);
         request.setAttribute("canRedeem", isOwner || isStoreManager);
         // ponytail: isAdmin kept for modal readonly compat; only StoreManager reaches modal
@@ -227,11 +226,28 @@ public class CustomerController extends HttpServlet {
 
     private void handleUpdateApi(HttpServletRequest request, HttpServletResponse response) throws IOException {
         int customerId = parseInt(request.getParameter("customerId"), -1);
+        String fullName = trim(request.getParameter("fullName"));
         String phone = trim(request.getParameter("phone"));
         String email = trim(request.getParameter("email"));
+        String address = trim(request.getParameter("address"));
+        String dateOfBirthStr = trim(request.getParameter("dateOfBirth"));
+        String gender = trim(request.getParameter("gender"));
 
-        if (customerId <= 0 || isBlank(phone)) {
+        if (customerId <= 0) {
             sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Dữ liệu khách hàng không hợp lệ.\"}");
+            return;
+        }
+
+        if (isBlank(phone)) {
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Số điện thoại không được để trống.\",\"field\":\"phone\"}");
+            return;
+        }
+        if (!phone.matches("^0[0-9]{9,10}$")) {
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Số điện thoại không hợp lệ (phải bắt đầu bằng 0 và 10-11 số).\",\"field\":\"phone\"}");
+            return;
+        }
+        if (email != null && !email.isBlank() && !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Email không hợp lệ.\",\"field\":\"email\"}");
             return;
         }
 
@@ -250,33 +266,39 @@ public class CustomerController extends HttpServlet {
         boolean isSales = user != null && user.getRoleName().toLowerCase().contains("sales");
 
         if (isSales) {
-            // Sales Staff can ONLY edit phone and email
+            if (!isBlank(fullName)) existing.setFullName(fullName);
             existing.setPhone(phone);
             existing.setEmail(email);
-            boolean ok = customerDAO.update(existing, false, 0, 0);
-            if (ok) {
-                Employee user2 = getLoggedInUser(request);
-                if (user2 != null) activityLogService.log(user2.getEmployeeID(), "UPDATE", "Customer", customerId, null, phone);
-                sendJsonResponse(response, "{\"status\":\"success\",\"message\":\"Cập nhật khách hàng thành công (Chỉ điện thoại và email).\"}");
-            } else {
-                sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Không thể cập nhật khách hàng.\"}");
-            }
         } else {
-            // Admin, Owner, Manager can edit everything in update-api too
+            if (!isBlank(fullName)) existing.setFullName(fullName);
             existing.setPhone(phone);
             existing.setEmail(email);
-            String fullName = trim(request.getParameter("fullName"));
-            if (!isBlank(fullName)) {
-                existing.setFullName(fullName);
-            }
-            boolean ok = customerDAO.update(existing, false, 0, 0);
-            if (ok) {
-                Employee user2 = getLoggedInUser(request);
-                if (user2 != null) activityLogService.log(user2.getEmployeeID(), "UPDATE", "Customer", customerId, null, phone);
-                sendJsonResponse(response, "{\"status\":\"success\",\"message\":\"Cập nhật khách hàng thành công.\"}");
-            } else {
-                sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Không thể cập nhật khách hàng.\"}");
-            }
+            existing.setAddress(address);
+            existing.setDateOfBirth(parseDate(dateOfBirthStr));
+            if (!isBlank(gender)) existing.setGender(gender);
+        }
+
+        boolean ok = customerDAO.update(existing, false, 0, 0);
+        if (ok) {
+            if (user != null) activityLogService.log(user.getEmployeeID(), "UPDATE", "Customer", customerId, null, phone);
+
+            Customer updated = customerDAO.findById(customerId);
+            sendJsonResponse(response, String.format(
+                "{\"status\":\"success\",\"message\":\"Cập nhật khách hàng thành công.\"," +
+                "\"customer\":{\"customerId\":%d,\"fullName\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\"," +
+                "\"address\":\"%s\",\"gender\":\"%s\",\"totalSpent\":%s,\"loyaltyPoint\":%d,\"lifetimePoints\":%d}}",
+                updated.getCustomerId(),
+                escapeJson(updated.getFullName()),
+                escapeJson(updated.getPhone()),
+                escapeJson(updated.getEmail() != null ? updated.getEmail() : ""),
+                escapeJson(updated.getAddress() != null ? updated.getAddress() : ""),
+                escapeJson(updated.getGender() != null ? updated.getGender() : ""),
+                updated.getTotalSpent().toString(),
+                updated.getLoyaltyPoint(),
+                updated.getLifetimePoints()
+            ));
+        } else {
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Không thể cập nhật khách hàng.\"}");
         }
     }
 
@@ -499,10 +521,20 @@ public class CustomerController extends HttpServlet {
 
         String action = getParam(request, "action", "list");
         boolean isPost = "POST".equalsIgnoreCase(request.getMethod());
+        String roleLower = roleName.trim().toLowerCase();
+
+        // Allowed roles for Customer Management: Admin, Owner, StoreManager, SalesStaff
+        if (!"admin".equals(roleLower)
+                && !"owner".equals(roleLower)
+                && !"storemanager".equals(roleLower)
+                && !"salesstaff".equals(roleLower)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
+            return false;
+        }
 
         // Sales staff is authorized ONLY for the API search/create/edit endpoints used in POS
         boolean isApiCall = "search-api".equals(action) || "create-api".equals(action) || "update-api".equals(action);
-        boolean isSales = roleName.toLowerCase().contains("sales");
+        boolean isSales = roleLower.contains("sales");
 
         if (isSales) {
             if (isApiCall) {
@@ -514,27 +546,17 @@ public class CustomerController extends HttpServlet {
         }
 
         // Admin: redeem/sync POST only, no customer UI access
-        if ("Admin".equalsIgnoreCase(roleName)) {
+        if ("admin".equals(roleLower)) {
             if (isPost && ("sync-loyalty".equals(action) || "redeem-points".equals(action))) {
                 return true;
-            }
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
-            return false;
-        }
-
-        // Owner: view, search, filter, soft-delete, detail, redeem/sync. No create/edit.
-        if ("Owner".equalsIgnoreCase(roleName)) {
-            boolean isWriteAction = "create".equals(action) || "update".equals(action)
-                    || "create-api".equals(action) || "update-api".equals(action);
-            if (isWriteAction) {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Owner cannot create or edit customers.");
+            } else {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
                 return false;
             }
-            return true;
         }
 
-        // StoreManager: full access
-        if ("StoreManager".equalsIgnoreCase(roleName)) {
+        // Owner/StoreManager: full access
+        if ("Owner".equalsIgnoreCase(roleName) || "StoreManager".equalsIgnoreCase(roleName)) {
             return true;
         }
 

@@ -44,7 +44,7 @@ public class IncomeExpenseController extends BaseController {
         String timeRange = request.getParameter("timeRange");
 
         if (timeRange == null) {
-            timeRange = "this_month"; // Mặc định là tháng này
+            timeRange = "all"; // Mặc định là tất cả thời gian
         }
 
         // Phân trang
@@ -73,7 +73,7 @@ public class IncomeExpenseController extends BaseController {
         double bankExpense = service.getSumExpense("BANK_TRANSFER");
 
         // 4. Lấy dữ liệu biểu đồ tổng quan theo tuần
-        List<Map<String, Object>> weeklyStats = service.getWeeklyOverview();
+        List<Map<String, Object>> weeklyStats = service.getWeeklyOverview(keyword, type, paymentMethod, timeRange);
         double[] weeklyIncome = new double[5];
         double[] weeklyExpense = new double[5];
         for (Map<String, Object> stat : weeklyStats) {

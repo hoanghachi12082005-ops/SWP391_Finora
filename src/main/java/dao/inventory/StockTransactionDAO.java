@@ -14,10 +14,23 @@ public class StockTransactionDAO {
     public List<StockTransaction> findAll(int warehouseId, List<Integer> allowedWarehouseIds, int offset, int limit, String typeFilter, String dateFilter) throws SQLException {
         List<StockTransaction> transactions = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-            "SELECT st.*, " +
-            "p.product_name, p.product_codebar, " +
-            "e.fullName as created_by_name, " +
-            "w.warehouse_name " +
+            "SELECT " +
+            "    MIN(st.stock_transaction_id) as stock_transaction_id, " +
+            "    st.warehouse_id, " +
+            "    MIN(st.product_id) as product_id, " +
+            "    st.reference_id, " +
+            "    MIN(st.reference_type) as reference_type, " +
+            "    MIN(st.transaction_type) as transaction_type, " +
+            "    SUM(st.quantity) as quantity, " +
+            "    0 as before_quantity, " +
+            "    0 as after_quantity, " +
+            "    MIN(st.note) as note, " +
+            "    MIN(st.created_by) as created_by, " +
+            "    MIN(st.created_at) as created_at, " +
+            "    STRING_AGG(p.product_name, ', ') as product_name, " +
+            "    '' as product_codebar, " +
+            "    MIN(e.fullName) as created_by_name, " +
+            "    MIN(w.warehouse_name) as warehouse_name " +
             "FROM stock_transaction st " +
             "JOIN product p ON st.product_id = p.product_id " +
             "JOIN warehouse w ON st.warehouse_id = w.warehouse_id " +
@@ -46,7 +59,8 @@ public class StockTransactionDAO {
             sql.append(" AND CAST(st.created_at AS DATE) = CAST(GETDATE() AS DATE)");
         }
 
-        sql.append(" ORDER BY st.created_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        sql.append(" GROUP BY st.warehouse_id, st.reference_type, st.reference_id");
+        sql.append(" ORDER BY MIN(st.created_at) DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
@@ -69,6 +83,105 @@ public class StockTransactionDAO {
         }
         return transactions;
     }
+
+    public List<StockTransaction> findAllFiltered(int warehouseId, List<Integer> allowedWarehouseIds, int offset, int limit, String typeFilter, String fromDate, String toDate, String productNameQuery) throws SQLException {
+        List<StockTransaction> transactions = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+            "SELECT " +
+            "    MIN(st.stock_transaction_id) as stock_transaction_id, " +
+            "    st.warehouse_id, " +
+            "    MIN(st.product_id) as product_id, " +
+            "    st.reference_id, " +
+            "    MIN(st.reference_type) as reference_type, " +
+            "    MIN(st.transaction_type) as transaction_type, " +
+            "    SUM(st.quantity) as quantity, " +
+            "    0 as before_quantity, " +
+            "    0 as after_quantity, " +
+            "    MIN(st.note) as note, " +
+            "    MIN(st.created_by) as created_by, " +
+            "    MIN(st.created_at) as created_at, " +
+            "    STRING_AGG(p.product_name, ', ') as product_name, " +
+            "    '' as product_codebar, " +
+            "    MIN(e.fullName) as created_by_name, " +
+            "    MIN(w.warehouse_name) as warehouse_name " +
+            "FROM stock_transaction st " +
+            "JOIN product p ON st.product_id = p.product_id " +
+            "JOIN warehouse w ON st.warehouse_id = w.warehouse_id " +
+            "LEFT JOIN Employee e ON st.created_by = e.emp_id " +
+            "WHERE 1=1"
+        );
+
+        if (warehouseId > 0) {
+            sql.append(" AND st.warehouse_id = ?");
+        } else if (allowedWarehouseIds != null && !allowedWarehouseIds.isEmpty()) {
+            sql.append(" AND st.warehouse_id IN (");
+            for (int i = 0; i < allowedWarehouseIds.size(); i++) {
+                sql.append(i > 0 ? ",?" : "?");
+            }
+            sql.append(")");
+        } else {
+            return transactions;
+        }
+
+        if (typeFilter != null && !typeFilter.trim().isEmpty()) {
+            if ("IMPORT_ALL".equals(typeFilter)) {
+                sql.append(" AND st.transaction_type IN ('IMPORT', 'RETURN', 'TRANSFER_IN')");
+            } else if ("EXPORT_ALL".equals(typeFilter)) {
+                sql.append(" AND st.transaction_type IN ('EXPORT', 'TRANSFER_OUT')");
+            } else if ("CHECK".equals(typeFilter)) {
+                sql.append(" AND st.transaction_type IN ('CHECK_IN', 'CHECK_OUT')");
+            } else {
+                sql.append(" AND st.transaction_type = ?");
+            }
+        }
+        if (fromDate != null && !fromDate.trim().isEmpty()) {
+            sql.append(" AND CAST(st.created_at AS DATE) >= CAST(? AS DATE)");
+        }
+        if (toDate != null && !toDate.trim().isEmpty()) {
+            sql.append(" AND CAST(st.created_at AS DATE) <= CAST(? AS DATE)");
+        }
+        if (productNameQuery != null && !productNameQuery.trim().isEmpty()) {
+            sql.append(" AND p.product_name LIKE ?");
+        }
+
+        sql.append(" GROUP BY st.warehouse_id, st.reference_type, st.reference_id");
+        sql.append(" ORDER BY MIN(st.created_at) DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            
+            int idx = 1;
+            if (warehouseId > 0) {
+                stmt.setInt(idx++, warehouseId);
+            } else if (allowedWarehouseIds != null && !allowedWarehouseIds.isEmpty()) {
+                for (Integer wid : allowedWarehouseIds) stmt.setInt(idx++, wid);
+            }
+            
+            if (typeFilter != null && !typeFilter.trim().isEmpty() && !"IMPORT_ALL".equals(typeFilter) && !"EXPORT_ALL".equals(typeFilter) && !"CHECK".equals(typeFilter)) {
+                stmt.setString(idx++, typeFilter);
+            }
+            if (fromDate != null && !fromDate.trim().isEmpty()) {
+                stmt.setString(idx++, fromDate.trim());
+            }
+            if (toDate != null && !toDate.trim().isEmpty()) {
+                stmt.setString(idx++, toDate.trim());
+            }
+            if (productNameQuery != null && !productNameQuery.trim().isEmpty()) {
+                stmt.setString(idx++, "%" + productNameQuery.trim() + "%");
+            }
+            
+            stmt.setInt(idx++, offset);
+            stmt.setInt(idx, limit);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    transactions.add(extractTransaction(rs));
+                }
+            }
+        }
+        return transactions;
+    }
+
     public List<StockTransaction> findByReference(String referenceType, int referenceId) throws SQLException {
         List<StockTransaction> transactions = new ArrayList<>();
         String sql = "SELECT st.*, p.product_name, p.product_codebar, " +

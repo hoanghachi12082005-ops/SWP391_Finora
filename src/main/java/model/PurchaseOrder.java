@@ -15,10 +15,18 @@ public class PurchaseOrder {
     private BigDecimal totalAmount;
     private String status;
     private LocalDateTime createdAt;
+    private String orderType; // PURCHASE or EXPORT
 
     private String supplierName;
     private String branchName;
     private String empName;
+    private Integer approvedBy;
+    private String approvedByName;
+
+    public Integer getApprovedBy() { return approvedBy; }
+    public void setApprovedBy(Integer approvedBy) { this.approvedBy = approvedBy; }
+    public String getApprovedByName() { return approvedByName; }
+    public void setApprovedByName(String approvedByName) { this.approvedByName = approvedByName; }
 
     public PurchaseOrder() {
         this.subtotal = BigDecimal.ZERO;
@@ -49,6 +57,12 @@ public class PurchaseOrder {
     public void setStatus(String status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public String getCreatedAtFormatted() {
+        if (createdAt == null) return "";
+        return createdAt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
+    public String getOrderType() { return orderType; }
+    public void setOrderType(String orderType) { this.orderType = orderType; }
     public String getSupplierName() { return supplierName; }
     public void setSupplierName(String supplierName) { this.supplierName = supplierName; }
     public String getBranchName() { return branchName; }

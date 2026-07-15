@@ -71,7 +71,8 @@ public class CartServlet extends HttpServlet {
                     // Tạo tab mới kế tiếp
                     int nextTabId = 1;
                     for (Integer id : tabs.keySet()) {
-                        if (id >= nextTabId) nextTabId = id + 1;
+                        if (id >= nextTabId)
+                            nextTabId = id + 1;
                     }
                     tabs.put(nextTabId, new OrderTab(nextTabId));
                     session.setAttribute(ACTIVE_TAB_ATTR, nextTabId);
@@ -105,15 +106,7 @@ public class CartServlet extends HttpServlet {
                             targetTab.setSelectedCustomer(null);
                         } else {
                             CustomerDAO customerDao = new CustomerDAO();
-                            List<Customer> allCus = customerDao.getAll();
-                            Customer selected = null;
-                            for (Customer c : allCus) {
-                                if (c.getCusId() == cusId) {
-                                    selected = c;
-                                    break;
-                                }
-                            }
-                            targetTab.setSelectedCustomer(selected);
+                            targetTab.setSelectedCustomer(customerDao.findById(cusId));
                         }
                     }
                 }
@@ -190,7 +183,10 @@ public class CartServlet extends HttpServlet {
         String qtyStr = req.getParameter("quantity");
         int qty = 1;
         if (qtyStr != null) {
-            try { qty = Integer.parseInt(qtyStr); } catch (NumberFormatException ignored) {}
+            try {
+                qty = Integer.parseInt(qtyStr);
+            } catch (NumberFormatException ignored) {
+            }
         }
 
         ProductDAO productDao = new ProductDAO();
@@ -200,7 +196,10 @@ public class CartServlet extends HttpServlet {
             int productId = Integer.parseInt(productIdStr);
             List<Product> all = productDao.getAllActiveByWarehouse(warehouseId);
             for (Product p : all) {
-                if (p.getProductId() == productId) { product = p; break; }
+                if (p.getProductId() == productId) {
+                    product = p;
+                    break;
+                }
             }
         } else if (codeParam != null && !codeParam.isBlank()) {
             product = productDao.findByCodebar(codeParam.trim(), warehouseId);
@@ -239,13 +238,12 @@ public class CartServlet extends HttpServlet {
             existing.setStockAvailable(stock);
         } else {
             CartItem ci = new CartItem(
-                product.getProductId(),
-                product.getProductName(),
-                product.getProductCode(),
-                product.getSellingPrice() != null ? product.getSellingPrice().doubleValue() : 0.0,
-                qty,
-                stock
-            );
+                    product.getProductId(),
+                    product.getProductName(),
+                    product.getProductCode(),
+                    product.getSellingPrice() != null ? product.getSellingPrice().doubleValue() : 0.0,
+                    qty,
+                    stock);
             tab.getItems().add(ci);
         }
 
@@ -298,15 +296,15 @@ public class CartServlet extends HttpServlet {
         // Cập nhật VAT rate từ DB cho tab đang active
         double vatRate = VatSettingDAO.getVatRate();
         activeTab.setVatRate(vatRate);
-
         out.write("{");
         out.write("\"activeTabId\":" + activeTabId + ",");
-        
+
         // 1. Output danh sách tab
         out.write("\"tabs\":[");
         int index = 0;
         for (Map.Entry<Integer, OrderTab> entry : tabs.entrySet()) {
-            if (index > 0) out.write(",");
+            if (index > 0)
+                out.write(",");
             OrderTab t = entry.getValue();
             out.write("{");
             out.write("\"tabId\":" + t.getTabId() + ",");
@@ -324,7 +322,7 @@ public class CartServlet extends HttpServlet {
         out.write("\"tabId\":" + activeTab.getTabId() + ",");
         out.write("\"status\":\"" + activeTab.getStatus() + "\",");
         out.write("\"note\":\"" + escJson(activeTab.getNote()) + "\",");
-        
+
         // selectedCustomer
         if (activeTab.getSelectedCustomer() != null) {
             Customer c = activeTab.getSelectedCustomer();
@@ -332,6 +330,9 @@ public class CartServlet extends HttpServlet {
             out.write("\"cusId\":" + c.getCusId() + ",");
             out.write("\"fullName\":\"" + escJson(c.getFullName()) + "\",");
             out.write("\"phone\":\"" + escJson(c.getPhone()) + "\",");
+            out.write("\"email\":\"" + escJson(c.getEmail()) + "\",");
+            out.write("\"address\":\"" + escJson(c.getAddress() != null ? c.getAddress() : "") + "\",");
+            out.write("\"status\":\"" + escJson(c.getStatus() != null ? c.getStatus() : "") + "\",");
             out.write("\"loyaltyPoint\":" + c.getLoyaltyPoint());
             out.write("},");
         } else {
@@ -355,7 +356,8 @@ public class CartServlet extends HttpServlet {
         // items list
         out.write("\"items\":[");
         for (int i = 0; i < activeTab.getItems().size(); i++) {
-            if (i > 0) out.write(",");
+            if (i > 0)
+                out.write(",");
             CartItem ci = activeTab.getItems().get(i);
             out.write("{");
             out.write("\"productId\":" + ci.getProductId() + ",");
@@ -375,24 +377,28 @@ public class CartServlet extends HttpServlet {
         out.write("\"vatAmount\":" + activeTab.getVatAmount() + ",");
         out.write("\"vatRate\":" + activeTab.getVatRate() + ",");
         out.write("\"totalAmount\":" + activeTab.getTotalAmount());
-        
+
         out.write("}"); // end activeTab
         out.write("}"); // end main object
     }
 
     private int getWarehouseId(int branchId) {
         try (var conn = util.database.DBContext.getConnection();
-             var ps = conn.prepareStatement("SELECT TOP 1 warehouse_id FROM warehouse WHERE branch_id = ?")) {
+                var ps = conn.prepareStatement("SELECT TOP 1 warehouse_id FROM warehouse WHERE branch_id = ?")) {
             ps.setInt(1, branchId);
             try (var rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt("warehouse_id");
+                if (rs.next())
+                    return rs.getInt("warehouse_id");
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return branchId;
     }
 
     private String escJson(String s) {
-        if (s == null) return "";
+        if (s == null)
+            return "";
         return s.replace("\\", "\\\\").replace("\"", "\\\"")
                 .replace("\n", "\\n").replace("\r", "\\r");
     }

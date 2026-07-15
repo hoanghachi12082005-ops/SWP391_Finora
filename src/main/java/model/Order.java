@@ -11,7 +11,7 @@ public class Order {
     public enum OrderStatus {
         PENDING("Chờ thanh toán"),
         PAID("Đã thanh toán"),
-        CANCELLED("Đã hủy"), COMPLETED("");
+        CANCELLED("Đã hủy"), COMPLETED(""), REJECTED("Bị từ chối");
 
         private final String displayName;
         OrderStatus(String displayName) { this.displayName = displayName; }

@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="model.Product, model.Category, model.Unit, java.util.List, java.text.NumberFormat, java.util.Locale" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
     List<Product> products   = (List<Product>) request.getAttribute("products");
     List<Category> categories = (List<Category>) request.getAttribute("categories");
@@ -13,8 +14,11 @@
     Integer filterUnitID     = (Integer) request.getAttribute("filterUnitID");
     NumberFormat vndFormat   = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 %>
+<c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : 'Nhân viên'}" />
+<c:set var="canManage" value="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'WarehouseStaff'}" />
+
 <jsp:include page="../common/header.jsp">
-    <jsp:param name="title" value="Quản lý Sản phẩm"/>
+    <jsp:param name="title" value="${canManage ? 'Quản lý Sản phẩm' : 'Danh sách sản phẩm'}"/>
 </jsp:include>
 <div class="app-container">
     <jsp:include page="../common/sidebar.jsp"/>
@@ -37,14 +41,24 @@
 
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2 class="fw-bold">Quản lý Sản phẩm</h2>
-                    <small class="text-muted">Quản lý toàn bộ hàng hóa trong hệ thống</small>
+                    <c:choose>
+                        <c:when test="${canManage}">
+                            <h2 class="fw-bold text-danger">Quản lý Sản phẩm</h2>
+                            <small class="text-muted">Quản lý toàn bộ hàng hóa trong hệ thống</small>
+                        </c:when>
+                        <c:otherwise>
+                            <h2 class="fw-bold text-danger">Danh sách sản phẩm</h2>
+                            <small class="text-muted">Xem thông tin và giá bán của toàn bộ hàng hóa trong hệ thống</small>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
-                <div>
-                    <button class="btn btn-danger" onclick="openProductModal('add')">
-                        + Thêm sản phẩm
-                    </button>
-                </div>
+                <c:if test="${canManage}">
+                    <div>
+                        <button class="btn btn-danger" onclick="openProductModal('add')">
+                            + Thêm sản phẩm
+                        </button>
+                    </div>
+                </c:if>
             </div>
 
             <!-- Search -->
@@ -100,14 +114,16 @@
                     <table class="table align-middle table-hover">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Ảnh</th>
+                                <th style="width: 80px;">ID</th>
+                                <th style="width: 80px; text-align: center;">Ảnh</th>
                                 <th>Tên sản phẩm</th>
-                                <th>Danh mục</th>
-                                <th>Đơn vị</th>
-                                <th>Giá bán</th>
-                                <th>Trạng thái</th>
-                                <th>Thao tác</th>
+                                <th style="width: 180px;">Danh mục</th>
+                                <th style="width: 120px;">Đơn vị</th>
+                                <th style="width: 140px; text-align: right;">Giá bán</th>
+                                <th style="width: 160px; text-align: center;">Trạng thái</th>
+                                <c:if test="${canManage}">
+                                    <th style="width: 150px; text-align: center;">Thao tác</th>
+                                </c:if>
                             </tr>
                         </thead>
                         <tbody>
@@ -116,7 +132,7 @@
         if (empty) {
 %>
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">Không tìm thấy sản phẩm nào.</td>
+                                <td colspan="${canManage ? 8 : 7}" class="text-center text-muted py-4">Không tìm thấy sản phẩm nào.</td>
                             </tr>
 <%
         } else {
@@ -148,26 +164,28 @@
                                 <td><strong><%= p.getName() != null ? p.getName() : "" %></strong></td>
                                 <td><%= p.getCategoryName() != null ? p.getCategoryName() : ("#" + p.getCategoryID()) %></td>
                                 <td><%= p.getUnitName() != null ? p.getUnitName() : ("#" + p.getUnitID()) %></td>
-                                <td><strong class="text-danger"><%= p.getSellingPrice() != null ? vndFormat.format(p.getSellingPrice()) : "0 ₫" %></strong></td>
-                                <td>
+                                <td class="text-end"><strong class="text-danger"><%= p.getSellingPrice() != null ? vndFormat.format(p.getSellingPrice()) : "0 ₫" %></strong></td>
+                                <td class="text-center">
                                     <% if ("Active".equalsIgnoreCase(p.getStatus())) { %>
                                         <span class="badge bg-success">Hoạt động</span>
                                     <% } else { %>
                                         <span class="badge bg-secondary">Ngừng hoạt động</span>
                                     <% } %>
                                 </td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning" onclick="openProductModal('edit',
-                                        '<%= p.getProductID() %>',
-                                        '<%= p.getCategoryID() %>',
-                                        '<%= (p.getName() != null ? p.getName() : "").replace("'", "\\'") %>',
-                                        '<%= p.getUnitID() %>',
-                                        '<%= p.getSellingPrice() != null ? p.getSellingPrice().toPlainString() : "0" %>',
-                                        '<%= p.getStatus() != null ? p.getStatus() : "Active" %>',
-                                        '<%= encodedImgUrlsJson %>'
-                                    )">Sửa</button>
-                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteProduct('<%= p.getProductID() %>')">Xóa</button>
-                                </td>
+                                <c:if test="${canManage}">
+                                    <td>
+                                        <button class="btn btn-sm btn-warning" onclick="openProductModal('edit',
+                                            '<%= p.getProductID() %>',
+                                            '<%= p.getCategoryID() %>',
+                                            '<%= (p.getName() != null ? p.getName() : "").replace("'", "\\'") %>',
+                                            '<%= p.getUnitID() %>',
+                                            '<%= p.getSellingPrice() != null ? p.getSellingPrice().toPlainString() : "0" %>',
+                                            '<%= p.getStatus() != null ? p.getStatus() : "Active" %>',
+                                            '<%= encodedImgUrlsJson %>'
+                                        )">Sửa</button>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteProduct('<%= p.getProductID() %>')">Xóa</button>
+                                    </td>
+                                </c:if>
                             </tr>
 <%
             }

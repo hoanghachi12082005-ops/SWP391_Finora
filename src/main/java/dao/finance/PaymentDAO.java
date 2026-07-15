@@ -197,29 +197,58 @@ public class PaymentDAO {
     /**
      * Lấy dữ liệu tổng quan thu chi theo từng tuần trong tháng hiện tại
      */
-    public List<Map<String, Object>> getWeeklyOverview() {
+    public List<Map<String, Object>> getWeeklyOverview(String keyword, String type, String paymentMethod, String timeRange) {
         List<Map<String, Object>> list = new ArrayList<>();
-        String sql = """
+        StringBuilder sql = new StringBuilder("""
             SELECT 
-                DATEPART(week, payment_date) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, payment_date), 0)) + 1 AS WeekNum,
-                SUM(CASE WHEN PaymentType = 'INCOME' THEN payment_amount ELSE 0 END) AS TotalIncome,
-                SUM(CASE WHEN PaymentType = 'EXPENSE' THEN payment_amount ELSE 0 END) AS TotalExpense
-            FROM payment
-            WHERE MONTH(payment_date) = MONTH(GETDATE()) AND YEAR(payment_date) = YEAR(GETDATE())
-            GROUP BY DATEPART(week, payment_date) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, payment_date), 0)) + 1
-            ORDER BY WeekNum
-        """;
+                DATEPART(week, p.payment_date) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, p.payment_date), 0)) + 1 AS WeekNum,
+                SUM(CASE WHEN p.PaymentType = 'INCOME' THEN p.payment_amount ELSE 0 END) AS TotalIncome,
+                SUM(CASE WHEN p.PaymentType = 'EXPENSE' THEN p.payment_amount ELSE 0 END) AS TotalExpense
+            FROM payment p
+            WHERE 1=1
+        """);
+
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (p.transaction_code LIKE ? OR p.description LIKE ?) ");
+            params.add("%" + keyword.trim() + "%");
+            params.add("%" + keyword.trim() + "%");
+        }
+
+        if (type != null && !type.isBlank()) {
+            sql.append(" AND p.PaymentType = ? ");
+            params.add(type);
+        }
+
+        if (paymentMethod != null && !paymentMethod.isBlank()) {
+            sql.append(" AND p.payment_method = ? ");
+            params.add(paymentMethod);
+        }
+
+        applyTimeRangeFilter(sql, timeRange);
+
+        sql.append("""
+             GROUP BY DATEPART(week, p.payment_date) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, p.payment_date), 0)) + 1
+             ORDER BY WeekNum
+        """);
 
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            while (rs.next()) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("weekNum", rs.getInt("WeekNum"));
-                map.put("totalIncome", rs.getDouble("TotalIncome"));
-                map.put("totalExpense", rs.getDouble("TotalExpense"));
-                list.add(map);
+            int idx = 1;
+            for (Object param : params) {
+                ps.setObject(idx++, param);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("weekNum", rs.getInt("WeekNum"));
+                    map.put("totalIncome", rs.getDouble("TotalIncome"));
+                    map.put("totalExpense", rs.getDouble("TotalExpense"));
+                    list.add(map);
+                }
             }
 
         } catch (Exception e) {
