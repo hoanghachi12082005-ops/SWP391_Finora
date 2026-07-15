@@ -47,43 +47,26 @@ public class ProductController extends BaseController {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String keyword  = request.getParameter("keyword");
-        if (keyword != null) {
-            keyword = keyword.trim().replaceAll("\\s+", " ");
-        }
-        String status   = request.getParameter("status");
+        String keyword = request.getParameter("keyword");
+        if (keyword != null) keyword = keyword.trim().replaceAll("\\s+", " ");
+
+        String status = request.getParameter("status");
         if (status != null) {
             status = status.trim().toUpperCase();
-            if (status.isEmpty() || (!"ACTIVE".equals(status) && !"INACTIVE".equals(status))) {
+            if (status.isEmpty() || (!"ACTIVE".equals(status) && !"INACTIVE".equals(status)))
                 status = null;
-            }
         }
-        String categoryParam = request.getParameter("categoryID");
-        String unitParam = request.getParameter("unitID");
 
-        Integer categoryID = null;
-        Integer unitID = null;
-        try {
-            if (categoryParam != null && !categoryParam.isBlank()) {
-                categoryID = Integer.parseInt(categoryParam.trim());
-            }
-            if (unitParam != null && !unitParam.isBlank()) {
-                unitID = Integer.parseInt(unitParam.trim());
-            }
-        } catch (NumberFormatException ignored) {}
+        Integer categoryID = parseIntParam(request.getParameter("categoryID"), null);
+        Integer unitID = parseIntParam(request.getParameter("unitID"), null);
+        int page = parseIntParam(request.getParameter("page"), 1);
 
-        int page = 1;
-        try {
-            if (request.getParameter("page") != null)
-                page = Integer.parseInt(request.getParameter("page").trim());
-        } catch (NumberFormatException ignored) {}
         try {
             int totalCount = productDAO.getTotalCount(keyword, status, categoryID, unitID);
             int totalPages = (int) Math.ceil((double) totalCount / ITEMS_PER_PAGE);
             page = Math.max(1, Math.min(page, totalPages > 0 ? totalPages : 1));
 
             List<Product> products = productDAO.findAll((page - 1) * ITEMS_PER_PAGE, ITEMS_PER_PAGE, keyword, status, categoryID, unitID);
-            // ImageUrl đã được load từ DB trong ProductDAO (cột ImageUrl + bảng product_image)
 
             request.setAttribute("products",    products);
             request.setAttribute("categories",  productDAO.findAllCategories());
@@ -113,15 +96,12 @@ public class ProductController extends BaseController {
                 Product p = buildProductFromRequest(request);
                 List<Part> imageParts = getImageParts(request);
 
-                // verify tất cả ảnh
-                for (Part part : imageParts) {
-                    String error = verifyImage(part);
-                    if (error != null) {
-                        session.setAttribute("message", error);
-                        session.setAttribute("messageType", "danger");
-                        response.sendRedirect(buildRedirectUrl(request));
-                        return;
-                    }
+                String imgError = verifyImages(imageParts);
+                if (imgError != null) {
+                    session.setAttribute("message", imgError);
+                    session.setAttribute("messageType", "danger");
+                    response.sendRedirect(buildRedirectUrl(request));
+                    return;
                 }
 
                 int newId = productDAO.insert(p);
@@ -152,15 +132,12 @@ public class ProductController extends BaseController {
 
                 List<Part> imageParts = getImageParts(request);
 
-                // verify tất cả ảnh
-                for (Part part : imageParts) {
-                    String error = verifyImage(part);
-                    if (error != null) {
-                        session.setAttribute("message", error);
-                        session.setAttribute("messageType", "danger");
-                        response.sendRedirect(buildRedirectUrl(request));
-                        return;
-                    }
+                String imgError = verifyImages(imageParts);
+                if (imgError != null) {
+                    session.setAttribute("message", imgError);
+                    session.setAttribute("messageType", "danger");
+                    response.sendRedirect(buildRedirectUrl(request));
+                    return;
                 }
 
                 if (!imageParts.isEmpty() || 
@@ -237,25 +214,32 @@ public class ProductController extends BaseController {
         return p;
     }
 
+    private Integer parseIntParam(String param, Integer defaultVal) {
+        if (param == null || param.isBlank()) return defaultVal;
+        try { return Integer.parseInt(param.trim()); } catch (NumberFormatException e) { return defaultVal; }
+    }
+
+    private String verifyImages(List<Part> imageParts) {
+        for (Part part : imageParts) {
+            String error = verifyImage(part);
+            if (error != null) return error;
+        }
+        return null;
+    }
+
     private String buildRedirectUrl(HttpServletRequest request) {
-        String keyword = request.getParameter("keyword");
-        if (keyword != null) {
-            keyword = keyword.trim().replaceAll("\\s+", " ");
+        String[] params = {"keyword", "filterStatus", "filterCategoryID", "filterUnitID", "page"};
+        StringBuilder sb = new StringBuilder(request.getContextPath() + "/products?");
+        for (String name : params) {
+            String value = request.getParameter(name);
+            if (value != null && !value.isBlank()) {
+                if ("keyword".equals(name)) value = value.trim().replaceAll("\\s+", " ");
+                sb.append(name).append('=').append(value).append('&');
+            }
         }
-        String status  = request.getParameter("filterStatus");
-        String categoryID = request.getParameter("filterCategoryID");
-        String unitID = request.getParameter("filterUnitID");
-        String page    = request.getParameter("page");
-        StringBuilder redirect = new StringBuilder(request.getContextPath() + "/products?");
-        if (keyword != null && !keyword.isBlank()) redirect.append("keyword=").append(keyword).append("&");
-        if (status  != null && !status.isBlank())  redirect.append("status=").append(status).append("&");
-        if (categoryID  != null && !categoryID.isBlank())  redirect.append("categoryID=").append(categoryID).append("&");
-        if (unitID  != null && !unitID.isBlank())  redirect.append("unitID=").append(unitID).append("&");
-        if (page    != null && !page.isBlank())    redirect.append("page=").append(page);
-        if (redirect.charAt(redirect.length() - 1) == '&' || redirect.charAt(redirect.length() - 1) == '?') {
-            redirect.deleteCharAt(redirect.length() - 1);
-        }
-        return redirect.toString();
+        if (sb.charAt(sb.length() - 1) == '?' || sb.charAt(sb.length() - 1) == '&')
+            sb.deleteCharAt(sb.length() - 1);
+        return sb.toString();
     }
 
     private Part safeGetPart(HttpServletRequest request, String name) {
