@@ -1,0 +1,25 @@
+/* Styles for Inventory Main Page */
+.subtab-nav {
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 20px;
+}
+
+.subtab-link {
+    padding: 10px 16px;
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.subtab-link:hover {
+    color: var(--primary-color);
+}
+
+.subtab-link.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}

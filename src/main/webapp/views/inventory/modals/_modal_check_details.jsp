@@ -1,5 +1,5 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <div class="modal-header border-bottom-0 pb-0">
     <h5 class="modal-title fw-bold text-dark" id="modalTitle">Chi Tiết Phiếu Kiểm Kê</h5>

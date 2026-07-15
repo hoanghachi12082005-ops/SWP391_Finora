@@ -167,7 +167,7 @@ public class InventoryController extends BaseController {
                     request.setAttribute("showAll", "true".equals(showAll));
                 }
                 
-                forward(request, response, "inventory/_modal_ticket_details");
+                forward(request, response, "inventory/modals/_modal_ticket_details");
                 return;
             } else if ("viewOrderDetails".equals(action)) {
                 int orderId = Integer.parseInt(request.getParameter("orderId"));
@@ -179,7 +179,7 @@ public class InventoryController extends BaseController {
                 request.setAttribute("orderDetails", details);
                 request.setAttribute("transactions", txs);
                 
-                forward(request, response, "inventory/_modal_order_details");
+                forward(request, response, "inventory/modals/_modal_order_details");
                 return;
             } else if ("printTicket".equals(action)) {
                 int ticketId = Integer.parseInt(request.getParameter("ticketId"));
@@ -196,7 +196,7 @@ public class InventoryController extends BaseController {
                 request.setAttribute("subTransfers", sub);
                 request.setAttribute("transactions", txs);
                 
-                forward(request, response, "inventory/_print_ticket");
+                forward(request, response, "inventory/prints/_print_ticket");
                 return;
             } else if ("printOrder".equals(action)) {
                 int orderId = Integer.parseInt(request.getParameter("orderId"));
@@ -208,7 +208,7 @@ public class InventoryController extends BaseController {
                 request.setAttribute("orderDetails", details);
                 request.setAttribute("transactions", txs);
                 
-                forward(request, response, "inventory/_print_order");
+                forward(request, response, "inventory/prints/_print_order");
                 return;
             } else if ("searchStockCheckProductsApi".equals(action)) {
                 handleSearchStockCheckProductsApi(request, response, selectedWarehouseId);
@@ -222,7 +222,7 @@ public class InventoryController extends BaseController {
                 request.setAttribute("check", check);
                 request.setAttribute("checkDetails", details);
                 
-                forward(request, response, "inventory/_modal_check_details");
+                forward(request, response, "inventory/modals/_modal_check_details");
                 return;
             }
 
@@ -1385,15 +1385,20 @@ public class InventoryController extends BaseController {
                         List<model.OrderDetail> allDetails = new ArrayList<>();
                         double totalCost = 0.0;
                         
-                        for (int i = 0; i < productIds.length; i++) {
-                            int pId = Integer.parseInt(productIds[i]);
-                            int qty = Integer.parseInt(quantities[i]);
-                            int sId = Integer.parseInt(supplierIds[i]);
-                            double price = 0.0;
-                            if (importPrices != null && importPrices.length > i) {
-                                try { price = Double.parseDouble(importPrices[i]); } catch (Exception e) {}
-                            }
-                            if (qty > 0) {
+                        try {
+                            for (int i = 0; i < productIds.length; i++) {
+                                int pId = Integer.parseInt(productIds[i].trim());
+                                int qty = Integer.parseInt(quantities[i].trim());
+                                int sId = Integer.parseInt(supplierIds[i].trim());
+                                double price = 0.0;
+                                if (importPrices != null && importPrices.length > i) {
+                                    price = Double.parseDouble(importPrices[i].trim());
+                                }
+                                
+                                if (pId <= 0 || qty <= 0 || sId <= 0 || price < 0) {
+                                    throw new IllegalArgumentException("Dữ liệu nhập hàng không hợp lệ.");
+                                }
+                                
                                 model.OrderDetail detail = new model.OrderDetail();
                                 detail.setProductId(pId);
                                 detail.setQuantity(qty);
@@ -1405,6 +1410,10 @@ public class InventoryController extends BaseController {
                                 allDetails.add(detail);
                                 totalCost += qty * price;
                             }
+                        } catch (Exception ex) {
+                            request.getSession().setAttribute("errorMessage", "Dữ liệu nhập hàng không hợp lệ. Vui lòng kiểm tra lại số lượng hoặc thông tin sản phẩm!");
+                            redirect(response, request.getContextPath() + "/inventory?tab=stock&warehouseId=" + currentWarehouseId);
+                            break;
                         }
                         
                         // Tạo DUY NHẤT 1 Order cho tất cả NCC

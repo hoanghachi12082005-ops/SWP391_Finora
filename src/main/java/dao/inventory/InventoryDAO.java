@@ -725,23 +725,33 @@ public class InventoryDAO {
      * Returns a flat list of [productName, supplierId, supplierName] tuples.
      */
     public List<String[]> getAllProductsWithSuppliers() throws SQLException {
-        List<String[]> rows = new java.util.ArrayList<>();
-        String sql =
-            "SELECT TOP 5 p.product_name, s.supplier_id, s.supplier_name " +
-            "FROM product p " +
-            "CROSS JOIN supplier s " +
-            "WHERE s.status = 'ACTIVE' " +
-            "ORDER BY p.product_name ASC, s.supplier_id ASC";
-
+        List<String> products = new java.util.ArrayList<>();
+        String sqlProducts = "SELECT product_name FROM product ORDER BY product_id ASC";
         try (java.sql.Connection conn = util.database.DBContext.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(sql);
+             java.sql.PreparedStatement stmt = conn.prepareStatement(sqlProducts);
              java.sql.ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
+                products.add(rs.getString("product_name"));
+            }
+        }
+        if (products.isEmpty()) {
+            products.add("Sản phẩm mẫu");
+        }
+
+        List<String[]> rows = new java.util.ArrayList<>();
+        String sqlSuppliers = "SELECT supplier_id, supplier_name FROM supplier WHERE status = 'ACTIVE' ORDER BY supplier_id ASC";
+        try (java.sql.Connection conn = util.database.DBContext.getConnection();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(sqlSuppliers);
+             java.sql.ResultSet rs = stmt.executeQuery()) {
+            int i = 0;
+            while (rs.next()) {
+                String prodName = products.get(i % products.size());
                 rows.add(new String[]{
-                    rs.getString("product_name"),
+                    prodName,
                     String.valueOf(rs.getInt("supplier_id")),
                     rs.getString("supplier_name")
                 });
+                i++;
             }
         }
         return rows;

@@ -1,0 +1,279 @@
+/* Styles for Inventory Tabs */
+
+/* 1. Subtab and Approval styles (from _tab_approval.jsp, _tab_import.jsp, _tab_export.jsp) */
+.approval-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    margin-bottom: 24px;
+}
+.approval-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 16px 24px;
+    font-weight: 600;
+}
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 13px;
+    transition: all 0.2s;
+    border: none;
+}
+.btn-approve {
+    background-color: var(--success-bg);
+    color: var(--success-text);
+    border: 1px solid rgba(16, 185, 129, 0.15);
+}
+.btn-approve:hover {
+    background-color: var(--success-bg);
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+.btn-reject {
+    background-color: var(--danger-bg);
+    color: var(--danger-text);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+}
+.btn-reject:hover {
+    background-color: var(--danger-bg);
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
+.import-subtab-nav {
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 0;
+}
+.import-subtab-link {
+    padding: 12px 20px;
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+}
+.import-subtab-link:hover {
+    color: var(--primary-color);
+    background-color: rgba(79,70,229,0.04);
+}
+.import-subtab-link.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* 2. Check and Stocktaking styles (from _tab_check.jsp, _tab_check_create.jsp) */
+.discrepant-row {
+    background-color: #fff5f5 !important;
+    border-left: 4px solid #ef4444 !important;
+}
+.discrepant-row td {
+    color: #b91c1c !important;
+}
+.discrepant-row td strong.text-primary {
+    color: #b91c1c !important;
+}
+.discrepant-row:hover {
+    background-color: #fee2e2 !important;
+}
+
+.action-card {
+    cursor: pointer;
+    border: 2px dashed #cbd5e1 !important;
+    border-radius: 12px !important;
+    transition: all 0.25s ease-in-out;
+    min-height: 155px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.action-card:hover {
+    border-color: var(--primary-color, #800000) !important;
+    background-color: #f8fafc !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.05);
+}
+
+.smart-table {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+.smart-table th {
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    padding: 16px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.smart-table td {
+    padding: 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f5f9;
+}
+.empty-state {
+    padding: 40px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+/* 3. Transfer and stock distribution styles (from _tab_transfer.jsp, _tab_transfer_create.jsp) */
+.transfer-subtab-nav {
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 0;
+}
+.transfer-subtab-link {
+    padding: 12px 20px;
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+}
+.transfer-subtab-link:hover {
+    color: var(--primary-color);
+    background-color: rgba(79,70,229,0.04);
+}
+.transfer-subtab-link.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    font-weight: 600;
+}
+
+.status-timeline {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+}
+.status-step {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+.status-step.done {
+    background: #dcfce7;
+    color: #16a34a;
+}
+.status-step.current {
+    background: #dbeafe;
+    color: #2563eb;
+    animation: pulse-status 2s infinite;
+}
+.status-step.pending {
+    background: #f1f5f9;
+    color: #94a3b8;
+}
+@keyframes pulse-status {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.search-box {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto 30px;
+}
+.search-input {
+    width: 100%;
+    padding: 16px 20px 16px 50px;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    font-size: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    transition: all 0.2s ease-in-out;
+}
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px var(--primary-light);
+}
+.search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 24px;
+}
+
+.search-results { 
+    position: absolute; 
+    top: 100%; 
+    left: 0; 
+    right: 0; 
+    background: #ffffff; 
+    border-radius: 12px; 
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+    margin-top: 8px; 
+    z-index: 100; 
+    display: none; 
+    max-height: 420px; 
+    overflow-y: auto; 
+    border: 1px solid #e2e8f0; 
+}
+.normal-header {
+    background: #f8fafc; 
+    color: #475569; 
+    border-bottom: 1px solid #e2e8f0; 
+}
+.search-item { 
+    padding: 14px 20px; 
+    border-bottom: 1px solid #f1f5f9; 
+    cursor: pointer; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    transition: all 0.2s ease-in-out; 
+}
+.search-item:hover { 
+    background: rgba(147, 0, 11, 0.03); 
+}
+.search-item:last-child {
+    border-bottom: none;
+}
+.partner-choice-select {
+    border-radius: 8px;
+    font-size: 13.5px;
+    padding: 6px 12px;
+    border: 1px solid #cbd5e1;
+    outline: none;
+    background-color: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+.partner-choice-select:focus {
+    border-color: var(--primary-color);
+}
+.add-icon-btn {
+    color: var(--primary-color);
+    font-size: 32px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    vertical-align: middle;
+}
+.add-icon-btn:hover {
+    transform: scale(1.15);
+    color: #74000a;
+}

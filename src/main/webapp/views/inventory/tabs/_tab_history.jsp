@@ -1,7 +1,7 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <div class="dashboard-card mb-4">
     <div class="card-header mb-3">
@@ -72,51 +72,7 @@
         </form>
     </div>
 
-    <script>
-        document.getElementById('historyFilterForm').addEventListener('submit', function(e) {
-            const fromDateEl = document.getElementById('fromDate');
-            const toDateEl = document.getElementById('toDate');
-            
-            if (fromDateEl.value) {
-                const fromYear = parseInt(fromDateEl.value.split('-')[0]);
-                if (isNaN(fromYear) || fromYear < 1000 || fromYear > 9999) {
-                    e.preventDefault();
-                    alert('Lỗi validate: Năm của Từ ngày phải nằm trong khoảng từ 1000 đến 9999!');
-                    fromDateEl.style.borderColor = '#dc3545';
-                    return;
-                }
-            }
-            
-            if (toDateEl.value) {
-                const toYear = parseInt(toDateEl.value.split('-')[0]);
-                if (isNaN(toYear) || toYear < 1000 || toYear > 9999) {
-                    e.preventDefault();
-                    alert('Lỗi validate: Năm của Đến ngày phải nằm trong khoảng từ 1000 đến 9999!');
-                    toDateEl.style.borderColor = '#dc3545';
-                    return;
-                }
-            }
-            
-            if (fromDateEl.value && toDateEl.value) {
-                if (fromDateEl.value > toDateEl.value) {
-                    e.preventDefault();
-                    alert('Lỗi validate: Ngày bắt đầu (Từ ngày) không được lớn hơn Ngày kết thúc (Đến ngày)!');
-                    fromDateEl.style.borderColor = '#dc3545';
-                    toDateEl.style.borderColor = '#dc3545';
-                }
-            }
-        });
-        
-        // Reset border colors on input
-        document.getElementById('fromDate').addEventListener('input', function() {
-            this.style.borderColor = '';
-            document.getElementById('toDate').style.borderColor = '';
-        });
-        document.getElementById('toDate').addEventListener('input', function() {
-            this.style.borderColor = '';
-            document.getElementById('fromDate').style.borderColor = '';
-        });
-    </script>
+
 
 
         <div class="premium-table-container">

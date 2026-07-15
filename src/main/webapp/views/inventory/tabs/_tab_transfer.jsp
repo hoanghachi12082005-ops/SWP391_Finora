@@ -1,21 +1,10 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : ''}" />
 <c:set var="currentSubtab" value="${not empty param.subtab ? param.subtab : 'transfer_list'}" />
 
-<style>
-    .transfer-subtab-nav { border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; display: flex; gap: 0; }
-    .transfer-subtab-link { padding: 12px 20px; color: #64748b; text-decoration: none; font-weight: 500; font-size: 14px; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
-    .transfer-subtab-link:hover { color: var(--primary-color); background-color: rgba(79,70,229,0.04); }
-    .transfer-subtab-link.active { color: var(--primary-color); border-bottom-color: var(--primary-color); font-weight: 600; }
-    .status-timeline { display: flex; align-items: center; gap: 4px; font-size: 12px; }
-    .status-step { padding: 3px 8px; border-radius: 12px; font-weight: 500; }
-    .status-step.done { background: #dcfce7; color: #16a34a; }
-    .status-step.current { background: #dbeafe; color: #2563eb; animation: pulse-status 2s infinite; }
-    .status-step.pending { background: #f1f5f9; color: #94a3b8; }
-    @keyframes pulse-status { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-</style>
+
 
 <div class="dashboard-card">
     <div class="card-header border-bottom-0 pb-0 mb-3">

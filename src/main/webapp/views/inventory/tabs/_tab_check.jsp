@@ -1,22 +1,7 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : ''}" />
 
-<style>
-    .discrepant-row {
-        background-color: #fff5f5 !important;
-        border-left: 4px solid #ef4444 !important;
-    }
-    .discrepant-row td {
-        color: #b91c1c !important;
-    }
-    .discrepant-row td strong.text-primary {
-        color: #b91c1c !important;
-    }
-    .discrepant-row:hover {
-        background-color: #fee2e2 !important;
-    }
-</style>
 
 <div class="dashboard-card">
     <div class="card-header border-bottom-0 pb-0 d-flex justify-content-between align-items-center mb-3">

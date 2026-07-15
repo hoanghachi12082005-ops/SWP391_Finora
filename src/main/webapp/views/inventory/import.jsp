@@ -1,32 +1,12 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 
 <jsp:include page="../common/header.jsp">
     <jsp:param name="title" value="Nhập Kho - Nhập hàng từ nhà cung cấp"/>
 </jsp:include>
 
-<style>
-    .import-row-active {
-        background-color: rgba(25, 135, 84, 0.05) !important;
-    }
-    .text-winered {
-        color: #8b0000 !important;
-    }
-    .bg-winered {
-        background-color: #8b0000 !important;
-        color: white;
-    }
-    .btn-winered {
-        background-color: #8b0000;
-        color: white;
-        border: none;
-    }
-    .btn-winered:hover {
-        background-color: #a00000;
-        color: white;
-    }
-</style>
+<link href="${pageContext.request.contextPath}/assets/css/inventory/inventory-import.css" rel="stylesheet">
 
 <div class="app-container">
     <jsp:include page="../common/sidebar.jsp"/>
@@ -147,7 +127,7 @@
                                                     <c:forEach var="p" items="${activeProducts}">
                                                         <tr id="row_${p.productID}" data-product-id="${p.productID}" data-selling-price="${p.sellingPrice}" class="product-row">
                                                             <td class="text-center">
-                                                                <input class="form-check-input check-import" type="checkbox" name="productIds" value="${p.productID}" id="check_${p.productID}" onchange="toggleProductRow(${p.productID})">
+                                                                <input class="form-check-input check-import" type="checkbox" name="productIds" value="${p.productID}" id="check_${p.productID}" onchange="toggleProductRow(this.value)">
                                                             </td>
                                                             <td>
                                                                 <div class="fw-bold">${p.name}</div>
@@ -158,11 +138,11 @@
                                                             </td>
                                                             <td>
                                                                 <div class="input-group input-group-sm">
-                                                                    <input type="number" name="importPrice_${p.productID}" id="importPrice_${p.productID}" class="form-control import-price-input" value="0" disabled required min="0" step="1000" onchange="calculateRow(${p.productID})" oninput="calculateRow(${p.productID})">
+                                                                    <input type="number" name="importPrice_${p.productID}" id="importPrice_${p.productID}" class="form-control import-price-input" value="0" disabled required min="0" step="1000" onchange="calculateRow(this.id.split('_')[1])" oninput="calculateRow(this.id.split('_')[1])">
                                                                 </div>
                                                             </td>
                                                             <td>
-                                                                <input type="number" name="quantity_${p.productID}" id="quantity_${p.productID}" class="form-control form-control-sm qty-input" value="1" disabled required min="1" onchange="calculateRow(${p.productID})" oninput="calculateRow(${p.productID})">
+                                                                <input type="number" name="quantity_${p.productID}" id="quantity_${p.productID}" class="form-control form-control-sm qty-input" value="1" disabled required min="1" onchange="calculateRow(this.id.split('_')[1])" oninput="calculateRow(this.id.split('_')[1])">
                                                             </td>
                                                             <td class="text-end fw-bold text-winered" id="subtotal_${p.productID}" style="padding-right: 15px;">
                                                                 0 đ
@@ -195,164 +175,15 @@
 </div>
 
 <!-- Dynamic Local Filtering Logic -->
+<textarea id="importConfigData" style="display:none;">${supplierProductsJson != null ? supplierProductsJson : "{}"}</textarea>
 <script>
-    // Bản đồ nhà cung cấp - sản phẩm được serialize từ Controller
-    const supplierProducts = ${supplierProductsJson != null ? supplierProductsJson : '{}'};
-
-    document.addEventListener("DOMContentLoaded", function() {
-        filterProducts();
-    });
-
-    /**
-     * Lọc sản phẩm cục bộ dựa trên Nhà cung cấp được chọn
-     */
-    function filterProducts() {
-        const supplierSelect = document.getElementById("supplierSelect");
-        const supplierId = supplierSelect.value;
-        const showAll = document.getElementById("showAllProducts").checked;
-        const rows = document.querySelectorAll(".product-row");
-        
-        let visibleCount = 0;
-        
-        rows.forEach(row => {
-            const productId = row.getAttribute("data-product-id");
-            const checkbox = row.querySelector(".check-import");
-            const importPriceInput = row.querySelector(".import-price-input");
-            
-            let isVisible = false;
-            let preNegotiatedPrice = null;
-            
-            if (showAll || !supplierId) {
-                // Nếu chưa chọn nhà cung cấp hoặc bật chế độ xem tất cả, cho hiển thị hết
-                isVisible = true;
-                
-                // Nếu có liên kết với nhà cung cấp hiện tại, vẫn lấy giá đàm phán
-                if (supplierId && supplierProducts[supplierId] && supplierProducts[supplierId][productId] !== undefined) {
-                    preNegotiatedPrice = supplierProducts[supplierId][productId];
-                }
-            } else {
-                // Lọc sản phẩm thuộc nhà cung cấp này
-                if (supplierProducts[supplierId] && supplierProducts[supplierId][productId] !== undefined) {
-                    isVisible = true;
-                    preNegotiatedPrice = supplierProducts[supplierId][productId];
-                }
-            }
-            
-            if (isVisible) {
-                row.classList.remove("d-none");
-                visibleCount++;
-                
-                // Nếu sản phẩm được hiển thị và có giá đàm phán, tự điền sẵn vào ô giá nhập
-                if (preNegotiatedPrice !== null && !checkbox.checked) {
-                    importPriceInput.value = Math.round(preNegotiatedPrice);
-                } else if (!checkbox.checked) {
-                    // Nếu không có giá đàm phán và chưa được tick, đặt mặc định bằng 70% giá bán lẻ
-                    const sellingPrice = parseFloat(row.getAttribute("data-selling-price"));
-                    importPriceInput.value = Math.round(sellingPrice * 0.7);
-                }
-            } else {
-                row.classList.add("d-none");
-                // Nếu bị ẩn đi, bỏ tick checkbox
-                if (checkbox.checked) {
-                    checkbox.checked = false;
-                    toggleProductRow(productId);
-                }
-            }
-        });
-        
-        document.getElementById("productCountBadge").innerText = visibleCount + " sản phẩm";
-        calculateGrandTotal();
-    }
-
-    /**
-     * Bật/Tắt hoạt động dòng sản phẩm khi được tick chọn nhập hàng
-     */
-    function toggleProductRow(productId) {
-        const row = document.getElementById("row_" + productId);
-        const checkbox = document.getElementById("check_" + productId);
-        const priceInput = document.getElementById("importPrice_" + productId);
-        const qtyInput = document.getElementById("quantity_" + productId);
-        
-        if (checkbox.checked) {
-            row.classList.add("import-row-active");
-            priceInput.disabled = false;
-            qtyInput.disabled = false;
-            qtyInput.focus();
-        } else {
-            row.classList.remove("import-row-active");
-            priceInput.disabled = true;
-            qtyInput.disabled = true;
-        }
-        
-        calculateRow(productId);
-    }
-
-    /**
-     * Tính toán thành tiền của một dòng sản phẩm
-     */
-    function calculateRow(productId) {
-        const checkbox = document.getElementById("check_" + productId);
-        const priceInput = document.getElementById("importPrice_" + productId);
-        const qtyInput = document.getElementById("quantity_" + productId);
-        const subtotalTd = document.getElementById("subtotal_" + productId);
-        
-        if (!checkbox.checked) {
-            subtotalTd.innerText = "0 đ";
-            calculateGrandTotal();
-            return;
-        }
-        
-        const price = parseFloat(priceInput.value) || 0;
-        const qty = parseInt(qtyInput.value) || 0;
-        const subtotal = price * qty;
-        
-        subtotalTd.innerText = formatCurrency(subtotal);
-        calculateGrandTotal();
-    }
-
-    /**
-     * Tính toán tổng giá trị phiếu nhập
-     */
-    function calculateGrandTotal() {
-        const checkboxes = document.querySelectorAll(".check-import:checked");
-        let grandTotal = 0;
-        let totalQty = 0;
-        let selectedCount = checkboxes.length;
-        
-        checkboxes.forEach(checkbox => {
-            const productId = checkbox.value;
-            const priceInput = document.getElementById("importPrice_" + productId);
-            const qtyInput = document.getElementById("quantity_" + productId);
-            
-            const price = parseFloat(priceInput.value) || 0;
-            const qty = parseInt(qtyInput.value) || 0;
-            
-            grandTotal += price * qty;
-            totalQty += qty;
-        });
-        
-        document.getElementById("grandTotalDisplay").innerText = formatCurrency(grandTotal);
-        document.getElementById("selectedCountDisplay").innerText = selectedCount;
-        document.getElementById("totalQtyDisplay").innerText = totalQty;
-    }
-
-    function formatCurrency(amount) {
-        return amount.toLocaleString('vi-VN') + " đ";
-    }
-
-    // Xác nhận khi submit form
-    document.getElementById("importForm").addEventListener("submit", function(e) {
-        const checkboxes = document.querySelectorAll(".check-import:checked");
-        if (checkboxes.length === 0) {
-            e.preventDefault();
-            alert("Vui lòng tích chọn ít nhất 1 sản phẩm để nhập hàng!");
-            return;
-        }
-        
-        if (!confirm("Xác nhận hoàn tất phiếu nhập hàng?")) {
-            e.preventDefault();
-        }
-    });
+    (function() {
+        const el = document.getElementById('importConfigData');
+        window.IMPORT_CONFIG = {
+            supplierProducts: el ? JSON.parse(el.value) : {}
+        };
+    })();
 </script>
+<script src="${pageContext.request.contextPath}/assets/js/inventory/inventory-import.js"></script>
 
 <jsp:include page="../common/footer.jsp" />

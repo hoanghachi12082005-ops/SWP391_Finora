@@ -1,6 +1,6 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : ''}" />
 
 <div class="dashboard-card">
@@ -15,12 +15,7 @@
         </div>
         
         <c:if test="${roleName == 'WarehouseStaff' || roleName == 'StoreManager'}">
-            <style>
-                .import-subtab-nav { border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; display: flex; gap: 0; }
-                .import-subtab-link { padding: 12px 20px; color: #64748b; text-decoration: none; font-weight: 500; font-size: 14px; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
-                .import-subtab-link:hover { color: var(--primary-color); background-color: rgba(79,70,229,0.04); }
-                .import-subtab-link.active { color: var(--primary-color); border-bottom-color: var(--primary-color); font-weight: 600; }
-            </style>
+
             <div class="import-subtab-nav">
                 <a href="?tab=import&warehouseId=${selectedWarehouseId}" 
                    class="import-subtab-link active">
