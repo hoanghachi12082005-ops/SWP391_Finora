@@ -22,6 +22,8 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -109,27 +111,30 @@ public class ProductController extends BaseController {
             if (action == null) action = "";
             if ("add".equals(action)) {
                 Product p = buildProductFromRequest(request);
-                Part imagePart = safeGetPart(request, "imageFile");
+                List<Part> imageParts = getImageParts(request);
 
-                // verify image
-                String verifyError = (imagePart != null && imagePart.getSize() > 0)
-                        ? verifyImage(imagePart) : null;
-                if (verifyError != null) {
-                    session.setAttribute("message", verifyError);
-                    session.setAttribute("messageType", "danger");
-                    response.sendRedirect(buildRedirectUrl(request));
-                    return;
+                // verify tất cả ảnh
+                for (Part part : imageParts) {
+                    String error = verifyImage(part);
+                    if (error != null) {
+                        session.setAttribute("message", error);
+                        session.setAttribute("messageType", "danger");
+                        response.sendRedirect(buildRedirectUrl(request));
+                        return;
+                    }
                 }
 
                 int newId = productDAO.insert(p);
 
-                if (newId > 0 && imagePart != null && imagePart.getSize() > 0) {
+                if (newId > 0 && !imageParts.isEmpty()) {
                     try {
-                        String savedPath = saveProductImageFile(request, imagePart, newId);
-                        String imageUrl = request.getContextPath() + IMAGE_DIR + savedPath;
+                        List<String> savedUrls = new ArrayList<>();
+                        for (Part part : imageParts) {
+                            String savedPath = saveProductImageFile(request, part, newId);
+                            savedUrls.add(request.getContextPath() + IMAGE_DIR + savedPath);
+                        }
                         p.setProductID(newId);
-                        // Lưu dạng JSON array: ["url"]
-                        p.setImageUrl("[\"" + imageUrl + "\"]");
+                        p.setImageUrlList(savedUrls);
                         productDAO.update(p);
                     } catch (IOException ioe) {
                         session.setAttribute("message", "Thêm thành công, nhưng lưu ảnh thất bại: " + ioe.getMessage());
@@ -145,25 +150,30 @@ public class ProductController extends BaseController {
                 Product p = buildProductFromRequest(request);
                 p.setProductID(productID);
 
-                Part imagePart = safeGetPart(request, "imageFile");
-                String verifyError = (imagePart != null && imagePart.getSize() > 0)
-                        ? verifyImage(imagePart) : null;
-                if (verifyError != null) {
-                    session.setAttribute("message", verifyError);
-                    session.setAttribute("messageType", "danger");
-                    response.sendRedirect(buildRedirectUrl(request));
-                    return;
+                List<Part> imageParts = getImageParts(request);
+
+                // verify tất cả ảnh
+                for (Part part : imageParts) {
+                    String error = verifyImage(part);
+                    if (error != null) {
+                        session.setAttribute("message", error);
+                        session.setAttribute("messageType", "danger");
+                        response.sendRedirect(buildRedirectUrl(request));
+                        return;
+                    }
                 }
 
-                if (imagePart != null && imagePart.getSize() > 0) {
+                if (!imageParts.isEmpty()) {
                     try {
                         // Xoá ảnh cũ trên ổ cứng
                         deleteProductImageFiles(request, productID);
                         // Lưu file ảnh mới
-                        String savedPath = saveProductImageFile(request, imagePart, productID);
-                        String imageUrl = request.getContextPath() + IMAGE_DIR + savedPath;
-                        // Lưu dạng JSON array: ["url"]
-                        p.setImageUrl("[\"" + imageUrl + "\"]");
+                        List<String> savedUrls = new ArrayList<>();
+                        for (Part part : imageParts) {
+                            String savedPath = saveProductImageFile(request, part, productID);
+                            savedUrls.add(request.getContextPath() + IMAGE_DIR + savedPath);
+                        }
+                        p.setImageUrlList(savedUrls);
                     } catch (IOException ioe) {
                         session.setAttribute("message", "Cập nhật thành công, nhưng lưu ảnh thất bại: " + ioe.getMessage());
                         session.setAttribute("messageType", "warning");
@@ -311,11 +321,29 @@ public class ProductController extends BaseController {
         File dir = ensureImageDir(request);
         String ext = resolveExtension(imagePart);
         String uniqueName = "product_" + productId + "_" + System.currentTimeMillis() + "." + ext;
+        // Sleep 1ms để tránh trùng tên file khi upload nhiều ảnh cùng lúc
+        try { Thread.sleep(1); } catch (InterruptedException ignored) {}
         File target = new File(dir, uniqueName);
         try (InputStream in = imagePart.getInputStream()) {
             Files.copy(in, target.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
         return uniqueName;
+    }
+
+    /** Lấy tất cả Part có name="imageFile" và có nội dung */
+    private List<Part> getImageParts(HttpServletRequest request) {
+        List<Part> parts = new ArrayList<>();
+        try {
+            Collection<Part> allParts = request.getParts();
+            for (Part part : allParts) {
+                if ("imageFile".equals(part.getName()) && part.getSize() > 0) {
+                    parts.add(part);
+                }
+            }
+        } catch (Exception e) {
+            // Không có file nào được upload
+        }
+        return parts;
     }
 
     /** Xoá tất cả file ảnh của sản phẩm trong thư mục upload */
