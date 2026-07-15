@@ -34,6 +34,7 @@ public class Branch {
 
     // Các trường bổ sung phục vụ hiển thị trên view
     private String managerName;
+    private int managerId;
     private int employeeCount;
     private double revenue;
 
@@ -196,6 +197,14 @@ public class Branch {
 
     public void setManagerName(String managerName) {
         this.managerName = managerName;
+    }
+
+    public int getManagerId() {
+        return managerId;
+    }
+
+    public void setManagerId(int managerId) {
+        this.managerId = managerId;
     }
 
     public int getEmployeeCount() {

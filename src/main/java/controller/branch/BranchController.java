@@ -12,11 +12,12 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.nio.file.Paths;
-import java.io.FileOutputStream;
 
 import java.io.IOException;
+import javax.imageio.ImageIO;
 import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.util.HashMap;
@@ -58,6 +59,7 @@ public class BranchController extends HttpServlet {
                     resp.sendRedirect(req.getContextPath() + "/branch?error=notfound");
                     return;
                 }
+                toEdit.setManagerId(dao.findManagerIdByBranchId(editId));
                 req.setAttribute("branch", toEdit);
                 loadEmployeeList(req);
                 forward(req, resp, "branch-form.jsp");
@@ -197,11 +199,22 @@ public class BranchController extends HttpServlet {
         }
 
         if (imagePart != null && imagePart.getSize() > 0) {
-            String imageUrl = saveBranchImage(req, imagePart, b.getBranchCode());
-
-            if (imageUrl != null) {
-                b.setImageUrl(imageUrl);
+            try {
+                String imageUrl = saveBranchImage(req, imagePart, b.getBranchCode());
+                if (imageUrl != null) {
+                    b.setImageUrl(imageUrl);
+                }
+            } catch (IOException ex) {
+                errors.put("image", ex.getMessage());
             }
+        }
+
+        if (!errors.isEmpty()) {
+            req.setAttribute("errors", errors);
+            req.setAttribute("branch", b);
+            loadEmployeeList(req);
+            forward(req, resp, "branch-form.jsp");
+            return;
         }
 
         //Lưu dữ liệu
@@ -228,6 +241,17 @@ public class BranchController extends HttpServlet {
                 return;
             }
         }
+
+        // Gán quản lý cho chi nhánh
+        if (b.getManagerId() > 0) {
+            if (isUpdate) {
+                dao.unassignManager(branchId);
+            }
+            dao.assignManager(branchId, b.getManagerId());
+        } else if (isUpdate) {
+            dao.unassignManager(branchId);
+        }
+
         //Redirect sang Detail
         resp.sendRedirect(
                 req.getContextPath()
@@ -310,6 +334,7 @@ public class BranchController extends HttpServlet {
         b.setStatus(trim(req.getParameter("status")));
         b.setCity(trim(req.getParameter("city")));
         b.setDistrict(trim(req.getParameter("district")));
+        b.setManagerId(parseId(req.getParameter("managerId")));
         return b;
     }
 
@@ -340,7 +365,7 @@ public class BranchController extends HttpServlet {
 
     private void loadEmployeeList(HttpServletRequest req) {
         try {
-            req.setAttribute("employeeList", new dao.employee.EmployeeDAO().getAll());
+            req.setAttribute("employeeList", new dao.employee.EmployeeDAO().getStoreManagers());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -360,15 +385,30 @@ public class BranchController extends HttpServlet {
             return null;
         }
 
-        String lowerName = submittedFileName.toLowerCase();
-
-        if (!(lowerName.endsWith(".jpg")
-                || lowerName.endsWith(".jpeg")
-                || lowerName.endsWith(".png")
-                || lowerName.endsWith(".webp"))) {
-
-            throw new IOException("Only JPG, PNG and WEBP images are allowed.");
+        // Read all bytes from the input stream first
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        try (var input = imagePart.getInputStream()) {
+            input.transferTo(buffer);
         }
+        byte[] imageBytes = buffer.toByteArray();
+
+        // Validate actual file content by attempting to read as image
+        BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageBytes));
+        if (image == null) {
+            throw new IOException("File tải lên không phải hình ảnh hợp lệ.");
+        }
+
+        String extension = submittedFileName.substring(
+                submittedFileName.lastIndexOf(".")).toLowerCase();
+
+        // Force the extension to match the actual image type
+        // This prevents a malicuous user from uploading a valid PNG with a .jpg extension
+        String detectedType = getImageExtension(imageBytes);
+        if (detectedType != null) {
+            extension = detectedType;
+        }
+
+        String fileName = branchCode + extension;
 
         File folder = resolvePersistentUploadFolder(request);
 
@@ -377,19 +417,43 @@ public class BranchController extends HttpServlet {
                     + folder.getAbsolutePath());
         }
 
-        String extension = submittedFileName.substring(
-                submittedFileName.lastIndexOf(".")).toLowerCase();
-
-        String fileName = branchCode + extension;
-
+        // Save the validated image
         File file = new File(folder, fileName);
-
-        try (var input = imagePart.getInputStream(); var output = new java.io.FileOutputStream(file)) {
-
-            input.transferTo(output);
-        }
+        // Use ImageIO to write the image, which ensures only valid image data is saved
+        ImageIO.write(image, extension.substring(1), file);
 
         return fileName;
+    }
+
+    private String getImageExtension(byte[] imageBytes) {
+        // Detect the actual image format from the byte content (magic bytes)
+        if (imageBytes.length < 4) {
+            return ".png";
+        }
+        // PNG: 89 50 4E 47
+        if ((imageBytes[0] & 0xff) == 0x89 && imageBytes[1] == 0x50
+                && imageBytes[2] == 0x4E && imageBytes[3] == 0x47) {
+            return ".png";
+        }
+        // JPEG: FF D8 FF
+        if ((imageBytes[0] & 0xff) == 0xFF && (imageBytes[1] & 0xff) == 0xD8
+                && (imageBytes[2] & 0xff) == 0xFF) {
+            return ".jpg";
+        }
+        // GIF: 47 49 46 38
+        if (imageBytes[0] == 0x47 && imageBytes[1] == 0x49
+                && imageBytes[2] == 0x46 && imageBytes[3] == 0x38) {
+            return ".gif";
+        }
+        // WEBP: 52 49 46 46 ... 57 45 42 50
+        if (imageBytes[0] == 0x52 && imageBytes[1] == 0x49
+                && imageBytes[2] == 0x46 && imageBytes[3] == 0x46
+                && imageBytes.length > 12
+                && imageBytes[8] == 0x57 && imageBytes[9] == 0x45
+                && imageBytes[10] == 0x42 && imageBytes[11] == 0x50) {
+            return ".webp";
+        }
+        return ".png";
     }
 
     private File resolvePersistentUploadFolder(HttpServletRequest request)

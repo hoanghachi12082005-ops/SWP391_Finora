@@ -143,11 +143,11 @@ public class BranchDAO {
         }
         return false;
     }
-    
+
     public boolean isInforDuplicate(String email, String phone, int excludeId) {
         boolean hasEmail = (email != null && !email.isBlank());
         boolean hasPhone = (phone != null && !phone.isBlank());
-        
+
         if (!hasEmail && !hasPhone) {
             return false;
         }
@@ -348,7 +348,7 @@ public class BranchDAO {
         }
         return list;
     }
-    
+
     // -- Tìm kiếm thông tin được nhập---------------------------
     public List<Branch> search(String keyword) {
 
@@ -387,17 +387,17 @@ public class BranchDAO {
 
         return list;
     }
-    
+
     //-- Hàm này dùng để đếm có bao nhiêu branch ----------------------------------------------- 
-    public int countBranch(String keyword ,String status, String city) {
+    public int countBranch(String keyword, String status, String city) {
 
         StringBuilder sql = new StringBuilder("""
         SELECT COUNT(*)
         FROM branch
         WHERE 1=1
         """);
-        
-        if  (keyword != null && !keyword.isBlank()){
+
+        if (keyword != null && !keyword.isBlank()) {
             sql.append(""" 
                        AND 
                        (
@@ -406,8 +406,8 @@ public class BranchDAO {
                        branch_code LIKE ?
                        )
                        """);
-        } 
-        
+        }
+
         if (status != null && !status.isBlank()) {
             sql.append(" AND status = ?");
         }
@@ -417,22 +417,21 @@ public class BranchDAO {
         }
 
         try (
-                Connection conn = DBContext.getConnection(); 
-                PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            setFilterParams(ps, keyword,status, city);
+            setFilterParams(ps, keyword, status, city);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);
                 }
-            } 
+            }
         } catch (Exception e) {
             e.printStackTrace();
-        } 
+        }
         return 0;
     }
-    
+
     //-- Hàm này giúp phân trang  -----------------------------------------------
     public List<Branch> findBranchPaging(
             String keyword,
@@ -452,8 +451,8 @@ public class BranchDAO {
         FROM branch b
         WHERE 1=1
         """);
-        
-        if (keyword != null && !keyword.isBlank()){ 
+
+        if (keyword != null && !keyword.isBlank()) {
             sql.append("""
                        AND
                        (
@@ -462,8 +461,8 @@ public class BranchDAO {
                        branch_code Like ?
                        )
                        """);
-        } 
-        
+        }
+
         if (status != null && !status.isBlank()) {
             sql.append(" AND status = ?");
         }
@@ -524,13 +523,13 @@ public class BranchDAO {
             String city) throws SQLException {
 
         int index = 1;
-        
-        if (keyword != null && !keyword.isBlank()){
+
+        if (keyword != null && !keyword.isBlank()) {
             String key = "%" + keyword + "%";
             ps.setString(index++, key);
             ps.setString(index++, key);
         }
-        
+
         if (status != null && !status.isBlank()) {
             ps.setString(index++, status);
         }
@@ -586,5 +585,51 @@ public class BranchDAO {
             // Truy vấn không có cột manager_name
         }
         return b;
+    }
+
+    // ── Gán quản lý cho chi nhánh ────────────────────────────────
+    public boolean assignManager(int branchId, int employeeId) {
+        String sql = "UPDATE employee SET branch_id = ? WHERE emp_id = ?";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            ps.setInt(2, employeeId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // ── Xoá quản lý khỏi chi nhánh ────────────────────────────────
+    public boolean unassignManager(int branchId) {
+        String sql = "UPDATE employee SET branch_id = NULL WHERE branch_id = ? AND role_id = (SELECT role_id FROM role WHERE role_name = 'StoreManager')";
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // ── Tìm ID quản lý hiện tại của chi nhánh ─────────────────────
+    public int findManagerIdByBranchId(int branchId) {
+        String sql = """
+            SELECT e.emp_id FROM employee e
+            INNER JOIN role r ON e.role_id = r.role_id
+            WHERE e.branch_id = ? AND r.role_name = 'StoreManager'
+            """;
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 }

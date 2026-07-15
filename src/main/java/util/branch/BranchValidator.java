@@ -3,10 +3,7 @@ package util.branch;
 import model.Branch;
 
 import jakarta.servlet.http.Part;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.Set;
-import javax.imageio.ImageIO;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -82,17 +79,6 @@ public final class BranchValidator {
 
         if (contentType == null || !ALLOWED_TYPES.contains(contentType.toLowerCase())) {
             return "Định dạng hình ảnh không hợp lệ.";
-        }
-
-        try {
-            BufferedImage image = ImageIO.read(imagePart.getInputStream());
-
-            if (image == null) {
-                return "File tải lên không phải hình ảnh hợp lệ.";
-            }
-
-        } catch (IOException ex) {
-            return "Không thể đọc file hình ảnh.";
         }
 
         return null;
