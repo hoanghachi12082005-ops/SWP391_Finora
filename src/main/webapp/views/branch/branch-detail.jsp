@@ -185,7 +185,7 @@
                                         <tr>
                                             <td>${emp.empId}</td>
                                             <td>${emp.fullName}</td>
-                                            <td>—</td>
+                                            <td>${emp.roleName}</td>
                                             <td>${empty emp.phone ? '—' : emp.phone}</td>
                                             <td>
                                                 <c:set var="empStatus" value="${fn:toLowerCase(emp.status)}"/>
