@@ -15,6 +15,7 @@ import jakarta.servlet.http.Part;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 @WebServlet(name = "ProductController", urlPatterns = {"/products"})
 @MultipartConfig(
@@ -36,7 +38,8 @@ import java.util.List;
 public class ProductController extends BaseController {
     private ProductDAO productDAO;
     private static final int ITEMS_PER_PAGE = 5;
-    private static final long MAX_IMAGE_SIZE = 3L * 1024 * 1024; // 3MB
+    private static final int MAX_IMAGE_SIZE = 3 * 1024 * 1024; // 3MB
+    private static final int MAX_IMAGE_DIMENSION = 5000;        // 5000px tối đa mỗi chiều
     private static final String IMAGE_DIR = "/assets/images/product/";
 
     @Override
@@ -251,7 +254,7 @@ public class ProductController extends BaseController {
     }
 
     /**
-     * Xác thực ảnh thật bằng ImageIO + giới hạn 3MB.
+     * Xác thực ảnh thật bằng ImageIO + giới hạn 3MB + giới hạn kích thước.
      * Trả về null nếu hợp lệ; ngược lại trả về message lỗi.
      */
     private String verifyImage(Part imagePart) {
@@ -275,6 +278,16 @@ public class ProductController extends BaseController {
                 if (width <= 0 || height <= 0) {
                     return "Ảnh không hợp lệ (kích thước không xác định).";
                 }
+                // Chống zip bomb: giới hạn kích thước ảnh
+                if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
+                    return "Kích thước ảnh quá lớn (tối đa " + MAX_IMAGE_DIMENSION + "px mỗi chiều).";
+                }
+                // Đọc thử ảnh để đảm bảo file decode được hoàn chỉnh
+                BufferedImage bi = reader.read(0);
+                if (bi == null) {
+                    return "Không thể giải mã ảnh.";
+                }
+                bi.flush();
             } finally {
                 reader.dispose();
             }
@@ -314,14 +327,12 @@ public class ProductController extends BaseController {
 
     /**
      * Lưu file ảnh xuống ổ cứng.
-     * @return tên file đã lưu (vd: "product_1_1712345678.jpg")
+     * @return tên file đã lưu (vd: "product_1_a1b2c3d4.jpg")
      */
     private String saveProductImageFile(HttpServletRequest request, Part imagePart, int productId) throws IOException {
         File dir = ensureImageDir(request);
         String ext = resolveExtension(imagePart);
-        String uniqueName = "product_" + productId + "_" + System.currentTimeMillis() + "." + ext;
-        // Sleep 1ms để tránh trùng tên file khi upload nhiều ảnh cùng lúc
-        try { Thread.sleep(1); } catch (InterruptedException ignored) {}
+        String uniqueName = "product_" + productId + "_" + UUID.randomUUID() + "." + ext;
         File target = new File(dir, uniqueName);
         try (InputStream in = imagePart.getInputStream()) {
             Files.copy(in, target.toPath(), StandardCopyOption.REPLACE_EXISTING);
