@@ -122,12 +122,23 @@
         } else {
             for (Product p : products) {
                 String imgUrl = p.getImageUrl();
+                List<String> imgUrls = p.getImageUrlList();
+                int imgCount = imgUrls.size();
 %>
                             <tr>
                                 <td>#<%= p.getProductID() %></td>
                                 <td>
-                                    <% if (imgUrl != null && !imgUrl.isBlank()) { %>
-                                        <img src="<%= imgUrl %>" alt="product" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #eee;">
+                                    <% if (imgCount > 0) { %>
+                                        <div class="d-flex align-items-center gap-1" style="min-width:60px;">
+                                            <img src="<%= imgUrls.get(0) %>" alt="product" 
+                                                 style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #eee;">
+                                            <% if (imgCount > 1) { %>
+                                                <span class="badge bg-secondary" style="font-size:10px;" 
+                                                      title="<%= String.join(", ", imgUrls) %>">
+                                                    +<%= imgCount - 1 %>
+                                                </span>
+                                            <% } %>
+                                        </div>
                                     <% } else { %>
                                         <span class="text-muted" style="font-size:12px;">No image</span>
                                     <% } %>
@@ -151,7 +162,7 @@
                                         '<%= p.getUnitID() %>',
                                         '<%= p.getSellingPrice() != null ? p.getSellingPrice().toPlainString() : "0" %>',
                                         '<%= p.getStatus() != null ? p.getStatus() : "Active" %>',
-                                        '<%= imgUrl != null ? imgUrl : "" %>'
+                                        '<%= java.util.Optional.ofNullable(Product.toJsonArray(p.getImageUrlList())).orElse("").replace("'", "\\\\'") %>'
                                     )">Sửa</button>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="deleteProduct('<%= p.getProductID() %>')">Xóa</button>
                                 </td>
@@ -267,8 +278,15 @@
             </div>
             <div class="mb-3">
                 <label class="form-label">Ảnh sản phẩm</label>
-                <input type="file" id="modal-image" name="imageFile" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,image/*">
-                <div class="form-text">Chỉ chấp nhận file ảnh: JPG, JPEG, PNG, WEBP, GIF, BMP. Tối đa 3MB. Có thể bỏ trống khi tạo mới.</div>
+                <input type="file" id="modal-image" name="imageFile" class="form-control" 
+                       accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,image/*" multiple>
+                <div class="form-text">Chọn nhiều ảnh (giữ Ctrl để chọn nhiều). Chỉ chấp nhận file ảnh, tối đa 3MB mỗi ảnh. Có thể bỏ trống khi tạo mới.</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Ảnh hiện tại</label>
+                <div id="currentImages" class="d-flex flex-wrap gap-2">
+                    <!-- JS sẽ render ảnh hiện tại ở đây -->
+                </div>
             </div>
             <div class="d-flex justify-content-end">
                 <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal" onclick="closeProductModal()">Huỷ</button>
@@ -311,28 +329,55 @@
         if (productForm) {
             productForm.addEventListener('submit', function(e) {
                 const fileInput = document.getElementById('modal-image');
-                const file = fileInput && fileInput.files && fileInput.files[0];
-                if (!file) return; // không có ảnh thì cho qua
-                if (!isValidImageFile(file)) {
-                    e.preventDefault();
-                    alert('File tải lên không phải ảnh hợp lệ. Chỉ chấp nhận: ' + ALLOWED_IMAGE_EXT.join(', ') + '.');
-                    fileInput.value = '';
-                    return false;
-                }
-                if (file.size > 3 * 1024 * 1024) {
-                    e.preventDefault();
-                    alert('Ảnh vượt quá 3MB. Vui lòng chọn ảnh khác.');
-                    fileInput.value = '';
-                    return false;
+                const files = fileInput && fileInput.files;
+                if (!files || files.length === 0) return; // không có ảnh thì cho qua
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (!isValidImageFile(file)) {
+                        e.preventDefault();
+                        alert('File "' + file.name + '" không phải ảnh hợp lệ. Chỉ chấp nhận: ' + ALLOWED_IMAGE_EXT.join(', ') + '.');
+                        fileInput.value = '';
+                        return false;
+                    }
+                    if (file.size > 3 * 1024 * 1024) {
+                        e.preventDefault();
+                        alert('File "' + file.name + '" vượt quá 3MB. Vui lòng chọn ảnh khác.');
+                        fileInput.value = '';
+                        return false;
+                    }
                 }
             });
         }
     });
 
-    function openProductModal(action, id, catId, name, unitId, sellingPrice, status, imageUrl) {
+    function openProductModal(action, id, catId, name, unitId, sellingPrice, status, imageUrlsJson) {
         document.getElementById('modal-action').value = action;
         const fileInput = document.getElementById('modal-image');
         if (fileInput) fileInput.value = '';
+
+        // Hiển thị ảnh hiện tại (khi sửa)
+        const container = document.getElementById('currentImages');
+        container.innerHTML = '';
+        if (imageUrlsJson && imageUrlsJson !== '') {
+            try {
+                const urls = JSON.parse(imageUrlsJson);
+                urls.forEach(function(url) {
+                    if (!url) return;
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.alt = 'product';
+                    img.title = url;
+                    img.style.width = '64px';
+                    img.style.height = '64px';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '6px';
+                    img.style.border = '1px solid #ddd';
+                    img.style.cursor = 'pointer';
+                    container.appendChild(img);
+                });
+            } catch(e) { /* ignore - không parse được thì bỏ qua */ }
+        }
+
         if (action === 'edit') {
             document.getElementById('modal-title').innerText = 'Chỉnh sửa sản phẩm';
             document.getElementById('modal-submit').innerText = 'Cập nhật';
