@@ -1,5 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fn" uri="jakarta.tags.functions"%>
+<c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : 'Nhân viên'}" />
 
 <jsp:include page="../common/header.jsp">
     <jsp:param name="title" value="Danh sách nhà cung cấp"/>
@@ -35,7 +37,9 @@
                         <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">file_download</span> Xuất file
                     </a>
 
-                    <button type="button" class="btn btn-danger" onclick="openSupplierModal('create')">+ Thêm nhà cung cấp</button>
+                    <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+                        <button type="button" class="btn btn-danger" onclick="openSupplierModal('create')">+ Thêm nhà cung cấp</button>
+                    </c:if>
                 </div>
             </div>
 
@@ -95,58 +99,25 @@
                         <div class="row">
 
                             <div class="col-md-6">
-
                                 <input type="text" name="keyword" value="${keyword}" class="form-control" placeholder="Nhập NCC muốn tìm...">
                             </div>
 
-                            <div class="col-md-2">
-
+                            <div class="col-md-3">
                                 <select name="status" class="form-select" onchange="this.form.submit()">
-
                                     <option value="" ${empty status ? 'selected' : ''}>
-                                        All Status
+                                        Tất cả trạng thái
                                     </option>
-
                                     <option value="active" ${status eq 'active' ? 'selected' : ''}>
                                         Active
                                     </option>
-
                                     <option value="inactive" ${status eq 'inactive' ? 'selected' : ''}>
                                         Inactive
                                     </option>
-
                                 </select>
-
                             </div>
 
-                            <div class="col-md-2">
-
-                                <select name="pageSize" class="form-select" onchange="this.form.submit()">
-
-                                    <option value="5" ${pageSizeOption == '5' ? 'selected' : ''}>
-                                        5 bản ghi/trang
-                                    </option>
-
-                                    <option value="10" ${empty pageSizeOption || pageSizeOption == '10' ? 'selected' : ''}>
-                                        10 bản ghi/trang
-                                    </option>
-
-                                    <option value="30p" ${pageSizeOption == '30p' ? 'selected' : ''}>
-                                        30% số bản ghi
-                                    </option>
-
-                                    <option value="50p" ${pageSizeOption == '50p' ? 'selected' : ''}>
-                                        50% số bản ghi
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-                            <div class="col-md-2">
-
+                            <div class="col-md-3">
                                 <button class="btn btn-danger w-100"> Tìm kiếm </button>
-
                             </div>
 
                         </div>
@@ -183,26 +154,28 @@
                                         ${s.address}
                                     </td>
                                     <td>
-                                        <c:choose>
-                                            <c:when test="${s.status eq 'active'}">
-                                                <span class="badge bg-success">Hoạt động</span>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="badge bg-secondary">Ngưng hoạt động</span>
-                                            </c:otherwise>
-                                        </c:choose>
+                                         <c:choose>
+                                             <c:when test="${fn:toUpperCase(s.status) eq 'ACTIVE'}">
+                                                 <span class="status-badge active">Hoạt động</span>
+                                             </c:when>
+                                             <c:otherwise>
+                                                 <span class="status-badge locked">Ngưng hoạt động</span>
+                                             </c:otherwise>
+                                         </c:choose>
                                     </td>
 
                                     <td>
-                                        <button type="button" 
-                                                class="btn btn-sm btn-warning btn-edit-supplier" 
-                                                data-id="${s.supplierID}"
-                                                data-name="<c:out value='${s.name}'/>"
-                                                data-phone="<c:out value='${s.phone}'/>"
-                                                data-address="<c:out value='${s.address}'/>"
-                                                data-status="<c:out value='${s.status}'/>">
-                                            Sửa
-                                        </button>
+                                        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-warning btn-edit-supplier" 
+                                                    data-id="${s.supplierID}"
+                                                    data-name="<c:out value='${s.name}'/>"
+                                                    data-phone="<c:out value='${s.phone}'/>"
+                                                    data-address="<c:out value='${s.address}'/>"
+                                                    data-status="<c:out value='${s.status}'/>">
+                                                Sửa
+                                            </button>
+                                        </c:if>
 
                                         <button type="button" 
                                                 class="btn btn-sm btn-outline-info" 
@@ -210,7 +183,9 @@
                                             Sản phẩm
                                         </button>
 
-                                        <a href="suppliers?action=delete&id=${s.supplierID}&page=${page}&keyword=${keyword}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa nhà cung cấp này?')"> Xóa</a>
+                                        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+                                            <a href="suppliers?action=delete&id=${s.supplierID}&page=${page}&keyword=${keyword}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa nhà cung cấp này?')"> Xóa</a>
+                                        </c:if>
                                     </td>
                                 </tr>
                             </c:forEach>
@@ -220,17 +195,10 @@
                     </table>
 
                     <!-- Pagination -->
-
-                    <div class="d-flex justify-content-between align-items-center mt-4">
-                        <div class="text-muted small">
-                            Trang <strong>${page}</strong> / <strong>${totalPage}</strong>
-                        </div>
-                        <jsp:include page="../common/pagination.jsp">
-                            <jsp:param name="currentPage" value="${page}"/>
-                            <jsp:param name="totalPages" value="${totalPage}"/>
-                            <jsp:param name="url" value="suppliers?keyword=${keyword}&status=${status}&pageSize=${pageSizeOption}&page="/>
-                        </jsp:include>
-                    </div>
+                    <jsp:include page="/views/common/pagination.jsp">
+                        <jsp:param name="baseUrl" value="suppliers"/>
+                        <jsp:param name="queryString" value="&keyword=${empty keyword ? '' : keyword}&status=${empty status ? '' : status}"/>
+                    </jsp:include>
 
                 </div>
 
@@ -288,6 +256,8 @@
 </div>
 
 <script>
+    const userRole = '${roleName}';
+    const canEditSuppliers = (userRole === 'Admin' || userRole === 'Owner' || userRole === 'StoreManager');
     let bsModal;
     document.addEventListener("DOMContentLoaded", function() {
         if (typeof bootstrap !== 'undefined') {
@@ -410,29 +380,37 @@
                             <td class="text-start">\${item.productName}</td>
                             <td class="text-end">
                                 <div class="input-group input-group-sm ms-auto" style="width: 160px;">
-                                    <input type="number" class="form-control text-end fw-bold i-row-price" value="\${item.importPrice}" min="0" step="1000" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                                    <input type="number" class="form-control text-end fw-bold i-row-price" value="\${item.importPrice}" min="0" step="1000" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px;" \${canEditSuppliers ? '' : 'disabled'}>
                                     <span class="input-group-text text-muted small" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px;">đ</span>
                                 </div>
                             </td>
+                            \${canEditSuppliers ? `
                             <td class="text-center">
                                 <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-circle p-1 i-row-delete-btn" title="Xóa sản phẩm" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
                                     <span class="material-icons" style="font-size: 18px;">delete</span>
                                 </button>
                             </td>
+                            ` : ''}
                         `;
                         
-                        const priceInput = tr.querySelector('.i-row-price');
-                        priceInput.onchange = () => {
-                            const newPrice = parseFloat(priceInput.value);
-                            updateSupplierProductPrice(supplierId, item.productId, newPrice);
-                        };
-
-                        const deleteBtn = tr.querySelector('.i-row-delete-btn');
-                        deleteBtn.onclick = () => {
-                            if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi danh sách của nhà cung cấp?')) {
-                                deleteSupplierProduct(supplierId, item.productId, tr);
+                        if (canEditSuppliers) {
+                            const priceInput = tr.querySelector('.i-row-price');
+                            if (priceInput) {
+                                priceInput.onchange = () => {
+                                    const newPrice = parseFloat(priceInput.value);
+                                    updateSupplierProductPrice(supplierId, item.productId, newPrice);
+                                };
                             }
-                        };
+
+                            const deleteBtn = tr.querySelector('.i-row-delete-btn');
+                            if (deleteBtn) {
+                                deleteBtn.onclick = () => {
+                                    if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi danh sách của nhà cung cấp?')) {
+                                        deleteSupplierProduct(supplierId, item.productId, tr);
+                                    }
+                                };
+                            }
+                        }
                         
                         tbody.appendChild(tr);
                     });
@@ -447,6 +425,7 @@
 
     function loadActiveProducts(currentLinkedProductIds = []) {
         const select = document.getElementById('addProductSelect');
+        if (!select) return;
         select.innerHTML = '<option value="">-- Đang tải sản phẩm --</option>';
         
         fetch('suppliers?action=get-active-products-api')
@@ -565,6 +544,7 @@
       </div>
       <div class="modal-body pt-3">
         <!-- Add Product Section -->
+        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
         <div class="row g-2 mb-3 align-items-end p-3 bg-light rounded-3 border border-light-subtle">
            <div class="col-md-6">
              <label class="form-label small fw-bold text-muted mb-1">Thêm sản phẩm mới</label>
@@ -583,6 +563,7 @@
              <button type="button" class="btn btn-sm btn-danger w-100 fw-semibold text-white" id="btnAddSupplierProduct" style="border-radius: 8px; height: 31px;">Thêm</button>
            </div>
         </div>
+        </c:if>
 
         <div class="table-responsive" style="border-radius: 8px; border: 1px solid #e5e7eb;">
           <table class="table table-hover align-middle mb-0">
@@ -591,7 +572,9 @@
                 <th width="100">Mã SP</th>
                 <th class="text-start">Tên Sản Phẩm</th>
                 <th width="220">Giá Nhập</th>
+                <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
                 <th width="100">Thao tác</th>
+                </c:if>
               </tr>
             </thead>
             <tbody id="spModalTableBody" style="font-size: 14px;">
@@ -601,7 +584,14 @@
         </div>
       </div>
       <div class="modal-footer border-top-0 pt-0">
-        <button type="button" class="btn btn-danger" onclick="location.reload();" style="border-radius: 8px; font-weight: 500;">Lưu</button>
+        <c:choose>
+            <c:when test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+                <button type="button" class="btn btn-danger" onclick="location.reload();" style="border-radius: 8px; font-weight: 500;">Lưu</button>
+            </c:when>
+            <c:otherwise>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 500;">Đóng</button>
+            </c:otherwise>
+        </c:choose>
       </div>
     </div>
   </div>

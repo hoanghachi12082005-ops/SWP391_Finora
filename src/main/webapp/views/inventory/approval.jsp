@@ -5,21 +5,29 @@
     <jsp:param name="title" value="Xử Lý Phiếu"/>
 </jsp:include>
 
+<div class="app-container">
+    <jsp:include page="/views/common/sidebar.jsp" />
+    
+    <div class="main-content">
+        <jsp:include page="/views/common/topbar.jsp" />
+        
+        <div class="page-container">
+
 <style>
     .approval-page { padding: 24px 32px; max-width: 1400px; margin: 0 auto; }
     .approval-page-header h4 { font-weight: 700; color: #111827; letter-spacing: -0.5px; margin-bottom: 4px; }
     .approval-page-header p { color: #6b7280; font-size: 14px; margin-bottom: 0; }
     .approval-card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; overflow: hidden; }
-    .approval-card-header { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white; padding: 16px 24px; font-weight: 600; font-size: 15px; }
+    .approval-card-header { background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%); color: white; padding: 16px 24px; font-weight: 600; font-size: 15px; }
     .approval-card-header .badge { font-size: 13px; }
     .approval-table th { font-weight: 600; color: #475569; background-color: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.3px; }
     .approval-table td { vertical-align: middle; color: #334155; font-size: 14px; }
     .approval-table tbody tr:hover { background-color: #f1f5f9; }
     .action-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 7px 14px; border-radius: 8px; font-weight: 500; font-size: 13px; transition: all 0.2s; border: none; cursor: pointer; }
-    .btn-approve { background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-    .btn-approve:hover { background-color: #d1fae5; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(5,150,105,0.15); }
-    .btn-reject { background-color: #fef2f2; color: #e11d48; border: 1px solid #fecdd3; }
-    .btn-reject:hover { background-color: #ffe4e6; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(225,29,72,0.15); }
+    .btn-approve { background-color: var(--success-bg); color: var(--success-text); border: 1px solid rgba(16, 185, 129, 0.15); }
+    .btn-approve:hover { background-color: var(--success-bg); opacity: 0.85; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(16,185,129,0.15); }
+    .btn-reject { background-color: var(--danger-bg); color: var(--danger-text); border: 1px solid rgba(239, 68, 68, 0.15); }
+    .btn-reject:hover { background-color: var(--danger-bg); opacity: 0.85; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(239,68,68,0.15); }
     .empty-state { padding: 48px 24px; text-align: center; }
     .empty-state .material-icons { font-size: 56px; color: #cbd5e1; margin-bottom: 12px; }
     .empty-state h5 { color: #64748b; font-weight: 600; }
@@ -28,7 +36,7 @@
 
 <div class="approval-page">
     <div class="approval-page-header mb-4">
-        <h4><span class="material-icons" style="font-size: 28px; vertical-align: text-bottom; margin-right: 8px; color: #4f46e5;">fact_check</span>Xử Lý Phiếu</h4>
+        <h4><span class="material-icons" style="font-size: 28px; vertical-align: text-bottom; margin-right: 8px; color: var(--primary-color);">fact_check</span>Xử Lý Phiếu</h4>
         <p>Phê duyệt hoặc từ chối các phiếu điều chuyển đang chờ xử lý</p>
     </div>
 
@@ -81,7 +89,7 @@
                             <tbody>
                                 <c:forEach var="item" items="${pendingTransfers}">
                                     <tr>
-                                        <td class="ps-4"><strong style="color: #4f46e5;">${item.transferCode}</strong></td>
+                                        <td class="ps-4"><strong style="color: var(--primary-color);">${item.transferCode}</strong></td>
                                         <td>${item.fromWarehouseName}</td>
                                         <td>${item.toWarehouseName}</td>
                                         <td>${item.createdByName}</td>
@@ -109,6 +117,9 @@
                     </div>
                 </c:otherwise>
             </c:choose>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 </div>

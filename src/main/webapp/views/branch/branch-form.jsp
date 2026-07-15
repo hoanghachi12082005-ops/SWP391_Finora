@@ -12,7 +12,7 @@
     <jsp:include page="/views/common/sidebar.jsp"/>
 
     <main class="main-content">
-        <jsp:include page="/views/common/topbar.jsp"/>
+        
         
         <div class="container-fluid py-4">
             <div class="page-header">
@@ -43,7 +43,13 @@
                   method="post"
                   enctype="multipart/form-data"
                   class="branch-form">
-
+                
+                <input type="hidden" name="returnPage" value="${page}">
+<input type="hidden" name="returnSizeValue" value="${sizeValue}">
+<input type="hidden" name="returnKeyword" value="${keyword}">
+<input type="hidden" name="returnStatus" value="${status}">
+<input type="hidden" name="returnCity" value="${city}">
+                
                 <c:choose>
                     <c:when test="${branch == null || branch.branchId <= 0}">
 
@@ -273,10 +279,10 @@
 
                 <div class="form-actions">
 
-                    <a href="branch"
+                    <a href="branch?action=list&page=${page}&sizeValue=${sizeValue}&keyword=${keyword} &status=${status}&city=${city}"
                        class="btn-cancel">
                         Hủy
-                    </a>   
+                    </a>  
 
                     <button type="submit"
                             class="btn-save">

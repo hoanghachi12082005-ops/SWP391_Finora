@@ -198,12 +198,14 @@
                                     <td>${b.employeeCount}</td>
                                 </c:if>
                                 <td>
-                                    <c:set var="branchStatus" value="${fn:toLowerCase(b.status)}"/>
-                                    <span class="${branchStatus == 'active'
-                                                   ? 'status-active'
-                                                   : 'status-inactive'}">
-                                              ${branchStatus == 'active' ? 'Active' : 'Inactive'}
-                                          </span>
+                                    <c:choose>
+                                        <c:when test="${fn:toLowerCase(b.status) == 'active'}">
+                                            <span class="status-badge active">Hoạt động</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="status-badge locked">Ngừng hoạt động</span>
+                                        </c:otherwise>
+                                    </c:choose>
                                     </td>
 
                                     <td>

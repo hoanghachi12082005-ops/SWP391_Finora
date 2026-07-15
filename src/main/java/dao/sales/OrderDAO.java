@@ -64,7 +64,7 @@ public class OrderDAO {
         List<Order> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
             SELECT o.*, 
-                   s.name AS supplierName, 
+                   s.supplier_name AS supplierName, 
                    e.fullName AS employeeName, 
                    w.warehouse_name AS warehouseName
             FROM [order] o
@@ -109,9 +109,10 @@ public class OrderDAO {
     public List<OrderDetail> findDetailsByOrderId(int orderId) {
         List<OrderDetail> list = new ArrayList<>();
         String sql = """
-            SELECT od.*, p.product_name, p.product_codebar 
+            SELECT od.*, p.product_name, p.product_codebar, s.supplier_name 
             FROM order_detail od 
             JOIN Product p ON od.product_id = p.product_id 
+            LEFT JOIN supplier s ON od.supplier_id = s.supplier_id
             WHERE od.order_id = ?
             """;
         
@@ -130,6 +131,7 @@ public class OrderDAO {
                     od.setImportPrice(rs.getDouble("import_price"));
                     od.setProductName(rs.getString("product_name"));
                     od.setProductCode(rs.getString("product_codebar"));
+                    od.setSupplierName(rs.getString("supplier_name"));
                     list.add(od);
                 }
             }
@@ -225,6 +227,38 @@ public class OrderDAO {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             ps.setInt(2, orderId);
+            ps.executeUpdate();
+        }
+    }
+
+    public boolean updateStatus(int orderId, String status, Integer approvedBy) {
+        String sql = "UPDATE [order] SET status = ?, approved_by = ? WHERE order_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            if (approvedBy != null) {
+                ps.setInt(2, approvedBy);
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }
+            ps.setInt(3, orderId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public void updateStatus(Connection conn, int orderId, String status, Integer approvedBy) throws SQLException {
+        String sql = "UPDATE [order] SET status = ?, approved_by = ? WHERE order_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            if (approvedBy != null) {
+                ps.setInt(2, approvedBy);
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }
+            ps.setInt(3, orderId);
             ps.executeUpdate();
         }
     }
@@ -371,5 +405,101 @@ public class OrderDAO {
             o.setCreatedAt(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(ts));
         }
         return o;
+    }
+
+    public int countSaleOrders(String keyword, int branchId) {
+        StringBuilder sql = new StringBuilder("""
+            SELECT COUNT(*) 
+            FROM [order] o
+            LEFT JOIN Customer c ON o.customer_id = c.cus_id
+            JOIN Employee e ON o.emp_id = e.emp_id
+            JOIN Branch b ON o.branch_id = b.branch_id
+            WHERE o.order_type = 'SALE'
+            """);
+        
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        boolean hasBranch = branchId > 0;
+        
+        if (hasKeyword) {
+            sql.append(" AND (o.order_code LIKE ? OR c.full_name LIKE ?)");
+        }
+        if (hasBranch) {
+            sql.append(" AND o.branch_id = ?");
+        }
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            if (hasKeyword) {
+                String searchStr = "%" + keyword.trim() + "%";
+                ps.setString(paramIndex++, searchStr);
+                ps.setString(paramIndex++, searchStr);
+            }
+            if (hasBranch) {
+                ps.setInt(paramIndex++, branchId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public List<Order> getAllSaleOrdersPaginated(String keyword, int branchId, int offset, int pageSize) {
+        List<Order> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+            SELECT o.*, 
+                   c.full_name AS customerName, 
+                   e.fullName AS employeeName, 
+                   b.branch_name AS branchName
+            FROM [order] o
+            LEFT JOIN Customer c ON o.customer_id = c.cus_id
+            JOIN Employee e ON o.emp_id = e.emp_id
+            JOIN Branch b ON o.branch_id = b.branch_id
+            WHERE o.order_type = 'SALE'
+            """);
+        
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        boolean hasBranch = branchId > 0;
+        
+        if (hasKeyword) {
+            sql.append(" AND (o.order_code LIKE ? OR c.full_name LIKE ?)");
+        }
+        if (hasBranch) {
+            sql.append(" AND o.branch_id = ?");
+        }
+        sql.append(" ORDER BY o.order_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            if (hasKeyword) {
+                String searchStr = "%" + keyword.trim() + "%";
+                ps.setString(paramIndex++, searchStr);
+                ps.setString(paramIndex++, searchStr);
+            }
+            if (hasBranch) {
+                ps.setInt(paramIndex++, branchId);
+            }
+            ps.setInt(paramIndex++, offset);
+            ps.setInt(paramIndex++, pageSize);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Order o = mapRow(rs);
+                    o.setCustomerName(rs.getString("customerName"));
+                    o.setEmployeeName(rs.getString("employeeName"));
+                    o.setBranchName(rs.getString("branchName"));
+                    list.add(o);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

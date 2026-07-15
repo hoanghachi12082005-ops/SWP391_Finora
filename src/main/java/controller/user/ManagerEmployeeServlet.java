@@ -61,8 +61,8 @@ public class ManagerEmployeeServlet extends HttpServlet {
 
         loadPageData(request, branchID);
 
-        request.setAttribute("pageTitle", "Branch Employee List");
-        request.setAttribute("pageSubtitle", "Store Manager views employee accounts in the assigned branch");
+        request.setAttribute("pageTitle", "Nhân viên chi nhánh");
+        request.setAttribute("pageSubtitle", "Danh sách nhân viên tại chi nhánh");
         request.setAttribute("addButtonText", "");
         request.setAttribute("baseUrl", request.getContextPath() + "/manager/emp");
 

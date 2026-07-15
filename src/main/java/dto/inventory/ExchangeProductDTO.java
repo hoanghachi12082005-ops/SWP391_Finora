@@ -7,8 +7,15 @@ public class ExchangeProductDTO {
     private int partnerWarehouseId;
     private String partnerWarehouseName;
     private int partnerStock;
+    private double sellingPrice;
+    private double importPrice;
 
     public ExchangeProductDTO() {}
+
+    public double getSellingPrice() { return sellingPrice; }
+    public void setSellingPrice(double sellingPrice) { this.sellingPrice = sellingPrice; }
+    public double getImportPrice() { return importPrice; }
+    public void setImportPrice(double importPrice) { this.importPrice = importPrice; }
 
     public int getProductId() { return productId; }
     public void setProductId(int productId) { this.productId = productId; }

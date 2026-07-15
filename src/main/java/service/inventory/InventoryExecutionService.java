@@ -4,10 +4,13 @@ import dao.sales.OrderDAO;
 import dao.inventory.InventoryDAO;
 import dao.inventory.StockTransactionDAO;
 import dao.inventory.StockTransferDAO;
+import dao.inventory.InventoryCheckDAO;
 import model.Order;
 import model.OrderDetail;
 import model.StockTransaction;
 import model.StockTransfer;
+import model.InventoryCheck;
+import model.InventoryCheckDetail;
 import util.database.DBContext;
 import java.sql.Connection;
 import java.util.List;
@@ -21,7 +24,7 @@ public class InventoryExecutionService {
 
     public void executeOrder(int orderId, int approverId) throws Exception {
         Order order = orderDAO.findById(orderId);
-        if (order == null || !"PENDING".equals(order.getStatus())) {
+        if (order == null || order.getStatus() != Order.OrderStatus.PENDING) {
             throw new Exception("Đơn hàng không tồn tại hoặc đã được xử lý.");
         }
 
@@ -31,7 +34,7 @@ public class InventoryExecutionService {
             conn.setAutoCommit(false);
             try {
                 // Update Order Status
-                orderDAO.updateStatus(conn, orderId, "COMPLETED");
+                orderDAO.updateStatus(conn, orderId, "COMPLETED", approverId);
                 
                 // Update Stock and Insert Transactions
                 for (OrderDetail d : details) {
@@ -104,7 +107,7 @@ public class InventoryExecutionService {
         try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                transferDAO.updateStatus(conn, transferId, "COMPLETED");
+                transferDAO.updateStatus(conn, transferId, "COMPLETED", empId);
 
                 for (model.StockTransferDetail d : details) {
                     int beforeQty = inventoryDAO.getStockInTransaction(conn, d.getProductId(), transfer.getToWarehouseId());
@@ -114,6 +117,79 @@ public class InventoryExecutionService {
                             "STOCK_TRANSFER", transferId, "TRANSFER_IN",
                             d.getQuantity(), beforeQty, beforeQty + d.getQuantity(),
                             "Nhập điều chuyển kho " + transfer.getTransferCode(), empId);
+                }
+
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
+
+    public void approveInventoryCheck(int checkId, int approverId) throws Exception {
+        InventoryCheckDAO checkDAO = new InventoryCheckDAO();
+        InventoryCheck check = checkDAO.findById(checkId);
+        if (check == null || !"PENDING".equals(check.getStatus())) {
+            throw new Exception("Phiếu kiểm kho không tồn tại hoặc đã được xử lý.");
+        }
+
+        List<InventoryCheckDetail> details = checkDAO.getCheckDetails(checkId);
+
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                checkDAO.updateStatus(conn, checkId, "APPROVED", approverId);
+
+                for (InventoryCheckDetail d : details) {
+                    int beforeQty = inventoryDAO.getStockInTransaction(conn, d.getProductId(), check.getWarehouseId());
+                    int afterQty = d.getActualQty();
+                    int diff = d.getDiscrepancy(); // actual - system
+
+                    inventoryDAO.updateStockQty(conn, check.getWarehouseId(), d.getProductId(), afterQty);
+
+                    String txType = diff >= 0 ? "CHECK_IN" : "CHECK_OUT";
+                    String noteStr = "Kiểm kê kho " + check.getCheckCode() + ": " + (d.getNote() != null ? d.getNote() : "");
+                    inventoryDAO.logCustomStockTransaction(conn, check.getWarehouseId(), d.getProductId(),
+                            "INVENTORY_CHECK", checkId, txType,
+                            Math.abs(diff), beforeQty, afterQty,
+                            noteStr, approverId);
+                }
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
+
+    public void executeStockBalance(int checkId, int executorId) throws Exception {
+        InventoryCheckDAO checkDAO = new InventoryCheckDAO();
+        InventoryCheck check = checkDAO.findById(checkId);
+        if (check == null) {
+            throw new Exception("Phiếu kiểm kho không tồn tại.");
+        }
+
+        List<InventoryCheckDetail> details = checkDAO.getCheckDetails(checkId);
+
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                checkDAO.updateStatus(conn, checkId, "APPROVED", executorId);
+
+                for (InventoryCheckDetail d : details) {
+                    int beforeQty = inventoryDAO.getStockInTransaction(conn, d.getProductId(), check.getWarehouseId());
+                    int afterQty = d.getActualQty();
+                    int diff = d.getDiscrepancy(); // actual - system
+
+                    inventoryDAO.updateStockQty(conn, check.getWarehouseId(), d.getProductId(), afterQty);
+
+                    String txType = diff >= 0 ? "CHECK_IN" : "CHECK_OUT";
+                    String noteStr = "Kiểm kê kho " + check.getCheckCode() + ": " + (d.getNote() != null ? d.getNote() : "");
+                    inventoryDAO.logCustomStockTransaction(conn, check.getWarehouseId(), d.getProductId(),
+                            "INVENTORY_CHECK", checkId, txType,
+                            Math.abs(diff), beforeQty, afterQty,
+                            noteStr, executorId);
                 }
 
                 conn.commit();

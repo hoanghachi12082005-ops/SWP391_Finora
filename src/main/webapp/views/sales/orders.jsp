@@ -17,6 +17,7 @@
                         rel="stylesheet">
                     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
                     <link href="${pageContext.request.contextPath}/assets/css/base.css" rel="stylesheet">
+                    <link href="${pageContext.request.contextPath}/assets/css/sales.css?v=2" rel="stylesheet">
                     <script>
                         tailwind.config = { darkMode: "class", theme: { extend: { colors: { "secondary": "#b51a1b", "primary-fixed-dim": "#ffb3ac", "tertiary-fixed-dim": "#88d982", "on-tertiary-container": "#d8ffd0", "tertiary": "#11651d", "background": "#f8f9fa", "tertiary-fixed": "#a3f69c", "inverse-on-surface": "#f0f1f2", "error-container": "#ffdad6", "surface-dim": "#d9dadb", "on-background": "#191c1d", "on-surface": "#191c1d", "primary-fixed": "#ffdad6", "on-secondary-container": "#fffbff", "surface-container-lowest": "#ffffff", "surface-container-highest": "#e1e3e4", "surface-variant": "#e1e3e4", "surface-container-high": "#e7e8e9", "on-secondary": "#ffffff", "inverse-surface": "#2e3132", "on-tertiary": "#ffffff", "on-secondary-fixed-variant": "#93000b", "surface-tint": "#ba1a20", "surface": "#f8f9fa", "error": "#ba1a1a", "on-error-container": "#93000a", "primary-container": "#d32f2f", "surface-container-low": "#f3f4f5", "on-surface-variant": "#5b403d", "on-primary-fixed-variant": "#930010", "on-primary-container": "#fff2f0", "surface-container": "#edeeef", "surface-bright": "#f8f9fa", "on-error": "#ffffff", "on-tertiary-fixed": "#002204", "tertiary-container": "#307f34", "inverse-primary": "#ffb3ac", "on-tertiary-fixed-variant": "#005312", "on-primary-fixed": "#410003", "outline": "#8f6f6c", "secondary-fixed-dim": "#ffb4ab", "outline-variant": "#e4beba", "on-primary": "#ffffff", "secondary-fixed": "#ffdad6", "secondary-container": "#d93630", "on-secondary-fixed": "#410002", "primary": "#af101a" }, borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" }, spacing: { "stack-lg": "24px", "container-padding": "32px", "stack-sm": "8px", "gutter": "24px", "section-gap": "48px", "unit": "8px", "stack-md": "16px" }, fontFamily: { "body-md": ["Inter"], "label-md": ["Inter"], "caption": ["Inter"], "headline-md": ["Inter"], "headline-lg": ["Inter"], "button-text": ["Inter"], "title-lg": ["Inter"], "display-lg": ["Inter"], "body-lg": ["Inter"] }, fontSize: { "body-md": ["16px", { lineHeight: "24px", fontWeight: "500" }], "label-md": ["14px", { lineHeight: "20px", fontWeight: "600" }], "caption": ["12px", { lineHeight: "16px", fontWeight: "400" }], "headline-md": ["24px", { lineHeight: "32px", fontWeight: "700" }], "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "700" }], "button-text": ["16px", { lineHeight: "24px", fontWeight: "600" }], "title-lg": ["20px", { lineHeight: "28px", fontWeight: "600" }], "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }], "body-lg": ["18px", { lineHeight: "26px", fontWeight: "500" }] } } } };
                     </script>
@@ -49,7 +50,7 @@
                     <div class="flex h-screen w-screen pl-[var(--sidebar-width,260px)] pr-6">
 
                         <!-- Include POS Sidebar -->
-                        <jsp:include page="/views/common/sidebar-pos.jsp" />
+                        <jsp:include page="/views/common/sidebar.jsp" />
 
                         <!-- Main Workspace -->
                         <div class="flex-1 flex flex-col min-w-0 h-screen relative">
@@ -146,6 +147,90 @@
                                                 </c:if>
                                             </tbody>
                                         </table>
+                                    </div>
+                                    <!-- Pagination Section -->
+                                    <div class="flex justify-between items-center mt-6 px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant/30">
+                                        <!-- Page Size Select and Record Info -->
+                                        <form method="get" action="${pageContext.request.contextPath}/orders" id="paginationForm" class="flex items-center gap-3">
+                                            <input type="hidden" name="keyword" value="${fn:escapeXml(keyword)}">
+                                            <span class="text-caption text-outline">Hiển thị:</span>
+                                            <select name="sizeValue" onchange="this.form.submit()" 
+                                                class="text-caption bg-white rounded-lg border border-outline-variant/60 px-2 py-1 outline-none cursor-pointer focus:border-primary">
+                                                <option value="10" ${sizeValue == 10 ? 'selected' : ''}>10 dòng</option>
+                                                <option value="20" ${sizeValue == 20 ? 'selected' : ''}>20 dòng</option>
+                                                <option value="50" ${sizeValue == 50 ? 'selected' : ''}>50 dòng</option>
+                                                <option value="100" ${sizeValue == 100 ? 'selected' : ''}>Tất cả</option>
+                                            </select>
+                                            <span class="text-caption text-outline">
+                                                Hiển thị <strong class="text-on-surface">${startRecord}</strong> - <strong class="text-on-surface">${endRecord}</strong> trong số <strong class="text-on-surface">${totalOrders}</strong> đơn hàng
+                                            </span>
+                                        </form>
+
+                                        <!-- Page Numbers -->
+                                        <c:if test="${totalPages > 1}">
+                                            <div class="flex items-center gap-1.5">
+                                                <!-- Previous Page -->
+                                                <c:if test="${currentPage > 1}">
+                                                    <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${currentPage - 1}&sizeValue=${sizeValue}"
+                                                       class="w-8 h-8 rounded-lg border border-outline-variant/60 flex items-center justify-center text-caption hover:bg-surface-container-high hover:text-primary transition-colors bg-white text-on-surface-variant font-medium">
+                                                        &lt;
+                                                    </a>
+                                                </c:if>
+
+                                                <!-- Page Numbers Logic (similar to branch-list.jsp) -->
+                                                <c:choose>
+                                                    <c:when test="${totalPages <= 5}">
+                                                        <c:forEach begin="1" end="${totalPages}" var="i">
+                                                            <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${i}&sizeValue=${sizeValue}"
+                                                               class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${i == currentPage ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                                ${i}
+                                                            </a>
+                                                        </c:forEach>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <!-- First Page -->
+                                                        <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=1&sizeValue=${sizeValue}"
+                                                           class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${currentPage == 1 ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                            1
+                                                        </a>
+
+                                                        <!-- Dots Left -->
+                                                        <c:if test="${currentPage > 3}">
+                                                            <span class="text-caption text-outline px-1">...</span>
+                                                        </c:if>
+
+                                                        <!-- Mid Pages -->
+                                                        <c:forEach begin="${currentPage - 1 < 2 ? 2 : currentPage - 1}"
+                                                                   end="${currentPage + 1 > totalPages - 1 ? totalPages - 1 : currentPage + 1}"
+                                                                   var="i">
+                                                            <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${i}&sizeValue=${sizeValue}"
+                                                               class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${i == currentPage ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                                ${i}
+                                                            </a>
+                                                        </c:forEach>
+
+                                                        <!-- Dots Right -->
+                                                        <c:if test="${currentPage < totalPages - 2}">
+                                                            <span class="text-caption text-outline px-1">...</span>
+                                                        </c:if>
+
+                                                        <!-- Last Page -->
+                                                        <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${totalPages}&sizeValue=${sizeValue}"
+                                                           class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${currentPage == totalPages ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                            ${totalPages}
+                                                        </a>
+                                                    </c:otherwise>
+                                                </c:choose>
+
+                                                <!-- Next Page -->
+                                                <c:if test="${currentPage < totalPages}">
+                                                    <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${currentPage + 1}&sizeValue=${sizeValue}"
+                                                       class="w-8 h-8 rounded-lg border border-outline-variant/60 flex items-center justify-center text-caption hover:bg-surface-container-high hover:text-primary transition-colors bg-white text-on-surface-variant font-medium">
+                                                        &gt;
+                                                    </a>
+                                                </c:if>
+                                            </div>
+                                        </c:if>
                                     </div>
                                 </div>
 

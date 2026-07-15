@@ -212,7 +212,7 @@ public class ProfileServlet extends HttpServlet {
             input.transferTo(output);
         }
 
-        return "/assets/upload/avatars/" + fileName;
+        return "/assets/images/avatars/" + fileName;
     }
 
     private File resolvePersistentUploadFolder(HttpServletRequest request) throws IOException {
@@ -248,7 +248,7 @@ public class ProfileServlet extends HttpServlet {
                 if (projectRoot != null) {
                     return new File(projectRoot,
                             "src" + File.separator + "main" + File.separator + "webapp" + File.separator + "assets"
-                            + File.separator + "upload" + File.separator + "avatars");
+                            + File.separator + "images" + File.separator + "avatars");
                 }
             }
 
@@ -257,7 +257,7 @@ public class ProfileServlet extends HttpServlet {
 
         File fallback = new File(currentRoot,
                 "src" + File.separator + "main" + File.separator + "webapp" + File.separator + "assets"
-                + File.separator + "upload" + File.separator + "avatars");
+                + File.separator + "images" + File.separator + "avatars");
 
         return fallback.exists() ? fallback : null;
     }
