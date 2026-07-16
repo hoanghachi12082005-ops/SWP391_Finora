@@ -878,9 +878,9 @@ function calcChange() {
 
 async function submitCheckout() {
     if (!cartState) return;
-    // const btn = document.querySelector('#paymentModal .bg-primary');
-    // if (btn && btn.disabled) return; // chống double-click
-    // if (btn) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); }
+    const btn = document.querySelector('#paymentModal .bg-primary');
+    if (btn && btn.disabled) return; // chống double-click
+    if (btn) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); }
 
     const body = new URLSearchParams();
     body.append('paymentMethod', modalPayMethod);
