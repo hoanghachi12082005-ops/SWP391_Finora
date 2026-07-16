@@ -328,7 +328,7 @@ class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab ==
                                     <a href="${pageContext.request.contextPath}/admin/user"
                                         class="sidebar-menu-item ${originalUri.contains('/admin/user') ? 'active' : ''}">
                                         <span class="material-icons">manage_accounts</span>
-                                        <span>Quản lý Nhân viên</span>
+                                        <span>Quản lý Nhân viên </span>
                                     </a>
                                 </c:if>
                                 <c:if test="${roleName == 'Owner'}">

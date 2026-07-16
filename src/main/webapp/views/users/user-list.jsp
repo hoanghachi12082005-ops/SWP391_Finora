@@ -57,7 +57,7 @@
                     </c:if>
                 </section>
 
-                <c:if test="${not empty employeeOverview}">
+                <c:if test="${not empty employeeOverview and sessionScope.currentUser.roleName ne 'Admin'}">
                     <section class="overview-grid">
 
                         <div class="overview-card">
