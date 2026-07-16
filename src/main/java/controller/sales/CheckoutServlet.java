@@ -75,6 +75,8 @@ public class CheckoutServlet extends HttpServlet {
             paymentMethod = "CASH";
         }
 
+
+//session.getAttribute
         String cashReceivedStr = req.getParameter("cashReceived");
         double cashReceived = 0;
         if (cashReceivedStr != null && !cashReceivedStr.isBlank()) {
@@ -101,17 +103,6 @@ public class CheckoutServlet extends HttpServlet {
         // Chuyển khoản: tạo đơn hàng chờ → VNPAY QR
         // ══════════════════════════════════════════════════════════
         if ("BANK_TRANSFER".equals(paymentMethod)) {
-            // ── Chống duplicate: lock session ──────────────
-            String lockKey = "checkout_lock_" + tabId;
-            boolean lockExists = Boolean.TRUE.equals(session.getAttribute(lockKey));
-            System.out.println("[DEBUG] BANK_TRANSFER tabId=" + tabId + " | lockExists=" + lockExists);
-            if (lockExists) {
-                System.out.println("[DEBUG]  LOCK FOUND — từ chối request (double-click)");
-                out.write("{\"status\":\"error\",\"message\":\"Đơn hàng đang được xử lý, vui lòng chờ...\"}");
-                return;
-            }
-            session.setAttribute(lockKey, true);
-            System.out.println("[DEBUG]  LOCK SET — request được xử lý");
 
             Connection conn = null;
             try {
@@ -173,8 +164,6 @@ public class CheckoutServlet extends HttpServlet {
                 if (conn != null) { try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); } }
                 out.write("{\"status\":\"error\",\"message\":\"Lỗi hệ thống: " + escJson(e.getMessage()) + "\"}");
             } finally {
-                session.removeAttribute(lockKey);
-                System.out.println("[DEBUG]  LOCK REMOVED — session lock đã được giải phóng");
                 if (conn != null) { try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {} }
             }
             return;
