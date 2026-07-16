@@ -319,7 +319,7 @@ public class PaymentDAO {
     /**
      * Sinh mã giao dịch tăng tự động (ví dụ: PT00001, PC00001)
      */
-    private String generateTransactionCode(String type, String prefix) {
+    public String generateTransactionCode(String type, String prefix) {
         String sql = "SELECT MAX(transaction_code) FROM payment WHERE PaymentType = ? AND transaction_code LIKE ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -423,10 +423,10 @@ public class PaymentDAO {
     }
 
     // --- Dùng trong transaction (sales/POS/VNPay) ---
-    public void insert(Connection conn, Payment p) throws SQLException {
+    public int insert(Connection conn, Payment p) throws SQLException {
         String sql = "INSERT INTO payment (order_id, payment_amount, payment_date, payment_status, transaction_code, PaymentType, Description, EmployeeID, BranchID, payment_method) "
                    + "VALUES (?, ?, GETDATE(), ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, p.getOrderId());
             ps.setDouble(2, p.getAmount());
             ps.setString(3, p.getStatus() != null ? p.getStatus() : "PAID");
@@ -444,7 +444,14 @@ public class PaymentDAO {
                 ps.setNull(8, java.sql.Types.INTEGER);
             }
             ps.setString(9, p.getMethod() != null ? p.getMethod() : "CASH");
-            ps.executeUpdate();
+            int affected = ps.executeUpdate();
+            if (affected == 0) {
+                throw new SQLException("Tạo thanh toán thất bại.");
+            }
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) return keys.getInt(1);
+            }
+            throw new SQLException("Không lấy được ID thanh toán.");
         }
     }
 }

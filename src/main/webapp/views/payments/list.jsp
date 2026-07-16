@@ -315,6 +315,15 @@
                 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <div class="modal-body p-4">
                     <div class="mb-3">
+                        <label class="form-label fw-bold">Chọn đơn hàng <span class="text-danger">*</span></label>
+                        <select name="orderId" class="form-select" required>
+                            <option value="">-- Chọn đơn hàng --</option>
+                            <c:forEach var="o" items="${recentOrders}">
+                                <option value="${o.orderId}">${o.orderCode} - ${o.customerName} - ${o.totalAmount}₫</option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label fw-bold">Số tiền (VNĐ) <span class="text-danger">*</span></label>
                         <input type="number" name="amount" class="form-control" placeholder="Nhập số tiền thu" required min="1000">
                     </div>
@@ -350,6 +359,15 @@
             <form action="${pageContext.request.contextPath}/cashbook/create-payment" method="post">
                 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Chọn đơn hàng <span class="text-danger">*</span></label>
+                        <select name="orderId" class="form-select" required>
+                            <option value="">-- Chọn đơn hàng --</option>
+                            <c:forEach var="o" items="${recentOrders}">
+                                <option value="${o.orderId}">${o.orderCode} - ${o.customerName} - ${o.totalAmount}₫</option>
+                            </c:forEach>
+                        </select>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Số tiền (VNĐ) <span class="text-danger">*</span></label>
                         <input type="number" name="amount" class="form-control" placeholder="Nhập số tiền chi" required min="1000">

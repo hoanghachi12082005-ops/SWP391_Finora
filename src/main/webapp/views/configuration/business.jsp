@@ -28,6 +28,7 @@
             <div style="background: #fff; padding: 1.5rem; border-radius: 8px; border: 1px solid #e5e7eb; margin-top: 1.5rem;">
                 <h3>Cài đặt điểm tích lũy</h3>
                 <form method="post" action="${pageContext.request.contextPath}/configuration/business" style="margin-top: 1rem;">
+                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <!-- Tỉ lệ tích điểm -->
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">Tích điểm: bao nhiêu VNĐ được 1 điểm?</label>
@@ -52,6 +53,7 @@
             <div style="background: #fff; padding: 1.5rem; border-radius: 8px; border: 1px solid #e5e7eb; margin-top: 1.5rem;">
                 <h3>Cấu hình VAT chung</h3>
                 <form method="post" action="${pageContext.request.contextPath}/configuration/business" style="margin-top: 1rem;">
+                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">Tỷ lệ VAT (%)</label>
                         <input type="number" name="vatPercentage" class="form-control"

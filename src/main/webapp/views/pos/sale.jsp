@@ -353,7 +353,10 @@
                 var ctx = '<%= request.getContextPath() %>';
                 fetch(ctx + '/customers', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
                     body: params.toString()
                 })
                 .then(function(r) { return r.json(); })

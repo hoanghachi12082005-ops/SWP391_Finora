@@ -17,6 +17,9 @@
             <form method="post" action="suppliers">
 
                 <input type="hidden"
+                       name="csrfToken"
+                       value="${sessionScope.csrfToken}">
+                <input type="hidden"
                        name="action"
                        value="create">
 

@@ -223,6 +223,7 @@
       </div>
       <div class="modal-body">
         <form action="suppliers" method="post" id="supplier-form">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="action" id="modal-action" value="create">
             <input type="hidden" name="id" id="modal-id">
 

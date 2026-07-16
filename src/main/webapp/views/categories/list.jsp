@@ -188,6 +188,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form method="post" action="${pageContext.request.contextPath}/category">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="action" id="categoryFormAction" value="add">
                 <input type="hidden" name="categoryId" id="categoryId">
                 

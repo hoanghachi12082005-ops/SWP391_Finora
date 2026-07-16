@@ -227,6 +227,7 @@
 
                                                     <c:if test="${canDelete}">
                                                         <form method="post" action="${baseUrl}" onsubmit="return confirm('Xóa mềm khách hàng này?')">
+                                                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                             <input type="hidden" name="action" value="delete"/>
                                                             <input type="hidden" name="customerId" value="${cust.customerId}"/>
                                                             <button type="submit" title="Xóa">
@@ -265,6 +266,9 @@
         <div class="modal-overlay">
             <form class="modal-box" method="post" action="${baseUrl}">
 
+                <input type="hidden"
+                       name="csrfToken"
+                       value="${sessionScope.csrfToken}">
                 <input type="hidden"
                        name="action"
                        value="${isEdit ? 'update' : 'create'}"/>
@@ -500,6 +504,7 @@
                         <div class="detail-section">
                             <h4>Đồng bộ điểm tích lũy</h4>
                             <form method="post" action="${baseUrl}" class="inline-form">
+                                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                 <input type="hidden" name="action" value="sync-loyalty"/>
                                 <input type="hidden" name="customerId" value="${detailCustomer.customerId}"/>
                                 <button type="submit" class="btn-primary"
@@ -514,6 +519,7 @@
                         <div class="detail-section">
                             <h4>Đổi điểm</h4>
                             <form method="post" action="${baseUrl}" class="inline-form">
+                                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                 <input type="hidden" name="action" value="redeem-points"/>
                                 <input type="hidden" name="customerId" value="${detailCustomer.customerId}"/>
                                 <input type="number" name="redeemPoints" min="1" placeholder="Điểm" required/>

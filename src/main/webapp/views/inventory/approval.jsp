@@ -96,6 +96,7 @@
                                         <td><fmt:formatDate pattern="dd/MM/yyyy HH:mm" value="${item.transferDate}" /></td>
                                         <td class="text-center">
                                             <form action="${pageContext.request.contextPath}/approval" method="POST" class="d-inline">
+                                                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                 <input type="hidden" name="action" value="approveTransfer">
                                                 <input type="hidden" name="transferId" value="${item.stockTransferId}">
                                                 <button class="action-btn btn-approve" type="submit" onclick="return confirm('Duyệt phiếu điều chuyển này?')">
@@ -103,6 +104,7 @@
                                                 </button>
                                             </form>
                                             <form action="${pageContext.request.contextPath}/approval" method="POST" class="d-inline ms-2">
+                                                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                 <input type="hidden" name="action" value="rejectTransfer">
                                                 <input type="hidden" name="transferId" value="${item.stockTransferId}">
                                                 <button class="action-btn btn-reject" type="submit" onclick="return confirm('Từ chối phiếu điều chuyển này?')">
