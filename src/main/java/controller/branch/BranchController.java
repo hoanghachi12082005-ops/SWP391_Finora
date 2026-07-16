@@ -285,6 +285,29 @@ public class BranchController extends HttpServlet {
         req.setAttribute("branch", branch);
         req.setAttribute("employeeList", employees);
         req.setAttribute("employeeCount", branch.getEmployeeCount());
+
+        // Nạp dữ liệu tài chính chi nhánh
+        String range = req.getParameter("range");
+        if (range == null || range.trim().isEmpty()) {
+            range = "month";
+        }
+        dao.dashboard.DashboardDAO dashboardDAO = new dao.dashboard.DashboardDAO();
+        try {
+            dao.dashboard.DashboardDAO.FinancialData fd = dashboardDAO.getFinancialData(range, branchId);
+            req.setAttribute("totalRevenue", fd.totalRevenue);
+            req.setAttribute("totalExpenses", fd.totalExpenses);
+            req.setAttribute("netProfit", fd.netProfit);
+            req.setAttribute("totalInvoices", fd.totalInvoices);
+            req.setAttribute("selectedRange", range);
+            
+            List<model.Payment> payments = dashboardDAO.getBranchPayments(range, branchId);
+            req.setAttribute("branchPayments", payments);
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            req.setAttribute("financialError", "Không thể tải dữ liệu tài chính chi nhánh.");
+        }
+
+        // Backward compatibility
         req.setAttribute("monthlyRevenue", formatCurrency(dao.sumMonthlyRevenue(branchId)));
         req.setAttribute("orderCount", dao.countMonthlyOrders(branchId));
         req.setAttribute("profit", formatCurrency(dao.sumMonthlyProfit(branchId)));

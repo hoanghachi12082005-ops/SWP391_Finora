@@ -297,10 +297,20 @@ class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab ==
                                 <!-- Cashbook (Sổ Quỹ) (Admin, Owner, StoreManager) -->
                                 <c:if
                                     test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
-<a href="${pageContext.request.contextPath}/cashbook"
+                                    <a href="${pageContext.request.contextPath}/cashbook"
                                         class="sidebar-menu-item ${originalUri.contains('/cashbook') ? 'active' : ''}">
                                         <span class="material-icons">account_balance_wallet</span>
                                         <span>Sổ Quỹ</span>
+                                    </a>
+                                </c:if>
+
+                                <!-- Financial Dashboard (Tài chính) (Admin, Owner, StoreManager) -->
+                                <c:if
+                                    test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+                                    <a href="${pageContext.request.contextPath}/dashboard/financial"
+                                        class="sidebar-menu-item ${originalUri.contains('/dashboard/financial') ? 'active' : ''}">
+                                        <span class="material-icons">payments</span>
+                                        <span>Tài chính</span>
                                     </a>
                                 </c:if>
 

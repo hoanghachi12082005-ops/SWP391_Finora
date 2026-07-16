@@ -140,6 +140,7 @@ public class DashboardOverview {
         private String branchCode;
         private BigDecimal revenue = BigDecimal.ZERO;
         private int orderCount;
+        private String status;
 
         public int getBranchId() { return branchId; }
         public void setBranchId(int branchId) { this.branchId = branchId; }
@@ -151,6 +152,8 @@ public class DashboardOverview {
         public void setRevenue(BigDecimal revenue) { this.revenue = revenue == null ? BigDecimal.ZERO : revenue; }
         public int getOrderCount() { return orderCount; }
         public void setOrderCount(int orderCount) { this.orderCount = orderCount; }
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
     }
 
     public static class TopProduct {

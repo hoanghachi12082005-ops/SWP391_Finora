@@ -62,6 +62,30 @@ public class DashboardController extends BaseController {
             }
         }
 
+        // Nạp dữ liệu Overview cho Financial Dashboard
+        if ("/dashboard/financial".equals(path)) {
+            String range = request.getParameter("range");
+            if (range == null || range.trim().isEmpty()) {
+                range = "month";
+            }
+            try {
+                DashboardDAO.FinancialData financialData = dashboardDAO.getFinancialData(range);
+                request.setAttribute("totalRevenue", financialData.totalRevenue);
+                request.setAttribute("totalExpenses", financialData.totalExpenses);
+                request.setAttribute("netProfit", financialData.netProfit);
+                request.setAttribute("totalInvoices", financialData.totalInvoices);
+                request.setAttribute("branchRevenues", financialData.branchRevenues);
+                request.setAttribute("selectedRange", range);
+                
+                // Nạp danh sách phát sinh chi tiết toàn hệ thống
+                List<model.Payment> globalPayments = dashboardDAO.getBranchPayments(range, null);
+                request.setAttribute("globalPayments", globalPayments);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                request.setAttribute("financialError", "Không thể tải dữ liệu tài chính. Vui lòng thử lại sau.");
+            }
+        }
+
         switch (path) {
         case "/dashboard/owner": forward(request, response, "dashboard/owner"); break;
         case "/dashboard/inventory": forward(request, response, "dashboard/inventory"); break;
