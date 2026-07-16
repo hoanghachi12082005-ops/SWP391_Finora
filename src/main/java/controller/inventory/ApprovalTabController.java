@@ -397,7 +397,11 @@ public class ApprovalTabController extends InventoryBaseController {
         }
 
         if (pendingOrders != null) {
+            Integer selectedWarehouseId = (Integer) request.getSession().getAttribute("selectedWarehouseId");
             for (model.Order order : pendingOrders) {
+                if (selectedWarehouseId != null && order.getWarehouseId() != selectedWarehouseId) {
+                    continue;
+                }
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", order.getOrderId());
                 map.put("code", order.getOrderCode());
@@ -427,7 +431,11 @@ public class ApprovalTabController extends InventoryBaseController {
         }
         
         if (pendingChecks != null) {
+            Integer selectedWarehouseId = (Integer) request.getSession().getAttribute("selectedWarehouseId");
             for (model.InventoryCheck check : pendingChecks) {
+                if (selectedWarehouseId != null && check.getWarehouseId() != selectedWarehouseId) {
+                    continue;
+                }
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", check.getCheckId());
                 map.put("code", check.getCheckCode());

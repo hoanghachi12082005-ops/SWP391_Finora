@@ -153,7 +153,7 @@
                     <link href="${pageContext.request.contextPath}/assets/css/inventory/inventory-main.css?v=<%= System.currentTimeMillis() %>" rel="stylesheet">
                     <link href="${pageContext.request.contextPath}/assets/css/inventory/inventory-tabs.css?v=<%= System.currentTimeMillis() %>" rel="stylesheet">
 
-                    <c:if test="${roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'WarehouseStaff'}">
+                    <c:if test="${roleName == 'Owner' || roleName == 'Admin'}">
                         <div class="subtab-nav mb-4">
                             <a href="${pageContext.request.contextPath}/inventory?tab=stock&warehouseId=${selectedWarehouseId}"
                                 class="subtab-link ${empty activeTab || activeTab == 'stock' ? 'active' : ''}">
