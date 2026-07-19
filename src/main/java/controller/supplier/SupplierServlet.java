@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import service.supplier.SupplierService;
+import service.supplier.SupplierProductService;
 import dao.product.ProductDAO;
 
 @WebServlet("/suppliers")
@@ -27,90 +28,26 @@ public class SupplierServlet extends HttpServlet {
             action = "list";
         }
         switch (action) {
-            case "get-products-api": {
+            case "manage-products": {
                 try {
                     int supplierId = Integer.parseInt(request.getParameter("id"));
-                    List<dto.inventory.ImportProductDTO.SupplierInfo> list = service.getSupplierProductsHistory(supplierId);
-                    StringBuilder json = new StringBuilder("[");
-                    for (int i = 0; i < list.size(); i++) {
-                        dto.inventory.ImportProductDTO.SupplierInfo item = list.get(i);
-                        json.append("{");
-                        json.append("\"productId\":").append(item.getSupplierId()).append(",");
-                        json.append("\"productName\":\"").append(item.getSupplierName().replace("\"", "\\\"")).append("\",");
-                        json.append("\"importPrice\":").append(item.getImportPrice());
-                        json.append("}");
-                        if (i < list.size() - 1) json.append(",");
+                    Supplier supplier = service.getById(supplierId);
+                    if (supplier == null) {
+                        response.sendRedirect("suppliers");
+                        return;
                     }
-                    json.append("]");
-                    
-                    response.setContentType("application/json");
-                    response.setCharacterEncoding("UTF-8");
-                    response.getWriter().write(json.toString());
-                } catch (Exception e) {
-                    response.setContentType("application/json");
-                    response.getWriter().write("[]");
-                }
-                return;
-            }
-            case "get-active-products-api": {
-                try {
                     ProductDAO productDAO = new ProductDAO();
-                    List<model.Product> products = productDAO.findAll(0, 10000, "", "ACTIVE", null, null);
-                    StringBuilder json = new StringBuilder("[");
-                    for (int i = 0; i < products.size(); i++) {
-                        model.Product p = products.get(i);
-                        json.append("{");
-                        json.append("\"productId\":").append(p.getProductId()).append(",");
-                        json.append("\"productName\":\"").append(p.getProductName().replace("\"", "\\\"")).append("\",");
-                        json.append("\"sellingPrice\":").append(p.getSellingPrice() != null ? p.getSellingPrice() : 0);
-                        json.append("}");
-                        if (i < products.size() - 1) json.append(",");
-                    }
-                    json.append("]");
-                    response.setContentType("application/json");
-                    response.setCharacterEncoding("UTF-8");
-                    response.getWriter().write(json.toString());
+                    List<model.Product> allProducts = productDAO.findAll(0, 10000, "", "ACTIVE", null, null);
+                    SupplierProductService spService = new SupplierProductService();
+                    Map<Integer, Double> linkedProducts = spService.getLinkedProductsWithPrices(supplierId);
+                    
+                    request.setAttribute("supplier", supplier);
+                    request.setAttribute("allProducts", allProducts);
+                    request.setAttribute("linkedProducts", linkedProducts);
+                    request.getRequestDispatcher("/views/suppliers/manage_products.jsp").forward(request, response);
                 } catch (Exception e) {
-                    response.setContentType("application/json");
-                    response.getWriter().write("[]");
-                }
-                return;
-            }
-            case "add-product-api": {
-                response.setContentType("application/json");
-                try {
-                    int supplierId = Integer.parseInt(request.getParameter("supplierId"));
-                    int productId = Integer.parseInt(request.getParameter("productId"));
-                    double price = Double.parseDouble(request.getParameter("price"));
-                    boolean success = service.addOrUpdateSupplierProduct(supplierId, productId, price);
-                    response.getWriter().write("{\"success\":" + success + "}");
-                } catch (Exception e) {
-                    response.getWriter().write("{\"success\":false}");
-                }
-                return;
-            }
-            case "delete-product-api": {
-                response.setContentType("application/json");
-                try {
-                    int supplierId = Integer.parseInt(request.getParameter("supplierId"));
-                    int productId = Integer.parseInt(request.getParameter("productId"));
-                    boolean success = service.deleteSupplierProduct(supplierId, productId);
-                    response.getWriter().write("{\"success\":" + success + "}");
-                } catch (Exception e) {
-                    response.getWriter().write("{\"success\":false}");
-                }
-                return;
-            }
-            case "update-price-api": {
-                response.setContentType("application/json");
-                try {
-                    int supplierId = Integer.parseInt(request.getParameter("supplierId"));
-                    int productId = Integer.parseInt(request.getParameter("productId"));
-                    double price = Double.parseDouble(request.getParameter("price"));
-                    boolean success = service.addOrUpdateSupplierProduct(supplierId, productId, price);
-                    response.getWriter().write("{\"success\":" + success + "}");
-                } catch (Exception e) {
-                    response.getWriter().write("{\"success\":false}");
+                    e.printStackTrace();
+                    response.sendRedirect("suppliers");
                 }
                 return;
             }
@@ -202,6 +139,44 @@ public class SupplierServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String action = request.getParameter("action");
+
+        if ("save-products".equals(action)) {
+            try {
+                int supplierId = Integer.parseInt(request.getParameter("id"));
+                String[] productIdsStr = request.getParameterValues("productIds");
+                List<Integer> productIds = new java.util.ArrayList<>();
+                List<Double> prices = new java.util.ArrayList<>();
+                
+                if (productIdsStr != null) {
+                    for (String pidStr : productIdsStr) {
+                        int pid = Integer.parseInt(pidStr);
+                        String priceStr = request.getParameter("price_" + pid);
+                        double price = 0;
+                        if (priceStr != null && !priceStr.isBlank()) {
+                            price = Double.parseDouble(priceStr);
+                        }
+                        productIds.add(pid);
+                        prices.add(price);
+                    }
+                }
+                
+                SupplierProductService spService = new SupplierProductService();
+                boolean success = spService.saveAssociations(supplierId, productIds, prices);
+                if (success) {
+                    request.getSession().setAttribute("message", "Cập nhật liên kết sản phẩm thành công.");
+                    request.getSession().setAttribute("messageType", "success");
+                } else {
+                    request.getSession().setAttribute("message", "Không thể cập nhật liên kết sản phẩm.");
+                    request.getSession().setAttribute("messageType", "danger");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                request.getSession().setAttribute("message", "Đã xảy ra lỗi khi lưu liên kết.");
+                request.getSession().setAttribute("messageType", "danger");
+            }
+            response.sendRedirect(request.getContextPath() + "/suppliers");
+            return;
+        }
 
         Supplier s = new Supplier();
 

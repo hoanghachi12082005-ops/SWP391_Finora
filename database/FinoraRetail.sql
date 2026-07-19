@@ -217,6 +217,19 @@ CREATE TABLE [product] (
 GO
 
 -- ============================================================
+--  11b. SUPPLIER PRODUCT RELATIONSHIP
+-- ============================================================
+CREATE TABLE supplier_product (
+    supplier_id  INT NOT NULL,
+    product_id   INT NOT NULL,
+    import_price DECIMAL(18,2) DEFAULT 0,
+    PRIMARY KEY (supplier_id, product_id),
+    CONSTRAINT FK_SupplierProduct_Supplier FOREIGN KEY (supplier_id) REFERENCES supplier(supplier_id) ON DELETE CASCADE,
+    CONSTRAINT FK_SupplierProduct_Product FOREIGN KEY (product_id) REFERENCES [product](product_id) ON DELETE CASCADE
+);
+GO
+
+-- ============================================================
 --  12. INVENTORY
 -- ============================================================
 CREATE TABLE inventory (
