@@ -1,11 +1,49 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%-- 
+  ==========================================================================
+  TRANG BỐ CỤC CHÍNH CỦA PHÂN HỆ KHO HÀNG (inventory.jsp)
+  - Sử dụng header.jsp và footer.jsp làm khung giao diện.
+  - Sidebar và Topbar được nhúng động qua jsp:include.
+  - Phân chia làm 2 trạng thái chính:
+    1. DASHBOARD CHUNG: Khi chưa chọn kho hàng (selectedWarehouseId trống).
+    2. CHI TIẾT KHO: Khi đã chọn kho cụ thể (hiển thị các tab Tồn kho, Chuyển kho, Kiểm kho, Phê duyệt...).
+  - Load các file JS bổ trợ ở cuối trang: inventory-main.js, inventory-tabs.js, inventory-modals.js.
+  ==========================================================================
+--%>
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : ''}" />
 <jsp:include page="/views/common/header.jsp">
     <jsp:param name="title" value="Quản Lý Kho Hàng"/>
     <jsp:param name="additionalCSS" value="inventory.css?v=5"/>
 </jsp:include>
+
+<script>
+    window.addEventListener('error', function(e) {
+        var errDiv = document.getElementById('js-diagnostic-error');
+        if (!errDiv) {
+            errDiv = document.createElement('div');
+            errDiv.id = 'js-diagnostic-error';
+            errDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#fef2f2;color:#991b1b;padding:15px;z-index:99999;border-bottom:3px solid #ef4444;font-family:monospace;font-size:14px;white-space:pre-wrap;box-shadow:0 4px 6px rgba(0,0,0,0.1);';
+            var closeBtn = document.createElement('button');
+            closeBtn.textContent = 'Dismiss';
+            closeBtn.style.cssText = 'float:right;background:#991b1b;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;margin-left:15px;';
+            closeBtn.onclick = function() { errDiv.remove(); };
+            errDiv.appendChild(closeBtn);
+            var title = document.createElement('strong');
+            title.textContent = 'JS Error Detected: ';
+            errDiv.appendChild(title);
+            var msg = document.createElement('span');
+            msg.id = 'js-diagnostic-error-msg';
+            errDiv.appendChild(msg);
+            document.body.appendChild(errDiv);
+        }
+        var msgSpan = document.getElementById('js-diagnostic-error-msg');
+        if (msgSpan) {
+            msgSpan.textContent += '\n- ' + e.message + ' (at ' + e.filename + ':' + e.lineno + ':' + e.colno + ')';
+        }
+    });
+</script>
 
 <div class="app-container">
     <jsp:include page="/views/common/sidebar.jsp" />
@@ -49,13 +87,13 @@
                         <c:choose>
                             <c:when test="${activeTab == 'stock'}">
                                 <!-- Include _tab_stock to render the Warehouse Cards -->
-                                <jsp:include page="_tab_stock.jsp" />
+                                <jsp:include page="tabs/_tab_stock.jsp" />
                             </c:when>
                             <c:when test="${activeTab == 'approval'}">
-                                <jsp:include page="_tab_approval.jsp" />
+                                <jsp:include page="tabs/_tab_approval.jsp" />
                             </c:when>
                             <c:when test="${activeTab == 'history'}">
-                                <jsp:include page="_tab_history.jsp" />
+                                <jsp:include page="tabs/_tab_history.jsp" />
                             </c:when>
                         </c:choose>
                     </div>
@@ -111,15 +149,10 @@
                             </div>
                         </c:if>
                     </div>
+                    <link href="${pageContext.request.contextPath}/assets/css/inventory/inventory-main.css?v=<%= System.currentTimeMillis() %>" rel="stylesheet">
+                    <link href="${pageContext.request.contextPath}/assets/css/inventory/inventory-tabs.css?v=<%= System.currentTimeMillis() %>" rel="stylesheet">
 
-                    <style>
-                        .subtab-nav { border-bottom: 1px solid #e2e8f0; margin-bottom: 20px; display: flex; gap: 20px; }
-                        .subtab-link { padding: 10px 16px; color: #64748b; text-decoration: none; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
-                        .subtab-link:hover { color: var(--primary-color); }
-                        .subtab-link.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
-                    </style>
-
-                    <c:if test="${roleName == 'Owner'}">
+                    <c:if test="${roleName == 'Owner' || roleName == 'Admin'}">
                         <div class="subtab-nav mb-4">
                             <a href="${pageContext.request.contextPath}/inventory?tab=stock&warehouseId=${selectedWarehouseId}"
                                 class="subtab-link ${empty activeTab || activeTab == 'stock' ? 'active' : ''}">
@@ -134,6 +167,12 @@
                                 class="subtab-link ${activeTab == 'check' || activeTab == 'createCheck' || activeTab == 'editCheck' ? 'active' : ''}">
                                 Kiểm kho
                             </a>
+                            <c:if test="${roleName == 'WarehouseStaff'}">
+                                <a href="${pageContext.request.contextPath}/inventory?tab=pending_vouchers&warehouseId=${selectedWarehouseId}"
+                                    class="subtab-link ${activeTab == 'pending_vouchers' ? 'active' : ''}">
+                                    Phiếu Chờ Duyệt
+                                </a>
+                            </c:if>
                             <a href="${pageContext.request.contextPath}/inventory?tab=history&warehouseId=${selectedWarehouseId}"
                                 class="subtab-link ${activeTab == 'history' ? 'active' : ''}">
                                 Lịch sử
@@ -188,34 +227,28 @@
                     <div class="tab-content">
                         <c:choose>
                             <c:when test="${activeTab == 'stock'}">
-                                <jsp:include page="_tab_stock.jsp" />
-                            </c:when>
-                            <c:when test="${activeTab == 'import'}">
-                                <jsp:include page="_tab_import.jsp" />
-                            </c:when>
-                            <c:when test="${activeTab == 'export'}">
-                                <jsp:include page="_tab_export.jsp" />
+                                <jsp:include page="tabs/_tab_stock.jsp" />
                             </c:when>
                             <c:when test="${activeTab == 'transfer'}">
-                                <jsp:include page="_tab_transfer.jsp" />
+                                <jsp:include page="tabs/_tab_transfer.jsp" />
                             </c:when>
                             <c:when test="${activeTab == 'createTransfer'}">
-                                <jsp:include page="_tab_transfer_create.jsp" />
+                                <jsp:include page="tabs/_tab_transfer_create.jsp" />
                             </c:when>
                             <c:when test="${activeTab == 'check'}">
-                                <jsp:include page="_tab_check.jsp" />
+                                <jsp:include page="tabs/_tab_check.jsp" />
                             </c:when>
                             <c:when test="${activeTab == 'createCheck' || activeTab == 'editCheck'}">
-                                <jsp:include page="_tab_check_create.jsp" />
+                                <jsp:include page="tabs/_tab_check_create.jsp" />
                             </c:when>
                             <c:when test="${activeTab == 'approval'}">
-                                <jsp:include page="_tab_approval.jsp" />
+                                <jsp:include page="tabs/_tab_approval.jsp" />
                             </c:when>
                             <c:when test="${activeTab == 'pending_vouchers'}">
-                                <jsp:include page="_tab_pending_vouchers.jsp" />
+                                <jsp:include page="tabs/_tab_pending_vouchers.jsp" />
                             </c:when>
                             <c:when test="${activeTab == 'history'}">
-                                <jsp:include page="_tab_history.jsp" />
+                                <jsp:include page="tabs/_tab_history.jsp" />
                             </c:when>
                         </c:choose>
                     </div>
@@ -226,8 +259,7 @@
     </div>
 </div>
 
-<jsp:include page="_modal_create_import.jsp" />
-<jsp:include page="_modal_create_export.jsp" />
+<jsp:include page="modals/_modal_create_import.jsp" />
 
 <!-- Edit Warehouse Modal -->
 <div class="modal fade" id="editWarehouseModal" tabindex="-1" aria-hidden="true">
@@ -316,213 +348,23 @@
     </div>
 </div>
 
+<div id="inventoryConfigData" style="display:none;" 
+     data-context-path="${pageContext.request.contextPath}"
+     data-selected-warehouse-id="${selectedWarehouseId}"
+     data-csrf-token="${sessionScope.csrfToken}"></div>
 <script>
-    function viewTicketDetails(ticketId, showAll) {
-        const modalContent = document.getElementById('ticketDetailsModalContent');
-        modalContent.innerHTML = '<div class="modal-body text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Đang tải dữ liệu...</p></div>';
-        
-        const myModal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
-        myModal.show();
-        
-        const currentWarehouseId = '${selectedWarehouseId}';
-        let url = '${pageContext.request.contextPath}/inventory?action=viewTicket&ticketId=' + ticketId;
-        if (currentWarehouseId) {
-            url += '&warehouseId=' + currentWarehouseId;
-        }
-        if (showAll) {
-            url += '&showAll=true';
-        }
-        
-        fetch(url)
-            .then(response => response.text())
-            .then(html => {
-                modalContent.innerHTML = html;
-            })
-            .catch(err => {
-                modalContent.innerHTML = '<div class="modal-body py-5 text-center text-danger"><i class="ph ph-warning-circle fs-1 mb-2"></i><p>Lỗi khi tải dữ liệu phiếu.</p></div>';
-            });
-    }
-
-    function viewCheckDetails(checkId) {
-        const modalContent = document.getElementById('ticketDetailsModalContent');
-        modalContent.innerHTML = '<div class="modal-body text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Đang tải dữ liệu...</p></div>';
-        
-        const myModal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
-        myModal.show();
-        
-        let url = '${pageContext.request.contextPath}/inventory?action=viewCheckDetails&checkId=' + checkId;
-        
-        fetch(url)
-            .then(response => response.text())
-            .then(html => {
-                modalContent.innerHTML = html;
-            })
-            .catch(err => {
-                modalContent.innerHTML = '<div class="modal-body py-5 text-center text-danger"><i class="ph ph-warning-circle fs-1 mb-2"></i><p>Lỗi khi tải dữ liệu phiếu kiểm kê.</p></div>';
-            });
-    }
-
-    function viewOrderDetails(orderId) {
-        const modalContent = document.getElementById('ticketDetailsModalContent');
-        modalContent.innerHTML = '<div class="modal-body text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Đang tải dữ liệu...</p></div>';
-        
-        const myModal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
-        myModal.show();
-        
-        let url = '${pageContext.request.contextPath}/inventory?action=viewOrderDetails&orderId=' + orderId;
-        
-        fetch(url)
-            .then(response => response.text())
-            .then(html => {
-                modalContent.innerHTML = html;
-            })
-            .catch(err => {
-                modalContent.innerHTML = '<div class="modal-body py-5 text-center text-danger"><i class="ph ph-warning-circle fs-1 mb-2"></i><p>Lỗi khi tải dữ liệu phiếu.</p></div>';
-            });
-    }
-
-    function openRejectModal(ticketId) {
-        document.getElementById('rejectTransferId').value = ticketId;
-        const myModal = new bootstrap.Modal(document.getElementById('rejectModal'));
-        myModal.show();
-    }
-
-    function openReceiptModal(ticketId) {
-        const modalContent = document.getElementById('receiptModalContent');
-        modalContent.innerHTML = '<div class="modal-body text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Đang tải dữ liệu...</p></div>';
-        
-        const myModal = new bootstrap.Modal(document.getElementById('receiptModal'));
-        myModal.show();
-        
-        // Fetch the receipt form view
-        fetch('${pageContext.request.contextPath}/inventory?action=viewReceiptForm&ticketId=' + ticketId + '&warehouseId=${selectedWarehouseId}')
-            .then(response => response.text())
-            .then(html => {
-                modalContent.innerHTML = html;
-            })
-            .catch(err => {
-                modalContent.innerHTML = '<div class="modal-body py-5 text-center text-danger"><i class="ph ph-warning-circle fs-1 mb-2"></i><p>Lỗi khi tải dữ liệu phiếu.</p></div>';
-            });
-    }
-
-    function printCheckVoucher() {
-        const code = document.getElementById('printCheckCode')?.innerText || '';
-        const statusText = document.getElementById('printCheckStatus')?.innerText.trim() || '';
-        const createdAt = document.getElementById('printCheckCreatedAt')?.innerText || '';
-        const warehouseName = document.getElementById('printCheckWarehouseName')?.innerText || '';
-        const createdByName = document.getElementById('printCheckCreatedByName')?.innerText || '';
-        const approvedByName = document.getElementById('printCheckApprovedByName')?.innerText || '';
-        const totalDiscrepancy = document.getElementById('printCheckTotalDiscrepancy')?.innerText || '';
-
-        let printWindow = window.open('', '_blank');
-        let html = '<html>'
-                 + '<head>'
-                 + '    <title>Phiếu Kiểm Kho - ' + code + '</title>'
-                 + '    <style>'
-                 + '        body { font-family: "Arial", sans-serif; padding: 20px; color: #333; }'
-                 + '        .header { text-align: center; margin-bottom: 30px; }'
-                 + '        .header h2 { margin: 0 0 10px; text-transform: uppercase; }'
-                 + '        .info-table { width: 100%; margin-bottom: 20px; border-collapse: collapse; }'
-                 + '        .info-table td { padding: 6px; border: none; font-size: 14px; }'
-                 + '        .main-table { width: 100%; border-collapse: collapse; margin-top: 20px; }'
-                 + '        .main-table th, .main-table td { border: 1px solid #333; padding: 10px; text-align: left; font-size: 13px; }'
-                 + '        .main-table th { background-color: #f2f2f2; text-transform: uppercase; font-weight: bold; }'
-                 + '        .text-center { text-align: center; }'
-                 + '        .text-end { text-align: right; }'
-                 + '        .footer-sign { margin-top: 50px; display: flex; justify-content: space-between; }'
-                 + '        .sign-box { width: 45%; text-align: center; }'
-                 + '        @media print {'
-                 + '            @page { size: A4; margin: 15mm; }'
-                 + '            body { padding: 0; }'
-                 + '        }'
-                 + '    </style>'
-                 + '</head>'
-                 + '<body>'
-                 + '    <div class="header">'
-                 + '        <h2>Phiếu Kiểm Kho Sản Phẩm</h2>'
-                 + '        <div><strong>Mã phiếu:</strong> ' + code + '</div>'
-                 + '    </div>'
-                 + '    '
-                 + '    <table class="info-table">'
-                 + '        <tr>'
-                 + '            <td width="50%"><strong>Kho hàng:</strong> ' + warehouseName + '</td>'
-                 + '            <td width="50%"><strong>Thời gian lập:</strong> ' + createdAt + '</td>'
-                 + '        </tr>'
-                 + '        <tr>'
-                 + '            <td><strong>Người lập:</strong> ' + createdByName + '</td>'
-                 + '            <td><strong>Người duyệt:</strong> ' + approvedByName + '</td>'
-                 + '        </tr>'
-                 + '        <tr>'
-                 + '            <td><strong>Trạng thái:</strong> ' + statusText + '</td>'
-                 + '            <td><strong>Tổng sai lệch:</strong> <span style="color: red; font-weight: bold;">' + totalDiscrepancy + '</span></td>'
-                 + '        </tr>'
-                 + '    </table>'
-                 + '    '
-                 + '    <table class="main-table">'
-                 + '        <thead>'
-                 + '            <tr>'
-                 + '                <th width="5%" class="text-center">STT</th>'
-                 + '                <th width="35%">Sản Phẩm</th>'
-                 + '                <th width="15%">Danh Mục</th>'
-                 + '                <th width="15%" class="text-center">Tồn Hệ Thống</th>'
-                 + '                <th width="15%" class="text-center">Tồn Thực Tế</th>'
-                 + '                <th width="15%" class="text-center">Chênh Lệch</th>'
-                 + '            </tr>'
-                 + '        </thead>'
-                 + '        <tbody>';
-                 
-        const productRows = document.querySelectorAll('#ticketDetailsModalContent tbody tr');
-        let stt = 1;
-        productRows.forEach(tr => {
-            const cols = tr.querySelectorAll('td');
-            if (cols.length < 5) return;
-            const name = cols[0].innerText.trim();
-            const cat = cols[1].innerText.trim();
-            const sys = cols[2].innerText.trim();
-            const act = cols[3].innerText.trim();
-            const diff = cols[4].innerText.trim();
-            
-            html += '<tr>'
-                 + '    <td class="text-center">' + stt + '</td>'
-                 + '    <td><strong>' + name + '</strong></td>'
-                 + '    <td>' + cat + '</td>'
-                 + '    <td class="text-center">' + sys + '</td>'
-                 + '    <td class="text-center">' + act + '</td>'
-                 + '    <td class="text-center" style="font-weight: bold; color: ' + (diff.includes("0") ? "green" : "red") + ';">' + diff + '</td>'
-                 + '</tr>';
-            stt++;
-        });
-        
-        html += '        </tbody>'
-             + '    </table>'
-             + '    '
-             + '    <div class="footer-sign">'
-             + '        <div class="sign-box">'
-             + '            <strong>Nhân viên kiểm kho</strong><br>'
-             + '            <small>(Ký và ghi rõ họ tên)</small>'
-             + '            <br><br><br><br>'
-             + '            ....................................................'
-             + '        </div>'
-             + '        <div class="sign-box">'
-             + '            <strong>Quản lý / Người phê duyệt</strong><br>'
-             + '            <small>(Ký và ghi rõ họ tên)</small>'
-             + '            <br><br><br><br>'
-             + '            ....................................................'
-             + '        </div>'
-             + '    </div>'
-             + '    '
-             + '    <' + 'script>'
-             + '        window.onload = function() {'
-             + '            window.print();'
-             + '            setTimeout(function() { window.close(); }, 500);'
-             + '        }'
-             + '    </' + 'script>'
-             + '</body>'
-             + '</html>';
-             
-        printWindow.document.write(html);
-        printWindow.document.close();
-    }
+    (function() {
+        const el = document.getElementById('inventoryConfigData');
+        window.INVENTORY_CONFIG = {
+            contextPath: el ? el.getAttribute('data-context-path') : '',
+            selectedWarehouseId: el ? el.getAttribute('data-selected-warehouse-id') : '',
+            csrfToken: el ? el.getAttribute('data-csrf-token') : ''
+        };
+    })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/inventory/inventory-main.js?v=<%= System.currentTimeMillis() %>"></script>
+<script src="${pageContext.request.contextPath}/assets/js/inventory/inventory-tabs.js?v=<%= System.currentTimeMillis() %>"></script>
+<script src="${pageContext.request.contextPath}/assets/js/inventory/inventory-modals.js?v=<%= System.currentTimeMillis() %>"></script>
 
 <jsp:include page="/views/common/footer.jsp" />

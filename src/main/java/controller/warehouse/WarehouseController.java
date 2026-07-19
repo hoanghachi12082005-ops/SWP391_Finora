@@ -12,7 +12,7 @@ import java.io.IOException;
  * Warehouse Controller — xử lý luồng quản lý kho
  * Dành cho: Warehouse Staff, Store Manager, Owner, Admin
  */
-@WebServlet(name = "WarehouseController", urlPatterns = {"/warehouse/dashboard", "/warehouse/import", "/warehouse/export", "/warehouse/stock"})
+@WebServlet(name = "WarehouseController", urlPatterns = {"/warehouse/dashboard", "/warehouse/stock"})
 public class WarehouseController extends BaseController {
 
     @Override
@@ -22,12 +22,6 @@ public class WarehouseController extends BaseController {
         switch (path) {
             case "/warehouse/dashboard":
                 forward(request, response, "warehouse/dashboard");
-                break;
-            case "/warehouse/import":
-                forward(request, response, "inventory/import");
-                break;
-            case "/warehouse/export":
-                forward(request, response, "inventory/export");
                 break;
             case "/warehouse/stock":
                 forward(request, response, "inventory/inventory");

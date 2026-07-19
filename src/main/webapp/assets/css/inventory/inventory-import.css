@@ -1,0 +1,20 @@
+/* Styles for Inventory Import Screen */
+.import-row-active {
+    background-color: rgba(25, 135, 84, 0.05) !important;
+}
+.text-winered {
+    color: #8b0000 !important;
+}
+.bg-winered {
+    background-color: #8b0000 !important;
+    color: white;
+}
+.btn-winered {
+    background-color: #8b0000;
+    color: white;
+    border: none;
+}
+.btn-winered:hover {
+    background-color: #a00000;
+    color: white;
+}

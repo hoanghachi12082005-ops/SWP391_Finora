@@ -513,7 +513,35 @@ public class StockTransferDAO {
             }
             t.setDisplayStatus(calculateDisplayStatus(subForStatus));
             
-            if (sub != null && !sub.isEmpty()) {
+            if (subForStatus != null && !subForStatus.isEmpty()) {
+                t.setCreatorBranchId(subForStatus.get(0).getCreatorBranchId());
+                
+                int userBranchId = 0;
+                if (warehouseId > 0) {
+                    for (StockTransfer s : subForStatus) {
+                        if (s.getFromWarehouseId() == warehouseId) {
+                            userBranchId = s.getFromBranchId();
+                            break;
+                        } else if (s.getToWarehouseId() == warehouseId) {
+                            userBranchId = s.getToBranchId();
+                            break;
+                        }
+                    }
+                }
+                
+                // Chỉ lấy người duyệt từ các phiếu con liên quan đến kho hiện tại và thuộc chi nhánh của kho đó (hoặc Owner/Admin không có chi nhánh cụ thể)
+                java.util.Set<String> approvers = new java.util.LinkedHashSet<>();
+                for (StockTransfer s : subForStatus) {
+                    if (s.getApprovedByName() != null && !s.getApprovedByName().trim().isEmpty()) {
+                        if (warehouseId == 0 || s.getApprovedByBranchId() == null || s.getApprovedByBranchId() == userBranchId) {
+                            approvers.add(s.getApprovedByName().trim());
+                        }
+                    }
+                }
+                if (!approvers.isEmpty()) {
+                    t.setApprovedByName(String.join(", ", approvers));
+                }
+            } else if (sub != null && !sub.isEmpty()) {
                 t.setCreatorBranchId(sub.get(0).getCreatorBranchId());
             }
         }
@@ -526,7 +554,8 @@ public class StockTransferDAO {
         String sql = "SELECT st.*, " +
                 "fw.warehouse_name as from_warehouse_name, tw.warehouse_name as to_warehouse_name, " +
                 "fw.branch_id as from_branch_id, tw.branch_id as to_branch_id, " +
-                "e.fullName as created_by_name, e.branch_id as creator_branch_id, e2.fullName as approved_by_name " +
+                "e.fullName as created_by_name, e.branch_id as creator_branch_id, e2.fullName as approved_by_name, " +
+                "e2.branch_id as approved_by_branch_id " +
                 "FROM stock_transfer st " +
                 "LEFT JOIN warehouse fw ON st.from_warehouse_id = fw.warehouse_id " +
                 "LEFT JOIN warehouse tw ON st.to_warehouse_id = tw.warehouse_id " +
@@ -553,6 +582,9 @@ public class StockTransferDAO {
                     t.setCreatedByName(rs.getString("created_by_name"));
                     int ab = rs.getInt("approved_by"); if (!rs.wasNull()) t.setApprovedBy(ab);
                     t.setApprovedByName(rs.getString("approved_by_name"));
+                    
+                    int abb = rs.getInt("approved_by_branch_id");
+                    if (!rs.wasNull()) t.setApprovedByBranchId(abb);
                     
                     t.setFromBranchId(rs.getInt("from_branch_id"));
                     t.setToBranchId(rs.getInt("to_branch_id"));
