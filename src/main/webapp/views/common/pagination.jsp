@@ -41,9 +41,14 @@
 
     <c:if test="${totalPages > 1}">
         <div class="pagination" style="display: flex; gap: 6px; align-items: center; justify-content: flex-end; margin: 0;">
-            <c:if test="${currentPage > 1}">
-                <a href="${baseUrl}?page=${currentPage - 1}&sizeValue=${sizeValue}${param.queryString}">&lt;&lt;</a>
-            </c:if>
+            <c:choose>
+                <c:when test="${currentPage > 1}">
+                    <a href="${baseUrl}?page=${currentPage - 1}&sizeValue=${sizeValue}${param.queryString}">«</a>
+                </c:when>
+                <c:otherwise>
+                    <span class="disabled-page">«</span>
+                </c:otherwise>
+            </c:choose>
 
             <c:choose>
                 <c:when test="${totalPages <= 5}">
@@ -67,9 +72,14 @@
                 </c:otherwise>
             </c:choose>
 
-            <c:if test="${currentPage < totalPages}">
-                <a href="${baseUrl}?page=${currentPage + 1}&sizeValue=${sizeValue}${param.queryString}">&gt;&gt;</a>
-            </c:if>
+            <c:choose>
+                <c:when test="${currentPage < totalPages}">
+                    <a href="${baseUrl}?page=${currentPage + 1}&sizeValue=${sizeValue}${param.queryString}">»</a>
+                </c:when>
+                <c:otherwise>
+                    <span class="disabled-page">»</span>
+                </c:otherwise>
+            </c:choose>
         </div>
     </c:if>
 </div>

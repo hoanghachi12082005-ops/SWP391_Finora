@@ -730,45 +730,55 @@
 }
 
 /* Shared pagination.css styles */
-.pagination a {
+.pagination a, .pagination .disabled-page, .dots {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 8px 14px;
-    border: 1px solid #e2e8f0;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
     border-radius: 8px;
     text-decoration: none;
-    color: #475569;
-    background: #ffffff;
     font-weight: 600;
-    font-size: 13px;
-    min-width: 38px;
-    height: 38px;
+    font-size: 14px;
     transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+/* Normal Page Button & Enabled Arrow */
+.pagination a {
+    border: 1px solid #e5e7eb;
+    color: #3b82f6;
+    background: #ffffff;
 }
 
 .pagination a:hover {
-    background: #ffebee;
-    color: var(--primary-color, #93000b);
-    border-color: var(--primary-color, #93000b);
+    background: #f8fafc;
+    color: #2563eb;
+    border-color: #cbd5e1;
 }
 
+/* Active Page Button */
 .pagination a.active-page {
-    background: var(--primary-color, #93000b);
+    background: var(--primary-color, #93000b) !important;
     color: #ffffff !important;
-    border-color: var(--primary-color, #93000b);
-    box-shadow: 0 3px 10px rgba(147, 0, 11, 0.25);
+    border-color: var(--primary-color, #93000b) !important;
+    box-shadow: 0 4px 12px rgba(147, 0, 11, 0.3);
 }
 
+/* Disabled Arrow Button */
+.pagination .disabled-page {
+    background: #f1f5f9;
+    color: #cbd5e1;
+    border: 1px solid #e5e7eb;
+    cursor: not-allowed;
+}
+
+/* Dots Button */
 .dots {
-    padding: 0 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    background: #f1f5f9;
     color: #94a3b8;
-    font-weight: 600;
-    font-size: 14px;
-    height: 38px;
+    border: 1px solid #e5e7eb;
 }
 
 .table-footer {
