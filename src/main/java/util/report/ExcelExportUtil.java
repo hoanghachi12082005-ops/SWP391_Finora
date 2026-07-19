@@ -390,6 +390,28 @@ public final class ExcelExportUtil {
         return df.format(v);
     }
 
+    public static byte[] generateSupplierReport(
+            String generatedBy, List<Supplier> rows, String keyword) {
+        try (Workbook wb = new XSSFWorkbook()) {
+            Sheet sheet = wb.createSheet("Supplier Report");
+            setupReport(wb, sheet, "Supplier Report", generatedBy, keyword, null, null, null);
+            String[] headers = {"Mã NCC", "Tên nhà cung cấp", "Số điện thoại", "Địa chỉ", "Trạng thái"};
+            int[] widths = {12, 35, 18, 45, 18};
+            int rowNum = fillHeader(wb, sheet, headers, widths, 4);
+            for (Supplier r : rows) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue("NCC" + r.getSupplierID());
+                row.createCell(1).setCellValue(r.getName());
+                row.createCell(2).setCellValue(nullToDash(r.getPhone()));
+                row.createCell(3).setCellValue(nullToDash(r.getAddress()));
+                row.createCell(4).setCellValue("ACTIVE".equalsIgnoreCase(r.getStatus()) ? "Đang hoạt động" : "Ngừng hoạt động");
+            }
+            return toBytes(wb);
+        } catch (Exception e) {
+            throw new RuntimeException("Excel generation failed", e);
+        }
+    }
+
     private static byte[] toBytes(Workbook wb) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             wb.write(baos);

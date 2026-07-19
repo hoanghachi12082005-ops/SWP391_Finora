@@ -33,7 +33,7 @@
                 </div>
 
                 <div>
-                    <a href="#" class="btn btn-outline-danger me-2">
+                    <a href="suppliers?action=export&keyword=${fn:escapeXml(param.keyword)}&status=${fn:escapeXml(param.status)}" class="btn btn-outline-danger me-2">
                         <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">file_download</span> Xuất file
                     </a>
 

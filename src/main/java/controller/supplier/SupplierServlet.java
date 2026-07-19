@@ -80,6 +80,10 @@ public class SupplierServlet extends HttpServlet {
                 }
                 response.sendRedirect(redirect.toString());
                 break;
+            case "export": {
+                exportSupplierExcel(request, response);
+                return;
+            }
             default:
                 listSupplier(request, response);
         }
@@ -124,6 +128,44 @@ public class SupplierServlet extends HttpServlet {
         request.setAttribute("baseUrl", request.getContextPath() + "/suppliers");
 
         request.getRequestDispatcher("/views/suppliers/list.jsp").forward(request, response);
+    }
+
+    private void exportSupplierExcel(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            String keyword = request.getParameter("keyword");
+            String status = request.getParameter("status");
+
+            if (keyword == null) {
+                keyword = "";
+            }
+            if (status == null) {
+                status = "";
+            }
+
+            keyword = keyword.trim().replaceAll("\\s+", " ");
+
+            List<Supplier> allSuppliers = service.getSuppliersPaging(keyword, status, 1, 1000000);
+
+            String generatedBy = "Unknown";
+            model.Employee currentUser = (model.Employee) request.getSession().getAttribute("currentUser");
+            if (currentUser != null) {
+                generatedBy = currentUser.getFullName();
+            }
+
+            byte[] excelBytes = util.report.ExcelExportUtil.generateSupplierReport(
+                    generatedBy, allSuppliers, keyword);
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=\"" +
+                    util.report.ExportUtil.buildExportFileName("SupplierReport") + ".xlsx\"");
+            response.setContentLength(excelBytes.length);
+            response.getOutputStream().write(excelBytes);
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Excel export failed: " + e.getMessage());
+        }
     }
 
     private int parseInt(String value, int defaultValue) {
