@@ -47,7 +47,10 @@
                     <nav class="sidebar-menu">
                         <c:choose>
                             <c:when test="${isPosView}">
-<!-- ════════════ MENU BÁN HÀNG (POS) ══════�                                <!-- Nút quay lại trang quản trị (Chỉ dành cho Owner, StoreManager - Admin không vào POS) -->
+<!-- ════════════ MENU BÁN HÀNG (POS) ════════════ -->
+                                <div class="sidebar-menu-title">CHỨC NĂNG CHÍNH</div>
+
+                                <!-- Nút quay lại trang quản trị (Chỉ dành cho Owner, StoreManager - Admin không vào POS) -->
                                 <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
                                     <a href="${pageContext.request.contextPath}/dashboard/owner"
                                         class="sidebar-menu-item"
@@ -57,13 +60,6 @@
                                         <span>Trang Quản trị</span>
                                     </a>
                                 </c:if>
-                            </a>
-                        </c:when>
-                    </c:choose>
-                </div>
-            </div>
-        </c:if>
->>>>>>> origin/Thắng
 
                                 <!-- Bán hàng (POS) -->
                                 <a href="${pageContext.request.contextPath}/sales"
