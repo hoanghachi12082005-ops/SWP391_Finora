@@ -20,7 +20,7 @@
 
     <!-- Custom CSS -->
     <link href="${pageContext.request.contextPath}/assets/css/theme.css?v=20260713" rel="stylesheet">
-    <link href="${pageContext.request.contextPath}/assets/css/components.css?v=20260714-2" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/assets/css/components.css?v=20260720" rel="stylesheet">
 
     <c:if test="${param.additionalCSS != null}">
         <link href="${pageContext.request.contextPath}/assets/css/${param.additionalCSS}?v=20260713" rel="stylesheet">

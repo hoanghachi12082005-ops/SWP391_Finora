@@ -25,7 +25,7 @@
                 <aside class="sidebar" id="${isPosView ? 'posSidebar' : ''}">
                     <!-- DEBUG: originalUri = "${originalUri}" -->
                     <!-- Đảm bảo styles cho sidebar luôn sẵn sàng -->
-                    <link href="${pageContext.request.contextPath}/assets/css/components.css?v=20260714-2"
+                    <link href="${pageContext.request.contextPath}/assets/css/components.css?v=20260720"
                         rel="stylesheet">
                     <!-- Brand Logo -->
                     <div class="sidebar-brand">
