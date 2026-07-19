@@ -2,6 +2,7 @@ package controller.finance;
 
 import controller.common.BaseController;
 import model.Employee;
+import model.Order;
 import model.Payment;
 import service.finance.PaymentService;
 
@@ -37,17 +38,15 @@ public class IncomeExpenseController extends BaseController {
     private void showCashbook(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 1. Lấy bộ lọc từ parameters
         String keyword = request.getParameter("keyword");
         String type = request.getParameter("type");
         String paymentMethod = request.getParameter("paymentMethod");
         String timeRange = request.getParameter("timeRange");
 
         if (timeRange == null) {
-            timeRange = "all"; // Mặc định là tất cả thời gian
+            timeRange = "all";
         }
 
-        // Phân trang
         int page = 1;
         String pageStr = request.getParameter("page");
         if (pageStr != null && !pageStr.isBlank()) {
@@ -57,12 +56,10 @@ public class IncomeExpenseController extends BaseController {
         }
         int pageSize = 10;
 
-        // 2. Lấy dữ liệu danh sách giao dịch
         List<Payment> transactions = service.getTransactionsPaging(keyword, type, paymentMethod, timeRange, page, pageSize);
         int totalRecords = service.countTransactions(keyword, type, paymentMethod, timeRange);
         int totalPage = (int) Math.ceil((double) totalRecords / pageSize);
 
-        // 3. Tính toán các chỉ số quỹ
         double totalCash = service.getTotalCashBalance();
         double totalBank = service.getTotalBankBalance();
         double totalFund = totalCash + totalBank;
@@ -72,7 +69,6 @@ public class IncomeExpenseController extends BaseController {
         double bankIncome = service.getSumIncome("BANK_TRANSFER");
         double bankExpense = service.getSumExpense("BANK_TRANSFER");
 
-        // 4. Lấy dữ liệu biểu đồ tổng quan theo tuần
         List<Map<String, Object>> weeklyStats = service.getWeeklyOverview(keyword, type, paymentMethod, timeRange);
         double[] weeklyIncome = new double[5];
         double[] weeklyExpense = new double[5];
@@ -84,7 +80,6 @@ public class IncomeExpenseController extends BaseController {
             }
         }
 
-        // Chuyển dữ liệu biểu đồ thành chuỗi ngăn cách bởi dấu phẩy
         StringBuilder incomeStr = new StringBuilder();
         StringBuilder expenseStr = new StringBuilder();
         for (int i = 0; i < 4; i++) {
@@ -96,7 +91,6 @@ public class IncomeExpenseController extends BaseController {
             expenseStr.append(weeklyExpense[i]);
         }
 
-        // 5. Đặt các thuộc tính cho JSP
         request.setAttribute("transactions", transactions);
         request.setAttribute("totalRecords", totalRecords);
         request.setAttribute("currentPage", page);
@@ -119,6 +113,9 @@ public class IncomeExpenseController extends BaseController {
         request.setAttribute("chartIncome", incomeStr.toString());
         request.setAttribute("chartExpense", expenseStr.toString());
 
+        List<Order> recentOrders = service.getRecentOrders(50);
+        request.setAttribute("recentOrders", recentOrders);
+
         forward(request, response, "payments/list");
     }
 
@@ -131,34 +128,46 @@ public class IncomeExpenseController extends BaseController {
 
         if ("/cashbook/create-receipt".equals(path) || "/cashbook/create-payment".equals(path)) {
             try {
+                int orderId = Integer.parseInt(request.getParameter("orderId"));
                 double amount = Double.parseDouble(request.getParameter("amount"));
                 String method = request.getParameter("method");
                 String description = request.getParameter("description");
-                String type = "/cashbook/create-receipt".equals(path) ? "INCOME" : "EXPENSE";
+                String paymentType = "/cashbook/create-receipt".equals(path) ? "INCOME" : "EXPENSE";
+
+                if (user == null) {
+                    request.getSession().setAttribute("message", "Lỗi: Phiên đăng nhập hết hạn.");
+                    request.getSession().setAttribute("messageType", "danger");
+                    redirect(response, request.getContextPath() + "/cashbook");
+                    return;
+                }
 
                 Payment p = new Payment();
                 p.setAmount(amount);
                 p.setMethod(method);
                 p.setDescription(description);
-                p.setPaymentType(type);
+                p.setPaymentType(paymentType);
 
-                if (user != null) {
-                    p.setEmployeeId(user.getEmployeeID());
-                    p.setBranchId(user.getBranchID());
+                String error;
+                if ("/cashbook/create-receipt".equals(path)) {
+                    error = service.createReceipt(orderId, p, user.getEmployeeID(), user.getBranchID());
+                } else {
+                    error = service.createExpense(orderId, p, user.getEmployeeID(), user.getBranchID());
                 }
 
-                boolean success = service.insert(p);
-                if (success) {
-                    request.getSession().setAttribute("message", type.equals("INCOME") ? "Lập phiếu thu thành công." : "Lập phiếu chi thành công.");
+                if (error == null) {
+                    String msg = paymentType.equals("INCOME") ? "Lập phiếu thu thành công." : "Lập phiếu chi thành công.";
+                    request.getSession().setAttribute("message", msg);
                     request.getSession().setAttribute("messageType", "success");
                 } else {
-                    request.getSession().setAttribute("message", "Lỗi: Không thể thực hiện giao dịch.");
+                    request.getSession().setAttribute("message", "Lỗi: " + error);
                     request.getSession().setAttribute("messageType", "danger");
                 }
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
                 request.getSession().setAttribute("message", "Lỗi: Dữ liệu nhập vào không hợp lệ.");
                 request.getSession().setAttribute("messageType", "danger");
-                e.printStackTrace();
+            } catch (Exception e) {
+                request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
+                request.getSession().setAttribute("messageType", "danger");
             }
         }
 

@@ -29,6 +29,7 @@ public class ProductDAO {
             "ISNULL((SELECT SUM(quantity_in_stock) FROM inventory WHERE product_id = p.product_id), 0) AS Quantity, " +
             "p.category_id AS CategoryID, c.category_name AS CategoryName, " +
             "p.unit_id AS UnitID, u.unit_name AS UnitName, p.selling_price AS SellingPrice, " +
+            "p.ImageUrl AS ImageUrl, " +
             "ISNULL(p.status, 'ACTIVE') AS Status, p.created_at AS CreatedAt, p.update_at AS UpdatedAt " +
             "FROM product p " +
             "LEFT JOIN category c ON p.category_id = c.category_id " +
@@ -62,7 +63,9 @@ public class ProductDAO {
             stmt.setInt(idx++, offset);
             stmt.setInt(idx, limit);
             try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) items.add(extractProduct(rs));
+                while (rs.next()) {
+                    items.add(extractProduct(rs));
+                }
             }
         }
         return items;
@@ -109,6 +112,7 @@ public class ProductDAO {
             "ISNULL((SELECT SUM(quantity_in_stock) FROM inventory WHERE product_id = p.product_id), 0) AS Quantity, " +
             "p.category_id AS CategoryID, c.category_name AS CategoryName, " +
             "p.unit_id AS UnitID, u.unit_name AS UnitName, p.selling_price AS SellingPrice, " +
+            "p.ImageUrl AS ImageUrl, " +
             "ISNULL(p.status, 'ACTIVE') AS Status, p.created_at AS CreatedAt, p.update_at AS UpdatedAt " +
             "FROM product p " +
             "LEFT JOIN category c ON p.category_id = c.category_id " +
@@ -124,14 +128,15 @@ public class ProductDAO {
     }
 
     public int insert(Product product) throws SQLException {
-        String sql = "INSERT INTO product (product_name, category_id, unit_id, selling_price, status, created_at, update_at) VALUES (?, ?, ?, ?, ?, GETDATE(), GETDATE())";
+        String sql = "INSERT INTO product (product_name, category_id, unit_id, selling_price, ImageUrl, status, created_at, update_at) VALUES (?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, product.getName());
             stmt.setObject(2, product.getCategoryID() > 0 ? product.getCategoryID() : null, java.sql.Types.INTEGER);
             stmt.setObject(3, product.getUnitID() > 0 ? product.getUnitID() : null, java.sql.Types.INTEGER);
             stmt.setBigDecimal(4, product.getSellingPrice());
-            stmt.setString(5, product.getStatus() != null ? product.getStatus() : "ACTIVE");
+            stmt.setString(5, product.getImageUrlRaw());
+            stmt.setString(6, product.getStatus() != null ? product.getStatus() : "ACTIVE");
             stmt.executeUpdate();
 
             try (ResultSet keys = stmt.getGeneratedKeys()) {
@@ -153,15 +158,16 @@ public class ProductDAO {
     }
 
     public void update(Product product) throws SQLException {
-        String sql = "UPDATE product SET product_name=?, category_id=?, unit_id=?, selling_price=?, status=?, update_at=GETDATE() WHERE product_id=?";
+        String sql = "UPDATE product SET product_name=?, category_id=?, unit_id=?, selling_price=?, ImageUrl=?, status=?, update_at=GETDATE() WHERE product_id=?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, product.getName());
             stmt.setObject(2, product.getCategoryID() > 0 ? product.getCategoryID() : null, java.sql.Types.INTEGER);
             stmt.setObject(3, product.getUnitID() > 0 ? product.getUnitID() : null, java.sql.Types.INTEGER);
             stmt.setBigDecimal(4, product.getSellingPrice());
-            stmt.setString(5, product.getStatus() != null ? product.getStatus() : "ACTIVE");
-            stmt.setInt(6, product.getProductID());
+            stmt.setString(5, product.getImageUrlRaw());
+            stmt.setString(6, product.getStatus() != null ? product.getStatus() : "ACTIVE");
+            stmt.setInt(7, product.getProductID());
             stmt.executeUpdate();
         }
     }
@@ -231,6 +237,7 @@ public class ProductDAO {
         item.setUnitName(rs.getString("UnitName"));
         
         item.setSellingPrice(rs.getBigDecimal("SellingPrice"));
+        item.setImageUrl(rs.getString("ImageUrl"));
         item.setStatus(rs.getString("Status"));
         Timestamp ct = rs.getTimestamp("CreatedAt");
         if (ct != null) item.setCreatedAt(ct.toLocalDateTime());
@@ -252,6 +259,8 @@ public class ProductDAO {
         java.math.BigDecimal sp = rs.getBigDecimal("selling_price");
         p.setSellingPrice(sp != null ? sp : java.math.BigDecimal.ZERO);
         
+        try { p.setImageUrl(rs.getString("image_url")); } catch (SQLException ignored) {}
+        
         Timestamp ct = rs.getTimestamp("created_at");
         if (ct != null) p.setCreatedAt(ct.toLocalDateTime());
         
@@ -264,7 +273,7 @@ public class ProductDAO {
     public List<Product> getAllActiveByWarehouse(int warehouseId) {
         List<Product> list = new ArrayList<>();
         String sql = "SELECT p.product_id, p.product_codebar, p.product_name, p.category_id, "
-                   + "p.unit_id, p.selling_price, p.created_at, p.update_at, "
+                   + "p.unit_id, p.selling_price, p.ImageUrl AS image_url, p.created_at, p.update_at, "
                    + "ISNULL(i.quantity_in_stock, 0) AS quantity_in_stock "
                    + "FROM product p "
                    + "LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? "
@@ -289,7 +298,7 @@ public class ProductDAO {
         String cleanedKeyword = keyword != null ? keyword.trim().replaceAll("\\s+", " ") : "";
         List<Product> list = new ArrayList<>();
         String sql = "SELECT p.product_id, p.product_codebar, p.product_name, p.category_id, "
-                   + "p.unit_id, p.selling_price, p.created_at, p.update_at, "
+                   + "p.unit_id, p.selling_price, p.ImageUrl AS image_url, p.created_at, p.update_at, "
                    + "ISNULL(i.quantity_in_stock, 0) AS quantity_in_stock "
                    + "FROM product p "
                    + "LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? "
@@ -316,7 +325,7 @@ public class ProductDAO {
 
     public Product findByCodebar(String codebar, int warehouseId) {
         String sql = "SELECT p.product_id, p.product_codebar, p.product_name, p.category_id, "
-                   + "p.unit_id, p.selling_price, p.created_at, p.update_at, "
+                   + "p.unit_id, p.selling_price, p.ImageUrl AS image_url, p.created_at, p.update_at, "
                    + "ISNULL(i.quantity_in_stock, 0) AS quantity_in_stock "
                    + "FROM product p "
                    + "LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? "

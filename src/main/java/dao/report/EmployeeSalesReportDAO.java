@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import model.EmployeeOverview;
 import model.EmployeeSalesSummary;
+import model.Order;
 import util.database.DBContext;
 
 public class EmployeeSalesReportDAO {
@@ -330,6 +331,180 @@ public class EmployeeSalesReportDAO {
         summary.setCancelledOrders(rs.getInt("CancelledOrders"));
 
         return summary;
+    }
+
+    // =====================================================
+    // EMPLOYEE DETAIL: Daily Revenue Timeline
+    // =====================================================
+
+    public List<java.util.Map<String, Object>> getDailyRevenue(int employeeId, LocalDate dateFrom, LocalDate dateTo) {
+        List<java.util.Map<String, Object>> list = new ArrayList<>();
+        String sql =
+                "SELECT " +
+                "    CAST(o.created_at AS DATE) AS SaleDate, " +
+                "    COUNT(o.order_id) AS TotalOrders, " +
+                "    COALESCE(SUM(o.total_amount), 0) AS TotalRevenue, " +
+                "    COALESCE(AVG(o.total_amount), 0) AS AvgOrderValue " +
+                "FROM [Order] o " +
+                "WHERE o.emp_id = ? " +
+                "AND (? IS NULL OR CAST(o.created_at AS DATE) >= ?) " +
+                "AND (? IS NULL OR CAST(o.created_at AS DATE) <= ?) " +
+                "GROUP BY CAST(o.created_at AS DATE) " +
+                "ORDER BY SaleDate DESC";
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, employeeId);
+            if (dateFrom == null) {
+                ps.setNull(2, Types.DATE);
+                ps.setNull(3, Types.DATE);
+            } else {
+                ps.setDate(2, Date.valueOf(dateFrom));
+                ps.setDate(3, Date.valueOf(dateFrom));
+            }
+            if (dateTo == null) {
+                ps.setNull(4, Types.DATE);
+                ps.setNull(5, Types.DATE);
+            } else {
+                ps.setDate(4, Date.valueOf(dateTo));
+                ps.setDate(5, Date.valueOf(dateTo));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("date", rs.getDate("SaleDate") != null ? rs.getDate("SaleDate").toLocalDate() : null);
+                    map.put("totalOrders", rs.getInt("TotalOrders"));
+                    BigDecimal rev = rs.getBigDecimal("TotalRevenue");
+                    map.put("totalRevenue", rev == null ? BigDecimal.ZERO : rev);
+                    BigDecimal avg = rs.getBigDecimal("AvgOrderValue");
+                    map.put("avgOrderValue", avg == null ? BigDecimal.ZERO : avg);
+                    list.add(map);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // =====================================================
+    // EMPLOYEE DETAIL: Order List
+    // =====================================================
+
+    public List<Order> getEmployeeOrders(int employeeId, LocalDate dateFrom, LocalDate dateTo,
+                                          String keyword, int page, int pageSize) {
+        List<Order> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT o.*, c.full_name AS customerName, c.phone AS customerPhone, " +
+                "e.fullName AS employeeName, b.branch_name AS branchName " +
+                "FROM [Order] o " +
+                "LEFT JOIN Customer c ON o.customer_id = c.cus_id " +
+                "JOIN Employee e ON o.emp_id = e.emp_id " +
+                "JOIN Branch b ON o.branch_id = b.branch_id " +
+                "WHERE o.emp_id = ? " +
+                "AND (? IS NULL OR CAST(o.created_at AS DATE) >= ?) " +
+                "AND (? IS NULL OR CAST(o.created_at AS DATE) <= ?) "
+        );
+        List<Object> params = new ArrayList<>();
+        params.add(employeeId);
+        params.add(dateFrom);
+        params.add(dateFrom);
+        params.add(dateTo);
+        params.add(dateTo);
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND (o.order_code LIKE ? OR c.full_name LIKE ?) ");
+            String like = "%" + keyword.trim() + "%";
+            params.add(like);
+            params.add(like);
+        }
+        sql.append("ORDER BY o.created_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        int offset = (page - 1) * pageSize;
+        params.add(offset);
+        params.add(pageSize);
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            int idx = 1;
+            for (Object p : params) {
+                if (p == null) {
+                    ps.setNull(idx++, Types.DATE);
+                } else if (p instanceof LocalDate) {
+                    ps.setDate(idx++, Date.valueOf((LocalDate) p));
+                } else if (p instanceof Integer) {
+                    ps.setInt(idx++, (Integer) p);
+                } else if (p instanceof String) {
+                    ps.setString(idx++, (String) p);
+                }
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapOrder(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int countEmployeeOrders(int employeeId, LocalDate dateFrom, LocalDate dateTo, String keyword) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM [Order] o " +
+                "LEFT JOIN Customer c ON o.customer_id = c.cus_id " +
+                "WHERE o.emp_id = ? " +
+                "AND (? IS NULL OR CAST(o.created_at AS DATE) >= ?) " +
+                "AND (? IS NULL OR CAST(o.created_at AS DATE) <= ?) "
+        );
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND (o.order_code LIKE ? OR c.full_name LIKE ?)");
+        }
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            int idx = 1;
+            ps.setInt(idx++, employeeId);
+            if (dateFrom == null) { ps.setNull(idx++, Types.DATE); ps.setNull(idx++, Types.DATE); }
+            else { ps.setDate(idx++, Date.valueOf(dateFrom)); ps.setDate(idx++, Date.valueOf(dateFrom)); }
+            if (dateTo == null) { ps.setNull(idx++, Types.DATE); ps.setNull(idx++, Types.DATE); }
+            else { ps.setDate(idx++, Date.valueOf(dateTo)); ps.setDate(idx++, Date.valueOf(dateTo)); }
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String like = "%" + keyword.trim() + "%";
+                ps.setString(idx++, like);
+                ps.setString(idx++, like);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    private Order mapOrder(ResultSet rs) throws SQLException {
+        Order o = new Order();
+        o.setOrderId(rs.getInt("order_id"));
+        o.setOrderCode(rs.getString("order_code"));
+        o.setOrderType(rs.getString("order_type"));
+        int cid = rs.getInt("customer_id");
+        o.setCustomerId(rs.wasNull() ? null : cid);
+        o.setBranchId(rs.getInt("branch_id"));
+        o.setEmpId(rs.getInt("emp_id"));
+        o.setSubtotal(rs.getDouble("subtotal"));
+        o.setDiscountAmount(rs.getDouble("discount_amount"));
+        o.setTotalAmount(rs.getDouble("total_amount"));
+        o.setPaymentMethod(rs.getString("payment_method"));
+        String statusStr = rs.getString("status");
+        if (statusStr != null) {
+            try { o.setStatus(Order.OrderStatus.valueOf(statusStr.toUpperCase())); }
+            catch (IllegalArgumentException e) { o.setStatus(Order.OrderStatus.PENDING); }
+        }
+        java.sql.Timestamp ts = rs.getTimestamp("created_at");
+        if (ts != null) o.setCreatedAt(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(ts));
+        o.setCustomerName(rs.getString("customerName"));
+        o.setEmployeeName(rs.getString("employeeName"));
+        o.setBranchName(rs.getString("branchName"));
+        return o;
     }
 
     private String normalize(String value) {

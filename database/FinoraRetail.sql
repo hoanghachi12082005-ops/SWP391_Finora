@@ -202,7 +202,7 @@ CREATE TABLE [product] (
     category_id     INT,
     unit_id         INT,
     selling_price   DECIMAL(18,2)  DEFAULT 0,
-    ImageUrl        NVARCHAR(500),
+    ImageUrl        NVARCHAR(MAX),
     created_at      DATETIME       DEFAULT GETDATE(),
     update_at       DATETIME       DEFAULT GETDATE(),
 

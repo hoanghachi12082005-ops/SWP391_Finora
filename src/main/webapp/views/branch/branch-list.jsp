@@ -11,8 +11,7 @@
 
 
 <div class="app-container">
-    <jsp:include page="/views/common/sidebar.jsp"/>
-
+    <jsp:include page="/views/common/sidebar.jsp"/> 
     <main class="main-content">
         
         
@@ -200,10 +199,10 @@
                                 <td>
                                     <c:choose>
                                         <c:when test="${fn:toLowerCase(b.status) == 'active'}">
-                                            <span class="status-badge active">Hoạt động</span>
+                                            <span class="branch-badge active">Hoạt động</span>
                                         </c:when>
                                         <c:otherwise>
-                                            <span class="status-badge locked">Ngừng hoạt động</span>
+                                            <span class="branch-badge locked">Ngừng hoạt động</span>
                                         </c:otherwise>
                                     </c:choose>
                                     </td>

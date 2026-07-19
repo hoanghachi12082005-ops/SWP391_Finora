@@ -338,7 +338,7 @@ class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab ==
                                     <a href="${pageContext.request.contextPath}/admin/user"
                                         class="sidebar-menu-item ${originalUri.contains('/admin/user') ? 'active' : ''}">
                                         <span class="material-icons">manage_accounts</span>
-                                        <span>Quản lý Owner</span>
+                                        <span>Quản lý Nhân viên</span>
                                     </a>
                                 </c:if>
                                 <c:if test="${roleName == 'Owner'}">
@@ -372,10 +372,6 @@ class="sidebar-menu-item ${originalUri.contains('/manager/emp') ? 'active' : ''}
                                     </a>
                                     <div class="collapse ${isReportsActive ? 'show' : ''}" id="reportsCollapse">
                                         <div class="sidebar-submenu">
-                                            <a href="${pageContext.request.contextPath}/reports/export"
-                                                class="sidebar-submenu-item ${originalUri.contains('/reports/export') ? 'active' : ''}">
-                                                Xuất báo cáo
-                                            </a>
                                             <a href="${pageContext.request.contextPath}/reports/employee-sales"
                                                 class="sidebar-submenu-item ${originalUri.contains('/reports/employee-sales') ? 'active' : ''}">
                                                 <span class="material-icons"

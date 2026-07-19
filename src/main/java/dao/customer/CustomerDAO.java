@@ -219,12 +219,47 @@ public class CustomerDAO {
     // =====================================================
 
     public CustomerOverview getCustomerOverview() {
+        return getCustomerOverview(null);
+    }
+
+    public CustomerOverview getCustomerOverview(Integer branchId) {
         CustomerOverview overview = new CustomerOverview();
 
-        loadTotalInfo(overview);
-        loadTopCustomer(overview);
+        if (branchId != null) {
+            loadTotalInfo(overview, branchId);
+            loadTopCustomer(overview, branchId);
+        } else {
+            loadTotalInfo(overview);
+            loadTopCustomer(overview);
+        }
 
         return overview;
+    }
+
+    private void loadTotalInfo(CustomerOverview overview, Integer branchId) {
+        String sql =
+                "SELECT " +
+                "    COUNT(DISTINCT c.cus_id) AS TotalCustomers, " +
+                "    COUNT(DISTINCT CASE WHEN c.created_at >= DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0) THEN c.cus_id END) AS NewThisMonth, " +
+                "    COALESCE(SUM(c.total_spent), 0) AS TotalSpent " +
+                "FROM customer c " +
+                "WHERE c.status = 'ACTIVE' " +
+                "AND EXISTS (SELECT 1 FROM [order] o WHERE o.customer_id = c.cus_id AND o.branch_id = ?)";
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    overview.setTotalCustomers(rs.getInt("TotalCustomers"));
+                    overview.setNewCustomersThisMonth(rs.getInt("NewThisMonth"));
+                    BigDecimal spent = rs.getBigDecimal("TotalSpent");
+                    overview.setTotalSpent(spent == null ? BigDecimal.ZERO : spent);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi loadTotalInfo(branch)", e);
+        }
     }
 
     private void loadTotalInfo(CustomerOverview overview) {
@@ -249,6 +284,31 @@ public class CustomerDAO {
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi loadTotalInfo", e);
+        }
+    }
+
+    private void loadTopCustomer(CustomerOverview overview, Integer branchId) {
+        String sql =
+                "SELECT TOP 1 " +
+                "    c.full_name, " +
+                "    COALESCE(cp.current_points, 0) AS CurrentPoints " +
+                "FROM customer c " +
+                "LEFT JOIN customer_point cp ON cp.cus_id = c.cus_id " +
+                "WHERE c.status = 'ACTIVE' " +
+                "AND EXISTS (SELECT 1 FROM [order] o WHERE o.customer_id = c.cus_id AND o.branch_id = ?) " +
+                "ORDER BY cp.current_points DESC, c.total_spent DESC";
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    overview.setTopCustomerName(rs.getString("full_name"));
+                    overview.setTopCustomerPoints(rs.getInt("CurrentPoints"));
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi loadTopCustomer(branch)", e);
         }
     }
 
@@ -716,6 +776,48 @@ public class CustomerDAO {
     }
 
     // =====================================================
+    // VERIFY CUSTOMER BELONGS TO BRANCH (for Store Manager access control)
+    // =====================================================
+
+    public boolean customerBelongsToBranch(int customerId, int branchId) {
+        String sql = "SELECT COUNT(*) AS Total FROM [order] WHERE customer_id = ? AND branch_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            ps.setInt(2, branchId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt("Total") > 0;
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi customerBelongsToBranch", e);
+        }
+        return false;
+    }
+
+    // =====================================================
+    // HELPER: GET BRANCH BY ID
+    // =====================================================
+
+    public model.Branch getBranchById(int branchId) {
+        String sql = "SELECT branch_id, branch_name FROM Branch WHERE branch_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    model.Branch b = new model.Branch();
+                    b.setBranchID(rs.getInt("branch_id"));
+                    b.setName(rs.getString("branch_name"));
+                    return b;
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi getBranchById", e);
+        }
+        return null;
+    }
+
+    // =====================================================
     // HELPER: GET ALL BRANCHES
     // =====================================================
 
@@ -829,6 +931,23 @@ public class CustomerDAO {
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi findAllActive", e);
+        }
+        return list;
+    }
+
+    public List<Customer> searchByPhone(String phone) {
+        List<Customer> list = new ArrayList<>();
+        String sql = CUSTOMER_SELECT + "WHERE c.status = 'ACTIVE' AND c.phone LIKE ? ORDER BY c.created_at DESC";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, "%" + phone.trim() + "%");
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi searchByPhone", e);
         }
         return list;
     }

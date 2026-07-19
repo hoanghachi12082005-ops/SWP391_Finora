@@ -104,7 +104,8 @@
                                 </option>
                                 <c:forEach items="${employeeList}"
                                            var="emp">
-                                    <option value="${emp.empId}">
+                                    <option value="${emp.empId}"
+                                            ${emp.empId == branch.managerId ? 'selected' : ''}>
                                         ${emp.fullName}
                                     </option>
                                 </c:forEach>

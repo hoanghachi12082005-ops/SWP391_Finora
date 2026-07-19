@@ -50,6 +50,7 @@
 
             <!-- Main Form -->
             <form action="${pageContext.request.contextPath}/inventory" method="post" id="importForm">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="action" value="saveImport">
                 <div class="row g-4">
                     

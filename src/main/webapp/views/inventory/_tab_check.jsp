@@ -121,6 +121,7 @@
                                             </button>
                                             <c:if test="${c.status == 'PENDING' && (roleName == 'Owner' || roleName == 'StoreManager')}">
                                                 <form action="${pageContext.request.contextPath}/inventory" method="POST" class="d-inline">
+                                                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="approveCheck">
                                                     <input type="hidden" name="checkId" value="${c.checkId}">
                                                     <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">
@@ -129,6 +130,7 @@
                                                     </button>
                                                 </form>
                                                 <form action="${pageContext.request.contextPath}/inventory" method="POST" class="d-inline">
+                                                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="cancelCheck">
                                                     <input type="hidden" name="checkId" value="${c.checkId}">
                                                     <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">

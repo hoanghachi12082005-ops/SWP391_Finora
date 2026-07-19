@@ -58,6 +58,8 @@
         .btn-print:hover { opacity: .9; }
         .btn-pdf { background: #c0392b; color: #fff; }
         .btn-pdf:hover { opacity: .9; }
+        .btn-excel { background: #217346; color: #fff; }
+        .btn-excel:hover { opacity: .9; }
         .btn-close { background: #f0f0f0; color: var(--text); }
         .btn-close:hover { background: #e0e0e0; }
         .btn-disabled { opacity: .4; pointer-events: none; }
@@ -189,10 +191,14 @@
     <span class="title">${pageTitle}</span>
     <c:choose>
         <c:when test="${empty allReports}">
+            <button class="btn-excel btn-disabled" disabled>Xuất Excel</button>
             <button class="btn-pdf btn-disabled" disabled>Xuất PDF</button>
             <button class="btn-print btn-disabled" disabled>In</button>
         </c:when>
         <c:otherwise>
+            <a class="btn-excel" href="${pageContext.request.contextPath}/reports/sales-by-store-export-excel?keyword=${param.keyword}&branchId=${param.branchId}&dateFrom=${param.dateFrom}&dateTo=${param.dateTo}">
+                <span class="material-symbols-outlined" style="font-size:18px">table_chart</span> Xuất Excel
+            </a>
             <a class="btn-pdf" href="${pageContext.request.contextPath}/reports/sales-by-store-export?keyword=${param.keyword}&branchId=${param.branchId}&dateFrom=${param.dateFrom}&dateTo=${param.dateTo}" target="_blank">
                 <span class="material-symbols-outlined" style="font-size:18px">picture_as_pdf</span> Xuất PDF
             </a>

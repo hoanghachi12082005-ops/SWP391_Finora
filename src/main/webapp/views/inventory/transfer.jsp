@@ -13,6 +13,7 @@
 
     <div class="card">
         <form method="post">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <div class="form-row"><label>Tên / Tiêu đề</label><input name="name" placeholder="Nhập tên hoặc tiêu đề"></div>
             <div class="form-row"><label>Trạng thái</label><select name="status"><option>ACTIVE</option><option>INACTIVE</option><option>PENDING</option></select></div>
             <div class="form-row"><label>Mô tả</label><textarea name="description" rows="4"></textarea></div>

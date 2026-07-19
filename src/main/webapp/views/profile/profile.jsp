@@ -275,6 +275,7 @@
                                       enctype="multipart/form-data"
                                       class="profile-form">
 
+                                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                     <input type="hidden" name="action" value="updateProfile"/>
 
                                     <div class="form-group">
@@ -327,6 +328,7 @@
                                       action="${pageContext.request.contextPath}/profile"
                                       class="profile-form">
 
+                                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                     <input type="hidden" name="action" value="changePassword"/>
 
                                     <div class="form-group">

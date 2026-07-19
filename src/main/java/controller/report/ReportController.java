@@ -22,24 +22,32 @@ import model.Branch;
 import model.Employee;
 import model.EmployeeOverview;
 import model.EmployeeSalesSummary;
+import model.Order;
 import util.pagination.PaginationHelper;
 import util.pagination.PaginationHelper.PageResult;
+import util.report.ExcelExportUtil;
 import util.report.ExportUtil;
 import util.report.PdfReportUtil;
 
 @WebServlet(name = "ReportController", urlPatterns = {
         "/reports/employee-sales",
+        "/reports/employee-sales-detail",
+        "/reports/employee-sales-detail-export",
         "/reports/employee-sales-preview",
         "/reports/employee-sales-export",
+        "/reports/employee-sales-export-excel",
         "/reports/customer-loyal",
         "/reports/customer-loyal-preview",
         "/reports/customer-loyal-export",
+        "/reports/customer-loyal-export-excel",
         "/reports/sales-by-store",
         "/reports/sales-by-store-preview",
         "/reports/sales-by-store-export",
+        "/reports/sales-by-store-export-excel",
         "/reports/inventory",
         "/reports/inventory-preview",
-        "/reports/inventory-export"
+        "/reports/inventory-export",
+        "/reports/inventory-export-excel"
     })
 public class ReportController extends BaseController {
 
@@ -79,10 +87,29 @@ public class ReportController extends BaseController {
             return;
         }
 
+        if ("/reports/employee-sales-detail".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            showEmployeeDetail(request, response);
+            return;
+        }
+
+        if ("/reports/employee-sales-detail-export".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            exportEmployeeDetailExcel(request, response);
+            return;
+        }
+
         if ("/reports/employee-sales-export".equals(path)) {
             if (!isOwnerOrManager(request, response)) return;
             applyBranchFilterForManager(request);
             exportEmployeeSalesPdf(request, response);
+            return;
+        }
+
+        if ("/reports/employee-sales-export-excel".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            applyBranchFilterForManager(request);
+            exportEmployeeSalesExcel(request, response);
             return;
         }
 
@@ -109,6 +136,13 @@ public class ReportController extends BaseController {
             return;
         }
 
+        if ("/reports/sales-by-store-export-excel".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            applyBranchFilterForManager(request);
+            exportBranchSalesExcel(request, response);
+            return;
+        }
+
         if ("/reports/inventory".equals(path)) {
             if (!isOwnerOrManager(request, response)) return;
             applyBranchFilterForManager(request);
@@ -132,6 +166,13 @@ public class ReportController extends BaseController {
             return;
         }
 
+        if ("/reports/inventory-export-excel".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            applyBranchFilterForManager(request);
+            exportInventoryExcel(request, response);
+            return;
+        }
+
         if ("/reports/customer-loyal".equals(path)) {
             if (!isOwnerOrManager(request, response)) return;
             loadCustomerLoyaltyReport(request);
@@ -149,6 +190,12 @@ public class ReportController extends BaseController {
         if ("/reports/customer-loyal-export".equals(path)) {
             if (!isOwnerOrManager(request, response)) return;
             exportCustomerLoyaltyPdf(request, response);
+            return;
+        }
+
+        if ("/reports/customer-loyal-export-excel".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            exportCustomerLoyaltyExcel(request, response);
             return;
         }
 
@@ -441,6 +488,311 @@ public class ReportController extends BaseController {
                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                         "Failed to generate PDF: " + msg);
             }
+        }
+    }
+
+    private void showEmployeeDetail(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        int empId = parseInt(request.getParameter("empId"), -1);
+        if (empId <= 0) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid employee ID");
+            return;
+        }
+
+        String dateFromRaw = trim(request.getParameter("dateFrom"));
+        String dateToRaw = trim(request.getParameter("dateTo"));
+        String orderKeyword = trim(request.getParameter("orderKeyword"));
+
+        LocalDate dateFrom = parseDate(dateFromRaw);
+        LocalDate dateTo = parseDate(dateToRaw);
+
+        // Store Manager can only view employees in their own branch
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            Employee currentUser = (Employee) session.getAttribute("currentUser");
+            if (currentUser != null && "StoreManager".equalsIgnoreCase(currentUser.getRoleName())) {
+                // Verify the employee belongs to the manager's branch
+                var empSummary = employeeSalesReportDAO.getAllEmployeeSalesReport(null, String.valueOf(currentUser.getBranchID()), null, null);
+                boolean found = empSummary.stream().anyMatch(e -> e.getEmployeeId() == empId);
+                if (!found) {
+                    response.sendError(403, "Cannot view employees from other branches.");
+                    return;
+                }
+            }
+        }
+
+        // Get employee summary
+        List<EmployeeSalesSummary> empList = employeeSalesReportDAO.getAllEmployeeSalesReport(
+                null, null, dateFrom, dateTo);
+        EmployeeSalesSummary empInfo = empList.stream()
+                .filter(e -> e.getEmployeeId() == empId)
+                .findFirst()
+                .orElse(null);
+        if (empInfo == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Employee not found");
+            return;
+        }
+
+        // Get daily revenue
+        List<java.util.Map<String, Object>> dailyRevenue = employeeSalesReportDAO.getDailyRevenue(
+                empId, dateFrom, dateTo);
+
+        // Get orders with pagination
+        int page = parseInt(request.getParameter("page"), 1);
+        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
+        int totalOrders = employeeSalesReportDAO.countEmployeeOrders(empId, dateFrom, dateTo, orderKeyword);
+        PageResult pr = PaginationHelper.compute(totalOrders, page, sizeValue);
+        pr.setAttributes(request);
+
+        List<Order> orders = employeeSalesReportDAO.getEmployeeOrders(
+                empId, dateFrom, dateTo, orderKeyword, pr.getCurrentPage(), pr.getPageSize());
+
+        request.setAttribute("employeeInfo", empInfo);
+        request.setAttribute("dailyRevenue", dailyRevenue);
+        request.setAttribute("orders", orders);
+        request.setAttribute("orderKeyword", orderKeyword);
+        request.setAttribute("dateFrom", dateFromRaw);
+        request.setAttribute("dateTo", dateToRaw);
+        request.setAttribute("baseUrl", request.getContextPath() + "/reports/employee-sales-detail");
+        request.setAttribute("pageTitle", "Chi tiết doanh số nhân viên - " + empInfo.getFullName());
+
+        forward(request, response, "reports/employee-sales-detail");
+    }
+
+    private void exportEmployeeSalesExcel(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            String keyword = trim(request.getParameter("keyword"));
+            String branchId = trim(request.getParameter("branchId"));
+            if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
+                branchId = String.valueOf(request.getAttribute("managerBranchId"));
+            }
+            String dateFromRaw = trim(request.getParameter("dateFrom"));
+            String dateToRaw = trim(request.getParameter("dateTo"));
+
+            LocalDate dateFrom = parseDate(dateFromRaw);
+            LocalDate dateTo = parseDate(dateToRaw);
+
+            List<EmployeeSalesSummary> allData = employeeSalesReportDAO.getAllEmployeeSalesReport(
+                    keyword, branchId, dateFrom, dateTo);
+            EmployeeOverview overview = employeeSalesReportDAO.getReportOverview(
+                    keyword, branchId, dateFrom, dateTo);
+
+            String generatedBy = "Unknown";
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Employee currentUser = (Employee) session.getAttribute("currentUser");
+                if (currentUser != null) generatedBy = currentUser.getFullName();
+            }
+
+            final int excelBranchId = parseInt(branchId, -1);
+            String branchName = null;
+            if (!isBlank(branchId)) {
+                var branches = userManagementDao.getAllBranches();
+                if (branches != null) {
+                    branchName = branches.stream()
+                            .filter(b -> b.getBranchID() == excelBranchId)
+                            .findFirst()
+                            .map(b -> b.getName())
+                            .orElse(null);
+                }
+            }
+
+            byte[] excelBytes = ExcelExportUtil.generateEmployeeSalesReport(
+                    generatedBy, allData, overview, keyword, branchName, dateFrom, dateTo);
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=\"" +
+                    ExportUtil.buildExportFileName("EmployeeSalesReport") + ".xlsx\"");
+            response.setContentLength(excelBytes.length);
+            response.getOutputStream().write(excelBytes);
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(500, "Excel export failed: " + e.getMessage());
+        }
+    }
+
+    private void exportBranchSalesExcel(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            String keyword = trim(request.getParameter("keyword"));
+            String branchId = trim(request.getParameter("branchId"));
+            if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
+                branchId = String.valueOf(request.getAttribute("managerBranchId"));
+            }
+            String dateFromRaw = trim(request.getParameter("dateFrom"));
+            String dateToRaw = trim(request.getParameter("dateTo"));
+
+            LocalDate dateFrom = parseDate(dateFromRaw);
+            LocalDate dateTo = parseDate(dateToRaw);
+
+            var allData = branchSalesReportDAO.getBranchSalesReport(
+                    keyword, branchId, dateFrom, dateTo, 1, 1000000);
+            var overview = branchSalesReportDAO.getReportOverview(keyword, branchId, dateFrom, dateTo);
+
+            String generatedBy = "Unknown";
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Employee currentUser = (Employee) session.getAttribute("currentUser");
+                if (currentUser != null) generatedBy = currentUser.getFullName();
+            }
+
+            final int excelBranchId = parseInt(branchId, -1);
+            String branchName = null;
+            if (!isBlank(branchId)) {
+                var branches = userManagementDao.getAllBranches();
+                if (branches != null) {
+                    branchName = branches.stream()
+                            .filter(b -> b.getBranchID() == excelBranchId)
+                            .findFirst()
+                            .map(b -> b.getName())
+                            .orElse(null);
+                }
+            }
+
+            byte[] excelBytes = ExcelExportUtil.generateBranchSalesReport(
+                    generatedBy, allData, overview, keyword, branchName, dateFrom, dateTo);
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=\"" +
+                    ExportUtil.buildExportFileName("BranchSalesReport") + ".xlsx\"");
+            response.setContentLength(excelBytes.length);
+            response.getOutputStream().write(excelBytes);
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(500, "Excel export failed: " + e.getMessage());
+        }
+    }
+
+    private void exportInventoryExcel(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            String keyword = trim(request.getParameter("keyword"));
+            String branchId = trim(request.getParameter("branchId"));
+            if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
+                branchId = String.valueOf(request.getAttribute("managerBranchId"));
+            }
+
+            var allData = inventoryReportDAO.getInventoryReport(keyword, branchId, 1, 1000000);
+            var overview = inventoryReportDAO.getReportOverview(keyword, branchId);
+
+            String generatedBy = "Unknown";
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Employee currentUser = (Employee) session.getAttribute("currentUser");
+                if (currentUser != null) generatedBy = currentUser.getFullName();
+            }
+
+            final int excelBranchId = parseInt(branchId, -1);
+            String branchName = null;
+            if (!isBlank(branchId)) {
+                var branches = userManagementDao.getAllBranches();
+                if (branches != null) {
+                    branchName = branches.stream()
+                            .filter(b -> b.getBranchID() == excelBranchId)
+                            .findFirst()
+                            .map(b -> b.getName())
+                            .orElse(null);
+                }
+            }
+
+            byte[] excelBytes = ExcelExportUtil.generateInventoryReport(
+                    generatedBy, allData, overview, keyword, branchName);
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=\"" +
+                    ExportUtil.buildExportFileName("InventoryReport") + ".xlsx\"");
+            response.setContentLength(excelBytes.length);
+            response.getOutputStream().write(excelBytes);
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(500, "Excel export failed: " + e.getMessage());
+        }
+    }
+
+    private void exportCustomerLoyaltyExcel(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            String keyword = trim(request.getParameter("keyword"));
+
+            var allData = customerLoyaltyReportDAO.getCustomerLoyaltyReport(keyword, 1, 1000000);
+            var overview = customerLoyaltyReportDAO.getReportOverview(keyword);
+
+            String generatedBy = "Unknown";
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Employee currentUser = (Employee) session.getAttribute("currentUser");
+                if (currentUser != null) generatedBy = currentUser.getFullName();
+            }
+
+            byte[] excelBytes = ExcelExportUtil.generateCustomerLoyaltyReport(
+                    generatedBy, allData, overview, keyword);
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=\"" +
+                    ExportUtil.buildExportFileName("CustomerLoyaltyReport") + ".xlsx\"");
+            response.setContentLength(excelBytes.length);
+            response.getOutputStream().write(excelBytes);
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(500, "Excel export failed: " + e.getMessage());
+        }
+    }
+
+    private void exportEmployeeDetailExcel(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            int empId = parseInt(request.getParameter("empId"), -1);
+            if (empId <= 0) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid employee ID");
+                return;
+            }
+
+            String dateFromRaw = trim(request.getParameter("dateFrom"));
+            String dateToRaw = trim(request.getParameter("dateTo"));
+
+            LocalDate dateFrom = parseDate(dateFromRaw);
+            LocalDate dateTo = parseDate(dateToRaw);
+
+            List<EmployeeSalesSummary> empList = employeeSalesReportDAO.getAllEmployeeSalesReport(
+                    null, null, dateFrom, dateTo);
+            EmployeeSalesSummary empInfo = empList.stream()
+                    .filter(e -> e.getEmployeeId() == empId)
+                    .findFirst()
+                    .orElse(null);
+            if (empInfo == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Employee not found");
+                return;
+            }
+
+            List<java.util.Map<String, Object>> dailyRevenue = employeeSalesReportDAO.getDailyRevenue(
+                    empId, dateFrom, dateTo);
+            List<Order> orders = employeeSalesReportDAO.getEmployeeOrders(
+                    empId, dateFrom, dateTo, null, 1, 1000000);
+
+            String generatedBy = "Unknown";
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Employee currentUser = (Employee) session.getAttribute("currentUser");
+                if (currentUser != null) generatedBy = currentUser.getFullName();
+            }
+
+            byte[] excelBytes = ExcelExportUtil.generateEmployeeDetailReport(
+                    generatedBy, empInfo, dailyRevenue, orders, dateFrom, dateTo);
+
+            String fileName = ExportUtil.buildExportFileName("EmployeeDetailReport_" + empInfo.getFullName().replaceAll("\\s+", "_"));
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + ".xlsx\"");
+            response.setContentLength(excelBytes.length);
+            response.getOutputStream().write(excelBytes);
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(500, "Excel export failed: " + e.getMessage());
         }
     }
 

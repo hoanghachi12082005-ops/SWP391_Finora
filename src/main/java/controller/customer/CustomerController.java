@@ -52,6 +52,12 @@ public class CustomerController extends HttpServlet {
             return;
         }
 
+        // POS phone-only search
+        if ("search-pos".equals(action)) {
+            handleSearchPos(request, response);
+            return;
+        }
+
         switch (action) {
             case "add":
                 request.setAttribute("formMode", "add");
@@ -150,6 +156,35 @@ public class CustomerController extends HttpServlet {
     // =====================================================
     // POS API HANDLERS (AJAX Support)
     // =====================================================
+
+    private void handleSearchPos(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String phone = trim(request.getParameter("phone"));
+        List<Customer> list = new java.util.ArrayList<>();
+        if (!isBlank(phone)) {
+            list = customerDAO.searchByPhone(phone);
+        }
+
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < list.size(); i++) {
+            Customer c = list.get(i);
+            json.append(String.format(
+                "{\"customerId\":%d,\"fullName\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"totalSpent\":%s,\"loyaltyPoint\":%d,\"lifetimePoints\":%d}",
+                c.getCustomerId(),
+                escapeJson(c.getFullName()),
+                escapeJson(c.getPhone()),
+                escapeJson(c.getEmail() != null ? c.getEmail() : ""),
+                c.getTotalSpent().toString(),
+                c.getLoyaltyPoint(),
+                c.getLifetimePoints()
+            ));
+            if (i < list.size() - 1) {
+                json.append(",");
+            }
+        }
+        json.append("]");
+
+        sendJsonResponse(response, json.toString());
+    }
 
     private void handleSearchApi(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String keyword = request.getParameter("keyword");
@@ -308,7 +343,7 @@ public class CustomerController extends HttpServlet {
 
     private void loadPageData(HttpServletRequest request) {
         String keyword = request.getParameter("keyword");
-        String branchIdFilter = request.getParameter("branchId");
+        String branchIdFilter = getEffectiveBranchId(request);
 
         int page = parseInt(request.getParameter("page"), 1);
         int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
@@ -326,8 +361,42 @@ public class CustomerController extends HttpServlet {
         request.setAttribute("branchFilter", parseInt(branchIdFilter, -1));
         request.setAttribute("totalCustomers", totalRecords);
 
-        request.setAttribute("customerOverview", customerDAO.getCustomerOverview());
-        request.setAttribute("branches", customerDAO.getAllBranches());
+        request.setAttribute("customerOverview", customerDAO.getCustomerOverview(getBranchIdFromSession(request)));
+        request.setAttribute("branches", getAvailableBranches(request));
+    }
+
+    /**
+     * For Store Manager, force branch filter from session (never trust browser).
+     * For Owner/Admin, allow branch filter from request.
+     */
+    private String getEffectiveBranchId(HttpServletRequest request) {
+        Employee user = getLoggedInUser(request);
+        if (user != null && "StoreManager".equalsIgnoreCase(user.getRoleName())) {
+            Integer bid = user.getBranchID();
+            return bid != null ? String.valueOf(bid) : null;
+        }
+        return request.getParameter("branchId");
+    }
+
+    private Integer getBranchIdFromSession(HttpServletRequest request) {
+        Employee user = getLoggedInUser(request);
+        if (user != null && "StoreManager".equalsIgnoreCase(user.getRoleName())) {
+            return user.getBranchID();
+        }
+        return null;
+    }
+
+    private List<model.Branch> getAvailableBranches(HttpServletRequest request) {
+        Employee user = getLoggedInUser(request);
+        if (user != null && "StoreManager".equalsIgnoreCase(user.getRoleName())) {
+            Integer bid = user.getBranchID();
+            if (bid != null) {
+                model.Branch b = customerDAO.getBranchById(bid);
+                if (b != null) return java.util.Collections.singletonList(b);
+            }
+            return java.util.Collections.emptyList();
+        }
+        return customerDAO.getAllBranches();
     }
 
     // =====================================================
@@ -337,14 +406,36 @@ public class CustomerController extends HttpServlet {
     private void loadSelectedCustomer(HttpServletRequest request, String attributeName) {
         int customerId = parseInt(request.getParameter("id"), -1);
         if (customerId > 0) {
-            request.setAttribute(attributeName, customerDAO.findById(customerId));
+            Customer c = customerDAO.findById(customerId);
+            if (c != null && isStoreManagerDenied(request, c)) return;
+            request.setAttribute(attributeName, c);
         }
+    }
+
+    /**
+     * Check if a Store Manager is denied access to a customer (wrong branch).
+     * Returns true if denied (response error already sent), false if allowed.
+     */
+    private boolean isStoreManagerDenied(HttpServletRequest request, Customer customer) {
+        Employee user = getLoggedInUser(request);
+        if (user == null || !"StoreManager".equalsIgnoreCase(user.getRoleName())) return false;
+        if (user.getBranchID() == null) return false;
+        // Check if the customer has any orders in the manager's branch
+        if (!customerDAO.customerBelongsToBranch(customer.getCustomerId(), user.getBranchID())) {
+            try {
+                HttpServletResponse resp = (HttpServletResponse) request.getAttribute("jakarta.servlet.http.response");
+                if (resp != null) resp.sendError(403, "Không có quyền truy cập khách hàng này.");
+            } catch (Exception ignored) {}
+            return true;
+        }
+        return false;
     }
 
     private void loadCustomerDetails(HttpServletRequest request) {
         int customerId = parseInt(request.getParameter("id"), -1);
         if (customerId > 0) {
             Customer cust = customerDAO.findById(customerId);
+            if (cust != null && isStoreManagerDenied(request, cust)) return;
             request.setAttribute("detailCustomer", cust);
             request.setAttribute("detailCustomerTransactions", customerDAO.getPointTransactions(customerId));
             request.setAttribute("detailCustomerOrders", customerDAO.getOrderHistory(customerId));
@@ -369,6 +460,18 @@ public class CustomerController extends HttpServlet {
         if (isUpdate && customerId <= 0) {
             setFlash(request, "errorMessage", "ID khách hàng không hợp lệ.");
             return;
+        }
+
+        // Store Manager can only edit customers belonging to their branch
+        if (isUpdate) {
+            Employee user = getLoggedInUser(request);
+            if (user != null && "StoreManager".equalsIgnoreCase(user.getRoleName()) && user.getBranchID() != null) {
+                Customer existing = customerDAO.findById(customerId);
+                if (existing == null || !customerDAO.customerBelongsToBranch(customerId, user.getBranchID())) {
+                    setFlash(request, "errorMessage", "Không có quyền chỉnh sửa khách hàng này.");
+                    return;
+                }
+            }
         }
 
         if (isBlank(fullName) || isBlank(phone)) {
@@ -444,9 +547,17 @@ public class CustomerController extends HttpServlet {
             return;
         }
 
+        // Store Manager can only delete customers belonging to their branch
+        Employee user = getLoggedInUser(request);
+        if (user != null && "StoreManager".equalsIgnoreCase(user.getRoleName()) && user.getBranchID() != null) {
+            if (!customerDAO.customerBelongsToBranch(customerId, user.getBranchID())) {
+                setFlash(request, "errorMessage", "Không có quyền xóa khách hàng này.");
+                return;
+            }
+        }
+
         boolean success = customerDAO.softDelete(customerId);
         if (success) {
-            Employee user = getLoggedInUser(request);
             if (user != null) activityLogService.log(user.getEmployeeID(), "DELETE", "Customer", customerId, null, null);
         }
         setFlash(
@@ -533,7 +644,7 @@ public class CustomerController extends HttpServlet {
         }
 
         // Sales staff is authorized ONLY for the API search/create/edit endpoints used in POS
-        boolean isApiCall = "search-api".equals(action) || "create-api".equals(action) || "update-api".equals(action);
+        boolean isApiCall = "search-pos".equals(action) || "search-api".equals(action) || "create-api".equals(action) || "update-api".equals(action);
         boolean isSales = roleLower.contains("sales");
 
         if (isSales) {
