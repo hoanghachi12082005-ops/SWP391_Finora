@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import service.vnpay.VNPayService;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @WebServlet("/vnpay/return")
@@ -37,14 +39,13 @@ public class VNPayReturnServlet extends HttpServlet {
             vnpay.processFailed(orderCode, responseCode);
         }
 
-        // Redirect — chuyển tiếp dữ liệu VNPay đã trả (trừ chữ ký)
+        // Redirect — chỉ mang theo 2 tham số (orderCode + amount)
+        // Đều là dữ liệu VNPay đã xác thực, không phải secret
         if (orderCode != null) {
             long amountVnd = amountStr != null ? Long.parseLong(amountStr) / 100 : 0;
             String target = (isSuccess ? "/payment/process" : "/payment/failed")
-                    + "?orderCode=" + orderCode
-                    + "&amount=" + amountVnd
-                    + "&transactionNo=" + (transactionNo != null ? transactionNo : "")
-                    + "&bankCode=" + (bankCode != null ? bankCode : "");
+                    + "?orderCode=" + URLEncoder.encode(orderCode, StandardCharsets.UTF_8)
+                    + "&amount=" + amountVnd;
             resp.sendRedirect(req.getContextPath() + target);
         } else {
             resp.sendRedirect(req.getContextPath() + "/payment/failed");
