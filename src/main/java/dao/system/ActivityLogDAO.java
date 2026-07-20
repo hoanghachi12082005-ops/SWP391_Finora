@@ -171,6 +171,7 @@ public class ActivityLogDAO {
                              String actionName, LocalDate dateFrom, LocalDate dateTo) {
         if (keyword != null && !keyword.isBlank())
             sql.append(" AND (a.action_name LIKE ? OR a.table_name LIKE ? OR e.fullName LIKE ? OR a.new_data LIKE ?) ");
+        if (tableName != null && !tableName.isBlank()) sql.append(" AND a.table_name = ? ");
         if (actionName != null && !actionName.isBlank()) sql.append(" AND a.action_name = ? ");
         if (dateFrom != null) sql.append(" AND a.created_at >= ? ");
         if (dateTo != null) sql.append(" AND a.created_at < ? ");
@@ -181,11 +182,11 @@ public class ActivityLogDAO {
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             int idx = 1;
-            if (tableName != null && !tableName.isBlank()) ps.setString(idx++, tableName);
             if (keyword != null && !keyword.isBlank()) {
                 String k = "%" + keyword + "%";
                 for (int i = 0; i < 4; i++) ps.setString(idx++, k);
             }
+            if (tableName != null && !tableName.isBlank()) ps.setString(idx++, tableName);
             if (actionName != null && !actionName.isBlank()) ps.setString(idx++, actionName);
             if (dateFrom != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateFrom.atStartOfDay()));
             if (dateTo != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateTo.plusDays(1).atStartOfDay()));
