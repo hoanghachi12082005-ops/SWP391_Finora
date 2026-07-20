@@ -1,5 +1,6 @@
 package dao.sales;
 
+import model.Voucher;
 import util.database.DBContext;
 import java.sql.*;
 
@@ -7,6 +8,12 @@ import java.sql.*;
  * DAO thao tác bảng customer_point + point_transaction — quản lý điểm tích lũy.
  */
 public class CustomerPointDAO {
+
+    // ponytail: earn rate stored as Voucher(POINT_EARN_CONFIG).discount_value
+    public static int getEarnRate() {
+        Voucher v = new VoucherDAO().getByCode("POINT_EARN_CONFIG");
+        return v != null && v.getDiscountValue() > 0 ? (int) v.getDiscountValue() : 100_000;
+    }
 
     /**
      * Lấy cus_point_id theo cus_id. Trả về -1 nếu không tồn tại.
@@ -53,7 +60,8 @@ public class CustomerPointDAO {
      * @param orderId    ID đơn hàng vừa tạo
      */
     public void addPoints(Connection conn, int cusId, double orderTotal, int orderId) throws SQLException {
-        int pointsEarned = (int) (orderTotal / 100_000);
+        int rate = getEarnRate();
+        int pointsEarned = (int) (orderTotal / rate);
         if (pointsEarned <= 0) return;
 
         // 1. Lấy thông tin điểm hiện tại

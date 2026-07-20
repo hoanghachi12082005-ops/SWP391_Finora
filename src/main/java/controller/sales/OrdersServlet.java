@@ -154,6 +154,8 @@ public class OrdersServlet extends HttpServlet {
         json.append("\"orderCode\":\"").append(escJson(order.getOrderCode())).append("\",");
         json.append("\"createdAt\":\"").append(escJson(order.getCreatedAt())).append("\",");
         json.append("\"customerName\":\"").append(escJson(order.getCustomerName() != null ? order.getCustomerName() : "Khách vãng lai")).append("\",");
+        json.append("\"customerPhone\":\"").append(escJson(order.getCustomerPhone() != null ? order.getCustomerPhone() : "")).append("\",");
+        json.append("\"customerPoints\":").append(order.getCustomerPoints() != null ? order.getCustomerPoints() : 0).append(",");
         json.append("\"employeeName\":\"").append(escJson(order.getEmployeeName())).append("\",");
         json.append("\"branchName\":\"").append(escJson(order.getBranchName())).append("\",");
         json.append("\"subtotal\":").append(order.getSubtotal()).append(",");
@@ -248,7 +250,7 @@ public class OrdersServlet extends HttpServlet {
 
             // 2. Hoàn điểm cho khách hàng
             if (order.getCustomerId() != null && order.getCustomerId() > 0) {
-                double pointsEarned = Math.round(order.getTotalAmount() / 10_000 * 100.0) / 100.0;
+                double pointsEarned = Math.round(order.getTotalAmount() / CustomerPointDAO.getEarnRate() * 100.0) / 100.0;
                 if (pointsEarned > 0) {
                     String selectSql = "SELECT cus_point_id, current_points FROM customer_point WHERE cus_id = ?";
                     int cusPointId = -1;

@@ -37,6 +37,8 @@ public class Order {
     // Transient fields for join queries
     // View-only / Additional properties
     private String customerName;
+    private String customerPhone;
+    private Integer customerPoints;
     private String employeeName;
     private String branchName;
     private String supplierName;
@@ -187,6 +189,22 @@ public class Order {
 
     public void setCustomerName(String customerName) {
         this.customerName = customerName;
+    }
+
+    public String getCustomerPhone() {
+        return customerPhone;
+    }
+
+    public void setCustomerPhone(String customerPhone) {
+        this.customerPhone = customerPhone;
+    }
+
+    public Integer getCustomerPoints() {
+        return customerPoints;
+    }
+
+    public void setCustomerPoints(Integer customerPoints) {
+        this.customerPoints = customerPoints;
     }
 
     public String getEmployeeName() {

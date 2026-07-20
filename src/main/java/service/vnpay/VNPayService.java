@@ -1,8 +1,10 @@
 package service.vnpay;
 
 import dao.finance.PaymentDAO;
+import dao.sales.CustomerPointDAO;
 import dao.sales.OrderDAO;
 import jakarta.servlet.http.HttpServletRequest;
+import model.Order;
 import model.Payment;
 import util.database.DBContext;
 import util.vnpay.Config;
@@ -99,6 +101,13 @@ public class VNPayService {
                     + ", GD: " + (transactionNo != null ? transactionNo : "N/A"));
 
             paymentDAO.insert(conn, payment);
+
+            // Earn loyalty points
+            Order order = orderDAO.findByCode(conn, orderCode);
+            if (order != null && order.getCustomerId() != null && order.getCustomerId() > 0) {
+                new CustomerPointDAO().addPoints(conn, order.getCustomerId(), order.getTotalAmount(), orderId);
+            }
+
             return true;
 
         } catch (Exception e) {
@@ -172,6 +181,12 @@ public class VNPayService {
                 + ", GD: " + (transactionNo != null ? transactionNo : "N/A"));
 
         paymentDAO.insert(conn, payment);
+
+        // Earn loyalty points
+        Order order = orderDAO.findByCode(conn, orderCode);
+        if (order != null && order.getCustomerId() != null && order.getCustomerId() > 0) {
+            new CustomerPointDAO().addPoints(conn, order.getCustomerId(), order.getTotalAmount(), orderId);
+        }
     }
 
     /** Xử lý thất bại trong transaction (dùng cho IPN). */

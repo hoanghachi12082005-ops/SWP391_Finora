@@ -164,9 +164,11 @@ public class OrderDAO {
                 if (rs.next()) {
                     Order o = mapRow(rs);
                     o.setCustomerName(rs.getString("customerName"));
+                    o.setCustomerPhone(rs.getString("customerPhone"));
+                    double pts = rs.getDouble("customerPoints");
+                    o.setCustomerPoints(rs.wasNull() ? null : (int) pts);
                     o.setEmployeeName(rs.getString("employeeName"));
                     o.setBranchName(rs.getString("branchName"));
-                    // We can return details if needed, but this is fine.
                     return o;
                 }
             }
