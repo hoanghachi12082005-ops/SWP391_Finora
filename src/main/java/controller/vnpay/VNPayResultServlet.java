@@ -16,25 +16,16 @@ public class VNPayResultServlet extends HttpServlet {
         String path = req.getServletPath();
         String orderCode = req.getParameter("orderCode");
         String amountStr = req.getParameter("amount");
-        String transactionNo = req.getParameter("transactionNo");
-        String bankCode = req.getParameter("bankCode");
 
-        req.setAttribute("orderCode", orderCode != null ? orderCode : "");
         long amount = 0;
         if (amountStr != null && !amountStr.isEmpty()) {
             try { amount = Long.parseLong(amountStr); } catch (NumberFormatException ignored) {}
         }
-        req.setAttribute("amount", amount);
-        req.setAttribute("transactionNo", transactionNo != null ? transactionNo : "");
-        req.setAttribute("bankCode", bankCode != null ? bankCode : "");
 
-        if ("/payment/process".equals(path)) {
-            req.setAttribute("status", "success");
-            req.setAttribute("message", "Giao dịch thành công!");
-        } else {
-            req.setAttribute("status", "failed");
-            req.setAttribute("message", "Giao dịch thất bại!");
-        }
+        req.setAttribute("status", "/payment/process".equals(path) ? "success" : "failed");
+        req.setAttribute("message", "/payment/process".equals(path) ? "Giao dịch thành công!" : "Giao dịch thất bại!");
+        req.setAttribute("orderCode", orderCode != null ? orderCode : "");
+        req.setAttribute("amount", amount);
 
         req.getRequestDispatcher("/views/common/vnpay_result.jsp").forward(req, resp);
     }
