@@ -21,15 +21,30 @@ public class LoyaltyPointSettingDAO {
         return new LoyaltyPointSetting();
     }
 
-    public boolean update(LoyaltyPointSetting s) {
-        String sql = "UPDATE loyalty_point_setting SET amount_per_point = ?, point_to_currency = ?, updated_by = ?, updated_at = GETDATE() WHERE setting_id = ?";
-        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setBigDecimal(1, s.getAmountPerPoint());
-            ps.setBigDecimal(2, s.getPointToCurrency());
-            if (s.getUpdatedBy() != null) ps.setInt(3, s.getUpdatedBy()); else ps.setNull(3, Types.INTEGER);
-            ps.setInt(4, s.getSettingId());
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); }
-        return false;
+    /** Upsert: update dòng đầu tiên, nếu chưa có thì INSERT. */
+    public boolean upsert(LoyaltyPointSetting s) {
+        LoyaltyPointSetting existing = getSetting();
+        if (existing.getSettingId() > 0) {
+            // Update
+            String sql = "UPDATE loyalty_point_setting SET amount_per_point = ?, point_to_currency = ?, updated_by = ?, updated_at = GETDATE() WHERE setting_id = ?";
+            try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setBigDecimal(1, s.getAmountPerPoint());
+                ps.setBigDecimal(2, s.getPointToCurrency());
+                if (s.getUpdatedBy() != null) ps.setInt(3, s.getUpdatedBy()); else ps.setNull(3, Types.INTEGER);
+                ps.setInt(4, existing.getSettingId());
+                return ps.executeUpdate() > 0;
+            } catch (SQLException e) { e.printStackTrace(); }
+            return false;
+        } else {
+            // Insert
+            String sql = "INSERT INTO loyalty_point_setting (amount_per_point, point_to_currency, updated_by, updated_at) VALUES (?, ?, ?, GETDATE())";
+            try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setBigDecimal(1, s.getAmountPerPoint());
+                ps.setBigDecimal(2, s.getPointToCurrency());
+                if (s.getUpdatedBy() != null) ps.setInt(3, s.getUpdatedBy()); else ps.setNull(3, Types.INTEGER);
+                return ps.executeUpdate() > 0;
+            } catch (SQLException e) { e.printStackTrace(); }
+            return false;
+        }
     }
 }
