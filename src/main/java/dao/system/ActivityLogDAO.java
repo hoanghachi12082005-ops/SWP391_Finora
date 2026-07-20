@@ -49,7 +49,8 @@ public class ActivityLogDAO {
      * @param beforeId  null ở trang đầu → lấy mới nhất.
      *                  != null → lấy các bản ghi cũ hơn beforeId (ORDER BY DESC, WHERE id < beforeId).
      * @param afterId   != null → lấy các bản ghi mới hơn afterId (ORDER BY ASC, WHERE id > afterId, reverse trong Java).
-     * @param limit     số bản ghi trả về (đã +1 bên controller để kiểm tra hasNext).
+     * @param limit     số bản ghi trả về. Hai query index seek riêng (existsLessThan / existsGreaterThan)
+     *                  được dùng để xác định hasNext / hasPrev thay vì limit+1.
      */
     public List<ActivityLog> findByKeyset(Integer beforeId, Integer afterId, int limit,
                                           String keyword, String tableName, String actionName,
@@ -108,6 +109,33 @@ public class ActivityLogDAO {
                                      String actionName, LocalDate dateFrom, LocalDate dateTo) throws SQLException {
         StringBuilder sql = new StringBuilder(
                 "SELECT TOP 1 1 FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id WHERE a.audit_log_id > ? ");
+        appendWhere(sql, keyword, tableName, actionName, dateFrom, dateTo);
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            ps.setInt(idx++, id);
+            if (keyword != null && !keyword.isBlank()) {
+                String k = "%" + keyword + "%";
+                for (int i = 0; i < 4; i++) ps.setString(idx++, k);
+            }
+            if (tableName != null && !tableName.isBlank()) ps.setString(idx++, tableName);
+            if (actionName != null && !actionName.isBlank()) ps.setString(idx++, actionName);
+            if (dateFrom != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateFrom.atStartOfDay()));
+            if (dateTo != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateTo.plusDays(1).atStartOfDay()));
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /**
+     * Kiểm tra xem có bản ghi nào với audit_log_id < givenId không (dùng cho hasNext).
+     * SELECT TOP 1 1 → index seek, rất nhẹ.
+     */
+    public boolean existsLessThan(int id, String keyword, String tableName,
+                                  String actionName, LocalDate dateFrom, LocalDate dateTo) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+                "SELECT TOP 1 1 FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id WHERE a.audit_log_id < ? ");
         appendWhere(sql, keyword, tableName, actionName, dateFrom, dateTo);
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
