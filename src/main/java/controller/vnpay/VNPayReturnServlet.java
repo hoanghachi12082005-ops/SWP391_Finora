@@ -37,11 +37,15 @@ public class VNPayReturnServlet extends HttpServlet {
             vnpay.processFailed(orderCode, responseCode);
         }
 
-        // Redirect — chỉ truyền orderCode (không lộ thông tin nhạy cảm)
-        if (isSuccess && orderCode != null) {
-            resp.sendRedirect(req.getContextPath() + "/payment/process?orderCode=" + orderCode);
-        } else if (orderCode != null) {
-            resp.sendRedirect(req.getContextPath() + "/payment/failed?orderCode=" + orderCode);
+        // Redirect — chuyển tiếp dữ liệu VNPay đã trả (trừ chữ ký)
+        if (orderCode != null) {
+            long amountVnd = amountStr != null ? Long.parseLong(amountStr) / 100 : 0;
+            String target = (isSuccess ? "/payment/process" : "/payment/failed")
+                    + "?orderCode=" + orderCode
+                    + "&amount=" + amountVnd
+                    + "&transactionNo=" + (transactionNo != null ? transactionNo : "")
+                    + "&bankCode=" + (bankCode != null ? bankCode : "");
+            resp.sendRedirect(req.getContextPath() + target);
         } else {
             resp.sendRedirect(req.getContextPath() + "/payment/failed");
         }
