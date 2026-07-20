@@ -5,6 +5,7 @@ import dao.report.EmployeeSalesReportDAO;
 import dao.report.BranchSalesReportDAO;
 import dao.report.InventoryReportDAO;
 import dao.report.CustomerLoyaltyReportDAO;
+import dao.report.FinanceDetailReportDAO;
 import dao.user.UserManagementDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -23,6 +24,8 @@ import model.Employee;
 import model.EmployeeOverview;
 import model.EmployeeSalesSummary;
 import model.Order;
+import model.Payment;
+import model.FinanceDetailReportOverview;
 import util.pagination.PaginationHelper;
 import util.pagination.PaginationHelper.PageResult;
 import util.report.ExcelExportUtil;
@@ -47,7 +50,10 @@ import util.report.PdfReportUtil;
         "/reports/inventory",
         "/reports/inventory-preview",
         "/reports/inventory-export",
-        "/reports/inventory-export-excel"
+        "/reports/inventory-export-excel",
+        "/reports/finance-detail",
+        "/reports/finance-detail-preview",
+        "/reports/finance-detail-export-excel"
     })
 public class ReportController extends BaseController {
 
@@ -55,6 +61,7 @@ public class ReportController extends BaseController {
     private BranchSalesReportDAO branchSalesReportDAO;
     private InventoryReportDAO inventoryReportDAO;
     private CustomerLoyaltyReportDAO customerLoyaltyReportDAO;
+    private FinanceDetailReportDAO financeDetailReportDAO;
     private UserManagementDao userManagementDao;
 
     @Override
@@ -63,6 +70,7 @@ public class ReportController extends BaseController {
         branchSalesReportDAO = new BranchSalesReportDAO();
         inventoryReportDAO = new InventoryReportDAO();
         customerLoyaltyReportDAO = new CustomerLoyaltyReportDAO();
+        financeDetailReportDAO = new FinanceDetailReportDAO();
         userManagementDao = new UserManagementDao();
     }
 
@@ -196,6 +204,29 @@ public class ReportController extends BaseController {
         if ("/reports/customer-loyal-export-excel".equals(path)) {
             if (!isOwnerOrManager(request, response)) return;
             exportCustomerLoyaltyExcel(request, response);
+            return;
+        }
+
+        if ("/reports/finance-detail".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            applyBranchFilterForManager(request);
+            loadFinanceDetailReport(request);
+            forward(request, response, "reports/finance-detail");
+            return;
+        }
+
+        if ("/reports/finance-detail-preview".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            applyBranchFilterForManager(request);
+            loadFinanceDetailPreview(request);
+            forward(request, response, "reports/finance-detail-preview");
+            return;
+        }
+
+        if ("/reports/finance-detail-export-excel".equals(path)) {
+            if (!isOwnerOrManager(request, response)) return;
+            applyBranchFilterForManager(request);
+            exportFinanceDetailExcel(request, response);
             return;
         }
 
@@ -1085,6 +1116,150 @@ public class ReportController extends BaseController {
         } catch (Exception e) {
             e.printStackTrace();
             response.sendError(500, e.getMessage());
+        }
+    }
+
+    private void loadFinanceDetailReport(HttpServletRequest request) {
+        String keyword = trim(request.getParameter("keyword"));
+        String branchId = trim(request.getParameter("branchId"));
+        if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
+            branchId = String.valueOf(request.getAttribute("managerBranchId"));
+        }
+        String typeFilter = trim(request.getParameter("typeFilter")); // INCOME, EXPENSE
+        String dateFromRaw = trim(request.getParameter("dateFrom"));
+        String dateToRaw = trim(request.getParameter("dateTo"));
+
+        LocalDate dateFrom = parseDate(dateFromRaw);
+        LocalDate dateTo = parseDate(dateToRaw);
+
+        int page = parseInt(request.getParameter("page"), 1);
+        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
+
+        int totalRecords = financeDetailReportDAO.countFinanceDetailReport(keyword, branchId, typeFilter, dateFrom, dateTo);
+        PageResult pr = PaginationHelper.compute(totalRecords, page, sizeValue);
+        pr.setAttributes(request);
+
+        request.setAttribute(
+                "financeReports",
+                financeDetailReportDAO.getFinanceDetailReport(
+                        keyword, branchId, typeFilter, dateFrom, dateTo, pr.getCurrentPage(), pr.getPageSize())
+        );
+        request.setAttribute(
+                "reportOverview",
+                financeDetailReportDAO.getReportOverview(keyword, branchId, typeFilter, dateFrom, dateTo)
+        );
+        request.setAttribute("branches", userManagementDao.getAllBranches());
+
+        request.setAttribute("pageTitle", "Báo cáo doanh thu chi tiết");
+        request.setAttribute(
+                "pageSubtitle",
+                "Xem chi tiết các khoản thu, chi và lợi nhuận của cửa hàng"
+        );
+        request.setAttribute("baseUrl", request.getContextPath() + "/reports/finance-detail");
+
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("branchFilter", parseInt(branchId, -1));
+        request.setAttribute("typeFilter", typeFilter);
+        request.setAttribute("dateFrom", dateFromRaw);
+        request.setAttribute("dateTo", dateToRaw);
+        request.setAttribute("totalRecords", totalRecords);
+    }
+
+    private void loadFinanceDetailPreview(HttpServletRequest request) {
+        String keyword = trim(request.getParameter("keyword"));
+        String branchId = trim(request.getParameter("branchId"));
+        if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
+            branchId = String.valueOf(request.getAttribute("managerBranchId"));
+        }
+        String typeFilter = trim(request.getParameter("typeFilter"));
+        String dateFromRaw = trim(request.getParameter("dateFrom"));
+        String dateToRaw = trim(request.getParameter("dateTo"));
+
+        LocalDate dateFrom = parseDate(dateFromRaw);
+        LocalDate dateTo = parseDate(dateToRaw);
+
+        List<Payment> allData = financeDetailReportDAO.getFinanceDetailReport(
+                keyword, branchId, typeFilter, dateFrom, dateTo, 1, 1000000);
+        FinanceDetailReportOverview overview = financeDetailReportDAO.getReportOverview(
+                keyword, branchId, typeFilter, dateFrom, dateTo);
+
+        request.setAttribute("allFinanceReports", allData);
+        request.setAttribute("reportOverview", overview);
+        request.setAttribute("branches", userManagementDao.getAllBranches());
+
+        final int finalBranchId = parseInt(branchId, -1);
+        String branchName = null;
+        if (!isBlank(branchId)) {
+            var branches = userManagementDao.getAllBranches();
+            if (branches != null) {
+                branchName = branches.stream()
+                        .filter(b -> b.getBranchID() == finalBranchId)
+                        .findFirst()
+                        .map(b -> b.getName())
+                        .orElse(null);
+            }
+        }
+        request.setAttribute("reportBranchName", branchName);
+
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("branchFilter", finalBranchId);
+        request.setAttribute("typeFilter", typeFilter);
+        request.setAttribute("dateFrom", dateFromRaw);
+        request.setAttribute("dateTo", dateToRaw);
+        request.setAttribute("pageTitle", "Xem trước báo cáo doanh thu chi tiết");
+    }
+
+    private void exportFinanceDetailExcel(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            String keyword = trim(request.getParameter("keyword"));
+            String branchId = trim(request.getParameter("branchId"));
+            if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
+                branchId = String.valueOf(request.getAttribute("managerBranchId"));
+            }
+            String typeFilter = trim(request.getParameter("typeFilter"));
+            String dateFromRaw = trim(request.getParameter("dateFrom"));
+            String dateToRaw = trim(request.getParameter("dateTo"));
+
+            LocalDate dateFrom = parseDate(dateFromRaw);
+            LocalDate dateTo = parseDate(dateToRaw);
+
+            var allData = financeDetailReportDAO.getFinanceDetailReport(
+                    keyword, branchId, typeFilter, dateFrom, dateTo, 1, 1000000);
+            var overview = financeDetailReportDAO.getReportOverview(keyword, branchId, typeFilter, dateFrom, dateTo);
+
+            String generatedBy = "Unknown";
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Employee currentUser = (Employee) session.getAttribute("currentUser");
+                if (currentUser != null) generatedBy = currentUser.getFullName();
+            }
+
+            final int excelBranchId = parseInt(branchId, -1);
+            String branchName = null;
+            if (!isBlank(branchId)) {
+                var branches = userManagementDao.getAllBranches();
+                if (branches != null) {
+                    branchName = branches.stream()
+                            .filter(b -> b.getBranchID() == excelBranchId)
+                            .findFirst()
+                            .map(b -> b.getName())
+                            .orElse(null);
+                }
+            }
+
+            byte[] excelBytes = ExcelExportUtil.generateFinanceDetailReport(
+                    generatedBy, allData, overview, keyword, branchName, typeFilter, dateFrom, dateTo);
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=\"" +
+                    ExportUtil.buildExportFileName("FinanceDetailReport") + ".xlsx\"");
+            response.setContentLength(excelBytes.length);
+            response.getOutputStream().write(excelBytes);
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(500, "Excel export failed: " + e.getMessage());
         }
     }
 }
