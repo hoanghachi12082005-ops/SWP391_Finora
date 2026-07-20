@@ -10,12 +10,12 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * DAO cho Activity Log (bảng AuditLog trong DB V3).
- * READ-ONLY: chỉ truy vấn. Không có insert/update/delete vì audit log
- * là immutable theo nguyên tắc bảo toàn dấu vết hệ thống.
+ * Dùng Keyset Pagination (audit_log_id) thay OFFSET để tránh chậm khi bảng lớn.
  */
 public class ActivityLogDAO {
 
@@ -45,9 +45,56 @@ public class ActivityLogDAO {
         return list;
     }
 
-    public List<ActivityLog> findAll(int offset, int limit, String keyword, String tableName, String actionName,
-                                     LocalDate dateFrom, LocalDate dateTo) throws SQLException {
+    /**
+     * Nhảy tới trang N bất kỳ — dùng index seek để tìm pivot audit_log_id,
+     * sau đó keyset từ đó. Kết hợp được số trang + tốc độ keyset.
+     */
+    public List<ActivityLog> findByPage(int page, int limit,
+                                        String keyword, String tableName, String actionName,
+                                        LocalDate dateFrom, LocalDate dateTo) throws SQLException {
+        // Step 1: Chỉ đọc audit_log_id (index only) để tìm pivot ở vị trí cần
+        int offset = (page - 1) * limit;
+        StringBuilder pivotSql = new StringBuilder(
+                "SELECT a.audit_log_id FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id WHERE 1=1 ");
+        appendFilters(pivotSql, keyword, tableName, actionName, dateFrom, dateTo);
+        pivotSql.append(" ORDER BY a.audit_log_id DESC OFFSET ? ROWS FETCH NEXT 1 ROWS ONLY");
+
+        Integer pivot = null;
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(pivotSql.toString())) {
+            int idx = setFilterParams(ps, 1, keyword, tableName, actionName, dateFrom, dateTo);
+            ps.setInt(idx, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) pivot = rs.getInt("audit_log_id");
+            }
+        }
+
+        // Step 2: Keyset từ pivot
+        // Nếu page=1 hoặc không tìm thấy pivot → lấy trang đầu
+        return findByKeyset(pivot, null, limit, keyword, tableName, actionName, dateFrom, dateTo);
+    }
+
+    /**
+     * Keyset pagination — KHÔNG dùng OFFSET.
+     *
+     * @param beforeId  null ở trang đầu; audit_log_id nhỏ nhất của trang hiện tại → trang tiếp (cũ hơn)
+     * @param afterId   null ở trang đầu; audit_log_id lớn nhất của trang hiện tại → trang trước (mới hơn)
+     * @param limit     số bản ghi mỗi trang
+     * @param keyword   tìm kiếm
+     * @param tableName lọc bảng
+     * @param actionName lọc thao tác
+     * @param dateFrom  lọc từ ngày
+     * @param dateTo    lọc đến ngày
+     * @return danh sách ActivityLog đã sắp xếp created_at DESC, audit_log_id DESC
+     */
+    public List<ActivityLog> findByKeyset(Integer beforeId, Integer afterId, int limit,
+                                          String keyword, String tableName, String actionName,
+                                          LocalDate dateFrom, LocalDate dateTo) throws SQLException {
+        // Nếu có afterId → đang prev: query ASC rồi reverse
+        boolean isPrev = (afterId != null);
+
         StringBuilder sql = new StringBuilder(BASE_SELECT).append(" WHERE 1=1 ");
+
         if (keyword != null && !keyword.isBlank()) {
             sql.append(" AND (a.action_name LIKE ? OR a.table_name LIKE ? OR e.fullName LIKE ? OR a.new_data LIKE ?) ");
         }
@@ -55,12 +102,25 @@ public class ActivityLogDAO {
         if (actionName != null && !actionName.isBlank()) sql.append(" AND a.action_name = ? ");
         if (dateFrom != null) sql.append(" AND a.created_at >= ? ");
         if (dateTo != null) sql.append(" AND a.created_at < ? ");
-        sql.append(" ORDER BY a.created_at DESC, a.audit_log_id DESC ");
-        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+
+        if (beforeId != null) {
+            sql.append(" AND a.audit_log_id < ? ");
+        } else if (afterId != null) {
+            sql.append(" AND a.audit_log_id > ? ");
+        }
+
+        if (isPrev) {
+            sql.append(" ORDER BY a.audit_log_id ASC ");
+        } else {
+            sql.append(" ORDER BY a.audit_log_id DESC ");
+        }
+
+        sql.append(" OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY");
 
         List<ActivityLog> list = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
             int idx = 1;
             if (keyword != null && !keyword.isBlank()) {
                 String k = "%" + keyword + "%";
@@ -73,15 +133,24 @@ public class ActivityLogDAO {
             if (actionName != null && !actionName.isBlank()) ps.setString(idx++, actionName);
             if (dateFrom != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateFrom.atStartOfDay()));
             if (dateTo != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateTo.plusDays(1).atStartOfDay()));
-            ps.setInt(idx++, offset);
+            if (beforeId != null) ps.setInt(idx++, beforeId);
+            else if (afterId != null) ps.setInt(idx++, afterId);
             ps.setInt(idx, limit);
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(extractWithBranch(rs));
             }
         }
+
+        // Nếu prev query thì đảo ngược lại để đúng thứ tự DESC
+        if (isPrev) Collections.reverse(list);
         return list;
     }
 
+    /**
+     * Đếm tổng số log (dùng để hiển thị "Tổng X hoạt động").
+     * Không liên quan tới phân trang.
+     */
     public int countAll(String keyword, String tableName, String actionName,
                         LocalDate dateFrom, LocalDate dateTo) throws SQLException {
         StringBuilder sql = new StringBuilder(
@@ -217,5 +286,36 @@ public class ActivityLogDAO {
         if (!rs.wasNull()) log.setBranchId(branchId);
         log.setBranchName(rs.getString("branch_name"));
         return log;
+    }
+
+    // ==================== HELPERS ====================
+
+    private void appendFilters(StringBuilder sql, String keyword, String tableName,
+                                String actionName, LocalDate dateFrom, LocalDate dateTo) {
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (a.action_name LIKE ? OR a.table_name LIKE ? OR e.fullName LIKE ? OR a.new_data LIKE ?) ");
+        }
+        if (tableName != null && !tableName.isBlank()) sql.append(" AND a.table_name = ? ");
+        if (actionName != null && !actionName.isBlank()) sql.append(" AND a.action_name = ? ");
+        if (dateFrom != null) sql.append(" AND a.created_at >= ? ");
+        if (dateTo != null) sql.append(" AND a.created_at < ? ");
+    }
+
+    /** Đặt tham số filter lên PreparedStatement, trả về index của tham số tiếp theo. */
+    private int setFilterParams(PreparedStatement ps, int startIdx, String keyword, String tableName,
+                                 String actionName, LocalDate dateFrom, LocalDate dateTo) throws SQLException {
+        int idx = startIdx;
+        if (keyword != null && !keyword.isBlank()) {
+            String k = "%" + keyword + "%";
+            ps.setString(idx++, k);
+            ps.setString(idx++, k);
+            ps.setString(idx++, k);
+            ps.setString(idx++, k);
+        }
+        if (tableName != null && !tableName.isBlank()) ps.setString(idx++, tableName);
+        if (actionName != null && !actionName.isBlank()) ps.setString(idx++, actionName);
+        if (dateFrom != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateFrom.atStartOfDay()));
+        if (dateTo != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateTo.plusDays(1).atStartOfDay()));
+        return idx;
     }
 }

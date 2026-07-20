@@ -17,10 +17,11 @@
             <c:when test="${status == 'success'}">
                 <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
                     <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 3h13l-1.5-3M7 13h10m-8 6a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z"/>
                     </svg>
                 </div>
-                <h1 class="text-2xl font-bold text-green-700 mb-2">Thanh toán thành công!</h1>
+                <h1 class="text-2xl font-bold text-green-700 mb-2">Đơn hàng đang được xử lý</h1>
+                <p class="text-gray-500 mb-6">Chúng tôi sẽ liên hệ với bạn sau</p>
             </c:when>
             <c:otherwise>
                 <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -32,7 +33,9 @@
             </c:otherwise>
         </c:choose>
         
+        <c:if test="${status != 'success'}">
         <p class="text-gray-500 mb-6">${message}</p>
+        </c:if>
         
         <div class="bg-gray-50 rounded-xl p-5 text-left space-y-3 mb-6">
             <div class="flex justify-between">

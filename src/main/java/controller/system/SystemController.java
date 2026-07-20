@@ -2,9 +2,9 @@ package controller.system;
 
 import controller.common.BaseController;
 import dao.system.VatSettingDAO;
-import dao.sales.VoucherDAO;
+import dao.customer.LoyaltyPointSettingDAO;
 import model.VatSetting;
-import model.Voucher;
+import model.LoyaltyPointSetting;
 import model.Employee;
 
 import jakarta.servlet.ServletException;
@@ -17,10 +17,8 @@ import java.io.IOException;
 @WebServlet(name = "SystemController", urlPatterns = {"/notifications", "/configuration/business"})
 public class SystemController extends BaseController {
 
-    private final VoucherDAO voucherDao = new VoucherDAO();
+    private final LoyaltyPointSettingDAO pointSettingDao = new LoyaltyPointSettingDAO();
     private final VatSettingDAO vatDao = new VatSettingDAO();
-    private static final String POINT_REDEEM_CODE = "POINT_CONFIG";
-    private static final String POINT_EARN_CODE = "POINT_EARN_CONFIG";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -31,27 +29,9 @@ public class SystemController extends BaseController {
                 forward(request, response, "notifications/list");
                 break;
             case "/configuration/business":
-                // Load cấu hình đổi điểm (1 điểm = ? VNĐ)
-                Voucher pointRedeem = voucherDao.getByCode(POINT_REDEEM_CODE);
-                if (pointRedeem == null) {
-                    pointRedeem = new Voucher();
-                    pointRedeem.setVoucherCode(POINT_REDEEM_CODE);
-                    pointRedeem.setVoucherName("Cấu hình đổi điểm ra tiền");
-                    pointRedeem.setDiscountType("FIXED");
-                    pointRedeem.setDiscountValue(1.00);
-                }
-                request.setAttribute("pointRedeem", pointRedeem);
-
-                // Load cấu hình tích điểm (? VNĐ = 1 điểm)
-                Voucher pointEarn = voucherDao.getByCode(POINT_EARN_CODE);
-                if (pointEarn == null) {
-                    pointEarn = new Voucher();
-                    pointEarn.setVoucherCode(POINT_EARN_CODE);
-                    pointEarn.setVoucherName("Cấu hình tích điểm");
-                    pointEarn.setDiscountType("FIXED");
-                    pointEarn.setDiscountValue(100000);
-                }
-                request.setAttribute("pointEarn", pointEarn);
+                // Load cấu hình điểm từ bảng loyalty_point_setting
+                LoyaltyPointSetting pointSetting = pointSettingDao.getSetting();
+                request.setAttribute("pointSetting", pointSetting);
 
                 // Load VAT setting
                 VatSetting vatSetting = vatDao.getSetting();
@@ -71,29 +51,35 @@ public class SystemController extends BaseController {
         HttpSession session = request.getSession();
 
         if ("/configuration/business".equals(path)) {
-            // Xử lý cập nhật tỉ lệ đổi điểm (1 điểm = ? VNĐ)
-            String redeemValueStr = request.getParameter("redeemValue");
-            if (redeemValueStr != null && !redeemValueStr.isBlank()) {
-                try {
-                    double newValue = Double.parseDouble(redeemValueStr);
-                    voucherDao.updateDiscountValue(POINT_REDEEM_CODE, newValue);
-                    session.setAttribute("successMessage", "Cập nhật tỉ lệ đổi điểm thành công!");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    session.setAttribute("errorMessage", "Lỗi cập nhật tỉ lệ đổi điểm: " + e.getMessage());
-                }
-            }
-
             // Xử lý cập nhật tỉ lệ tích điểm (? VNĐ = 1 điểm)
             String earnValueStr = request.getParameter("earnValue");
             if (earnValueStr != null && !earnValueStr.isBlank()) {
                 try {
-                    double newValue = Double.parseDouble(earnValueStr);
-                    voucherDao.updateDiscountValue(POINT_EARN_CODE, newValue);
+                    Employee emp = (Employee) session.getAttribute("currentUser");
+                    LoyaltyPointSetting setting = pointSettingDao.getSetting();
+                    setting.setAmountPerPoint(new java.math.BigDecimal(earnValueStr));
+                    if (emp != null) setting.setUpdatedBy(emp.getEmployeeId());
+                    pointSettingDao.upsert(setting);
                     session.setAttribute("successMessage", "Cập nhật tỉ lệ tích điểm thành công!");
                 } catch (Exception e) {
                     e.printStackTrace();
                     session.setAttribute("errorMessage", "Lỗi cập nhật tỉ lệ tích điểm: " + e.getMessage());
+                }
+            }
+
+            // Xử lý cập nhật tỉ lệ đổi điểm (1 điểm = ? VNĐ)
+            String redeemValueStr = request.getParameter("redeemValue");
+            if (redeemValueStr != null && !redeemValueStr.isBlank()) {
+                try {
+                    Employee emp = (Employee) session.getAttribute("currentUser");
+                    LoyaltyPointSetting setting = pointSettingDao.getSetting();
+                    setting.setPointToCurrency(new java.math.BigDecimal(redeemValueStr));
+                    if (emp != null) setting.setUpdatedBy(emp.getEmployeeId());
+                    pointSettingDao.upsert(setting);
+                    session.setAttribute("successMessage", "Cập nhật tỉ lệ đổi điểm thành công!");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    session.setAttribute("errorMessage", "Lỗi cập nhật tỉ lệ đổi điểm: " + e.getMessage());
                 }
             }
 

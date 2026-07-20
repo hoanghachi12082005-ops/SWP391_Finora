@@ -85,7 +85,6 @@ public class VoucherDAO {
 
     /**
      * Lấy voucher theo mã code (không filter ngày tháng).
-     * Dùng cho các record cấu hình đặc biệt như POINT_CONFIG.
      */
     public Voucher getByCode(String code) {
         String sql = "SELECT * FROM voucher WHERE voucher_code = ?";
@@ -101,34 +100,6 @@ public class VoucherDAO {
             e.printStackTrace();
         }
         return null;
-    }
-
-    /**
-     * Cập nhật discount_value của voucher theo mã code.
-     * Nếu chưa có dòng nào thì INSERT mới (upsert).
-     * Dùng cho POINT_CONFIG và các cấu hình tương tự.
-     */
-    public boolean updateDiscountValue(String code, double newValue) {
-        String sql = "UPDATE voucher SET discount_value = ? WHERE voucher_code = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setDouble(1, newValue);
-            ps.setString(2, code.trim());
-            int rows = ps.executeUpdate();
-            if (rows > 0) return true;
-
-            // Không có dòng nào → INSERT mới
-            String insertSql = "INSERT INTO voucher (voucher_code, voucher_name, discount_type, discount_value, used_quantity, start_date, end_date, status) "
-                             + "VALUES (?, N'Cấu hình đổi điểm ra tiền', 'FIXED', ?, 0, NULL, NULL, 'ACTIVE')";
-            try (PreparedStatement ps2 = conn.prepareStatement(insertSql)) {
-                ps2.setString(1, code.trim());
-                ps2.setDouble(2, newValue);
-                return ps2.executeUpdate() > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
     }
 
     private Voucher mapRow(ResultSet rs) throws SQLException {

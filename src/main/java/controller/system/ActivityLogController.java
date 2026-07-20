@@ -21,13 +21,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Trung tâm hoạt động - Audit Log (immutable, read-only).
+ * Trung tâm hoạt động — Audit Log.
+ * Dùng page number (1,2,3...) nhưng backend dùng keyset để query nhanh.
  * - Chỉ GET; doPost trả 405.
- * - Chỉ Owner mới được truy cập; chưa login → /login; không phải Owner → 403.
- *
- * Trả về cho JSP các bộ filter dạng "value → nhãn nghiệp vụ" để Owner đọc dễ:
- *   - entityOptions   : value = table_name kỹ thuật, label = "Đơn hàng", "Sản phẩm"...
- *   - actionOptions   : value = action_name kỹ thuật, label = "Tạo mới", "Cập nhật"...
+ * - Chỉ Owner/Admin mới được truy cập.
  */
 @WebServlet(name = "ActivityLogController", urlPatterns = {"/activity-log"})
 public class ActivityLogController extends BaseController {
@@ -44,58 +41,65 @@ public class ActivityLogController extends BaseController {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        if (!ensureOwner(request, response)) return;
+        if (!ensureAdmin(request, response)) return;
 
-        String keyword = request.getParameter("keyword");
-        String tableName = request.getParameter("tableName");
+        String keyword    = request.getParameter("keyword");
+        String tableName  = request.getParameter("tableName");
         String actionName = request.getParameter("actionName");
         String dateFromRaw = request.getParameter("dateFrom");
         String dateToRaw   = request.getParameter("dateTo");
 
         LocalDate dateFrom = parseDate(dateFromRaw);
         LocalDate dateTo   = parseDate(dateToRaw);
-        // Nếu khoảng đảo ngược (from > to) thì hoán đổi để tránh kết quả rỗng vô lý.
         if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
             LocalDate tmp = dateFrom; dateFrom = dateTo; dateTo = tmp;
         }
 
-        int page = 1;
+        // Page number
+        int currentPage = 1;
         try {
-            if (request.getParameter("page") != null)
-                page = Integer.parseInt(request.getParameter("page").trim());
+            String p = request.getParameter("page");
+            if (p != null && !p.isBlank()) currentPage = Math.max(1, Integer.parseInt(p.trim()));
         } catch (NumberFormatException ignored) {}
 
-        // Thiết lập các bảng log được phép hiển thị (giới hạn activity center đúng 4 nhóm log cần thiết)
-        java.util.List<String> allowedTableNames = java.util.Arrays.asList(
-            "order", "orders", "order_detail",    // bán hàng
-            "product",                              // thêm/sửa/xóa sản phẩm  
-            "inventory", "stock_transaction", "stock_transfer", // kho
-            "branch", "store"                      // chi nhánh
+        // Giới hạn bảng được phép hiển thị
+        List<String> allowedTableNames = java.util.Arrays.asList(
+            "order", "orders", "order_detail",
+            "product",
+            "inventory", "stock_transaction", "stock_transfer",
+            "branch", "store"
         );
-        // Nếu filter table được cung cấp, giữ lại nếu thuộc danh sách cho phép
         if (tableName != null && !allowedTableNames.contains(tableName.toLowerCase())) {
-            tableName = null; // vô hiệu hóa filter table không được phép
+            tableName = null;
         }
 
         try {
-            int totalCount = tableName != null ? 
-                dao.countByTableName(keyword, tableName, actionName, dateFrom, dateTo) :
-                dao.countAll(keyword, tableName, actionName, dateFrom, dateTo);
-            int totalPages = (int) Math.ceil((double) totalCount / ITEMS_PER_PAGE);
-            page = Math.max(1, Math.min(page, totalPages > 0 ? totalPages : 1));
-
-            List<ActivityLog> logs = dao.findAll(
-                    (page - 1) * ITEMS_PER_PAGE, ITEMS_PER_PAGE,
+            // Keyset-style query theo page number
+            List<ActivityLog> logs = dao.findByPage(
+                    currentPage, ITEMS_PER_PAGE + 1,
                     keyword, tableName, actionName, dateFrom, dateTo);
 
-            // Chỉ hiển thị các bảng được phép trong filter dropdown
+            boolean hasNext = false;
+            if (logs.size() > ITEMS_PER_PAGE) {
+                hasNext = true;
+                logs.remove(logs.size() - 1);
+            }
+
+            // Tổng số → tính totalPages
+            int totalCount = tableName != null
+                    ? dao.countByTableName(keyword, tableName, actionName, dateFrom, dateTo)
+                    : dao.countAll(keyword, tableName, actionName, dateFrom, dateTo);
+            int totalPages = (int) Math.ceil((double) totalCount / ITEMS_PER_PAGE);
+            if (totalPages < 1) totalPages = 1;
+
             request.setAttribute("entityOptions", buildEntityOptionsFiltered(dao.findDistinctTables(), allowedTableNames));
             request.setAttribute("actionOptions", buildActionOptions(dao.findDistinctActions()));
 
             request.setAttribute("logs", logs);
-            request.setAttribute("currentPage", page);
+            request.setAttribute("currentPage", currentPage);
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("totalCount", totalCount);
+            request.setAttribute("hasNext", hasNext);
             request.setAttribute("keyword", keyword != null ? keyword : "");
             request.setAttribute("filterTable", tableName != null ? tableName : "");
             request.setAttribute("filterAction", actionName != null ? actionName : "");
@@ -115,7 +119,7 @@ public class ActivityLogController extends BaseController {
                 "Activity log là dữ liệu chỉ đọc. Không thể thêm/sửa/xóa từ giao diện.");
     }
 
-    private boolean ensureOwner(HttpServletRequest request, HttpServletResponse response)
+    private boolean ensureAdmin(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession(false);
         Object user = (session == null) ? null : session.getAttribute("currentUser");
@@ -133,7 +137,6 @@ public class ActivityLogController extends BaseController {
         return true;
     }
 
-    /** Parse "yyyy-MM-dd" từ input HTML date; trả null nếu trống/không hợp lệ. */
     private LocalDate parseDate(String raw) {
         if (raw == null || raw.isBlank()) return null;
         try {
@@ -143,7 +146,6 @@ public class ActivityLogController extends BaseController {
         }
     }
 
-    /** Sinh map { table_name → "Đối tượng nghiệp vụ" } để render dropdown. */
     private Map<String, String> buildEntityOptions(List<String> tables) {
         Map<String, String> options = new LinkedHashMap<>();
         if (tables == null) return options;
@@ -168,7 +170,6 @@ public class ActivityLogController extends BaseController {
         return options;
     }
 
-    /** Sinh map { action_name → "Loại thao tác" } để render dropdown. */
     private Map<String, String> buildActionOptions(List<String> actions) {
         Map<String, String> options = new LinkedHashMap<>();
         if (actions == null) return options;

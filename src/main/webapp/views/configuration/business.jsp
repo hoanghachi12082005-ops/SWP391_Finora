@@ -33,7 +33,7 @@
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">Tích điểm: bao nhiêu VNĐ được 1 điểm?</label>
                         <input type="number" name="earnValue" class="form-control"
-                               value="<fmt:formatNumber value="${pointEarn.discountValue}" type="number" groupingUsed="false" maxFractionDigits="0"/>"
+                               value="<fmt:formatNumber value="${pointSetting.amountPerPoint}" type="number" groupingUsed="false" maxFractionDigits="0"/>"
                                min="1" required/>
                         <small class="form-text text-muted">Số tiền chi tiêu (VNĐ) để nhận 1 điểm tích lũy. Mặc định: 100.000 VNĐ</small>
                     </div>
@@ -41,7 +41,7 @@
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">Đổi điểm: 1 điểm = ? VNĐ</label>
                         <input type="number" name="redeemValue" class="form-control"
-                               value="<fmt:formatNumber value="${pointRedeem.discountValue}" type="number" groupingUsed="false" maxFractionDigits="2"/>"
+                               value="<fmt:formatNumber value="${pointSetting.pointToCurrency}" type="number" groupingUsed="false" maxFractionDigits="2"/>"
                                min="0" step="0.01" required/>
                         <small class="form-text text-muted">Giá trị quy đổi của 1 điểm ra tiền VNĐ. Mặc định: 1.00</small>
                     </div>

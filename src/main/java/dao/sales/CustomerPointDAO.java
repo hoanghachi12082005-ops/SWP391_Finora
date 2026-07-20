@@ -1,6 +1,7 @@
 package dao.sales;
 
-import model.Voucher;
+import dao.customer.LoyaltyPointSettingDAO;
+import model.LoyaltyPointSetting;
 import util.database.DBContext;
 import java.sql.*;
 
@@ -9,10 +10,11 @@ import java.sql.*;
  */
 public class CustomerPointDAO {
 
-    // ponytail: earn rate stored as Voucher(POINT_EARN_CONFIG).discount_value
+    // ponytail: earn rate from loyalty_point_setting.amount_per_point
     public static int getEarnRate() {
-        Voucher v = new VoucherDAO().getByCode("POINT_EARN_CONFIG");
-        return v != null && v.getDiscountValue() > 0 ? (int) v.getDiscountValue() : 100_000;
+        LoyaltyPointSetting setting = new LoyaltyPointSettingDAO().getSetting();
+        return setting != null && setting.getAmountPerPoint().intValue() > 0
+                ? setting.getAmountPerPoint().intValue() : 100_000;
     }
 
     /**
