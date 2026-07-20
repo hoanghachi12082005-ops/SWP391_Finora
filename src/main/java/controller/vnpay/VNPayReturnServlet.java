@@ -33,7 +33,6 @@ public class VNPayReturnServlet extends HttpServlet {
         String transactionNo = params.get("vnp_TransactionNo");
         String amountStr   = params.get("vnp_Amount");
         String bankCode    = params.get("vnp_BankCode");
-        String payDate     = params.get("vnp_PayDate");
 
         boolean isSuccess = isValid && "00".equals(responseCode)
                 && ("00".equals(transStatus) || transStatus == null);
@@ -45,13 +44,34 @@ public class VNPayReturnServlet extends HttpServlet {
             vnpay.processFailed(orderCode, responseCode);
         }
 
-        // Redirect sạch — URL không còn lộ tham số VNPay
-        if (isSuccess) {
-            resp.sendRedirect(req.getContextPath() + "/payment/result?status=success&orderCode=" + orderCode);
-        } else {
-            String message = vnpay.getResponseMessage(responseCode);
-            String encodedMsg = URLEncoder.encode(message, StandardCharsets.UTF_8);
-            resp.sendRedirect(req.getContextPath() + "/payment/result?status=failed&orderCode=" + orderCode + "&message=" + encodedMsg);
-        }
+        // Redirect tới trang kết quả — chỉ truyền orderCode, không lộ tham số VNPay
+        String status = isSuccess ? "success" : "failed";
+        String msg = getResponseMessage(responseCode);
+        String encodedMsg = URLEncoder.encode(msg, StandardCharsets.UTF_8);
+
+        resp.sendRedirect(req.getContextPath() + "/payment/result?status=" + status
+                + "&orderCode=" + orderCode + "&message=" + encodedMsg
+                + "&transactionNo=" + (transactionNo != null ? transactionNo : "")
+                + "&bankCode=" + (bankCode != null ? bankCode : ""));
+    }
+
+    /** Diễn giải mã lỗi VNPay thành thông báo. */
+    private String getResponseMessage(String code) {
+        if (code == null) return "Lỗi không xác định";
+        return switch (code) {
+            case "00" -> "Giao dịch thành công!";
+            case "07" -> "Giao dịch bị nghi ngờ gian lận.";
+            case "09" -> "Thẻ chưa đăng ký dịch vụ InternetBanking.";
+            case "10" -> "Xác thực thông tin thẻ không đúng quá 3 lần.";
+            case "11" -> "Đã hết hạn chờ thanh toán.";
+            case "12" -> "Thẻ bị khóa.";
+            case "13" -> "Sai mật khẩu OTP.";
+            case "24" -> "Khách hàng hủy giao dịch.";
+            case "51" -> "Tài khoản không đủ số dư.";
+            case "65" -> "Vượt quá hạn mức giao dịch trong ngày.";
+            case "75" -> "Ngân hàng đang bảo trì.";
+            case "79" -> "Sai mật khẩu thanh toán quá số lần quy định.";
+            default -> "Giao dịch thất bại. Mã lỗi: " + code;
+        };
     }
 }
