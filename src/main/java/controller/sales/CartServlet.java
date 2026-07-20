@@ -149,9 +149,6 @@ public class CartServlet extends HttpServlet {
                         }
                     }
                 }
-                case "hold" -> {
-                    targetTab.setStatus("HOLD");
-                }
                 case "clear" -> {
                     // Xóa tab hiện tại khỏi Map
                     tabs.remove(targetTabId);

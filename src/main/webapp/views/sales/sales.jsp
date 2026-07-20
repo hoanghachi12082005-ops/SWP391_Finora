@@ -298,7 +298,7 @@
                 </button>
                 <!-- Small Actions -->
                 <div class="flex gap-2 text-[13px] font-semibold">
-                    <button onclick="holdOrder()" class="flex-1 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors">LƯU TẠM</button>
+
                     <button onclick="printPreview()" class="flex-1 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors">IN THỬ</button>
                     <button onclick="cancelOrder()" class="flex-1 py-2 rounded-lg text-error hover:bg-error-container transition-colors">HUỶ ĐƠN</button>
                 </div>
@@ -615,19 +615,6 @@ async function switchTab(tabId) {
     } catch(e) { console.error(e); }
 }
 
-async function holdOrder() {
-    if (!cartState) return;
-    try {
-        const res = await fetch(CTX+'/cart', {
-            method: 'POST',
-            body: new URLSearchParams({ action: 'hold', tabId: cartState.activeTabId, csrfToken: CSRF_TOKEN })
-        });
-        cartState = await res.json();
-        renderUI();
-        showToast('Lưu tạm thành công!', 'Đơn hàng đã được chuyển sang trạng thái chờ.');
-    } catch(e) { console.error(e); }
-}
-
 async function cancelOrder() {
     if (!cartState) return;
     if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
@@ -677,7 +664,7 @@ function renderUI() {
                 (tab.tabId === cartState.activeTabId 
                     ? 'text-primary border-b-2 border-primary font-bold' 
                     : 'text-on-surface-variant hover:bg-surface-container-low');
-            btn.textContent = 'Đơn ' + tab.tabId + (tab.status === 'HOLD' ? ' (Tạm)' : '');
+            btn.textContent = 'Đơn ' + tab.tabId;
             tabRow.appendChild(btn);
         });
     }
