@@ -157,7 +157,7 @@
             <!-- Customer Section - Phone Search -->
             <div class="px-4 py-3 border-b border-outline-variant space-y-2">
                 <div class="text-[12px] text-outline font-medium">Khách hàng</div>
-                <div class="flex items-center gap-2">
+                <div id="posSearchWrapper" class="flex items-center gap-2">
                     <div class="flex-1 relative">
                         <div class="flex items-center bg-surface-container-low rounded-lg px-3 h-9 gap-2 border border-transparent focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/10 transition-all">
                             <span class="material-symbols-outlined text-outline text-[16px]">phone</span>
@@ -228,18 +228,6 @@
                     <span id="summaryVat" class="font-semibold">0 ₫</span>
                 </div>
 
-                <!-- Grand Total -->
-                <div class="pt-2.5 border-t border-outline-variant">
-                    <div class="flex justify-between items-end">
-                        <span class="text-[16px] font-bold">Tổng cộng</span>
-                        <span id="summaryTotal" class="text-[24px] text-primary font-bold leading-none">0 <span class="text-[18px]">₫</span></span>
-                    </div>
-                </div>
-
-                <!-- Notes -->
-                <div class="pt-2">
-                    <textarea id="orderNotes" rows="1" placeholder="Ghi chú đơn hàng..." class="w-full text-[14px] bg-surface-container-low rounded-lg px-3 py-2 border border-transparent focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none resize-none"></textarea>
-                </div>
                 </div>
 
                 <!-- VNPAY Payment Panel (hiện khi thanh toán VNPAY) -->
@@ -261,6 +249,14 @@
                         </div>
                         <button onclick="cancelVNPayQR()" class="text-[13px] text-outline hover:text-error transition-colors">Hủy thanh toán</button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Grand Total (fixed) -->
+            <div class="bg-white border-t border-outline-variant px-4 py-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-[16px] font-bold">Tổng cộng</span>
+                    <span id="summaryTotal" class="text-[24px] text-primary font-bold leading-none">0 <span class="text-[18px]">₫</span></span>
                 </div>
             </div>
 
@@ -677,6 +673,7 @@ function renderUI() {
     const posRemoveCustomerBtn = document.getElementById('posRemoveCustomerBtn');
     const customerIdInput = document.getElementById('selectedCustomerId');
     const posPhoneSearch = document.getElementById('posPhoneSearch');
+    const posSearchWrapper = document.getElementById('posSearchWrapper');
     if (activeTab.selectedCustomer) {
         const c = activeTab.selectedCustomer;
         posCustName.textContent = c.fullName;
@@ -687,6 +684,7 @@ function renderUI() {
         posEditCustomerBtn.classList.remove('hidden');
         posRemoveCustomerBtn.classList.remove('hidden');
         customerIdInput.value = c.cusId;
+        if (posSearchWrapper) posSearchWrapper.classList.add('hidden');
         if (posPhoneSearch && !posPhoneSearch.value) {
             posPhoneSearch.value = c.phone;
         }
@@ -696,6 +694,7 @@ function renderUI() {
         posEditCustomerBtn.classList.add('hidden');
         posRemoveCustomerBtn.classList.add('hidden');
         customerIdInput.value = '';
+        if (posSearchWrapper) posSearchWrapper.classList.remove('hidden');
     }
 
     document.getElementById('summaryItemCount').textContent = activeTab.items.reduce((sum, item) => sum + item.quantity, 0);

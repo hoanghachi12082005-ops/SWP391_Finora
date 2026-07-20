@@ -334,7 +334,7 @@ public class CartServlet extends HttpServlet {
         out.write("\"activeTab\":{");
         out.write("\"tabId\":" + activeTab.getTabId() + ",");
         out.write("\"status\":\"" + activeTab.getStatus() + "\",");
-        out.write("\"note\":\"" + escJson(activeTab.getNote()) + "\",");
+
 
         // selectedCustomer
         if (activeTab.getSelectedCustomer() != null) {
