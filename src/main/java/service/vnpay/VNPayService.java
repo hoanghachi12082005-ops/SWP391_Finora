@@ -135,6 +135,54 @@ public class VNPayService {
         }
     }
 
+    // ==================== TOKEN KÉP CHO RESULT PAGE ====================
+    // Token chứa TOÀN BỘ dữ liệu kết quả, mã hóa dạng:
+    //   base64UrlSafe(payload) + "." + base64UrlSafe(hmacSHA512(payload))
+    // trong đó payload = orderCode|status|message|amount|transactionNo|bankCode|payDate
+
+    /** Tạo token chứa toàn bộ kết quả, URL chỉ hiện ?t=... */
+    public String encodeResultToken(String orderCode, String status, String message,
+                                     String amount, String transactionNo,
+                                     String bankCode, String payDate) {
+        String payload = String.join("|",
+                nvl(orderCode), nvl(status), nvl(message), nvl(amount),
+                nvl(transactionNo), nvl(bankCode), nvl(payDate));
+        String hmac = Config.hmacSHA512(payload);
+        String b64Payload = Base64.getUrlEncoder().encodeToString(payload.getBytes(StandardCharsets.UTF_8));
+        String b64Hmac    = Base64.getUrlEncoder().encodeToString(hmac.getBytes(StandardCharsets.UTF_8));
+        return b64Payload + "." + b64Hmac;
+    }
+
+    /** Giải mã token, trả về Map chứa các field. Trả về null nếu token không hợp lệ. */
+    public Map<String, String> decodeResultToken(String token) {
+        if (token == null) return null;
+        String[] parts = token.split("\\.", 2);
+        if (parts.length != 2) return null;
+
+        try {
+            String payload = new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);
+            String hmac    = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+
+            // Verify HMAC
+            String expected = Config.hmacSHA512(payload);
+            if (!hmac.equalsIgnoreCase(expected)) return null;
+
+            String[] fields = payload.split("\\|", 7);
+            Map<String, String> map = new LinkedHashMap<>();
+            String[] keys = {"orderCode", "status", "message", "amount", "transactionNo", "bankCode", "payDate"};
+            for (int i = 0; i < keys.length; i++) {
+                map.put(keys[i], i < fields.length ? fields[i] : "");
+            }
+            return map;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String nvl(String s) {
+        return s != null ? s : "";
+    }
+
     /** Diễn giải mã lỗi VNPay thành thông báo. */
     public String getResponseMessage(String code) {
         if (code == null) return "Lỗi không xác định";
