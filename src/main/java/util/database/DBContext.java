@@ -12,9 +12,9 @@ public class DBContext {
 
     private static final String DRIVER = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
     private static final String DEFAULT_URL
-            = "jdbc:sqlserver://160.191.242.124:1433;"
-            + "databaseName=DBFinoraV3;"
-            + "encrypt=false;";
+        = "jdbc:sqlserver://160.191.242.124:1433;"
+        + "databaseName=DBFinoraV3;"
+        + "encrypt=false;trustServerCertificate=true;";
 
     private static final String JDBC_URL = envOr("DB_URL", DEFAULT_URL);
     private static final String DB_USER = envOr("DB_USER", "sa");

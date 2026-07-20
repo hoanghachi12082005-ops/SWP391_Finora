@@ -146,4 +146,8 @@ public class StockTransfer {
     public void setToBranchId(int toBranchId) { this.toBranchId = toBranchId; }
     public int getCreatorBranchId() { return creatorBranchId; }
     public void setCreatorBranchId(int creatorBranchId) { this.creatorBranchId = creatorBranchId; }
+
+    private Integer approvedByBranchId;
+    public Integer getApprovedByBranchId() { return approvedByBranchId; }
+    public void setApprovedByBranchId(Integer approvedByBranchId) { this.approvedByBranchId = approvedByBranchId; }
 }

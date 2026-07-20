@@ -278,11 +278,9 @@ public class ProductController extends BaseController {
                 if (width <= 0 || height <= 0) {
                     return "Ảnh không hợp lệ (kích thước không xác định).";
                 }
-                // Chống zip bomb: giới hạn kích thước ảnh
                 if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
                     return "Kích thước ảnh quá lớn (tối đa " + MAX_IMAGE_DIMENSION + "px mỗi chiều).";
                 }
-                // Đọc thử ảnh để đảm bảo file decode được hoàn chỉnh
                 BufferedImage bi = reader.read(0);
                 if (bi == null) {
                     return "Không thể giải mã ảnh.";

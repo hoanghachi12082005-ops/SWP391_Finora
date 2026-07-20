@@ -269,6 +269,135 @@ public class DashboardDAO {
         return ov;
     }
 
+    // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
+    public static class FinancialData {
+        public BigDecimal totalRevenue = BigDecimal.ZERO;
+        public BigDecimal totalExpenses = BigDecimal.ZERO;
+        public BigDecimal netProfit = BigDecimal.ZERO;
+        public int totalInvoices;
+        public List<model.DashboardOverview.BranchRevenue> branchRevenues = new ArrayList<>();
+    }
+
+    public FinancialData getFinancialData(String range) throws SQLException {
+        return getFinancialData(range, null);
+    }
+
+    public FinancialData getFinancialData(String range, Integer branchId) throws SQLException {
+        FinancialData fd = new FinancialData();
+        
+        String orderTimeFilter = "";
+        String paymentTimeFilter = "";
+        
+        if ("day".equalsIgnoreCase(range) || "today".equalsIgnoreCase(range)) {
+            orderTimeFilter = " AND CAST(o.created_at AS DATE) = CAST(GETDATE() AS DATE) ";
+            paymentTimeFilter = " AND CAST(p.payment_date AS DATE) = CAST(GETDATE() AS DATE) ";
+        } else if ("week".equalsIgnoreCase(range) || "this_week".equalsIgnoreCase(range)) {
+            orderTimeFilter = " AND DATEPART(WEEK, o.created_at) = DATEPART(WEEK, GETDATE()) AND YEAR(o.created_at) = YEAR(GETDATE()) ";
+            paymentTimeFilter = " AND DATEPART(WEEK, p.payment_date) = DATEPART(WEEK, GETDATE()) AND YEAR(p.payment_date) = YEAR(GETDATE()) ";
+        } else { // default is month
+            orderTimeFilter = " AND YEAR(o.created_at) = YEAR(GETDATE()) AND MONTH(o.created_at) = MONTH(GETDATE()) ";
+            paymentTimeFilter = " AND YEAR(p.payment_date) = YEAR(GETDATE()) AND MONTH(p.payment_date) = MONTH(GETDATE()) ";
+        }
+
+        if (branchId != null) {
+            orderTimeFilter += " AND o.branch_id = " + branchId + " ";
+            paymentTimeFilter += " AND p.BranchID = " + branchId + " ";
+        }
+
+        // 1. Total Revenue
+        String revSql = "SELECT ISNULL(SUM(o.total_amount), 0) FROM [order] o WHERE o.status = 'COMPLETED' AND o.order_type = 'SALE' " + orderTimeFilter;
+        fd.totalRevenue = queryBigDecimal(revSql);
+
+        // 2. Total Expenses
+        String expSql = "SELECT ISNULL(SUM(p.payment_amount), 0) FROM payment p WHERE p.payment_status = 'PAID' AND p.PaymentType = 'EXPENSE' " + paymentTimeFilter;
+        fd.totalExpenses = queryBigDecimal(expSql);
+
+        // 3. Net Profit
+        fd.netProfit = fd.totalRevenue.subtract(fd.totalExpenses);
+
+        // 4. Total Invoices
+        String invSql = "SELECT COUNT(*) FROM [order] o WHERE o.status = 'COMPLETED' AND o.order_type = 'SALE' " + orderTimeFilter;
+        fd.totalInvoices = queryInt(invSql);
+
+        // 5. Branch Revenues / Performance
+        String branchSql = "SELECT b.branch_id, b.branch_name, b.branch_code, b.status, "
+                         + "       ISNULL(SUM(o.total_amount), 0) AS revenue, COUNT(o.order_id) AS order_count "
+                         + "FROM Branch b "
+                         + "LEFT JOIN [order] o ON o.branch_id = b.branch_id "
+                         + "     AND o.status = 'COMPLETED' AND o.order_type = 'SALE' "
+                         + orderTimeFilter
+                         + "GROUP BY b.branch_id, b.branch_name, b.branch_code, b.status "
+                         + "ORDER BY revenue DESC";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(branchSql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                model.DashboardOverview.BranchRevenue br = new model.DashboardOverview.BranchRevenue();
+                br.setBranchId(rs.getInt("branch_id"));
+                br.setBranchName(rs.getString("branch_name"));
+                br.setBranchCode(rs.getString("branch_code"));
+                br.setRevenue(rs.getBigDecimal("revenue"));
+                br.setOrderCount(rs.getInt("order_count"));
+                br.setStatus(rs.getString("status"));
+                fd.branchRevenues.add(br);
+            }
+        }
+
+        return fd;
+    }
+
+    public List<model.Payment> getBranchPayments(String range, Integer branchId) throws SQLException {
+        List<model.Payment> list = new ArrayList<>();
+        
+        String orderTimeFilter = "";
+        String paymentTimeFilter = "";
+        
+        if ("day".equalsIgnoreCase(range) || "today".equalsIgnoreCase(range)) {
+            orderTimeFilter = " AND CAST(o.created_at AS DATE) = CAST(GETDATE() AS DATE) ";
+            paymentTimeFilter = " AND CAST(p.payment_date AS DATE) = CAST(GETDATE() AS DATE) ";
+        } else if ("week".equalsIgnoreCase(range) || "this_week".equalsIgnoreCase(range)) {
+            orderTimeFilter = " AND DATEPART(WEEK, o.created_at) = DATEPART(WEEK, GETDATE()) AND YEAR(o.created_at) = YEAR(GETDATE()) ";
+            paymentTimeFilter = " AND DATEPART(WEEK, p.payment_date) = DATEPART(WEEK, GETDATE()) AND YEAR(p.payment_date) = YEAR(GETDATE()) ";
+        } else { // month
+            orderTimeFilter = " AND YEAR(o.created_at) = YEAR(GETDATE()) AND MONTH(o.created_at) = MONTH(GETDATE()) ";
+            paymentTimeFilter = " AND YEAR(p.payment_date) = YEAR(GETDATE()) AND MONTH(p.payment_date) = MONTH(GETDATE()) ";
+        }
+        
+        String orderBranchFilter = (branchId != null) ? " AND o.branch_id = " + branchId + " " : "";
+        String paymentBranchFilter = (branchId != null) ? " AND p.BranchID = " + branchId + " " : "";
+        
+        String sql = "SELECT TransactionCode, PaymentDate, PaymentType, PaymentMethod, PaymentAmount, Description FROM ("
+                   + "  SELECT o.order_code AS TransactionCode, o.created_at AS PaymentDate, 'INCOME' AS PaymentType, "
+                   + "         o.payment_method AS PaymentMethod, o.total_amount AS PaymentAmount, "
+                   + "         N'Bán hàng - Hóa đơn ' + o.order_code AS Description "
+                   + "  FROM [order] o "
+                   + "  WHERE o.status = 'COMPLETED' AND o.order_type = 'SALE' " + orderBranchFilter + orderTimeFilter
+                   + "  UNION ALL "
+                   + "  SELECT p.transaction_code AS TransactionCode, p.payment_date AS PaymentDate, p.PaymentType AS PaymentType, "
+                   + "         p.payment_method AS PaymentMethod, p.payment_amount AS PaymentAmount, p.Description AS Description "
+                   + "  FROM payment p "
+                   + "  WHERE p.PaymentType = 'EXPENSE' " + paymentBranchFilter + paymentTimeFilter
+                   + ") t "
+                   + "ORDER BY PaymentDate DESC";
+                   
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                model.Payment p = new model.Payment();
+                p.setName(rs.getString("TransactionCode"));
+                p.setPaymentDate(rs.getTimestamp("PaymentDate"));
+                p.setPaymentType(rs.getString("PaymentType"));
+                p.setMethod(rs.getString("PaymentMethod"));
+                p.setAmount(rs.getDouble("PaymentAmount"));
+                p.setDescription(rs.getString("Description"));
+                list.add(p);
+            }
+        }
+        return list;
+    }
+
     // ──────────────────────── UTIL ────────────────────────
 
     private BigDecimal queryBigDecimal(String sql) throws SQLException {

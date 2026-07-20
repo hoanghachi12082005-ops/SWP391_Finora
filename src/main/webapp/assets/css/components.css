@@ -730,17 +730,84 @@
 }
 
 /* Shared pagination.css styles */
-.pagination a.active-page {
-    background: var(--primary);
-    color: var(--on-primary);
-    border-color: var(--primary);
-}
-.dots {
-    padding: 0 10px;
+.pagination a, .pagination .disabled-page, .dots {
     display: inline-flex;
     align-items: center;
-    color: var(--secondary);
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 8px;
+    text-decoration: none;
     font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+/* Normal Page Button & Enabled Arrow */
+.pagination a {
+    border: 1px solid #e5e7eb;
+    color: #3b82f6;
+    background: #ffffff;
+}
+
+.pagination a:hover {
+    background: #f8fafc;
+    color: #2563eb;
+    border-color: #cbd5e1;
+}
+
+/* Active Page Button */
+.pagination a.active-page {
+    background: var(--primary-color, #93000b) !important;
+    color: #ffffff !important;
+    border-color: var(--primary-color, #93000b) !important;
+    box-shadow: 0 4px 12px rgba(147, 0, 11, 0.3);
+}
+
+/* Disabled Arrow Button */
+.pagination .disabled-page {
+    background: #f1f5f9;
+    color: #cbd5e1;
+    border: 1px solid #e5e7eb;
+    cursor: not-allowed;
+}
+
+/* Dots Button */
+.dots {
+    background: #f1f5f9;
+    color: #94a3b8;
+    border: 1px solid #e5e7eb;
+}
+
+.table-footer {
+    border-top: 1px solid #f1f5f9;
+    padding-top: 16px;
+    margin-top: 16px;
+}
+
+.pagination-info select {
+    padding: 6px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #334155;
+    background-color: #ffffff;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.pagination-info select:focus {
+    border-color: var(--primary-color, #93000b);
+}
+
+.pagination-summary {
+    font-size: 13px;
+    color: #64748b;
+    margin-left: 12px;
+    font-weight: 500;
 }
 
 /* ── Utilities & Pagination (Restored from Thắng's branch) ── */

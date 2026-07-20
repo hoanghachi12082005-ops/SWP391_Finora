@@ -39,10 +39,10 @@ public final class ExcelExportUtil {
                 row.createCell(3).setCellValue(nullToDash(r.getRoleName()));
                 row.createCell(4).setCellValue(r.getTotalOrders());
                 Cell revCell = row.createCell(5);
-                revCell.setCellValue(r.getTotalRevenue().doubleValue());
+                revCell.setCellValue(doubleValue(r.getTotalRevenue()));
                 revCell.setCellStyle(currencyStyle);
                 Cell avgCell = row.createCell(6);
-                avgCell.setCellValue(r.getAverageOrderValue().doubleValue());
+                avgCell.setCellValue(doubleValue(r.getAverageOrderValue()));
                 avgCell.setCellStyle(currencyStyle);
                 row.createCell(7).setCellValue(r.getCompletedOrders());
                 row.createCell(8).setCellValue(r.getCancelledOrders());
@@ -72,10 +72,10 @@ public final class ExcelExportUtil {
                 row.createCell(3).setCellValue(r.getCompletedOrders());
                 row.createCell(4).setCellValue(r.getCancelledOrders());
                 Cell revCell = row.createCell(5);
-                revCell.setCellValue(r.getTotalRevenue().doubleValue());
+                revCell.setCellValue(doubleValue(r.getTotalRevenue()));
                 revCell.setCellStyle(currencyStyle);
                 Cell avgCell = row.createCell(6);
-                avgCell.setCellValue(r.getAverageOrderValue().doubleValue());
+                avgCell.setCellValue(doubleValue(r.getAverageOrderValue()));
                 avgCell.setCellStyle(currencyStyle);
             }
             addBranchSummary(sheet, rowNum + 1, overview, currencyStyle);
@@ -103,10 +103,10 @@ public final class ExcelExportUtil {
                 row.createCell(3).setCellValue(nullToDash(r.getBranchName()));
                 row.createCell(4).setCellValue(r.getQuantityInStock());
                 Cell priceCell = row.createCell(5);
-                priceCell.setCellValue(r.getSellingPrice().doubleValue());
+                priceCell.setCellValue(doubleValue(r.getSellingPrice()));
                 priceCell.setCellStyle(currencyStyle);
                 Cell valCell = row.createCell(6);
-                valCell.setCellValue(r.getTotalValue().doubleValue());
+                valCell.setCellValue(doubleValue(r.getTotalValue()));
                 valCell.setCellStyle(currencyStyle);
             }
             addInventorySummary(sheet, rowNum + 1, overview, currencyStyle);
@@ -134,7 +134,7 @@ public final class ExcelExportUtil {
                 row.createCell(4).setCellValue(r.getCurrentPoints());
                 row.createCell(5).setCellValue(r.getLifetimePoints());
                 Cell spentCell = row.createCell(6);
-                spentCell.setCellValue(r.getTotalSpent().doubleValue());
+                spentCell.setCellValue(doubleValue(r.getTotalSpent()));
                 spentCell.setCellStyle(currencyStyle);
             }
             addLoyaltySummary(sheet, rowNum + 1, overview, currencyStyle);
@@ -219,8 +219,15 @@ public final class ExcelExportUtil {
                     r.createCell(1).setCellValue(nullToDash(o.getCreatedAt()));
                     r.createCell(2).setCellValue(nullToDash(o.getCustomerName()));
                     r.createCell(3).setCellValue(nullToDash(o.getPaymentMethod()));
-                    r.createCell(4).setCellValue(o.getSubtotal());
-                    r.createCell(5).setCellValue(o.getDiscountAmount());
+                    
+                    Cell subtotalCell = r.createCell(4);
+                    subtotalCell.setCellValue(o.getSubtotal());
+                    subtotalCell.setCellStyle(currencyStyle);
+                    
+                    Cell discountCell = r.createCell(5);
+                    discountCell.setCellValue(o.getDiscountAmount());
+                    discountCell.setCellStyle(currencyStyle);
+                    
                     Cell fc = r.createCell(6);
                     fc.setCellValue(o.getTotalAmount());
                     fc.setCellStyle(currencyStyle);
@@ -281,12 +288,12 @@ public final class ExcelExportUtil {
         rowNum++;
         Row title = sheet.createRow(rowNum++);
         title.createCell(0).setCellValue("Summary");
-        addSumRow(sheet, rowNum++, "Total Employees", String.valueOf(overview.getTotalEmployees()), null);
-        addSumRow(sheet, rowNum++, "Total Orders", String.valueOf(overview.getTotalOrders()), null);
-        addSumRow(sheet, rowNum++, "Total Revenue", formatCurrency(overview.getTotalRevenue()), currencyStyle);
+        addSumRow(sheet, rowNum++, "Total Employees", overview.getTotalEmployees(), null);
+        addSumRow(sheet, rowNum++, "Total Orders", overview.getTotalOrders(), null);
+        addSumRow(sheet, rowNum++, "Total Revenue", doubleValue(overview.getTotalRevenue()), currencyStyle);
         if (overview.getTopEmployeeName() != null) {
-            addSumRow(sheet, rowNum++, "Top Employee", overview.getTopEmployeeName(), null);
-            addSumRow(sheet, rowNum++, "Highest Revenue", formatCurrency(overview.getTopEmployeeRevenue()), currencyStyle);
+            addSumRow(sheet, rowNum++, "Top Employee", overview.getTopEmployeeName());
+            addSumRow(sheet, rowNum++, "Highest Revenue", doubleValue(overview.getTopEmployeeRevenue()), currencyStyle);
         }
     }
 
@@ -295,12 +302,12 @@ public final class ExcelExportUtil {
         rowNum++;
         Row title = sheet.createRow(rowNum++);
         title.createCell(0).setCellValue("Summary");
-        addSumRow(sheet, rowNum++, "Total Branches", String.valueOf(overview.getTotalBranches()), null);
-        addSumRow(sheet, rowNum++, "Total Orders", String.valueOf(overview.getTotalOrders()), null);
-        addSumRow(sheet, rowNum++, "Total Revenue", formatCurrency(overview.getTotalRevenue()), currencyStyle);
+        addSumRow(sheet, rowNum++, "Total Branches", overview.getTotalBranches(), null);
+        addSumRow(sheet, rowNum++, "Total Orders", overview.getTotalOrders(), null);
+        addSumRow(sheet, rowNum++, "Total Revenue", doubleValue(overview.getTotalRevenue()), currencyStyle);
         if (overview.getTopBranchName() != null) {
-            addSumRow(sheet, rowNum++, "Top Branch", overview.getTopBranchName(), null);
-            addSumRow(sheet, rowNum++, "Highest Revenue", formatCurrency(overview.getTopBranchRevenue()), currencyStyle);
+            addSumRow(sheet, rowNum++, "Top Branch", overview.getTopBranchName());
+            addSumRow(sheet, rowNum++, "Highest Revenue", doubleValue(overview.getTopBranchRevenue()), currencyStyle);
         }
     }
 
@@ -309,11 +316,11 @@ public final class ExcelExportUtil {
         rowNum++;
         Row title = sheet.createRow(rowNum++);
         title.createCell(0).setCellValue("Summary");
-        addSumRow(sheet, rowNum++, "Total Products", String.valueOf(overview.getTotalProducts()), null);
-        addSumRow(sheet, rowNum++, "Total Quantity", String.valueOf(overview.getTotalQuantity()), null);
-        addSumRow(sheet, rowNum++, "Total Value", formatCurrency(overview.getTotalValue()), currencyStyle);
-        addSumRow(sheet, rowNum++, "Low Stock Items", String.valueOf(overview.getLowStockCount()), null);
-        addSumRow(sheet, rowNum++, "Out of Stock Items", String.valueOf(overview.getOutOfStockCount()), null);
+        addSumRow(sheet, rowNum++, "Total Products", overview.getTotalProducts(), null);
+        addSumRow(sheet, rowNum++, "Total Quantity", overview.getTotalQuantity(), null);
+        addSumRow(sheet, rowNum++, "Total Value", doubleValue(overview.getTotalValue()), currencyStyle);
+        addSumRow(sheet, rowNum++, "Low Stock Items", overview.getLowStockCount(), null);
+        addSumRow(sheet, rowNum++, "Out of Stock Items", overview.getOutOfStockCount(), null);
     }
 
     private static void addLoyaltySummary(Sheet sheet, int rowNum, LoyalCustomerOverview overview, CellStyle currencyStyle) {
@@ -321,21 +328,27 @@ public final class ExcelExportUtil {
         rowNum++;
         Row title = sheet.createRow(rowNum++);
         title.createCell(0).setCellValue("Summary");
-        addSumRow(sheet, rowNum++, "Total Customers", String.valueOf(overview.getTotalCustomers()), null);
-        addSumRow(sheet, rowNum++, "Total Points", String.valueOf(overview.getTotalPoints()), null);
-        addSumRow(sheet, rowNum++, "Total Spent", formatCurrency(overview.getTotalSpent()), currencyStyle);
+        addSumRow(sheet, rowNum++, "Total Customers", overview.getTotalCustomers(), null);
+        addSumRow(sheet, rowNum++, "Total Points", overview.getTotalPoints(), null);
+        addSumRow(sheet, rowNum++, "Total Spent", doubleValue(overview.getTotalSpent()), currencyStyle);
         if (overview.getTopCustomerName() != null) {
-            addSumRow(sheet, rowNum++, "Top Customer", overview.getTopCustomerName(), null);
-            addSumRow(sheet, rowNum++, "Highest Spent", formatCurrency(overview.getTopCustomerSpent()), currencyStyle);
+            addSumRow(sheet, rowNum++, "Top Customer", overview.getTopCustomerName());
+            addSumRow(sheet, rowNum++, "Highest Spent", doubleValue(overview.getTopCustomerSpent()), currencyStyle);
         }
     }
 
-    private static void addSumRow(Sheet sheet, int rowNum, String label, String value, CellStyle style) {
+    private static void addSumRow(Sheet sheet, int rowNum, String label, double value, CellStyle style) {
         Row r = sheet.createRow(rowNum);
         r.createCell(0).setCellValue(label);
         Cell vc = r.createCell(1);
         vc.setCellValue(value);
         if (style != null) vc.setCellStyle(style);
+    }
+
+    private static void addSumRow(Sheet sheet, int rowNum, String label, String value) {
+        Row r = sheet.createRow(rowNum);
+        r.createCell(0).setCellValue(label);
+        r.createCell(1).setCellValue(value);
     }
 
     private static CellStyle createHeaderStyle(Workbook wb) {
@@ -367,10 +380,36 @@ public final class ExcelExportUtil {
         return s == null || s.trim().isEmpty() ? "\u2014" : s.trim();
     }
 
+    private static double doubleValue(BigDecimal v) {
+        return v == null ? 0.0 : v.doubleValue();
+    }
+
     private static String formatCurrency(BigDecimal v) {
         if (v == null) return "0";
         java.text.DecimalFormat df = new java.text.DecimalFormat("#,##0");
         return df.format(v);
+    }
+
+    public static byte[] generateSupplierReport(
+            String generatedBy, List<Supplier> rows, String keyword) {
+        try (Workbook wb = new XSSFWorkbook()) {
+            Sheet sheet = wb.createSheet("Supplier Report");
+            setupReport(wb, sheet, "Supplier Report", generatedBy, keyword, null, null, null);
+            String[] headers = {"Mã NCC", "Tên nhà cung cấp", "Số điện thoại", "Địa chỉ", "Trạng thái"};
+            int[] widths = {12, 35, 18, 45, 18};
+            int rowNum = fillHeader(wb, sheet, headers, widths, 4);
+            for (Supplier r : rows) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue("NCC" + r.getSupplierID());
+                row.createCell(1).setCellValue(r.getName());
+                row.createCell(2).setCellValue(nullToDash(r.getPhone()));
+                row.createCell(3).setCellValue(nullToDash(r.getAddress()));
+                row.createCell(4).setCellValue("ACTIVE".equalsIgnoreCase(r.getStatus()) ? "Đang hoạt động" : "Ngừng hoạt động");
+            }
+            return toBytes(wb);
+        } catch (Exception e) {
+            throw new RuntimeException("Excel generation failed", e);
+        }
     }
 
     private static byte[] toBytes(Workbook wb) {

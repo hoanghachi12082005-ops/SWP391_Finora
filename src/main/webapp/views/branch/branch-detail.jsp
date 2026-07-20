@@ -2,6 +2,7 @@
 
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
+<%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
 
 <jsp:include page="/views/common/header.jsp">
     <jsp:param name="title" value="Chi tiết chi nhánh"/>
@@ -11,7 +12,7 @@
 <div class="app-container">
     <jsp:include page="/views/common/sidebar.jsp"/>
 
-    <main class="main-content"> 
+    <main class="main-content">
         
         <div class="container-fluid py-4"> 
             <c:if test="${param.success == 'add'}">
@@ -133,26 +134,117 @@
                     </div>
                 </div>
 
-                <!-- THỐNG KÊ -->
-                <div class="stats">
-                    <div class="stat-card">
-                        <h3 class="stat-label">DOANH THU THÁNG</h3>
-                        <p class="stat-value">${monthlyRevenue}</p>
+                <!-- BÁO CÁO TÀI CHÍNH CHI NHÁNH -->
+                <div style="margin-top: 24px;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="m-0" style="font-size: 18px; font-weight: 600; color: #0f172a;">Báo cáo tài chính chi nhánh</h3>
+                        <div class="d-flex align-items-center gap-2" style="background: #f1f5f9; padding: 4px; border-radius: 8px;">
+                            <a href="?action=detail&id=${branch.branchId}&range=day" class="btn btn-sm" style="font-weight:600; border-radius:6px; padding: 6px 14px; text-decoration:none; transition:0.2s; ${selectedRange == 'day' ? 'background:#93000b; color:white; border:none;' : 'color:#475569; background:transparent; border:none;'}">Hôm nay</a>
+                            <a href="?action=detail&id=${branch.branchId}&range=week" class="btn btn-sm" style="font-weight:600; border-radius:6px; padding: 6px 14px; text-decoration:none; transition:0.2s; ${selectedRange == 'week' ? 'background:#93000b; color:white; border:none;' : 'color:#475569; background:transparent; border:none;'}">Tuần này</a>
+                            <a href="?action=detail&id=${branch.branchId}&range=month" class="btn btn-sm" style="font-weight:600; border-radius:6px; padding: 6px 14px; text-decoration:none; transition:0.2s; ${selectedRange == 'month' ? 'background:#93000b; color:white; border:none;' : 'color:#475569; background:transparent; border:none;'}">Tháng này</a>
+                        </div>
                     </div>
 
-                    <div class="stat-card">
-                        <h3 class="stat-label">TỔNG NHÂN VIÊN</h3>
-                        <p class="stat-value">${employeeCount}</p>
-                    </div>
+                    <!-- KPI Cards Grid -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-card-info">
+                                <p>Tổng doanh thu</p>
+                                <h3><fmt:formatNumber value="${totalRevenue != null ? totalRevenue : 0}" type="number" maxFractionDigits="0"/> đ</h3>
+                                <span class="kpi-subtext">Hóa đơn hoàn tất</span>
+                            </div>
+                            <div class="kpi-card-icon green" style="background: rgba(16, 185, 129, 0.08); color: #10b981;">
+                                <span class="material-icons">payments</span>
+                            </div>
+                        </div>
 
-                    <div class="stat-card">
-                        <h3 class="stat-label">TỔNG ĐƠN HÀNG</h3>
-                        <p class="stat-value">${orderCount}</p>
-                    </div>
+                        <div class="kpi-card">
+                            <div class="kpi-card-info">
+                                <p>Tổng chi phí phát sinh</p>
+                                <h3><fmt:formatNumber value="${totalExpenses != null ? totalExpenses : 0}" type="number" maxFractionDigits="0"/> đ</h3>
+                                <span class="kpi-subtext">Chi phí giao dịch</span>
+                            </div>
+                            <div class="kpi-card-icon red" style="background: rgba(239, 68, 68, 0.08); color: #ef4444;">
+                                <span class="material-icons">money_off</span>
+                            </div>
+                        </div>
 
-                    <div class="stat-card">
-                        <h3 class="stat-label">LỢI NHUẬN</h3>
-                        <p class="stat-value">${profit}</p>
+                        <div class="kpi-card">
+                            <div class="kpi-card-info">
+                                <p>Lợi nhuận ròng</p>
+                                <h3 style="color: ${netProfit >= 0 ? '#10b981' : '#ef4444'};"><fmt:formatNumber value="${netProfit != null ? netProfit : 0}" type="number" maxFractionDigits="0"/> đ</h3>
+                                <span class="kpi-subtext">Doanh thu - Chi phí</span>
+                            </div>
+                            <div class="kpi-card-icon blue" style="background: rgba(59, 130, 246, 0.08); color: #3b82f6;">
+                                <span class="material-icons">trending_up</span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-card-info">
+                                <p>Tổng hóa đơn đã bán</p>
+                                <h3><fmt:formatNumber value="${totalInvoices != null ? totalInvoices : 0}"/></h3>
+                                <span class="kpi-subtext">Đơn thành công</span>
+                            </div>
+                            <div class="kpi-card-icon orange" style="background: rgba(245, 158, 11, 0.08); color: #f59e0b;">
+                                <span class="material-icons">receipt_long</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BÁO CÁO PHÁT SINH CHI TIẾT -->
+                <div class="table-card mt-4">
+                    <div class="table-header">
+                        <h3>Báo cáo doanh số và phát sinh chi tiết</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="branch-table align-middle" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Mã giao dịch / Hóa đơn</th>
+                                    <th>Thời gian</th>
+                                    <th>Loại giao dịch</th>
+                                    <th>Phương thức</th>
+                                    <th style="text-align: right;">Số tiền</th>
+                                    <th>Mô tả</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:choose>
+                                    <c:when test="${empty branchPayments}">
+                                        <tr>
+                                            <td colspan="6" style="text-align:center;color:#777;padding:24px;">
+                                                Không có phát sinh tài chính trong thời gian này
+                                            </td>
+                                        </tr>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:forEach items="${branchPayments}" var="payment">
+                                            <tr>
+                                                <td><strong>${payment.name}</strong></td>
+                                                <td><fmt:formatDate value="${payment.paymentDate}" pattern="dd/MM/yyyy HH:mm"/></td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${payment.paymentType == 'INCOME'}">
+                                                            <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 600; padding: 4px 8px; border-radius: 12px;">Thu (Doanh thu)</span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; font-weight: 600; padding: 4px 8px; border-radius: 12px;">Chi (Chi phí)</span>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td>${payment.method}</td>
+                                                <td style="text-align: right; font-weight: 600; color: ${payment.paymentType == 'INCOME' ? '#10b981' : '#ef4444'};">
+                                                    <fmt:formatNumber value="${payment.amount}" type="number" maxFractionDigits="0"/> đ
+                                                </td>
+                                                <td>${payment.description}</td>
+                                            </tr>
+                                        </c:forEach>
+                                    </c:otherwise>
+                                </c:choose>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -185,7 +277,7 @@
                                         <tr>
                                             <td>${emp.empId}</td>
                                             <td>${emp.fullName}</td>
-                                            <td>${emp.roleName}</td>
+                                            <td>${empty emp.roleName ? '—' : emp.roleName}</td>
                                             <td>${empty emp.phone ? '—' : emp.phone}</td>
                                             <td>
                                                 <c:set var="empStatus" value="${fn:toLowerCase(emp.status)}"/>
