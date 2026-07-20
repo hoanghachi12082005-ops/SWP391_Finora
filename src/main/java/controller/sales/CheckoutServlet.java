@@ -90,14 +90,12 @@ public class CheckoutServlet extends HttpServlet {
 
         // ── Tính toán tổng ──────────────────────────────────────
         double subtotal = tab.getSubtotal();
-        double voucherDiscount = tab.getDiscountAmount();
         double redeemDiscount = tab.getRedeemDiscount();
         int redeemPoints = tab.getRedeemPoints();
-        Voucher voucher = tab.getAppliedVoucher();
         Customer selectedCustomer = tab.getSelectedCustomer();
         Integer customerId = selectedCustomer != null ? selectedCustomer.getCusId() : null;
 
-        double totalDiscount = voucherDiscount + redeemDiscount;
+        double totalDiscount = redeemDiscount;
         double totalBeforeTax = subtotal - totalDiscount;
         double vatRate = tab.getVatRate();
         double vat = totalBeforeTax * vatRate;
@@ -123,7 +121,6 @@ public class CheckoutServlet extends HttpServlet {
                 order.setCustomerId(customerId);
                 order.setBranchId(emp.getBranchId());
                 order.setEmpId(emp.getEmpId());
-                order.setVoucherId(voucher != null ? voucher.getVoucherId() : null);
                 order.setWarehouseId(warehouseId);
                 order.setSubtotal(subtotal);
                 order.setDiscountAmount(totalDiscount);
@@ -143,11 +140,6 @@ public class CheckoutServlet extends HttpServlet {
                     }
                     inventoryDao.logStockTransaction(conn, warehouseId, item.getProductId(),
                             orderId, item.getQuantity(), beforeQty, emp.getEmpId());
-                }
-
-                if (voucher != null) {
-                    VoucherDAO voucherDao = new VoucherDAO();
-                    voucherDao.incrementUsedQuantity(conn, voucher.getVoucherId());
                 }
 
                 conn.commit();
@@ -190,8 +182,6 @@ public class CheckoutServlet extends HttpServlet {
             OrderDetailDAO detailDao = new OrderDetailDAO();
             PaymentDAO paymentDao = new PaymentDAO();
             CustomerPointDAO pointDao = new CustomerPointDAO();
-            VoucherDAO voucherDao = new VoucherDAO();
-
             // 1. Kiểm tra tồn kho từng sản phẩm
             for (CartItem item : cart) {
                 int stock = inventoryDao.getStockInTransaction(conn, item.getProductId(), warehouseId);
@@ -203,7 +193,7 @@ public class CheckoutServlet extends HttpServlet {
                 }
             }
 
-            // 2. Tạo đơn hàng với discountAmount = voucherDiscount + redeemDiscount
+            // 2. Tạo đơn hàng với discountAmount = redeemDiscount
             String orderCode = "HD" + System.currentTimeMillis();
             Order order = new Order();
             order.setOrderCode(orderCode);
@@ -211,7 +201,6 @@ public class CheckoutServlet extends HttpServlet {
             order.setCustomerId(customerId);
             order.setBranchId(emp.getBranchId());
             order.setEmpId(emp.getEmpId());
-            order.setVoucherId(voucher != null ? voucher.getVoucherId() : null);
             order.setWarehouseId(warehouseId);
             order.setSubtotal(subtotal);
             order.setDiscountAmount(totalDiscount);
@@ -248,12 +237,7 @@ public class CheckoutServlet extends HttpServlet {
                         orderId, item.getQuantity(), beforeQty, emp.getEmpId());
             }
 
-            // 6. Cập nhật voucher (nếu có)
-            if (voucher != null) {
-                voucherDao.incrementUsedQuantity(conn, voucher.getVoucherId());
-            }
-
-            // 7. Trừ điểm đã đổi (chỉ sau khi payment thành công)
+            // 6. Trừ điểm đã đổi (chỉ sau khi payment thành công)
             if (customerId != null && customerId > 0 && redeemPoints > 0) {
                 int available = pointDao.getCurrentPoints(customerId);
                 if (available < redeemPoints) {
@@ -291,7 +275,6 @@ public class CheckoutServlet extends HttpServlet {
             out.write("{\"status\":\"success\",");
             out.write("\"orderCode\":\"" + escJson(orderCode) + "\",");
             out.write("\"subtotal\":" + subtotal + ",");
-            out.write("\"voucherDiscount\":" + voucherDiscount + ",");
             out.write("\"redeemDiscount\":" + redeemDiscount + ",");
             out.write("\"redeemPoints\":" + redeemPoints + ",");
             out.write("\"vat\":" + vat + ",");

@@ -2,7 +2,6 @@ package controller.sales;
 
 import dao.product.ProductDAO;
 import dao.customer.CustomerDAO;
-import dao.sales.VoucherDAO;
 import dao.sales.ShiftDAO;
 import dao.system.VatSettingDAO;
 import model.Employee;
@@ -80,26 +79,6 @@ public class SalesServlet extends HttpServlet {
             return;
         }
 
-        if ("checkVoucher".equals(action)) {
-            // AJAX: kiểm tra và lấy thông tin voucher
-            String code = req.getParameter("code");
-            dao.sales.VoucherDAO voucherDao = new dao.sales.VoucherDAO();
-            model.Voucher v = voucherDao.getValidByCode(code != null ? code.trim() : "");
-            resp.setContentType("application/json");
-            resp.setCharacterEncoding("UTF-8");
-            if (v != null) {
-                resp.getWriter().write("{"
-                    + "\"voucherId\":" + v.getVoucherId() + ","
-                    + "\"voucherCode\":\"" + escJson(v.getVoucherCode()) + "\","
-                    + "\"discountType\":\"" + escJson(v.getDiscountType()) + "\","
-                    + "\"discountValue\":" + v.getDiscountValue()
-                    + "}");
-            } else {
-                resp.getWriter().write("{\"error\":\"Mã giảm giá không hợp lệ hoặc đã hết hạn.\"}");
-            }
-            return;
-        }
-
         // Default: load trang POS
         req.setAttribute("activePage", "sales");
 
@@ -116,11 +95,6 @@ public class SalesServlet extends HttpServlet {
             activeTabId = tabs.keySet().iterator().next();
             session.setAttribute("activeTabId", activeTabId);
         }
-
-        // Lấy danh sách voucher hoạt động
-        dao.sales.VoucherDAO voucherDao = new dao.sales.VoucherDAO();
-        List<model.Voucher> vouchers = voucherDao.getAllValidVouchers();
-        req.setAttribute("vouchers", vouchers);
 
         List<Product> productList = productDao.getAllActiveByWarehouse(warehouseId);
         req.setAttribute("productList", productList);

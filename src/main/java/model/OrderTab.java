@@ -11,7 +11,6 @@ public class OrderTab implements Serializable {
     private List<CartItem> items = new ArrayList<>();
     private Customer selectedCustomer;
     private String note = "";
-    private Voucher appliedVoucher;
     private String status = "ACTIVE"; // ACTIVE, HOLD
     private double vatRate = 0.08; // tỷ lệ VAT mặc định 8%
     private int redeemPoints;
@@ -41,15 +40,7 @@ public class OrderTab implements Serializable {
     }
 
     public double getDiscountAmount() {
-        double subtotal = getSubtotal();
-        if (appliedVoucher == null) return 0;
-        double discount = 0;
-        if ("PERCENT".equalsIgnoreCase(appliedVoucher.getDiscountType()) || "PERCENTAGE".equalsIgnoreCase(appliedVoucher.getDiscountType())) {
-            discount = subtotal * appliedVoucher.getDiscountValue() / 100.0;
-        } else {
-            discount = appliedVoucher.getDiscountValue();
-        }
-        return Math.min(discount, subtotal);
+        return redeemDiscount;
     }
 
     public double getVatAmount() {
@@ -62,7 +53,7 @@ public class OrderTab implements Serializable {
         double subtotal = getSubtotal();
         double discount = getDiscountAmount();
         double vat = getVatAmount();
-        return subtotal - discount - redeemDiscount + vat;
+        return subtotal - discount + vat;
     }
 
     // ── Getters and Setters ──
@@ -77,9 +68,6 @@ public class OrderTab implements Serializable {
 
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
-
-    public Voucher getAppliedVoucher() { return appliedVoucher; }
-    public void setAppliedVoucher(Voucher appliedVoucher) { this.appliedVoucher = appliedVoucher; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

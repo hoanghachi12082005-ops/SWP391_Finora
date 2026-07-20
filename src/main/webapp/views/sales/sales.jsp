@@ -228,22 +228,6 @@
                     <span id="summaryVat" class="font-semibold">0 ₫</span>
                 </div>
 
-                 <!-- Voucher -->
-                 <div class="pt-2 border-t border-outline-variant">
-                     <div class="flex items-center gap-2 relative">
-                         <span class="material-symbols-outlined text-outline text-[16px] absolute left-3 top-1/2 -translate-y-1/2">sell</span>
-                         <select id="voucherSelect" onchange="changeVoucher(this.value)" class="w-full text-[14px] bg-surface-container-low rounded-lg pl-9 pr-3 py-2 border border-transparent focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none appearance-none cursor-pointer">
-                             <option value="0">-- Chọn mã giảm giá --</option>
-                             <c:forEach items="${vouchers}" var="v">
-                                 <option value="${v.voucherId}">
-                                     ${v.voucherCode} - ${v.voucherName}
-                                 </option>
-                             </c:forEach>
-                         </select>
-                     </div>
-                     <div id="voucherMessage" class="hidden text-[12px] mt-0.5 px-7"></div>
-                 </div>
-
                 <!-- Grand Total -->
                 <div class="pt-2.5 border-t border-outline-variant">
                     <div class="flex justify-between items-end">
@@ -626,23 +610,6 @@ async function cancelOrder() {
         cartState = await res.json();
         renderUI();
         showToast('Đã hủy đơn hàng!', 'Dữ liệu đơn hiện tại đã được xóa.');
-    } catch(e) { console.error(e); }
-}
-
-async function changeVoucher(voucherId) {
-    if (!cartState) return;
-    try {
-        const res = await fetch(CTX+'/cart', {
-            method: 'POST',
-            body: new URLSearchParams({
-                action: 'applyVoucher',
-                voucherId: voucherId,
-                tabId: cartState.activeTabId,
-                csrfToken: CSRF_TOKEN
-            })
-        });
-        cartState = await res.json();
-        renderUI();
     } catch(e) { console.error(e); }
 }
 

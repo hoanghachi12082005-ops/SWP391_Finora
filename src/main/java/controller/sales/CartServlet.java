@@ -3,7 +3,6 @@ package controller.sales;
 import dao.customer.CustomerDAO;
 import dao.inventory.InventoryDAO;
 import dao.product.ProductDAO;
-import dao.sales.VoucherDAO;
 import dao.system.VatSettingDAO;
 import model.*;
 import jakarta.servlet.annotation.WebServlet;
@@ -110,17 +109,6 @@ public class CartServlet extends HttpServlet {
                             CustomerDAO customerDao = new CustomerDAO();
                             targetTab.setSelectedCustomer(customerDao.findById(cusId));
                         }
-                    }
-                }
-                case "applyVoucher" -> {
-                    String voucherIdStr = req.getParameter("voucherId");
-                    if (voucherIdStr == null || voucherIdStr.isBlank() || "0".equals(voucherIdStr)) {
-                        targetTab.setAppliedVoucher(null);
-                    } else {
-                        int vId = Integer.parseInt(voucherIdStr);
-                        VoucherDAO voucherDao = new VoucherDAO();
-                        Voucher v = voucherDao.getById(vId);
-                        targetTab.setAppliedVoucher(v);
                     }
                 }
                 case "applyRedeem" -> {
@@ -362,20 +350,6 @@ public class CartServlet extends HttpServlet {
             out.write("},");
         } else {
             out.write("\"selectedCustomer\":null,");
-        }
-
-        // appliedVoucher
-        if (activeTab.getAppliedVoucher() != null) {
-            Voucher v = activeTab.getAppliedVoucher();
-            out.write("\"appliedVoucher\":{");
-            out.write("\"voucherId\":" + v.getVoucherId() + ",");
-            out.write("\"voucherCode\":\"" + escJson(v.getVoucherCode()) + "\",");
-            out.write("\"voucherName\":\"" + escJson(v.getVoucherName()) + "\",");
-            out.write("\"discountType\":\"" + escJson(v.getDiscountType()) + "\",");
-            out.write("\"discountValue\":" + v.getDiscountValue());
-            out.write("},");
-        } else {
-            out.write("\"appliedVoucher\":null,");
         }
 
         // items list
