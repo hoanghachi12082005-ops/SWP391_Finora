@@ -1,10 +1,14 @@
 package service.vnpay;
 
 import dao.finance.PaymentDAO;
+import dao.inventory.InventoryDAO;
 import dao.sales.CustomerPointDAO;
 import dao.sales.OrderDAO;
+import dao.sales.OrderDetailDAO;
+import dao.sales.VoucherDAO;
 import jakarta.servlet.http.HttpServletRequest;
 import model.Order;
+import model.OrderDetail;
 import model.Payment;
 import util.database.DBContext;
 import util.vnpay.Config;
@@ -23,6 +27,9 @@ public class VNPayService {
 
     private final OrderDAO orderDAO = new OrderDAO();
     private final PaymentDAO paymentDAO = new PaymentDAO();
+    private final OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
+    private final InventoryDAO inventoryDAO = new InventoryDAO();
+    private final VoucherDAO voucherDAO = new VoucherDAO();
 
     // ==================== TẠO LINK THANH TOÁN ====================
 
@@ -116,7 +123,7 @@ public class VNPayService {
         }
     }
 
-    /** Xử lý thanh toán thất bại: cập nhật trạng thái order. */
+    /** Xử lý thanh toán thất bại: cập nhật trạng thái order + hoàn kho + hoàn voucher. */
     public boolean processFailed(String orderCode, String responseCode) {
         try (Connection conn = DBContext.getConnection()) {
             int orderId = orderDAO.findIdByCode(conn, orderCode);
@@ -127,6 +134,22 @@ public class VNPayService {
 
             String newStatus = "24".equals(responseCode) ? "CANCELLED" : "FAILED";
             orderDAO.updateStatus(conn, orderId, newStatus);
+
+            // Hoàn kho: trả lại số lượng tồn kho đã trừ
+            Order order = orderDAO.findByCode(conn, orderCode);
+            if (order != null) {
+                int warehouseId = order.getWarehouseId();
+                List<OrderDetail> details = orderDetailDAO.findByOrderId(conn, orderId);
+                for (OrderDetail d : details) {
+                    inventoryDAO.increaseStock(conn, warehouseId, d.getProductId(), d.getQuantity());
+                }
+
+                // Hoàn voucher (nếu có)
+                if (order.getVoucherId() != null && order.getVoucherId() > 0) {
+                    voucherDAO.decrementUsedQuantity(conn, order.getVoucherId());
+                }
+            }
+
             return true;
 
         } catch (Exception e) {
@@ -196,6 +219,21 @@ public class VNPayService {
 
         String newStatus = "24".equals(responseCode) ? "CANCELLED" : "FAILED";
         orderDAO.updateStatus(conn, orderId, newStatus);
+
+        // Hoàn kho
+        Order order = orderDAO.findByCode(conn, orderCode);
+        if (order != null) {
+            int warehouseId = order.getWarehouseId();
+            java.util.List<OrderDetail> details = orderDetailDAO.findByOrderId(conn, orderId);
+            for (OrderDetail d : details) {
+                inventoryDAO.increaseStock(conn, warehouseId, d.getProductId(), d.getQuantity());
+            }
+
+            // Hoàn voucher (nếu có)
+            if (order.getVoucherId() != null && order.getVoucherId() > 0) {
+                voucherDAO.decrementUsedQuantity(conn, order.getVoucherId());
+            }
+        }
     }
 
     // ==================== HELPERS ====================
