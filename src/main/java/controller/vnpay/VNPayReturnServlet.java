@@ -37,9 +37,11 @@ public class VNPayReturnServlet extends HttpServlet {
             vnpay.processFailed(orderCode, responseCode);
         }
 
-        // Redirect thuần — không session, không param
-        if (isSuccess) {
-            resp.sendRedirect(req.getContextPath() + "/payment/success");
+        // Redirect — chỉ truyền orderCode (không lộ thông tin nhạy cảm)
+        if (isSuccess && orderCode != null) {
+            resp.sendRedirect(req.getContextPath() + "/payment/process?orderCode=" + orderCode);
+        } else if (orderCode != null) {
+            resp.sendRedirect(req.getContextPath() + "/payment/failed?orderCode=" + orderCode);
         } else {
             resp.sendRedirect(req.getContextPath() + "/payment/failed");
         }
