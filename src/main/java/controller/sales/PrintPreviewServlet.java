@@ -1,8 +1,9 @@
 package controller.sales;
 
-import model.CartItem;
-import model.Employee;
-import model.OrderTab;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Map;
+
 import dao.system.VatSettingDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -10,9 +11,9 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Map;
+import model.CartItem;
+import model.Employee;
+import model.OrderTab;
 
 @WebServlet("/print/preview")
 public class PrintPreviewServlet extends HttpServlet {
@@ -56,15 +57,23 @@ public class PrintPreviewServlet extends HttpServlet {
         out.write(".footer { text-align: center; margin-top: 15px; font-size: 10px; }");
         out.write("</style></head><body onload='window.print()'>");
 
+        String now = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date());
         out.write("<div class='header'>");
         out.write("<h2 style='margin:0;'>FINORA STORE</h2>");
-        out.write("<p style='margin:3px 0;'>HÓA ĐƠN TẠM TÍNH (IN THỬ)</p>");
-        out.write("<p style='margin:3px 0;'>Tab đơn: Đơn " + tabId + "</p>");
+        out.write("<p style='margin:3px 0;'>HÓA ĐƠN TẠM TÍNH</p>");
+        out.write("<p style='margin:3px 0;'>Số HĐ: TẠM - " + now + "</p>");
         out.write("</div>");
 
         out.write("<div class='divider'></div>");
-        out.write("<p>NV: " + empName + "</p>");
-        out.write("<p>Khách: " + (tab != null && tab.getSelectedCustomer() != null ? tab.getSelectedCustomer().getFullName() : "Khách vãng lai") + "</p>");
+        if (tab != null && tab.getSelectedCustomer() != null) {
+            var c = tab.getSelectedCustomer();
+            int remainingPoints = c.getLoyaltyPoint() - tab.getRedeemPoints();
+            out.write("<p>KH: " + c.getFullName() + " - Điểm khả dụng: " + remainingPoints + "</p>");
+            out.write("<p>SĐT: " + c.getPhone() + "</p>");
+        } else {
+            out.write("<p>KH: Khách vãng lai</p>");
+        }
+        out.write("<p>NVBH: " + empName + "</p>");
         out.write("<div class='divider'></div>");
 
         out.write("<table>");
@@ -86,7 +95,7 @@ public class PrintPreviewServlet extends HttpServlet {
             out.write("<table>");
             out.write("<tr><td>Cộng tiền hàng:</td><td class='text-right'>" + String.format("%,.0f ₫", tab.getSubtotal()) + "</td></tr>");
             if (tab.getDiscountAmount() > 0) {
-                out.write("<tr><td>Chiết khấu:</td><td class='text-right'>-" + String.format("%,.0f ₫", tab.getDiscountAmount()) + "</td></tr>");
+                out.write("<tr><td>Chiết khấu (-" + tab.getRedeemPoints() + " pts):</td><td class='text-right'>-" + String.format("%,.0f ₫", tab.getDiscountAmount()) + "</td></tr>");
             }
             out.write("<tr><td>Thuế VAT (" + vatPercent + "%):</td><td class='text-right'>" + String.format("%,.0f ₫", tab.getVatAmount()) + "</td></tr>");
             out.write("<tr class='bold'><td>TỔNG CỘNG:</td><td class='text-right'>" + String.format("%,.0f ₫", tab.getTotalAmount()) + "</td></tr>");
