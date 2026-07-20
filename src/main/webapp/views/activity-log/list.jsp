@@ -5,8 +5,10 @@
     List<ActivityLog> logs = (List<ActivityLog>) request.getAttribute("logs");
     Map<String,String> entityOptions = (Map<String,String>) request.getAttribute("entityOptions");
     Map<String,String> actionOptions = (Map<String,String>) request.getAttribute("actionOptions");
-    int currentPage   = request.getAttribute("currentPage") != null ? (Integer) request.getAttribute("currentPage") : 1;
-    int totalPages    = request.getAttribute("totalPages") != null ? (Integer) request.getAttribute("totalPages") : 1;
+    boolean hasNext   = Boolean.TRUE.equals(request.getAttribute("hasNext"));
+    boolean hasPrev   = Boolean.TRUE.equals(request.getAttribute("hasPrev"));
+    int firstId       = request.getAttribute("firstId") != null ? (Integer) request.getAttribute("firstId") : 0;
+    int lastId        = request.getAttribute("lastId") != null ? (Integer) request.getAttribute("lastId") : 0;
     Integer totalCount= (Integer) request.getAttribute("totalCount");
     String keyword     = (String) request.getAttribute("keyword");
     String filterTable = (String) request.getAttribute("filterTable");
@@ -185,7 +187,7 @@
                         </table>
                     </div>
 
-<% if (totalPages > 1) {
+<% if (totalCount > 0) {
         String baseUrl = ctx + "/activity-log?"
                 + (keyword != null && !keyword.isBlank() ? "keyword=" + java.net.URLEncoder.encode(keyword, "UTF-8") + "&" : "")
                 + (filterTable != null && !filterTable.isBlank() ? "tableName=" + filterTable + "&" : "")
@@ -194,41 +196,13 @@
                 + (filterDateTo != null && !filterDateTo.isBlank() ? "dateTo=" + filterDateTo + "&" : "");
 %>
                     <div class="d-flex justify-content-between align-items-center mt-3">
-                        <div class="text-muted small">Trang <strong><%= currentPage %></strong> / <strong><%= totalPages %></strong></div>
+                        <div class="text-muted small">Tổng <strong><%= totalCount %></strong> hoạt động</div>
                         <ul class="pagination mb-0">
-                            <li class="page-item <%= currentPage <= 1 ? "disabled" : "" %>">
-                                <a class="page-link" href="<%= baseUrl %>page=<%= currentPage - 1 %>">Trước</a>
+                            <li class="page-item <%= hasPrev ? "" : "disabled" %>">
+                                <a class="page-link" href="<%= hasPrev ? baseUrl + "after=" + firstId : "#" %>">← Mới hơn</a>
                             </li>
-<%
-        int visiblePages = 2;
-        int startPage = Math.max(1, currentPage - visiblePages);
-        int endPage = Math.min(totalPages, currentPage + visiblePages);
-
-        if (startPage > 1) {
-%>
-                            <li class="page-item"><a class="page-link" href="<%= baseUrl %>page=1">1</a></li>
-<%          if (startPage > 2) { %>
-                            <li class="page-item disabled"><span class="page-link">...</span></li>
-<%          }
-        }
-
-        for (int i = startPage; i <= endPage; i++) {
-%>
-                            <li class="page-item <%= i == currentPage ? "active" : "" %>">
-                                <a class="page-link" href="<%= baseUrl %>page=<%= i %>"><%= i %></a>
-                            </li>
-<%
-        }
-
-        if (endPage < totalPages) {
-            if (endPage < totalPages - 1) {
-%>
-                            <li class="page-item disabled"><span class="page-link">...</span></li>
-<%          } %>
-                            <li class="page-item"><a class="page-link" href="<%= baseUrl %>page=<%= totalPages %>"><%= totalPages %></a></li>
-<%      } %>
-                            <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
-                                <a class="page-link" href="<%= baseUrl %>page=<%= currentPage + 1 %>">Tiếp</a>
+                            <li class="page-item <%= hasNext ? "" : "disabled" %>">
+                                <a class="page-link" href="<%= hasNext ? baseUrl + "before=" + lastId : "#" %>">Cũ hơn →</a>
                             </li>
                         </ul>
                     </div>
