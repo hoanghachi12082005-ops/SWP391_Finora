@@ -1,7 +1,9 @@
 package dao.sales;
 
 import model.CartItem;
+import model.OrderDetail;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -53,5 +55,25 @@ public class OrderDetailDAO {
             }
             ps.executeBatch();
         }
+    }
+
+    /**
+     * Lấy danh sách sản phẩm trong đơn hàng (dùng cho hoàn kho khi hủy đơn).
+     */
+    public List<OrderDetail> findByOrderId(Connection conn, int orderId) throws SQLException {
+        String sql = "SELECT product_id, quantity FROM order_detail WHERE order_id = ?";
+        List<OrderDetail> list = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    OrderDetail d = new OrderDetail();
+                    d.setProductId(rs.getInt("product_id"));
+                    d.setQuantity(rs.getInt("quantity"));
+                    list.add(d);
+                }
+            }
+        }
+        return list;
     }
 }

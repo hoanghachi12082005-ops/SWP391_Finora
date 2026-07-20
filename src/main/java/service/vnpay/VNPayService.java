@@ -1,10 +1,14 @@
 package service.vnpay;
 
 import dao.finance.PaymentDAO;
+import dao.inventory.InventoryDAO;
 import dao.sales.CustomerPointDAO;
 import dao.sales.OrderDAO;
+import dao.sales.OrderDetailDAO;
+import dao.sales.VoucherDAO;
 import jakarta.servlet.http.HttpServletRequest;
 import model.Order;
+import model.OrderDetail;
 import model.Payment;
 import util.database.DBContext;
 import util.vnpay.Config;
@@ -23,6 +27,9 @@ public class VNPayService {
 
     private final OrderDAO orderDAO = new OrderDAO();
     private final PaymentDAO paymentDAO = new PaymentDAO();
+    private final OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
+    private final InventoryDAO inventoryDAO = new InventoryDAO();
+    private final VoucherDAO voucherDAO = new VoucherDAO();
 
     // ==================== TẠO LINK THANH TOÁN ====================
 
@@ -47,7 +54,9 @@ public class VNPayService {
         cal.add(Calendar.MINUTE, 15);
         params.put("vnp_ExpireDate", fmt.format(cal.getTime()));
 
-        return Config.PAY_URL + "?" + buildSignedQuery(params);
+        String hashData = buildHashData(params);
+        String secureHash = Config.hmacSHA512(hashData);
+        return Config.PAY_URL + "?" + hashData + "&vnp_SecureHash=" + urlEncode(secureHash);
     }
 
     // ==================== XỬ LÝ CALLBACK ====================
@@ -116,7 +125,7 @@ public class VNPayService {
         }
     }
 
-    /** Xử lý thanh toán thất bại: cập nhật trạng thái order. */
+    /** Xử lý thanh toán thất bại: cập nhật trạng thái order + hoàn kho + hoàn voucher. */
     public boolean processFailed(String orderCode, String responseCode) {
         try (Connection conn = DBContext.getConnection()) {
             int orderId = orderDAO.findIdByCode(conn, orderCode);
@@ -127,6 +136,22 @@ public class VNPayService {
 
             String newStatus = "24".equals(responseCode) ? "CANCELLED" : "FAILED";
             orderDAO.updateStatus(conn, orderId, newStatus);
+
+            // Hoàn kho: trả lại số lượng tồn kho đã trừ
+            Order order = orderDAO.findByCode(conn, orderCode);
+            if (order != null) {
+                int warehouseId = order.getWarehouseId();
+                List<OrderDetail> details = orderDetailDAO.findByOrderId(conn, orderId);
+                for (OrderDetail d : details) {
+                    inventoryDAO.increaseStock(conn, warehouseId, d.getProductId(), d.getQuantity());
+                }
+
+                // Hoàn voucher (nếu có)
+                if (order.getVoucherId() != null && order.getVoucherId() > 0) {
+                    voucherDAO.decrementUsedQuantity(conn, order.getVoucherId());
+                }
+            }
+
             return true;
 
         } catch (Exception e) {
@@ -135,125 +160,7 @@ public class VNPayService {
         }
     }
 
-    // ==================== TOKEN KÉP CHO RESULT PAGE ====================
-    // Token chứa TOÀN BỘ dữ liệu kết quả, mã hóa dạng:
-    //   base64UrlSafe(payload) + "." + base64UrlSafe(hmacSHA512(payload))
-    // trong đó payload = orderCode|status|message|amount|transactionNo|bankCode|payDate
-
-    /** Tạo token chứa toàn bộ kết quả, URL chỉ hiện ?t=... */
-    public String encodeResultToken(String orderCode, String status, String message,
-                                     String amount, String transactionNo,
-                                     String bankCode, String payDate) {
-        String payload = String.join("|",
-                nvl(orderCode), nvl(status), nvl(message), nvl(amount),
-                nvl(transactionNo), nvl(bankCode), nvl(payDate));
-        String hmac = Config.hmacSHA512(payload);
-        String b64Payload = Base64.getUrlEncoder().encodeToString(payload.getBytes(StandardCharsets.UTF_8));
-        String b64Hmac    = Base64.getUrlEncoder().encodeToString(hmac.getBytes(StandardCharsets.UTF_8));
-        return b64Payload + "." + b64Hmac;
-    }
-
-    /** Giải mã token, trả về Map chứa các field. Trả về null nếu token không hợp lệ. */
-    public Map<String, String> decodeResultToken(String token) {
-        if (token == null) return null;
-        String[] parts = token.split("\\.", 2);
-        if (parts.length != 2) return null;
-
-        try {
-            String payload = new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);
-            String hmac    = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
-
-            // Verify HMAC
-            String expected = Config.hmacSHA512(payload);
-            if (!hmac.equalsIgnoreCase(expected)) return null;
-
-            String[] fields = payload.split("\\|", 7);
-            Map<String, String> map = new LinkedHashMap<>();
-            String[] keys = {"orderCode", "status", "message", "amount", "transactionNo", "bankCode", "payDate"};
-            for (int i = 0; i < keys.length; i++) {
-                map.put(keys[i], i < fields.length ? fields[i] : "");
-            }
-            return map;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private static String nvl(String s) {
-        return s != null ? s : "";
-    }
-
-    /** Diễn giải mã lỗi VNPay thành thông báo. */
-    public String getResponseMessage(String code) {
-        if (code == null) return "Lỗi không xác định";
-        return switch (code) {
-            case "00" -> "Giao dịch thành công!";
-            case "07" -> "Giao dịch bị nghi ngờ gian lận.";
-            case "09" -> "Thẻ chưa đăng ký dịch vụ InternetBanking.";
-            case "10" -> "Xác thực thông tin thẻ không đúng quá 3 lần.";
-            case "11" -> "Đã hết hạn chờ thanh toán.";
-            case "12" -> "Thẻ bị khóa.";
-            case "13" -> "Sai mật khẩu OTP.";
-            case "24" -> "Khách hàng hủy giao dịch.";
-            case "51" -> "Tài khoản không đủ số dư.";
-            case "65" -> "Vượt quá hạn mức giao dịch trong ngày.";
-            case "75" -> "Ngân hàng đang bảo trì.";
-            case "79" -> "Sai mật khẩu thanh toán quá số lần quy định.";
-            default -> "Giao dịch thất bại. Mã lỗi: " + code;
-        };
-    }
-
-    // ==================== XỬ LÝ TRANSACTION (cho IPN) ====================
-
-    /** Xử lý thành công trong transaction (dùng cho IPN). */
-    public void processSuccessInTransaction(Connection conn, String orderCode,
-                                             String transactionNo, long amount, String bankCode) throws Exception {
-        int orderId = orderDAO.findIdByCode(conn, orderCode);
-        if (orderId == 0) throw new Exception("Order not found: " + orderCode);
-
-        String status = orderDAO.getStatus(conn, orderId);
-        if ("COMPLETED".equals(status) || "PAID".equals(status)) {
-            throw new Exception("Order already confirmed: " + orderCode);
-        }
-
-        orderDAO.updateStatus(conn, orderId, "COMPLETED");
-
-        Payment payment = new Payment();
-        payment.setOrderId(orderId);
-        payment.setAmount(amount / 100.0);
-        payment.setStatus("PAID");
-        payment.setName("VNPAY-" + (transactionNo != null ? transactionNo : "N/A"));
-        payment.setMethod("VNPAY");
-        payment.setPaymentType("INCOME");
-        payment.setDescription("Thanh toán VNPAY đơn hàng " + orderCode
-                + ", GD: " + (transactionNo != null ? transactionNo : "N/A"));
-
-        paymentDAO.insert(conn, payment);
-
-        // Earn loyalty points
-        Order order = orderDAO.findByCode(conn, orderCode);
-        if (order != null && order.getCustomerId() != null && order.getCustomerId() > 0) {
-            new CustomerPointDAO().addPoints(conn, order.getCustomerId(), order.getTotalAmount(), orderId);
-        }
-    }
-
-    /** Xử lý thất bại trong transaction (dùng cho IPN). */
-    public void processFailedInTransaction(Connection conn, String orderCode, String responseCode) throws Exception {
-        int orderId = orderDAO.findIdByCode(conn, orderCode);
-        if (orderId == 0) throw new Exception("Order not found: " + orderCode);
-
-        String newStatus = "24".equals(responseCode) ? "CANCELLED" : "FAILED";
-        orderDAO.updateStatus(conn, orderId, newStatus);
-    }
-
     // ==================== HELPERS ====================
-
-    /** Sắp xếp params + tạo chữ ký + trả về query string. */
-    private String buildSignedQuery(Map<String, String> params) {
-        String hashData = buildHashData(params);
-        String secureHash = Config.hmacSHA512(hashData);
-        return hashData + "&vnp_SecureHash=" + urlEncode(secureHash);
-    }
 
     /** Sắp xếp params theo thứ tự alphabet và nối thành chuỗi k=v&k=v. */
     private String buildHashData(Map<String, String> params) {

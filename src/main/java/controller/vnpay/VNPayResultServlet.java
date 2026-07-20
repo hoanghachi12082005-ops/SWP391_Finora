@@ -5,45 +5,41 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import service.vnpay.VNPayService;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
-import java.util.Map;
 
-/**
- * Hiển thị kết quả thanh toán VNPay với URL sạch.
- * Nhận redirect từ VNPayReturnServlet, decode+verify token, forward sang JSP.
- * GET /vnpay/result
- */
-@WebServlet("/vnpay/result")
+@WebServlet({"/payment/process", "/payment/failed"})
 public class VNPayResultServlet extends HttpServlet {
-
-    private final VNPayService vnpay = new VNPayService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String tokenParam = req.getParameter("t");
-        if (tokenParam == null || tokenParam.isBlank()) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing result token");
-            return;
-        }
+        HttpSession session = req.getSession();
 
-        // Giải mã + verify HMAC trong 1 bước
-        Map<String, String> data = vnpay.decodeResultToken(tokenParam);
-        if (data == null) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid or tampered result token");
-            return;
-        }
+        String status = (String) session.getAttribute("paymentStatus");
+        String orderCode = (String) session.getAttribute("paymentOrderCode");
+        Long amount = (Long) session.getAttribute("paymentAmount");
+        String transactionNo = (String) session.getAttribute("paymentTransactionNo");
+        String bankCode = (String) session.getAttribute("paymentBankCode");
 
-        // Set attributes cho JSP
-        req.setAttribute("status", data.get("status"));
-        req.setAttribute("message", data.getOrDefault("message", "Không có thông tin"));
-        req.setAttribute("orderCode", data.get("orderCode"));
-        String amount = data.get("amount");
-        req.setAttribute("amount", amount != null && !amount.isEmpty() ? Long.parseLong(amount) : 0);
-        req.setAttribute("transactionNo", data.get("transactionNo"));
-        req.setAttribute("bankCode", data.get("bankCode"));
-        req.setAttribute("payDate", data.get("payDate"));
+        // Xóa session để F5 không dùng lại dữ liệu cũ
+        session.removeAttribute("paymentStatus");
+        session.removeAttribute("paymentOrderCode");
+        session.removeAttribute("paymentAmount");
+        session.removeAttribute("paymentTransactionNo");
+        session.removeAttribute("paymentBankCode");
+
+        req.setAttribute("status", status != null ? status : "failed");
+        req.setAttribute("orderCode", orderCode != null ? orderCode : "");
+        req.setAttribute("amount", amount != null ? amount : 0L);
+        req.setAttribute("transactionNo", transactionNo != null ? transactionNo : "");
+        req.setAttribute("bankCode", bankCode != null ? bankCode : "");
+
+        if ("success".equals(status)) {
+            req.setAttribute("message", "Giao dịch thành công!");
+        } else {
+            req.setAttribute("message", "Giao dịch thất bại!");
+        }
 
         req.getRequestDispatcher("/views/common/vnpay_result.jsp").forward(req, resp);
     }

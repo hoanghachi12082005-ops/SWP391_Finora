@@ -43,6 +43,15 @@ public class VoucherDAO {
         }
     }
 
+    /** Decrement used_quantity khi đơn hàng bị hủy/thanh toán thất bại. */
+    public void decrementUsedQuantity(Connection conn, int voucherId) throws SQLException {
+        String sql = "UPDATE voucher SET used_quantity = CASE WHEN used_quantity > 0 THEN used_quantity - 1 ELSE 0 END WHERE voucher_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, voucherId);
+            ps.executeUpdate();
+        }
+    }
+
     /**
      * Lấy danh sách tất cả voucher đang còn hạn và hoạt động.
      */

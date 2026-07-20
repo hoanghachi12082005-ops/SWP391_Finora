@@ -5,19 +5,12 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import service.vnpay.VNPayService;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-/**
- * Xử lý kết quả thanh toán VNPay trả về qua browser (Return URL).
- * Sau khi verify signature + xử lý, redirect sang /vnpay/result với token
- * để không lộ raw VNPay params trên URL trình duyệt.
- * GET /vnpay/return
- */
 @WebServlet("/vnpay/return")
 public class VNPayReturnServlet extends HttpServlet {
 
@@ -34,31 +27,27 @@ public class VNPayReturnServlet extends HttpServlet {
         String transactionNo = params.get("vnp_TransactionNo");
         String amountStr   = params.get("vnp_Amount");
         String bankCode    = params.get("vnp_BankCode");
-        String payDate     = params.get("vnp_PayDate");
 
         boolean isSuccess = isValid && "00".equals(responseCode)
                 && ("00".equals(transStatus) || transStatus == null);
 
+        long amount = 0;
         if (isSuccess && orderCode != null) {
-            long amount = amountStr != null ? Long.parseLong(amountStr) : 0;
+            amount = amountStr != null ? Long.parseLong(amountStr) : 0;
             vnpay.processSuccess(orderCode, transactionNo, amount, bankCode);
         } else if (!isSuccess && orderCode != null) {
             vnpay.processFailed(orderCode, responseCode);
         }
 
-        // Redirect sạch — chỉ còn 1 tham số t=token trên URL
-        String status   = isSuccess ? "success" : "error";
-        String message  = vnpay.getResponseMessage(responseCode);
-        String amount   = amountStr != null ? String.valueOf(Long.parseLong(amountStr) / 100) : "0";
+        // Lưu kết quả vào session
+        HttpSession session = req.getSession();
+        session.setAttribute("paymentStatus", isSuccess ? "success" : "failed");
+        session.setAttribute("paymentOrderCode", orderCode);
+        session.setAttribute("paymentAmount", amount / 100);
+        session.setAttribute("paymentTransactionNo", transactionNo);
+        session.setAttribute("paymentBankCode", bankCode);
 
-        String token = vnpay.encodeResultToken(
-                orderCode, status, message, amount,
-                transactionNo, bankCode, payDate);
-
-        resp.sendRedirect(req.getContextPath() + "/vnpay/result?t=" + urlEncode(token));
-    }
-
-    private static String urlEncode(String s) {
-        return URLEncoder.encode(s, StandardCharsets.UTF_8);
+        // Redirect — URL sạch
+        resp.sendRedirect(req.getContextPath() + (isSuccess ? "/payment/process" : "/payment/failed"));
     }
 }
