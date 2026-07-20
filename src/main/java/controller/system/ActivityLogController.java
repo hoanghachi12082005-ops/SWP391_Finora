@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -22,14 +24,14 @@ import java.util.Map;
 
 /**
  * Trung tâm hoạt động — Audit Log.
- * Dùng page number (1,2,3...) nhưng backend dùng keyset để query nhanh.
- * - Chỉ GET; doPost trả 405.
- * - Chỉ Owner/Admin mới được truy cập.
+ * Dùng Keyset Pagination thuần (before/after by audit_log_id).
+ * Limit = 20 / trang.
+ * Chỉ Owner/Admin mới được truy cập.
  */
 @WebServlet(name = "ActivityLogController", urlPatterns = {"/activity-log"})
 public class ActivityLogController extends BaseController {
 
-    private static final int ITEMS_PER_PAGE = 10;
+    private static final int ITEMS_PER_PAGE = 20;
     private ActivityLogDAO dao;
 
     @Override
@@ -55,11 +57,14 @@ public class ActivityLogController extends BaseController {
             LocalDate tmp = dateFrom; dateFrom = dateTo; dateTo = tmp;
         }
 
-        // Page number
-        int currentPage = 1;
+        // Keyset: before → cũ hơn, after → mới hơn
+        Integer beforeId = null;
+        Integer afterId  = null;
         try {
-            String p = request.getParameter("page");
-            if (p != null && !p.isBlank()) currentPage = Math.max(1, Integer.parseInt(p.trim()));
+            String b = request.getParameter("before");
+            String a = request.getParameter("after");
+            if (b != null && !b.isBlank()) beforeId = Integer.parseInt(b.trim());
+            if (a != null && !a.isBlank()) afterId  = Integer.parseInt(a.trim());
         } catch (NumberFormatException ignored) {}
 
         // Giới hạn bảng được phép hiển thị
@@ -74,32 +79,44 @@ public class ActivityLogController extends BaseController {
         }
 
         try {
-            // Keyset-style query theo page number
-            List<ActivityLog> logs = dao.findByPage(
-                    currentPage, ITEMS_PER_PAGE + 1,
+            // Lấy đúng ITEMS_PER_PAGE bản ghi (không +1)
+            List<ActivityLog> logs = dao.findByKeyset(
+                    beforeId, afterId, ITEMS_PER_PAGE,
                     keyword, tableName, actionName, dateFrom, dateTo);
 
             boolean hasNext = false;
-            if (logs.size() > ITEMS_PER_PAGE) {
-                hasNext = true;
-                logs.remove(logs.size() - 1);
+            boolean hasPrev = false;
+            if (logs.isEmpty()) {
+                // Trường hợp empty: after/before dẫn tới ko có data
+                // Fallback về trang đầu
+                response.sendRedirect(request.getContextPath() + "/activity-log"
+                    + buildFilterQueryString(keyword, tableName, actionName,
+                        dateFrom != null ? dateFrom.toString() : null,
+                        dateTo != null ? dateTo.toString() : null, null, null));
+                return;
             }
 
-            // Tổng số → tính totalPages
+            int firstId = logs.get(0).getId();
+            int lastId  = logs.get(logs.size() - 1).getId();
+
+            // Dùng 2 query index seek riêng để kiểm tra hasNext và hasPrev
+            hasNext = dao.existsLessThan(lastId, keyword, tableName, actionName, dateFrom, dateTo);
+            hasPrev = dao.existsGreaterThan(firstId, keyword, tableName, actionName, dateFrom, dateTo);
+
+            // Tổng số — chỉ để hiển thị
             int totalCount = tableName != null
                     ? dao.countByTableName(keyword, tableName, actionName, dateFrom, dateTo)
                     : dao.countAll(keyword, tableName, actionName, dateFrom, dateTo);
-            int totalPages = (int) Math.ceil((double) totalCount / ITEMS_PER_PAGE);
-            if (totalPages < 1) totalPages = 1;
 
             request.setAttribute("entityOptions", buildEntityOptionsFiltered(dao.findDistinctTables(), allowedTableNames));
             request.setAttribute("actionOptions", buildActionOptions(dao.findDistinctActions()));
 
             request.setAttribute("logs", logs);
-            request.setAttribute("currentPage", currentPage);
-            request.setAttribute("totalPages", totalPages);
-            request.setAttribute("totalCount", totalCount);
             request.setAttribute("hasNext", hasNext);
+            request.setAttribute("hasPrev", hasPrev);
+            request.setAttribute("firstId", firstId);
+            request.setAttribute("lastId", lastId);
+            request.setAttribute("totalCount", totalCount);
             request.setAttribute("keyword", keyword != null ? keyword : "");
             request.setAttribute("filterTable", tableName != null ? tableName : "");
             request.setAttribute("filterAction", actionName != null ? actionName : "");
@@ -179,5 +196,23 @@ public class ActivityLogController extends BaseController {
             options.put(a, tmp.getActionLabel());
         }
         return options;
+    }
+
+    /** Build query string giữ lại filter params khi redirect về trang đầu. */
+    private String buildFilterQueryString(String keyword, String tableName, String actionName,
+                                           String dateFrom, String dateTo,
+                                           String before, String after) {
+        StringBuilder qs = new StringBuilder();
+        try {
+            if (keyword != null && !keyword.isBlank()) qs.append("&keyword=").append(URLEncoder.encode(keyword, "UTF-8"));
+            if (tableName != null && !tableName.isBlank()) qs.append("&tableName=").append(URLEncoder.encode(tableName, "UTF-8"));
+            if (actionName != null && !actionName.isBlank()) qs.append("&actionName=").append(URLEncoder.encode(actionName, "UTF-8"));
+            if (dateFrom != null && !dateFrom.isBlank()) qs.append("&dateFrom=").append(URLEncoder.encode(dateFrom, "UTF-8"));
+            if (dateTo != null && !dateTo.isBlank()) qs.append("&dateTo=").append(URLEncoder.encode(dateTo, "UTF-8"));
+            if (before != null) qs.append("&before=").append(before);
+            if (after != null) qs.append("&after=").append(after);
+        } catch (UnsupportedEncodingException ignored) {}
+        if (qs.length() > 0) qs.replace(0, 1, "?");
+        return qs.toString();
     }
 }

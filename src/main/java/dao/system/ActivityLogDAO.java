@@ -14,20 +14,18 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * DAO cho Activity Log (bảng AuditLog trong DB V3).
- * Dùng Keyset Pagination (audit_log_id) thay OFFSET để tránh chậm khi bảng lớn.
+ * DAO cho Activity Log (bảng AuditLog).
+ * Dùng Keyset Pagination thuần (audit_log_id) — không OFFSET, không số trang.
  */
 public class ActivityLogDAO {
 
-    // DB V3: AuditLog(AuditLogID, EmployeeID, ActionName, TableName, RecordID, OldData, NewData, CreatedAt)
-    // Employee: Employee(EmployeeID, FullName, ...)
     private static final String BASE_SELECT =
             "SELECT a.audit_log_id, a.emp_id, a.action_name, a.table_name, a.record_id, a.old_data, a.new_data, a.created_at, "
           + "       e.fullName AS emp_name, e.branch_id, b.branch_name "
           + "FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id "
           + "LEFT JOIN branch b ON e.branch_id = b.branch_id ";
 
-    /** Lấy danh sách mới nhất, phục vụ card "Hoạt động gần đây" trên dashboard. */
+    /** Lấy danh sách mới nhất cho card "Hoạt động gần đây" trên dashboard. */
     public List<ActivityLog> findRecent(int limit) throws SQLException {
         String sql = "SELECT TOP (?) a.audit_log_id, a.emp_id, a.action_name, a.table_name, a.record_id, a.old_data, a.new_data, a.created_at, "
                    + "e.fullName AS emp_name, e.branch_id, b.branch_name "
@@ -46,51 +44,17 @@ public class ActivityLogDAO {
     }
 
     /**
-     * Nhảy tới trang N bất kỳ — dùng index seek để tìm pivot audit_log_id,
-     * sau đó keyset từ đó. Kết hợp được số trang + tốc độ keyset.
-     */
-    public List<ActivityLog> findByPage(int page, int limit,
-                                        String keyword, String tableName, String actionName,
-                                        LocalDate dateFrom, LocalDate dateTo) throws SQLException {
-        // Step 1: Chỉ đọc audit_log_id (index only) để tìm pivot ở vị trí cần
-        int offset = (page - 1) * limit;
-        StringBuilder pivotSql = new StringBuilder(
-                "SELECT a.audit_log_id FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id WHERE 1=1 ");
-        appendFilters(pivotSql, keyword, tableName, actionName, dateFrom, dateTo);
-        pivotSql.append(" ORDER BY a.audit_log_id DESC OFFSET ? ROWS FETCH NEXT 1 ROWS ONLY");
-
-        Integer pivot = null;
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(pivotSql.toString())) {
-            int idx = setFilterParams(ps, 1, keyword, tableName, actionName, dateFrom, dateTo);
-            ps.setInt(idx, offset);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) pivot = rs.getInt("audit_log_id");
-            }
-        }
-
-        // Step 2: Keyset từ pivot
-        // Nếu page=1 hoặc không tìm thấy pivot → lấy trang đầu
-        return findByKeyset(pivot, null, limit, keyword, tableName, actionName, dateFrom, dateTo);
-    }
-
-    /**
-     * Keyset pagination — KHÔNG dùng OFFSET.
+     * Keyset pagination thuần.
      *
-     * @param beforeId  null ở trang đầu; audit_log_id nhỏ nhất của trang hiện tại → trang tiếp (cũ hơn)
-     * @param afterId   null ở trang đầu; audit_log_id lớn nhất của trang hiện tại → trang trước (mới hơn)
-     * @param limit     số bản ghi mỗi trang
-     * @param keyword   tìm kiếm
-     * @param tableName lọc bảng
-     * @param actionName lọc thao tác
-     * @param dateFrom  lọc từ ngày
-     * @param dateTo    lọc đến ngày
-     * @return danh sách ActivityLog đã sắp xếp created_at DESC, audit_log_id DESC
+     * @param beforeId  null ở trang đầu → lấy mới nhất.
+     *                  != null → lấy các bản ghi cũ hơn beforeId (ORDER BY DESC, WHERE id < beforeId).
+     * @param afterId   != null → lấy các bản ghi mới hơn afterId (ORDER BY ASC, WHERE id > afterId, reverse trong Java).
+     * @param limit     số bản ghi trả về. Hai query index seek riêng (existsLessThan / existsGreaterThan)
+     *                  được dùng để xác định hasNext / hasPrev thay vì limit+1.
      */
     public List<ActivityLog> findByKeyset(Integer beforeId, Integer afterId, int limit,
                                           String keyword, String tableName, String actionName,
                                           LocalDate dateFrom, LocalDate dateTo) throws SQLException {
-        // Nếu có afterId → đang prev: query ASC rồi reverse
         boolean isPrev = (afterId != null);
 
         StringBuilder sql = new StringBuilder(BASE_SELECT).append(" WHERE 1=1 ");
@@ -109,25 +73,16 @@ public class ActivityLogDAO {
             sql.append(" AND a.audit_log_id > ? ");
         }
 
-        if (isPrev) {
-            sql.append(" ORDER BY a.audit_log_id ASC ");
-        } else {
-            sql.append(" ORDER BY a.audit_log_id DESC ");
-        }
-
+        sql.append(isPrev ? " ORDER BY a.audit_log_id ASC " : " ORDER BY a.audit_log_id DESC ");
         sql.append(" OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY");
 
         List<ActivityLog> list = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-
             int idx = 1;
             if (keyword != null && !keyword.isBlank()) {
                 String k = "%" + keyword + "%";
-                ps.setString(idx++, k);
-                ps.setString(idx++, k);
-                ps.setString(idx++, k);
-                ps.setString(idx++, k);
+                for (int i = 0; i < 4; i++) ps.setString(idx++, k);
             }
             if (tableName != null && !tableName.isBlank()) ps.setString(idx++, tableName);
             if (actionName != null && !actionName.isBlank()) ps.setString(idx++, actionName);
@@ -142,45 +97,79 @@ public class ActivityLogDAO {
             }
         }
 
-        // Nếu prev query thì đảo ngược lại để đúng thứ tự DESC
         if (isPrev) Collections.reverse(list);
         return list;
     }
 
     /**
-     * Đếm tổng số log (dùng để hiển thị "Tổng X hoạt động").
-     * Không liên quan tới phân trang.
+     * Kiểm tra xem có bản ghi nào với audit_log_id > givenId không (dùng cho hasPrev).
+     * SELECT TOP 1 1 → index seek, rất nhẹ.
      */
-    public int countAll(String keyword, String tableName, String actionName,
-                        LocalDate dateFrom, LocalDate dateTo) throws SQLException {
+    public boolean existsGreaterThan(int id, String keyword, String tableName,
+                                     String actionName, LocalDate dateFrom, LocalDate dateTo) throws SQLException {
         StringBuilder sql = new StringBuilder(
-                "SELECT COUNT(*) FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id WHERE 1=1 ");
-        if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (a.action_name LIKE ? OR a.table_name LIKE ? OR e.fullName LIKE ? OR a.new_data LIKE ?) ");
-        }
-        if (tableName != null && !tableName.isBlank()) sql.append(" AND a.table_name = ? ");
-        if (actionName != null && !actionName.isBlank()) sql.append(" AND a.action_name = ? ");
-        if (dateFrom != null) sql.append(" AND a.created_at >= ? ");
-        if (dateTo != null) sql.append(" AND a.created_at < ? ");
-
+                "SELECT TOP 1 1 FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id WHERE a.audit_log_id > ? ");
+        appendWhere(sql, keyword, tableName, actionName, dateFrom, dateTo);
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             int idx = 1;
+            ps.setInt(idx++, id);
             if (keyword != null && !keyword.isBlank()) {
                 String k = "%" + keyword + "%";
-                ps.setString(idx++, k);
-                ps.setString(idx++, k);
-                ps.setString(idx++, k);
-                ps.setString(idx++, k);
+                for (int i = 0; i < 4; i++) ps.setString(idx++, k);
             }
             if (tableName != null && !tableName.isBlank()) ps.setString(idx++, tableName);
             if (actionName != null && !actionName.isBlank()) ps.setString(idx++, actionName);
             if (dateFrom != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateFrom.atStartOfDay()));
             if (dateTo != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateTo.plusDays(1).atStartOfDay()));
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getInt(1) : 0;
+                return rs.next();
             }
         }
+    }
+
+    /**
+     * Kiểm tra xem có bản ghi nào với audit_log_id < givenId không (dùng cho hasNext).
+     * SELECT TOP 1 1 → index seek, rất nhẹ.
+     */
+    public boolean existsLessThan(int id, String keyword, String tableName,
+                                  String actionName, LocalDate dateFrom, LocalDate dateTo) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+                "SELECT TOP 1 1 FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id WHERE a.audit_log_id < ? ");
+        appendWhere(sql, keyword, tableName, actionName, dateFrom, dateTo);
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            ps.setInt(idx++, id);
+            if (keyword != null && !keyword.isBlank()) {
+                String k = "%" + keyword + "%";
+                for (int i = 0; i < 4; i++) ps.setString(idx++, k);
+            }
+            if (tableName != null && !tableName.isBlank()) ps.setString(idx++, tableName);
+            if (actionName != null && !actionName.isBlank()) ps.setString(idx++, actionName);
+            if (dateFrom != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateFrom.atStartOfDay()));
+            if (dateTo != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateTo.plusDays(1).atStartOfDay()));
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /** Đếm tổng số log để hiển thị (không liên quan pagination). */
+    public int countAll(String keyword, String tableName, String actionName,
+                        LocalDate dateFrom, LocalDate dateTo) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id WHERE 1=1 ");
+        appendWhere(sql, keyword, tableName, actionName, dateFrom, dateTo);
+        return count(sql.toString(), keyword, tableName, actionName, dateFrom, dateTo);
+    }
+
+    public int countByTableName(String keyword, String tableName, String actionName,
+                                LocalDate dateFrom, LocalDate dateTo) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id WHERE 1=1 ");
+        appendWhere(sql, keyword, tableName, actionName, dateFrom, dateTo);
+        return count(sql.toString(), keyword, tableName, actionName, dateFrom, dateTo);
     }
 
     public ActivityLog findById(int id) throws SQLException {
@@ -192,49 +181,6 @@ public class ActivityLogDAO {
                 return rs.next() ? extract(rs) : null;
             }
         }
-    }
-
-    public int countByTableName(String keyword, String tableName, String actionName,
-                                LocalDate dateFrom, LocalDate dateTo) throws SQLException {
-        StringBuilder sql = new StringBuilder(
-                "SELECT COUNT(*) FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id WHERE a.table_name = ? ");
-        if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (a.action_name LIKE ? OR a.table_name LIKE ? OR e.fullName LIKE ? OR a.new_data LIKE ?) ");
-        }
-        if (actionName != null && !actionName.isBlank()) sql.append(" AND a.action_name = ? ");
-        if (dateFrom != null) sql.append(" AND a.created_at >= ? ");
-        if (dateTo != null) sql.append(" AND a.created_at < ? ");
-
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            int idx = 1;
-            ps.setString(idx++, tableName);
-            if (keyword != null && !keyword.isBlank()) {
-                String k = "%" + keyword + "%";
-                ps.setString(idx++, k);
-                ps.setString(idx++, k);
-                ps.setString(idx++, k);
-                ps.setString(idx++, k);
-            }
-            if (actionName != null && !actionName.isBlank()) ps.setString(idx++, actionName);
-            if (dateFrom != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateFrom.atStartOfDay()));
-            if (dateTo != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateTo.plusDays(1).atStartOfDay()));
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getInt(1) : 0;
-            }
-        }
-    }
-
-    /** Lấy danh sách tên bảng distinct để hiển thị trong filter. */
-    public List<String> findDistinctTables() throws SQLException {
-        List<String> list = new ArrayList<>();
-        String sql = "SELECT DISTINCT table_name FROM audit_log WHERE table_name IS NOT NULL ORDER BY table_name";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) list.add(rs.getString(1));
-        }
-        return list;
     }
 
     public void insertLog(Integer empId, String actionName, String tableName, Integer recordId,
@@ -252,15 +198,57 @@ public class ActivityLogDAO {
         }
     }
 
-    public List<String> findDistinctActions() throws SQLException {
+    public List<String> findDistinctTables() throws SQLException {
         List<String> list = new ArrayList<>();
-        String sql = "SELECT DISTINCT action_name FROM audit_log WHERE action_name IS NOT NULL ORDER BY action_name";
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT DISTINCT table_name FROM audit_log WHERE table_name IS NOT NULL ORDER BY table_name");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) list.add(rs.getString(1));
         }
         return list;
+    }
+
+    public List<String> findDistinctActions() throws SQLException {
+        List<String> list = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT DISTINCT action_name FROM audit_log WHERE action_name IS NOT NULL ORDER BY action_name");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) list.add(rs.getString(1));
+        }
+        return list;
+    }
+
+    // ==================== PRIVATE HELPERS ====================
+
+    private void appendWhere(StringBuilder sql, String keyword, String tableName,
+                             String actionName, LocalDate dateFrom, LocalDate dateTo) {
+        if (keyword != null && !keyword.isBlank())
+            sql.append(" AND (a.action_name LIKE ? OR a.table_name LIKE ? OR e.fullName LIKE ? OR a.new_data LIKE ?) ");
+        if (tableName != null && !tableName.isBlank()) sql.append(" AND a.table_name = ? ");
+        if (actionName != null && !actionName.isBlank()) sql.append(" AND a.action_name = ? ");
+        if (dateFrom != null) sql.append(" AND a.created_at >= ? ");
+        if (dateTo != null) sql.append(" AND a.created_at < ? ");
+    }
+
+    private int count(String sql, String keyword, String tableName,
+                      String actionName, LocalDate dateFrom, LocalDate dateTo) throws SQLException {
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            int idx = 1;
+            if (keyword != null && !keyword.isBlank()) {
+                String k = "%" + keyword + "%";
+                for (int i = 0; i < 4; i++) ps.setString(idx++, k);
+            }
+            if (tableName != null && !tableName.isBlank()) ps.setString(idx++, tableName);
+            if (actionName != null && !actionName.isBlank()) ps.setString(idx++, actionName);
+            if (dateFrom != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateFrom.atStartOfDay()));
+            if (dateTo != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateTo.plusDays(1).atStartOfDay()));
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
     }
 
     private ActivityLog extract(ResultSet rs) throws SQLException {
@@ -286,36 +274,5 @@ public class ActivityLogDAO {
         if (!rs.wasNull()) log.setBranchId(branchId);
         log.setBranchName(rs.getString("branch_name"));
         return log;
-    }
-
-    // ==================== HELPERS ====================
-
-    private void appendFilters(StringBuilder sql, String keyword, String tableName,
-                                String actionName, LocalDate dateFrom, LocalDate dateTo) {
-        if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (a.action_name LIKE ? OR a.table_name LIKE ? OR e.fullName LIKE ? OR a.new_data LIKE ?) ");
-        }
-        if (tableName != null && !tableName.isBlank()) sql.append(" AND a.table_name = ? ");
-        if (actionName != null && !actionName.isBlank()) sql.append(" AND a.action_name = ? ");
-        if (dateFrom != null) sql.append(" AND a.created_at >= ? ");
-        if (dateTo != null) sql.append(" AND a.created_at < ? ");
-    }
-
-    /** Đặt tham số filter lên PreparedStatement, trả về index của tham số tiếp theo. */
-    private int setFilterParams(PreparedStatement ps, int startIdx, String keyword, String tableName,
-                                 String actionName, LocalDate dateFrom, LocalDate dateTo) throws SQLException {
-        int idx = startIdx;
-        if (keyword != null && !keyword.isBlank()) {
-            String k = "%" + keyword + "%";
-            ps.setString(idx++, k);
-            ps.setString(idx++, k);
-            ps.setString(idx++, k);
-            ps.setString(idx++, k);
-        }
-        if (tableName != null && !tableName.isBlank()) ps.setString(idx++, tableName);
-        if (actionName != null && !actionName.isBlank()) ps.setString(idx++, actionName);
-        if (dateFrom != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateFrom.atStartOfDay()));
-        if (dateTo != null) ps.setTimestamp(idx++, Timestamp.valueOf(dateTo.plusDays(1).atStartOfDay()));
-        return idx;
     }
 }
