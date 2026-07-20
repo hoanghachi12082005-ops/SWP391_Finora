@@ -5,11 +5,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import service.vnpay.VNPayService;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @WebServlet("/vnpay/return")
@@ -32,23 +31,23 @@ public class VNPayReturnServlet extends HttpServlet {
         boolean isSuccess = isValid && "00".equals(responseCode)
                 && ("00".equals(transStatus) || transStatus == null);
 
+        long amount = 0;
         if (isSuccess && orderCode != null) {
-            long amount = amountStr != null ? Long.parseLong(amountStr) : 0;
+            amount = amountStr != null ? Long.parseLong(amountStr) : 0;
             vnpay.processSuccess(orderCode, transactionNo, amount, bankCode);
         } else if (!isSuccess && orderCode != null) {
             vnpay.processFailed(orderCode, responseCode);
         }
 
-        // Redirect — chỉ mang theo 2 tham số (orderCode + amount)
-        // Đều là dữ liệu VNPay đã xác thực, không phải secret
-        if (orderCode != null) {
-            long amountVnd = amountStr != null ? Long.parseLong(amountStr) / 100 : 0;
-            String target = (isSuccess ? "/payment/process" : "/payment/failed")
-                    + "?orderCode=" + URLEncoder.encode(orderCode, StandardCharsets.UTF_8)
-                    + "&amount=" + amountVnd;
-            resp.sendRedirect(req.getContextPath() + target);
-        } else {
-            resp.sendRedirect(req.getContextPath() + "/payment/failed");
-        }
+        // Lưu kết quả vào session
+        HttpSession session = req.getSession();
+        session.setAttribute("paymentStatus", isSuccess ? "success" : "failed");
+        session.setAttribute("paymentOrderCode", orderCode);
+        session.setAttribute("paymentAmount", amount / 100);
+        session.setAttribute("paymentTransactionNo", transactionNo);
+        session.setAttribute("paymentBankCode", bankCode);
+
+        // Redirect — URL sạch
+        resp.sendRedirect(req.getContextPath() + (isSuccess ? "/payment/success" : "/payment/failed"));
     }
 }
