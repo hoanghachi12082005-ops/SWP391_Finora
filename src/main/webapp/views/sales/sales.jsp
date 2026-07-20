@@ -709,7 +709,7 @@ function renderUI() {
                     '<input type="number" value="'+item.quantity+'" min="1" max="'+item.stockAvailable+'" onchange="updateCartQty('+item.productId+',parseInt(this.value)||1)" class="w-12 h-8 text-center text-label-md bg-surface-container-high rounded-lg border-0 outline-none">'+
                     '<button onclick="updateCartQty('+item.productId+','+(item.quantity+1)+')" class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center hover:bg-surface-dim transition-colors"><span class="material-symbols-outlined text-[16px]">add</span></button></div></td>'+
                 '<td class="py-3 px-4 text-right text-body-md font-semibold">'+fmt(item.lineTotal)+'</td>'+
-                '<td class="py-3 px-4 text-center"><button onclick="removeCartItem('+item.productId+')" class="text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button></td>';
+                '<td class="py-3 px-4 text-center"><button onclick="if(confirm(\'Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?\')){removeCartItem('+item.productId+')}" class="text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button></td>';
             tbody.appendChild(tr);
         });
     }
