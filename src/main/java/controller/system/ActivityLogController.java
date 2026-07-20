@@ -22,14 +22,14 @@ import java.util.Map;
 
 /**
  * Trung tâm hoạt động — Audit Log.
- * Dùng page number (1,2,3...) nhưng backend dùng keyset để query nhanh.
- * - Chỉ GET; doPost trả 405.
- * - Chỉ Owner/Admin mới được truy cập.
+ * Dùng Keyset Pagination thuần (before/after by audit_log_id).
+ * Limit = 20 / trang.
+ * Chỉ Owner/Admin mới được truy cập.
  */
 @WebServlet(name = "ActivityLogController", urlPatterns = {"/activity-log"})
 public class ActivityLogController extends BaseController {
 
-    private static final int ITEMS_PER_PAGE = 10;
+    private static final int ITEMS_PER_PAGE = 20;
     private ActivityLogDAO dao;
 
     @Override
@@ -55,11 +55,14 @@ public class ActivityLogController extends BaseController {
             LocalDate tmp = dateFrom; dateFrom = dateTo; dateTo = tmp;
         }
 
-        // Page number
-        int currentPage = 1;
+        // Keyset: before → cũ hơn, after → mới hơn
+        Integer beforeId = null;
+        Integer afterId  = null;
         try {
-            String p = request.getParameter("page");
-            if (p != null && !p.isBlank()) currentPage = Math.max(1, Integer.parseInt(p.trim()));
+            String b = request.getParameter("before");
+            String a = request.getParameter("after");
+            if (b != null && !b.isBlank()) beforeId = Integer.parseInt(b.trim());
+            if (a != null && !a.isBlank()) afterId  = Integer.parseInt(a.trim());
         } catch (NumberFormatException ignored) {}
 
         // Giới hạn bảng được phép hiển thị
@@ -74,32 +77,36 @@ public class ActivityLogController extends BaseController {
         }
 
         try {
-            // Keyset-style query theo page number
-            List<ActivityLog> logs = dao.findByPage(
-                    currentPage, ITEMS_PER_PAGE + 1,
+            // Lấy ITEMS_PER_PAGE + 1 để biết còn trang tiếp không
+            List<ActivityLog> logs = dao.findByKeyset(
+                    beforeId, afterId, ITEMS_PER_PAGE + 1,
                     keyword, tableName, actionName, dateFrom, dateTo);
 
             boolean hasNext = false;
+            boolean hasPrev = false;
             if (logs.size() > ITEMS_PER_PAGE) {
                 hasNext = true;
                 logs.remove(logs.size() - 1);
             }
+            hasPrev = (afterId != null) || (beforeId != null);
 
-            // Tổng số → tính totalPages
+            int firstId = logs.isEmpty() ? 0 : logs.get(0).getId();
+            int lastId  = logs.isEmpty() ? 0 : logs.get(logs.size() - 1).getId();
+
+            // Tổng số — chỉ để hiển thị
             int totalCount = tableName != null
                     ? dao.countByTableName(keyword, tableName, actionName, dateFrom, dateTo)
                     : dao.countAll(keyword, tableName, actionName, dateFrom, dateTo);
-            int totalPages = (int) Math.ceil((double) totalCount / ITEMS_PER_PAGE);
-            if (totalPages < 1) totalPages = 1;
 
             request.setAttribute("entityOptions", buildEntityOptionsFiltered(dao.findDistinctTables(), allowedTableNames));
             request.setAttribute("actionOptions", buildActionOptions(dao.findDistinctActions()));
 
             request.setAttribute("logs", logs);
-            request.setAttribute("currentPage", currentPage);
-            request.setAttribute("totalPages", totalPages);
-            request.setAttribute("totalCount", totalCount);
             request.setAttribute("hasNext", hasNext);
+            request.setAttribute("hasPrev", hasPrev);
+            request.setAttribute("firstId", firstId);
+            request.setAttribute("lastId", lastId);
+            request.setAttribute("totalCount", totalCount);
             request.setAttribute("keyword", keyword != null ? keyword : "");
             request.setAttribute("filterTable", tableName != null ? tableName : "");
             request.setAttribute("filterAction", actionName != null ? actionName : "");
