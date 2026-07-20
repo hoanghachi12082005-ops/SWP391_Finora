@@ -549,7 +549,7 @@ GO
 -- ============================================================
 --  DEFAULT DATA
 -- ============================================================
-INSERT INTO loyalty_point_setting (amount_per_point, point_to_currency) VALUES (100000, 0);
+INSERT INTO loyalty_point_setting (amount_per_point, point_to_currency) VALUES (100000, 2000);
 GO
 
 

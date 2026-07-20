@@ -14,6 +14,8 @@ public class OrderTab implements Serializable {
     private Voucher appliedVoucher;
     private String status = "ACTIVE"; // ACTIVE, HOLD
     private double vatRate = 0.08; // tỷ lệ VAT mặc định 8%
+    private int redeemPoints;
+    private double redeemDiscount;
 
     public OrderTab() {}
 
@@ -60,7 +62,7 @@ public class OrderTab implements Serializable {
         double subtotal = getSubtotal();
         double discount = getDiscountAmount();
         double vat = getVatAmount();
-        return subtotal - discount + vat;
+        return subtotal - discount - redeemDiscount + vat;
     }
 
     // ── Getters and Setters ──
@@ -84,4 +86,10 @@ public class OrderTab implements Serializable {
 
     public double getVatRate() { return vatRate; }
     public void setVatRate(double vatRate) { this.vatRate = vatRate; }
+
+    public int getRedeemPoints() { return redeemPoints; }
+    public void setRedeemPoints(int redeemPoints) { this.redeemPoints = redeemPoints; }
+
+    public double getRedeemDiscount() { return redeemDiscount; }
+    public void setRedeemDiscount(double redeemDiscount) { this.redeemDiscount = redeemDiscount; }
 }

@@ -12,7 +12,7 @@ public class LoyaltyPointSetting {
 
     public LoyaltyPointSetting() {
         this.amountPerPoint = new BigDecimal("100000");
-        this.pointToCurrency = BigDecimal.ZERO;
+        this.pointToCurrency = new BigDecimal("2000");
     }
 
     public int getSettingId() { return settingId; }

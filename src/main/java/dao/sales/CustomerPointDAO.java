@@ -17,6 +17,13 @@ public class CustomerPointDAO {
                 ? setting.getAmountPerPoint().intValue() : 100_000;
     }
 
+    // ponytail: redeem rate from loyalty_point_setting.point_to_currency (VND per point)
+    public static int getRedeemRate() {
+        LoyaltyPointSetting setting = new LoyaltyPointSettingDAO().getSetting();
+        return setting != null && setting.getPointToCurrency().intValue() > 0
+                ? setting.getPointToCurrency().intValue() : 0;
+    }
+
     /**
      * Lấy cus_point_id theo cus_id. Trả về -1 nếu không tồn tại.
      */
@@ -49,6 +56,45 @@ public class CustomerPointDAO {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    /**
+     * Trừ điểm khi khách hàng đổi điểm — gọi trong cùng transaction với checkout.
+     * Ghi log point_transaction với description "Đổi điểm POS".
+     */
+    public void deductPoints(Connection conn, int cusId, int pointsToDeduct, int orderId) throws SQLException {
+        if (pointsToDeduct <= 0) return;
+
+        int cusPointId = -1;
+        int beforePoints = 0;
+        String selectSql = "SELECT cus_point_id, current_points FROM customer_point WHERE cus_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(selectSql)) {
+            ps.setInt(1, cusId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    cusPointId = rs.getInt("cus_point_id");
+                    beforePoints = rs.getInt("current_points");
+                }
+            }
+        }
+        if (cusPointId == -1) return;
+
+        int afterPoints = Math.max(0, beforePoints - pointsToDeduct);
+        String updateSql = "UPDATE customer_point SET current_points = ?, updated_at = GETDATE() WHERE cus_point_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+            ps.setInt(1, afterPoints);
+            ps.setInt(2, cusPointId);
+            ps.executeUpdate();
+        }
+
+        String logSql = "INSERT INTO point_transaction (cus_point_id, order_id, before_points, after_points, description, created_at) VALUES (?, ?, ?, ?, N'Đổi điểm POS', GETDATE())";
+        try (PreparedStatement ps = conn.prepareStatement(logSql)) {
+            ps.setInt(1, cusPointId);
+            ps.setInt(2, orderId);
+            ps.setInt(3, beforePoints);
+            ps.setInt(4, afterPoints);
+            ps.executeUpdate();
+        }
     }
 
     /**

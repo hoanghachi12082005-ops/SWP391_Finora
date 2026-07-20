@@ -104,6 +104,8 @@ public class CartServlet extends HttpServlet {
                         int cusId = Integer.parseInt(cusIdStr);
                         if (cusId == 0) {
                             targetTab.setSelectedCustomer(null);
+                            targetTab.setRedeemPoints(0);
+                            targetTab.setRedeemDiscount(0);
                         } else {
                             CustomerDAO customerDao = new CustomerDAO();
                             targetTab.setSelectedCustomer(customerDao.findById(cusId));
@@ -119,6 +121,32 @@ public class CartServlet extends HttpServlet {
                         VoucherDAO voucherDao = new VoucherDAO();
                         Voucher v = voucherDao.getById(vId);
                         targetTab.setAppliedVoucher(v);
+                    }
+                }
+                case "applyRedeem" -> {
+                    String ptsStr = req.getParameter("redeemPoints");
+                    if (ptsStr == null || ptsStr.isBlank()) {
+                        targetTab.setRedeemPoints(0);
+                        targetTab.setRedeemDiscount(0);
+                    } else {
+                        int pts = Integer.parseInt(ptsStr);
+                        if (pts <= 0 || targetTab.getSelectedCustomer() == null) {
+                            targetTab.setRedeemPoints(0);
+                            targetTab.setRedeemDiscount(0);
+                        } else {
+                            int rate = dao.sales.CustomerPointDAO.getRedeemRate();
+                            if (rate <= 0) {
+                                out.write("{\"error\":\"Loyalty point redemption rate not configured. Go to System → Business Configuration to set it.\"}");
+                                return;
+                            }
+                            int available = targetTab.getSelectedCustomer().getLoyaltyPoint();
+                            if (pts > available) {
+                                out.write("{\"error\":\"Insufficient loyalty points.\"}");
+                                return;
+                            }
+                            targetTab.setRedeemPoints(pts);
+                            targetTab.setRedeemDiscount(pts * rate);
+                        }
                     }
                 }
                 case "hold" -> {
@@ -374,6 +402,8 @@ public class CartServlet extends HttpServlet {
         // totals
         out.write("\"subtotal\":" + activeTab.getSubtotal() + ",");
         out.write("\"discountAmount\":" + activeTab.getDiscountAmount() + ",");
+        out.write("\"redeemPoints\":" + activeTab.getRedeemPoints() + ",");
+        out.write("\"redeemDiscount\":" + activeTab.getRedeemDiscount() + ",");
         out.write("\"vatAmount\":" + activeTab.getVatAmount() + ",");
         out.write("\"vatRate\":" + activeTab.getVatRate() + ",");
         out.write("\"totalAmount\":" + activeTab.getTotalAmount());

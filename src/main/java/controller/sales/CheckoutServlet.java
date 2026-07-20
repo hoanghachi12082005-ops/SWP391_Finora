@@ -90,11 +90,15 @@ public class CheckoutServlet extends HttpServlet {
 
         // ── Tính toán tổng ──────────────────────────────────────
         double subtotal = tab.getSubtotal();
-        double discountAmount = tab.getDiscountAmount();
+        double voucherDiscount = tab.getDiscountAmount();
+        double redeemDiscount = tab.getRedeemDiscount();
+        int redeemPoints = tab.getRedeemPoints();
         Voucher voucher = tab.getAppliedVoucher();
-        Integer customerId = tab.getSelectedCustomer() != null ? tab.getSelectedCustomer().getCusId() : null;
+        Customer selectedCustomer = tab.getSelectedCustomer();
+        Integer customerId = selectedCustomer != null ? selectedCustomer.getCusId() : null;
 
-        double totalBeforeTax = subtotal - discountAmount;
+        double totalDiscount = voucherDiscount + redeemDiscount;
+        double totalBeforeTax = subtotal - totalDiscount;
         double vatRate = tab.getVatRate();
         double vat = totalBeforeTax * vatRate;
         double totalAmount = totalBeforeTax + vat;
@@ -122,15 +126,14 @@ public class CheckoutServlet extends HttpServlet {
                 order.setVoucherId(voucher != null ? voucher.getVoucherId() : null);
                 order.setWarehouseId(warehouseId);
                 order.setSubtotal(subtotal);
-                order.setDiscountAmount(discountAmount);
+                order.setDiscountAmount(totalDiscount);
                 order.setTotalAmount(totalAmount);
-                order.setPaymentMethod("BANK_TRANSFER"); // Dùng giá trị có sẵn trong DB constraint
+                order.setPaymentMethod("BANK_TRANSFER");
                 order.setStatus(Order.OrderStatus.PENDING);
 
                 int orderId = orderDao.createOrderInTransaction(conn, order);
                 detailDao.insertBatch(conn, orderId, cart);
 
-                // Trừ kho - giống như CASH flow
                 InventoryDAO inventoryDao = new InventoryDAO();
                 for (CartItem item : cart) {
                     int beforeQty = inventoryDao.getStockInTransaction(conn, item.getProductId(), warehouseId);
@@ -142,7 +145,6 @@ public class CheckoutServlet extends HttpServlet {
                             orderId, item.getQuantity(), beforeQty, emp.getEmpId());
                 }
 
-                // Cập nhật voucher (nếu có)
                 if (voucher != null) {
                     VoucherDAO voucherDao = new VoucherDAO();
                     voucherDao.incrementUsedQuantity(conn, voucher.getVoucherId());
@@ -150,7 +152,6 @@ public class CheckoutServlet extends HttpServlet {
 
                 conn.commit();
 
-                // Xóa tab khỏi session
                 tabs.remove(tabId);
                 if (tabs.isEmpty()) {
                     tabs.put(1, new OrderTab(1));
@@ -170,7 +171,6 @@ public class CheckoutServlet extends HttpServlet {
         }
 
         System.out.println("[DEBUG] CASH flow — KHÔNG có session lock, chỉ dùng frontend disable button");
-        // Kiểm tra tiền mặt đủ
         if ("CASH".equals(paymentMethod) && cashReceived < totalAmount) {
             out.write("{\"status\":\"error\",\"message\":\"Số tiền khách thanh toán không đủ. Cần: "
                     + String.format("%.0f", totalAmount) + " VND\"}");
@@ -203,7 +203,7 @@ public class CheckoutServlet extends HttpServlet {
                 }
             }
 
-            // 2. Tạo đơn hàng
+            // 2. Tạo đơn hàng với discountAmount = voucherDiscount + redeemDiscount
             String orderCode = "HD" + System.currentTimeMillis();
             Order order = new Order();
             order.setOrderCode(orderCode);
@@ -214,7 +214,7 @@ public class CheckoutServlet extends HttpServlet {
             order.setVoucherId(voucher != null ? voucher.getVoucherId() : null);
             order.setWarehouseId(warehouseId);
             order.setSubtotal(subtotal);
-            order.setDiscountAmount(discountAmount);
+            order.setDiscountAmount(totalDiscount);
             order.setTotalAmount(totalAmount);
             order.setPaymentMethod(paymentMethod);
             order.setStatus(Order.OrderStatus.PENDING);
@@ -224,7 +224,7 @@ public class CheckoutServlet extends HttpServlet {
             // 3. Chèn chi tiết đơn hàng
             detailDao.insertBatch(conn, orderId, cart);
 
-            // 4. Tạo payment record
+            // 4. Tạo payment record (dựa trên totalAmount đã trừ redeem discount)
             Payment payment = new Payment();
             payment.setOrderId(orderId);
             payment.setPaymentAmount(totalAmount);
@@ -253,12 +253,21 @@ public class CheckoutServlet extends HttpServlet {
                 voucherDao.incrementUsedQuantity(conn, voucher.getVoucherId());
             }
 
-            // 7. Tích điểm cho khách hàng (nếu có)
+            // 7. Trừ điểm đã đổi (chỉ sau khi payment thành công)
+            if (customerId != null && customerId > 0 && redeemPoints > 0) {
+                int available = pointDao.getCurrentPoints(customerId);
+                if (available < redeemPoints) {
+                    throw new SQLException("Insufficient loyalty points.");
+                }
+                pointDao.deductPoints(conn, customerId, redeemPoints, orderId);
+            }
+
+            // 8. Tích điểm cho khách hàng dựa trên số tiền thực tế đã thanh toán (totalAmount)
             if (customerId != null && customerId > 0) {
                 pointDao.addPoints(conn, customerId, totalAmount, orderId);
             }
 
-            // 8. Cập nhật trạng thái → COMPLETED
+            // 9. Cập nhật trạng thái → COMPLETED
             orderDao.updateStatus(conn, orderId, "COMPLETED");
 
             // COMMIT
@@ -282,7 +291,9 @@ public class CheckoutServlet extends HttpServlet {
             out.write("{\"status\":\"success\",");
             out.write("\"orderCode\":\"" + escJson(orderCode) + "\",");
             out.write("\"subtotal\":" + subtotal + ",");
-            out.write("\"discountAmount\":" + discountAmount + ",");
+            out.write("\"voucherDiscount\":" + voucherDiscount + ",");
+            out.write("\"redeemDiscount\":" + redeemDiscount + ",");
+            out.write("\"redeemPoints\":" + redeemPoints + ",");
             out.write("\"vat\":" + vat + ",");
             out.write("\"totalAmount\":" + totalAmount + ",");
             out.write("\"cashReceived\":" + cashReceived + ",");

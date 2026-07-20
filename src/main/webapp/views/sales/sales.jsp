@@ -186,8 +186,25 @@
                     <p class="text-caption text-outline">Không tìm thấy khách hàng</p>
                     <button id="posAddCustomerBtn" class="text-label-md text-primary hover:underline mt-0.5">+ Thêm khách hàng mới</button>
                 </div>
-                <input type="hidden" id="selectedCustomerId" value="">
-            </div>
+                    <input type="hidden" id="selectedCustomerId" value="">
+                    <!-- Redeem Points Section -->
+                    <div id="posRedeemSection" class="hidden pt-1">
+                        <div class="text-caption text-outline mb-1 text-[11px] tracking-wide uppercase font-semibold">Đổi điểm tích lũy</div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 relative">
+                                <input id="posRedeemInput" type="number" min="0" placeholder="Nhập số điểm" class="w-full text-body-md bg-surface-container-low rounded-lg px-3 py-2 border border-transparent focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none">
+                            </div>
+                            <button id="posRedeemApplyBtn" class="text-label-md text-primary font-semibold hover:underline whitespace-nowrap">Áp dụng</button>
+                            <button id="posRedeemRemoveBtn" class="hidden text-outline hover:text-error transition-colors text-[18px] leading-none">&times;</button>
+                        </div>
+                        <div id="posRedeemInfo" class="hidden mt-1.5 p-2 bg-surface-container-low rounded-lg space-y-0.5">
+                            <div class="flex justify-between text-caption"><span class="text-outline">Điểm đổi:</span><span id="posRedeemPointsDisplay" class="font-semibold text-primary">0</span></div>
+                            <div class="flex justify-between text-caption"><span class="text-outline">Giảm:</span><span id="posRedeemDiscountDisplay" class="font-semibold text-error">0 ₫</span></div>
+                            <div class="flex justify-between text-caption"><span class="text-outline">Còn lại (ước):</span><span id="posRedeemRemainingDisplay" class="font-semibold">0</span></div>
+                        </div>
+                        <div id="posRedeemError" class="hidden text-caption text-error mt-1"></div>
+                    </div>
+                </div>
 
             <!-- Summary Section -->
             <div class="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-3">
@@ -732,6 +749,8 @@ function renderUI() {
     document.getElementById('summaryDiscount').textContent = activeTab.discountAmount > 0 ? '-'+fmt(activeTab.discountAmount) : '0 ₫';
     document.getElementById('summaryVat').textContent = fmt(activeTab.vatAmount);
     document.getElementById('summaryTotal').innerHTML = fmt(activeTab.totalAmount).replace('₫','') + '<span class="text-headline-md"> ₫</span>';
+
+    if (typeof window.updateRedeemUI === 'function') window.updateRedeemUI();
 }
 
 // ── Product Search ──────────────────────────────────────
@@ -1061,6 +1080,94 @@ function cancelVNPayQR() {
         resetSearchUI();
         clearBtn.classList.add('hidden');
         searchInput.focus();
+    });
+
+    // ── Redeem Points ────────────────────────────────────
+    const redeemSection = document.getElementById('posRedeemSection');
+    const redeemInput = document.getElementById('posRedeemInput');
+    const redeemApplyBtn = document.getElementById('posRedeemApplyBtn');
+    const redeemRemoveBtn = document.getElementById('posRedeemRemoveBtn');
+    const redeemInfo = document.getElementById('posRedeemInfo');
+    const redeemPointsDisplay = document.getElementById('posRedeemPointsDisplay');
+    const redeemDiscountDisplay = document.getElementById('posRedeemDiscountDisplay');
+    const redeemRemainingDisplay = document.getElementById('posRedeemRemainingDisplay');
+    const redeemError = document.getElementById('posRedeemError');
+
+    window.updateRedeemUI = function() {
+        if (!cartState) return;
+        const tab = cartState.activeTab;
+        if (tab.selectedCustomer && tab.selectedCustomer.cusId > 0) {
+            redeemSection.classList.remove('hidden');
+            if (tab.redeemPoints && tab.redeemPoints > 0) {
+                redeemPointsDisplay.textContent = tab.redeemPoints;
+                redeemDiscountDisplay.textContent = fmt(tab.redeemDiscount);
+                const remaining = (tab.selectedCustomer.loyaltyPoint || 0) - tab.redeemPoints;
+                redeemRemainingDisplay.textContent = remaining > 0 ? remaining.toLocaleString('vi-VN') + ' pts' : '0 pts';
+                redeemInfo.classList.remove('hidden');
+                redeemInput.value = tab.redeemPoints;
+                redeemRemoveBtn.classList.remove('hidden');
+                redeemError.classList.add('hidden');
+            } else {
+                redeemInfo.classList.add('hidden');
+                redeemRemoveBtn.classList.add('hidden');
+                redeemInput.value = '';
+            }
+        } else {
+            redeemSection.classList.add('hidden');
+            redeemInfo.classList.add('hidden');
+            redeemRemoveBtn.classList.add('hidden');
+            redeemInput.value = '';
+            redeemError.classList.add('hidden');
+        }
+    }
+
+    redeemApplyBtn.addEventListener('click', function() {
+        const val = parseInt(redeemInput.value);
+        if (!val || val <= 0) {
+            redeemError.textContent = 'Vui lòng nhập số điểm hợp lệ.';
+            redeemError.classList.remove('hidden');
+            return;
+        }
+        const available = cartState.activeTab.selectedCustomer ? cartState.activeTab.selectedCustomer.loyaltyPoint : 0;
+        if (val > available) {
+            redeemError.textContent = 'Insufficient loyalty points.';
+            redeemError.classList.remove('hidden');
+            return;
+        }
+        doApplyRedeem(val);
+    });
+
+    redeemInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            redeemApplyBtn.click();
+        }
+    });
+
+    async function doApplyRedeem(pts) {
+        try {
+            const res = await fetch(CTX+'/cart', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    action: 'applyRedeem',
+                    redeemPoints: pts,
+                    tabId: cartState.activeTabId,
+                    csrfToken: CSRF_TOKEN
+                })
+            });
+            const data = await res.json();
+            if (data.error) {
+                redeemError.textContent = data.error;
+                redeemError.classList.remove('hidden');
+                return;
+            }
+            cartState = data;
+            renderUI();
+        } catch(e) { console.error(e); }
+    }
+
+    redeemRemoveBtn.addEventListener('click', function() {
+        doApplyRedeem(0);
     });
 })();
 
