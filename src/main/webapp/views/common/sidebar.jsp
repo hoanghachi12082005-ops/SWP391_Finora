@@ -360,7 +360,7 @@ class="sidebar-menu-item ${originalUri.contains('/manager/emp') ? 'active' : ''}
                                 <c:if
                                     test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
                                     <c:set var="isReportsActive"
-                                        value="${originalUri.contains('/reports/') || originalUri.contains('/reports/employee-sales')}" />
+                                        value="${originalUri.contains('/reports/')}" />
                                     <a href="#reportsCollapse" data-bs-toggle="collapse" role="button"
                                         aria-expanded="${isReportsActive ? 'true' : 'false'}"
                                         aria-controls="reportsCollapse"
@@ -383,6 +383,12 @@ class="sidebar-menu-item ${originalUri.contains('/manager/emp') ? 'active' : ''}
                                                 <span class="material-icons"
 style="font-size: 1rem; margin-right: 4px;">storefront</span>
                                                 Doanh thu chi nhánh
+                                            </a>
+                                            <a href="${pageContext.request.contextPath}/reports/finance-detail"
+                                                class="sidebar-submenu-item ${originalUri.contains('/reports/finance-detail') ? 'active' : ''}">
+                                                <span class="material-icons"
+                                                    style="font-size: 1rem; margin-right: 4px;">account_balance_wallet</span>
+                                                Doanh thu chi tiết
                                             </a>
                                             <a href="${pageContext.request.contextPath}/reports/inventory"
                                                 class="sidebar-submenu-item ${originalUri.contains('/reports/inventory') ? 'active' : ''}">

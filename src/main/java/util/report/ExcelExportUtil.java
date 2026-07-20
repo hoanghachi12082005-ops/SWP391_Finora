@@ -390,6 +390,78 @@ public final class ExcelExportUtil {
         return df.format(v);
     }
 
+    private static void addFinanceSummary(Sheet sheet, int rowNum, FinanceDetailReportOverview overview, CellStyle currencyStyle) {
+        if (overview == null) return;
+        rowNum++;
+        Row title = sheet.createRow(rowNum++);
+        title.createCell(0).setCellValue("Summary");
+        addSumRow(sheet, rowNum++, "Total Transactions", overview.getTotalTransactions(), null);
+        addSumRow(sheet, rowNum++, "Total Income", doubleValue(overview.getTotalIncome()), currencyStyle);
+        addSumRow(sheet, rowNum++, "Total Expense", doubleValue(overview.getTotalExpense()), currencyStyle);
+        addSumRow(sheet, rowNum++, "Net Profit", doubleValue(overview.getNetProfit()), currencyStyle);
+    }
+
+    public static byte[] generateFinanceDetailReport(
+            String generatedBy, List<Payment> rows, FinanceDetailReportOverview overview,
+            String keyword, String branchName, String typeFilter, LocalDate dateFrom, LocalDate dateTo) {
+        try (Workbook wb = new XSSFWorkbook()) {
+            Sheet sheet = wb.createSheet("Finance Detail Report");
+            
+            // Re-implement setupReport custom metadata to support type filter
+            CellStyle titleStyle = wb.createCellStyle();
+            Font titleFont = wb.createFont();
+            titleFont.setBold(true);
+            titleFont.setFontHeightInPoints((short) 16);
+            titleStyle.setFont(titleFont);
+
+            Row titleRow = sheet.createRow(0);
+            Cell tc = titleRow.createCell(0);
+            tc.setCellValue("Finance Detail Report");
+            tc.setCellStyle(titleStyle);
+            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 8));
+
+            sheet.createRow(1).createCell(0).setCellValue(COMPANY);
+
+            Row metaRow = sheet.createRow(2);
+            String meta = "Generated: " + LocalDateTime.now().format(DATETIME_FMT) + " | By: " + generatedBy;
+            if (keyword != null && !keyword.isEmpty()) meta += " | Search: " + keyword;
+            metaRow.createCell(0).setCellValue(meta);
+
+            Row filterRow = sheet.createRow(3);
+            String filter = "Branch: " + (branchName != null ? branchName : "All") +
+                    " | Type: " + (typeFilter != null && !typeFilter.isEmpty() ? typeFilter : "All") +
+                    " | Period: " + (dateFrom != null ? dateFrom.format(DATE_FMT) : "Earliest") +
+                    " — " + (dateTo != null ? dateTo.format(DATE_FMT) : "Latest");
+            filterRow.createCell(0).setCellValue(filter);
+
+            String[] headers = {"Mã GD", "Loại", "Số tiền", "Phương thức", "Ngày GD", "Chi nhánh", "Người thực hiện", "Mô tả"};
+            int[] widths = {15, 12, 18, 15, 20, 22, 22, 35};
+            int rowNum = fillHeader(wb, sheet, headers, widths, 4);
+            CellStyle currencyStyle = createCurrencyStyle(wb);
+            
+            for (Payment r : rows) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(r.getName());
+                row.createCell(1).setCellValue("INCOME".equals(r.getPaymentType()) ? "Thu" : "Chi");
+                
+                Cell amtCell = row.createCell(2);
+                amtCell.setCellValue(r.getAmount());
+                amtCell.setCellStyle(currencyStyle);
+                
+                row.createCell(3).setCellValue(r.getMethod());
+                row.createCell(4).setCellValue(r.getPaymentDate() != null ? r.getPaymentDate().toLocalDateTime().format(DATETIME_FMT) : "");
+                row.createCell(5).setCellValue(nullToDash(r.getBranchName()));
+                row.createCell(6).setCellValue(nullToDash(r.getCreatorName()));
+                row.createCell(7).setCellValue(nullToDash(r.getDescription()));
+            }
+            
+            addFinanceSummary(sheet, rowNum + 1, overview, currencyStyle);
+            return toBytes(wb);
+        } catch (Exception e) {
+            throw new RuntimeException("Excel generation failed", e);
+        }
+    }
+
     public static byte[] generateSupplierReport(
             String generatedBy, List<Supplier> rows, String keyword) {
         try (Workbook wb = new XSSFWorkbook()) {
