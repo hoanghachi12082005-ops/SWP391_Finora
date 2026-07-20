@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -84,14 +86,33 @@ public class ActivityLogController extends BaseController {
 
             boolean hasNext = false;
             boolean hasPrev = false;
+            if (logs.isEmpty()) {
+                // Trường hợp empty: after/before dẫn tới ko có data
+                // Fallback về trang đầu
+                response.sendRedirect(request.getContextPath() + "/activity-log"
+                    + buildFilterQueryString(keyword, tableName, actionName,
+                        dateFrom != null ? dateFrom.toString() : null,
+                        dateTo != null ? dateTo.toString() : null, null, null));
+                return;
+            }
+
             if (logs.size() > ITEMS_PER_PAGE) {
                 hasNext = true;
                 logs.remove(logs.size() - 1);
             }
-            hasPrev = (afterId != null) || (beforeId != null);
 
-            int firstId = logs.isEmpty() ? 0 : logs.get(0).getId();
-            int lastId  = logs.isEmpty() ? 0 : logs.get(logs.size() - 1).getId();
+            int firstId = logs.get(0).getId();
+            int lastId  = logs.get(logs.size() - 1).getId();
+
+            // hasPrev: có bản ghi mới hơn không?
+            if (beforeId != null) {
+                // Đã đi "cũ hơn" → chắc chắn có mới hơn
+                hasPrev = true;
+            } else if (afterId != null) {
+                // Đã đi "mới hơn" → kiểm tra xem còn bản ghi nào mới hơn firstId không
+                hasPrev = dao.existsGreaterThan(firstId, keyword, tableName, actionName, dateFrom, dateTo);
+            }
+            // else: trang đầu (cả before và after đều null → hasPrev = false)
 
             // Tổng số — chỉ để hiển thị
             int totalCount = tableName != null
@@ -186,5 +207,23 @@ public class ActivityLogController extends BaseController {
             options.put(a, tmp.getActionLabel());
         }
         return options;
+    }
+
+    /** Build query string giữ lại filter params khi redirect về trang đầu. */
+    private String buildFilterQueryString(String keyword, String tableName, String actionName,
+                                           String dateFrom, String dateTo,
+                                           String before, String after) {
+        StringBuilder qs = new StringBuilder();
+        try {
+            if (keyword != null && !keyword.isBlank()) qs.append("&keyword=").append(URLEncoder.encode(keyword, "UTF-8"));
+            if (tableName != null && !tableName.isBlank()) qs.append("&tableName=").append(URLEncoder.encode(tableName, "UTF-8"));
+            if (actionName != null && !actionName.isBlank()) qs.append("&actionName=").append(URLEncoder.encode(actionName, "UTF-8"));
+            if (dateFrom != null && !dateFrom.isBlank()) qs.append("&dateFrom=").append(URLEncoder.encode(dateFrom, "UTF-8"));
+            if (dateTo != null && !dateTo.isBlank()) qs.append("&dateTo=").append(URLEncoder.encode(dateTo, "UTF-8"));
+            if (before != null) qs.append("&before=").append(before);
+            if (after != null) qs.append("&after=").append(after);
+        } catch (UnsupportedEncodingException ignored) {}
+        if (qs.length() > 0) qs.replace(0, 1, "?");
+        return qs.toString();
     }
 }
