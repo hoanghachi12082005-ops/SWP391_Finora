@@ -409,7 +409,8 @@ public class OrderDAO {
         return o;
     }
 
-    public int countSaleOrders(String keyword, int branchId) {
+    public int countSaleOrders(String keyword, int branchId,
+                               String status, String paymentMethod, String fromDate, String toDate) {
         StringBuilder sql = new StringBuilder("""
             SELECT COUNT(*) 
             FROM [order] o
@@ -421,12 +422,28 @@ public class OrderDAO {
         
         boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
         boolean hasBranch = branchId > 0;
+        boolean hasStatus = status != null && !status.trim().isEmpty();
+        boolean hasPayment = paymentMethod != null && !paymentMethod.trim().isEmpty();
+        boolean hasFrom = fromDate != null && !fromDate.trim().isEmpty();
+        boolean hasTo = toDate != null && !toDate.trim().isEmpty();
         
         if (hasKeyword) {
             sql.append(" AND (o.order_code LIKE ? OR c.full_name LIKE ?)");
         }
         if (hasBranch) {
             sql.append(" AND o.branch_id = ?");
+        }
+        if (hasStatus) {
+            sql.append(" AND o.status = ?");
+        }
+        if (hasPayment) {
+            sql.append(" AND o.payment_method = ?");
+        }
+        if (hasFrom) {
+            sql.append(" AND o.created_at >= ?");
+        }
+        if (hasTo) {
+            sql.append(" AND o.created_at <= ?");
         }
         
         try (Connection conn = DBContext.getConnection();
@@ -440,6 +457,18 @@ public class OrderDAO {
             if (hasBranch) {
                 ps.setInt(paramIndex++, branchId);
             }
+            if (hasStatus) {
+                ps.setString(paramIndex++, status.trim());
+            }
+            if (hasPayment) {
+                ps.setString(paramIndex++, paymentMethod.trim());
+            }
+            if (hasFrom) {
+                ps.setString(paramIndex++, fromDate.trim());
+            }
+            if (hasTo) {
+                ps.setString(paramIndex++, toDate.trim() + " 23:59:59");
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);
@@ -451,7 +480,8 @@ public class OrderDAO {
         return 0;
     }
 
-    public List<Order> getAllSaleOrdersPaginated(String keyword, int branchId, int offset, int pageSize) {
+    public List<Order> getAllSaleOrdersPaginated(String keyword, int branchId, int offset, int pageSize,
+                                                  String status, String paymentMethod, String fromDate, String toDate) {
         List<Order> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
             SELECT o.*, 
@@ -467,12 +497,28 @@ public class OrderDAO {
         
         boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
         boolean hasBranch = branchId > 0;
+        boolean hasStatus = status != null && !status.trim().isEmpty();
+        boolean hasPayment = paymentMethod != null && !paymentMethod.trim().isEmpty();
+        boolean hasFrom = fromDate != null && !fromDate.trim().isEmpty();
+        boolean hasTo = toDate != null && !toDate.trim().isEmpty();
         
         if (hasKeyword) {
             sql.append(" AND (o.order_code LIKE ? OR c.full_name LIKE ?)");
         }
         if (hasBranch) {
             sql.append(" AND o.branch_id = ?");
+        }
+        if (hasStatus) {
+            sql.append(" AND o.status = ?");
+        }
+        if (hasPayment) {
+            sql.append(" AND o.payment_method = ?");
+        }
+        if (hasFrom) {
+            sql.append(" AND o.created_at >= ?");
+        }
+        if (hasTo) {
+            sql.append(" AND o.created_at <= ?");
         }
         sql.append(" ORDER BY o.order_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
         
@@ -486,6 +532,18 @@ public class OrderDAO {
             }
             if (hasBranch) {
                 ps.setInt(paramIndex++, branchId);
+            }
+            if (hasStatus) {
+                ps.setString(paramIndex++, status.trim());
+            }
+            if (hasPayment) {
+                ps.setString(paramIndex++, paymentMethod.trim());
+            }
+            if (hasFrom) {
+                ps.setString(paramIndex++, fromDate.trim());
+            }
+            if (hasTo) {
+                ps.setString(paramIndex++, toDate.trim() + " 23:59:59");
             }
             ps.setInt(paramIndex++, offset);
             ps.setInt(paramIndex++, pageSize);

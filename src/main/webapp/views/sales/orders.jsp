@@ -62,6 +62,10 @@
 
                                 <form action="${pageContext.request.contextPath}/orders" method="GET"
                                     class="w-96 relative">
+                                    <input type="hidden" name="status" value="${fn:escapeXml(selectedStatus)}">
+                                    <input type="hidden" name="paymentMethod" value="${fn:escapeXml(selectedPayment)}">
+                                    <input type="hidden" name="dateFrom" value="${fn:escapeXml(dateFrom)}">
+                                    <input type="hidden" name="dateTo" value="${fn:escapeXml(dateTo)}">
                                     <div
                                         class="flex items-center bg-surface-container-low rounded-full px-4 h-11 gap-3 border border-transparent focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all">
                                         <span class="material-symbols-outlined text-outline text-[20px]">search</span>
@@ -74,6 +78,38 @@
 
                                 <jsp:include page="/common/header.jsp" />
                             </header>
+
+                            <!-- Filter Bar -->
+                                <form method="get" action="${pageContext.request.contextPath}/orders" onsubmit="return validateDates()"
+                                  class="px-6 py-3 bg-surface border-b border-outline-variant flex items-center gap-3 flex-wrap shrink-0">
+                                <input type="hidden" name="keyword" value="${fn:escapeXml(keyword)}">
+                                <select name="status"
+                                        class="text-sm bg-white rounded-lg border border-outline-variant/60 px-3 py-2 pr-10 outline-none cursor-pointer focus:border-primary">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="COMPLETED" ${selectedStatus == 'COMPLETED' ? 'selected' : ''}>COMPLETED</option>
+                                    <option value="CANCELLED" ${selectedStatus == 'CANCELLED' ? 'selected' : ''}>CANCELLED</option>
+                                    <option value="PENDING" ${selectedStatus == 'PENDING' ? 'selected' : ''}>PENDING</option>
+                                </select>
+                                <select name="paymentMethod"
+                                        class="text-sm bg-white rounded-lg border border-outline-variant/60 px-3 py-2 pr-10 outline-none cursor-pointer focus:border-primary">
+                                    <option value="">Tất cả HT thanh toán</option>
+                                    <option value="CASH" ${selectedPayment == 'CASH' ? 'selected' : ''}>Tiền mặt</option>
+                                    <option value="BANK_TRANSFER" ${selectedPayment == 'BANK_TRANSFER' ? 'selected' : ''}>Chuyển khoản</option>
+                                </select>
+                                <input type="date" name="dateFrom" id="filterDateFrom" value="${fn:escapeXml(dateFrom)}" onchange="syncDateLimits()"
+                                       class="text-sm bg-white rounded-lg border border-outline-variant/60 px-3 py-2 outline-none focus:border-primary">
+                                <span class="text-outline text-sm">→</span>
+                                <input type="date" name="dateTo" id="filterDateTo" value="${fn:escapeXml(dateTo)}"
+                                       class="text-sm bg-white rounded-lg border border-outline-variant/60 px-3 py-2 outline-none focus:border-primary">
+                                <button type="submit"
+                                        class="px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:bg-secondary transition-colors">
+                                    Lọc
+                                </button>
+                                <a href="${pageContext.request.contextPath}/orders"
+                                   class="px-4 py-2 border border-outline-variant text-on-surface-variant rounded-lg text-sm font-semibold hover:bg-surface-container-high transition-colors">
+                                    Đặt lại
+                                </a>
+                            </form>
 
                             <!-- Main content area split in two -->
                             <div class="flex flex-1 overflow-hidden relative">
@@ -153,9 +189,13 @@
                                         <!-- Page Size Select and Record Info -->
                                         <form method="get" action="${pageContext.request.contextPath}/orders" id="paginationForm" class="flex items-center gap-3">
                                             <input type="hidden" name="keyword" value="${fn:escapeXml(keyword)}">
+                                            <input type="hidden" name="status" value="${fn:escapeXml(selectedStatus)}">
+                                            <input type="hidden" name="paymentMethod" value="${fn:escapeXml(selectedPayment)}">
+                                            <input type="hidden" name="dateFrom" value="${fn:escapeXml(dateFrom)}">
+                                            <input type="hidden" name="dateTo" value="${fn:escapeXml(dateTo)}">
                                             <span class="text-caption text-outline">Hiển thị:</span>
                                             <select name="sizeValue" onchange="this.form.submit()" 
-                                                class="text-caption bg-white rounded-lg border border-outline-variant/60 px-2 py-1 outline-none cursor-pointer focus:border-primary">
+                                                class="text-caption bg-white rounded-lg border border-outline-variant/60 px-2 py-1 pr-7 outline-none cursor-pointer focus:border-primary">
                                                 <option value="10" ${sizeValue == 10 ? 'selected' : ''}>10 dòng</option>
                                                 <option value="20" ${sizeValue == 20 ? 'selected' : ''}>20 dòng</option>
                                                 <option value="50" ${sizeValue == 50 ? 'selected' : ''}>50 dòng</option>
@@ -171,7 +211,7 @@
                                             <div class="flex items-center gap-1.5">
                                                 <!-- Previous Page -->
                                                 <c:if test="${currentPage > 1}">
-                                                    <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${currentPage - 1}&sizeValue=${sizeValue}"
+                                                    <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${currentPage - 1}&sizeValue=${sizeValue}&status=${fn:escapeXml(selectedStatus)}&paymentMethod=${fn:escapeXml(selectedPayment)}&dateFrom=${fn:escapeXml(dateFrom)}&dateTo=${fn:escapeXml(dateTo)}"
                                                        class="w-8 h-8 rounded-lg border border-outline-variant/60 flex items-center justify-center text-caption hover:bg-surface-container-high hover:text-primary transition-colors bg-white text-on-surface-variant font-medium">
                                                         &lt;
                                                     </a>
@@ -181,7 +221,7 @@
                                                 <c:choose>
                                                     <c:when test="${totalPages <= 5}">
                                                         <c:forEach begin="1" end="${totalPages}" var="i">
-                                                            <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${i}&sizeValue=${sizeValue}"
+                                                            <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${i}&sizeValue=${sizeValue}&status=${fn:escapeXml(selectedStatus)}&paymentMethod=${fn:escapeXml(selectedPayment)}&dateFrom=${fn:escapeXml(dateFrom)}&dateTo=${fn:escapeXml(dateTo)}"
                                                                class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${i == currentPage ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
                                                                 ${i}
                                                             </a>
@@ -189,7 +229,7 @@
                                                     </c:when>
                                                     <c:otherwise>
                                                         <!-- First Page -->
-                                                        <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=1&sizeValue=${sizeValue}"
+                                                        <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=1&sizeValue=${sizeValue}&status=${fn:escapeXml(selectedStatus)}&paymentMethod=${fn:escapeXml(selectedPayment)}&dateFrom=${fn:escapeXml(dateFrom)}&dateTo=${fn:escapeXml(dateTo)}"
                                                            class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${currentPage == 1 ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
                                                             1
                                                         </a>
@@ -203,7 +243,7 @@
                                                         <c:forEach begin="${currentPage - 1 < 2 ? 2 : currentPage - 1}"
                                                                    end="${currentPage + 1 > totalPages - 1 ? totalPages - 1 : currentPage + 1}"
                                                                    var="i">
-                                                            <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${i}&sizeValue=${sizeValue}"
+                                                            <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${i}&sizeValue=${sizeValue}&status=${fn:escapeXml(selectedStatus)}&paymentMethod=${fn:escapeXml(selectedPayment)}&dateFrom=${fn:escapeXml(dateFrom)}&dateTo=${fn:escapeXml(dateTo)}"
                                                                class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${i == currentPage ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
                                                                 ${i}
                                                             </a>
@@ -215,7 +255,7 @@
                                                         </c:if>
 
                                                         <!-- Last Page -->
-                                                        <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${totalPages}&sizeValue=${sizeValue}"
+                                                        <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${totalPages}&sizeValue=${sizeValue}&status=${fn:escapeXml(selectedStatus)}&paymentMethod=${fn:escapeXml(selectedPayment)}&dateFrom=${fn:escapeXml(dateFrom)}&dateTo=${fn:escapeXml(dateTo)}"
                                                            class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${currentPage == totalPages ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
                                                             ${totalPages}
                                                         </a>
@@ -224,7 +264,7 @@
 
                                                 <!-- Next Page -->
                                                 <c:if test="${currentPage < totalPages}">
-                                                    <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${currentPage + 1}&sizeValue=${sizeValue}"
+                                                    <a href="${pageContext.request.contextPath}/orders?keyword=${keyword}&page=${currentPage + 1}&sizeValue=${sizeValue}&status=${fn:escapeXml(selectedStatus)}&paymentMethod=${fn:escapeXml(selectedPayment)}&dateFrom=${fn:escapeXml(dateFrom)}&dateTo=${fn:escapeXml(dateTo)}"
                                                        class="w-8 h-8 rounded-lg border border-outline-variant/60 flex items-center justify-center text-caption hover:bg-surface-container-high hover:text-primary transition-colors bg-white text-on-surface-variant font-medium">
                                                         &gt;
                                                     </a>
@@ -374,6 +414,41 @@
                         function formatVND(amount) {
                             return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
                         }
+
+                        function getTodayStr() {
+                            var d = new Date();
+                            var mm = '0' + (d.getMonth() + 1), dd = '0' + d.getDate();
+                            return d.getFullYear() + '-' + mm.slice(-2) + '-' + dd.slice(-2);
+                        }
+                        function syncDateLimits() {
+                            var from = document.getElementById('filterDateFrom');
+                            var to = document.getElementById('filterDateTo');
+                            var today = getTodayStr();
+                            to.setAttribute('max', today);
+                            if (from.value) {
+                                to.setAttribute('min', from.value);
+                            } else {
+                                to.removeAttribute('min');
+                            }
+                        }
+                        function validateDates() {
+                            var from = document.getElementById('filterDateFrom');
+                            var to = document.getElementById('filterDateTo');
+                            var today = getTodayStr();
+                            if (from.value && to.value && from.value > to.value) {
+                                alert('Ngày bắt đầu không được lớn hơn ngày kết thúc.');
+                                return false;
+                            }
+                            if (to.value && to.value > today) {
+                                alert('Ngày kết thúc không được lớn hơn ngày hiện tại.');
+                                return false;
+                            }
+                            return true;
+                        }
+                        document.addEventListener('DOMContentLoaded', function() {
+                            var to = document.getElementById('filterDateTo');
+                            if (to) to.setAttribute('max', getTodayStr());
+                        });
 
                         function showOrderDetails(orderId) {
                             activeSelectedOrderId = orderId;

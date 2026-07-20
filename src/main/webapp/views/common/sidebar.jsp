@@ -87,17 +87,21 @@
                                     </a>
                                 </c:if>
 
-                                <!-- Danh sách sản phẩm -->
+                                <!-- Danh sách sản phẩm (chỉ Owner/StoreManager) -->
+                                <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
                                 <a href="${pageContext.request.contextPath}/products"
 class="sidebar-menu-item ${originalUri.contains('/products') ? 'active' : ''}">
                                     <span class="material-icons">shopping_bag</span><span>Danh sách sản phẩm</span>
                                 </a>
+                                </c:if>
 
-                                <!-- Khách hàng -->
+                                <!-- Khách hàng (chỉ Owner/StoreManager) -->
+                                <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
                                 <a href="${pageContext.request.contextPath}/customers"
                                     class="sidebar-menu-item ${originalUri.contains('/customers') ? 'active' : ''}">
                                     <span class="material-icons">people</span><span>Khách hàng</span>
                                 </a>
+                                </c:if>
 
                                 <!-- Chi nhánh (Owner) -->
                                 <c:if test="${roleName == 'Owner'}">

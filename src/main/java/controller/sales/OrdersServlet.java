@@ -55,6 +55,16 @@ public class OrdersServlet extends HttpServlet {
             keyword = keyword.trim();
         }
 
+        // Filter params: status, payment method, date range
+        String status = req.getParameter("status");
+        if (status != null) status = status.trim();
+        String paymentMethod = req.getParameter("paymentMethod");
+        if (paymentMethod != null) paymentMethod = paymentMethod.trim();
+        String dateFrom = req.getParameter("dateFrom");
+        if (dateFrom != null) dateFrom = dateFrom.trim();
+        String dateTo = req.getParameter("dateTo");
+        if (dateTo != null) dateTo = dateTo.trim();
+
         // Lấy tất cả đơn hàng thuộc chi nhánh của nhân viên (hoặc tất cả chi nhánh nếu cần, 
         // nhưng để lọc theo branch của emp đang làm việc là chuẩn nghiệp vụ).
         // Cho admin hoặc manager, họ xem toàn bộ nếu branchId = 0.
@@ -83,7 +93,7 @@ public class OrdersServlet extends HttpServlet {
             }
         }
 
-        int totalOrders = orderDao.countSaleOrders(keyword, branchId);
+        int totalOrders = orderDao.countSaleOrders(keyword, branchId, status, paymentMethod, dateFrom, dateTo);
 
         int pageSize = sizeValue;
         if (sizeValue == 100) {
@@ -95,13 +105,18 @@ public class OrdersServlet extends HttpServlet {
         if (page > totalPages) page = totalPages;
 
         int offset = (page - 1) * pageSize;
-        List<Order> orders = orderDao.getAllSaleOrdersPaginated(keyword, branchId, offset, pageSize);
+        List<Order> orders = orderDao.getAllSaleOrdersPaginated(keyword, branchId, offset, pageSize,
+                                                                  status, paymentMethod, dateFrom, dateTo);
 
         int startRecord = totalOrders == 0 ? 0 : offset + 1;
         int endRecord = Math.min(page * pageSize, totalOrders);
 
         req.setAttribute("orders", orders);
         req.setAttribute("keyword", keyword);
+        req.setAttribute("selectedStatus", status);
+        req.setAttribute("selectedPayment", paymentMethod);
+        req.setAttribute("dateFrom", dateFrom);
+        req.setAttribute("dateTo", dateTo);
         req.setAttribute("currentPage", page);
         req.setAttribute("totalPages", totalPages);
         req.setAttribute("sizeValue", sizeValue);
