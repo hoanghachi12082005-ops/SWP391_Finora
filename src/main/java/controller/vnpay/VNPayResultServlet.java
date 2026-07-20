@@ -13,8 +13,8 @@ import java.io.IOException;
 import java.sql.Connection;
 
 /**
- * Hiển thị kết quả thanh toán VNPay với URL sạch.
- * Nhận request từ VNPayReturnServlet, query DB để lấy thông tin.
+ * Hiển thị kết quả thanh toán VNPay.
+ * Nhận request từ VNPayReturnServlet (redirect), query DB lấy số tiền, forward sang JSP.
  * GET /payment/result
  */
 @WebServlet("/payment/result")
@@ -25,27 +25,29 @@ public class VNPayResultServlet extends HttpServlet {
         String status = req.getParameter("status");
         String orderCode = req.getParameter("orderCode");
         String message = req.getParameter("message");
+        String transactionNo = req.getParameter("transactionNo");
+        String bankCode = req.getParameter("bankCode");
 
         if (status == null || orderCode == null) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing parameters");
             return;
         }
 
-        // Set attributes cho JSP
         req.setAttribute("status", status);
         req.setAttribute("orderCode", orderCode);
-        req.setAttribute("message", message != null ? message : "Không có thông tin");
+        req.setAttribute("message", message);
+        req.setAttribute("transactionNo", transactionNo);
+        req.setAttribute("bankCode", bankCode);
+        req.setAttribute("amount", 0);
 
-        // Nếu thành công, query DB để lấy số tiền
-        if ("success".equals(status)) {
+        // Query số tiền từ DB
+        if (orderCode != null) {
             try (Connection conn = DBContext.getConnection()) {
                 Order order = new OrderDAO().findByCode(conn, orderCode);
                 req.setAttribute("amount", order != null ? (long) order.getTotalAmount() : 0);
             } catch (Exception e) {
-                req.setAttribute("amount", 0);
+                e.printStackTrace();
             }
-        } else {
-            req.setAttribute("amount", 0);
         }
 
         req.getRequestDispatcher("/views/common/vnpay_result.jsp").forward(req, resp);
