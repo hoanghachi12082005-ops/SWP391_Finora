@@ -54,7 +54,9 @@ public class VNPayService {
         cal.add(Calendar.MINUTE, 15);
         params.put("vnp_ExpireDate", fmt.format(cal.getTime()));
 
-        return Config.PAY_URL + "?" + buildSignedQuery(params);
+        String hashData = buildHashData(params);
+        String secureHash = Config.hmacSHA512(hashData);
+        return Config.PAY_URL + "?" + hashData + "&vnp_SecureHash=" + urlEncode(secureHash);
     }
 
     // ==================== XỬ LÝ CALLBACK ====================
@@ -158,34 +160,7 @@ public class VNPayService {
         }
     }
 
-    /** Diễn giải mã lỗi VNPay thành thông báo. */
-    public String getResponseMessage(String code) {
-        if (code == null) return "Lỗi không xác định";
-        return switch (code) {
-            case "00" -> "Giao dịch thành công!";
-            case "07" -> "Giao dịch bị nghi ngờ gian lận.";
-            case "09" -> "Thẻ chưa đăng ký dịch vụ InternetBanking.";
-            case "10" -> "Xác thực thông tin thẻ không đúng quá 3 lần.";
-            case "11" -> "Đã hết hạn chờ thanh toán.";
-            case "12" -> "Thẻ bị khóa.";
-            case "13" -> "Sai mật khẩu OTP.";
-            case "24" -> "Khách hàng hủy giao dịch.";
-            case "51" -> "Tài khoản không đủ số dư.";
-            case "65" -> "Vượt quá hạn mức giao dịch trong ngày.";
-            case "75" -> "Ngân hàng đang bảo trì.";
-            case "79" -> "Sai mật khẩu thanh toán quá số lần quy định.";
-            default -> "Giao dịch thất bại. Mã lỗi: " + code;
-        };
-    }
-
     // ==================== HELPERS ====================
-
-    /** Sắp xếp params + tạo chữ ký + trả về query string. */
-    private String buildSignedQuery(Map<String, String> params) {
-        String hashData = buildHashData(params);
-        String secureHash = Config.hmacSHA512(hashData);
-        return hashData + "&vnp_SecureHash=" + urlEncode(secureHash);
-    }
 
     /** Sắp xếp params theo thứ tự alphabet và nối thành chuỗi k=v&k=v. */
     private String buildHashData(Map<String, String> params) {
