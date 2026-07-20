@@ -79,9 +79,9 @@ public class ActivityLogController extends BaseController {
         }
 
         try {
-            // Lấy ITEMS_PER_PAGE + 1 để biết còn trang tiếp không
+            // Lấy đúng ITEMS_PER_PAGE bản ghi (không +1)
             List<ActivityLog> logs = dao.findByKeyset(
-                    beforeId, afterId, ITEMS_PER_PAGE + 1,
+                    beforeId, afterId, ITEMS_PER_PAGE,
                     keyword, tableName, actionName, dateFrom, dateTo);
 
             boolean hasNext = false;
@@ -96,23 +96,12 @@ public class ActivityLogController extends BaseController {
                 return;
             }
 
-            if (logs.size() > ITEMS_PER_PAGE) {
-                hasNext = true;
-                logs.remove(logs.size() - 1);
-            }
-
             int firstId = logs.get(0).getId();
             int lastId  = logs.get(logs.size() - 1).getId();
 
-            // hasPrev: có bản ghi mới hơn không?
-            if (beforeId != null) {
-                // Đã đi "cũ hơn" → chắc chắn có mới hơn
-                hasPrev = true;
-            } else if (afterId != null) {
-                // Đã đi "mới hơn" → kiểm tra xem còn bản ghi nào mới hơn firstId không
-                hasPrev = dao.existsGreaterThan(firstId, keyword, tableName, actionName, dateFrom, dateTo);
-            }
-            // else: trang đầu (cả before và after đều null → hasPrev = false)
+            // Dùng 2 query index seek riêng để kiểm tra hasNext và hasPrev
+            hasNext = dao.existsLessThan(lastId, keyword, tableName, actionName, dateFrom, dateTo);
+            hasPrev = dao.existsGreaterThan(firstId, keyword, tableName, actionName, dateFrom, dateTo);
 
             // Tổng số — chỉ để hiển thị
             int totalCount = tableName != null
