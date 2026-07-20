@@ -9,7 +9,7 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
-@WebServlet({"/payment/success", "/payment/failed"})
+@WebServlet({"/payment/process", "/payment/failed"})
 public class VNPayResultServlet extends HttpServlet {
 
     @Override
