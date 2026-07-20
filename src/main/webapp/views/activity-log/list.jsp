@@ -5,9 +5,9 @@
     List<ActivityLog> logs = (List<ActivityLog>) request.getAttribute("logs");
     Map<String,String> entityOptions = (Map<String,String>) request.getAttribute("entityOptions");
     Map<String,String> actionOptions = (Map<String,String>) request.getAttribute("actionOptions");
-    int currentPage    = (Integer) request.getAttribute("currentPage");
-    int totalPages     = (Integer) request.getAttribute("totalPages");
-    Integer totalCount = (Integer) request.getAttribute("totalCount");
+    int currentPage   = request.getAttribute("currentPage") != null ? (Integer) request.getAttribute("currentPage") : 1;
+    int totalPages    = request.getAttribute("totalPages") != null ? (Integer) request.getAttribute("totalPages") : 1;
+    Integer totalCount= (Integer) request.getAttribute("totalCount");
     String keyword     = (String) request.getAttribute("keyword");
     String filterTable = (String) request.getAttribute("filterTable");
     String filterAction= (String) request.getAttribute("filterAction");
@@ -187,7 +187,7 @@
 
 <% if (totalPages > 1) {
         String baseUrl = ctx + "/activity-log?"
-                + (keyword != null && !keyword.isBlank() ? "keyword=" + keyword + "&" : "")
+                + (keyword != null && !keyword.isBlank() ? "keyword=" + java.net.URLEncoder.encode(keyword, "UTF-8") + "&" : "")
                 + (filterTable != null && !filterTable.isBlank() ? "tableName=" + filterTable + "&" : "")
                 + (filterAction != null && !filterAction.isBlank() ? "actionName=" + filterAction + "&" : "")
                 + (filterDateFrom != null && !filterDateFrom.isBlank() ? "dateFrom=" + filterDateFrom + "&" : "")
@@ -200,19 +200,15 @@
                                 <a class="page-link" href="<%= baseUrl %>page=<%= currentPage - 1 %>">Trước</a>
                             </li>
 <%
-        int visiblePages = 2; // số trang hiển thị mỗi bên trang hiện tại
+        int visiblePages = 2;
         int startPage = Math.max(1, currentPage - visiblePages);
         int endPage = Math.min(totalPages, currentPage + visiblePages);
 
         if (startPage > 1) {
 %>
-                            <li class="page-item">
-                                <a class="page-link" href="<%= baseUrl %>page=1">1</a>
-                            </li>
+                            <li class="page-item"><a class="page-link" href="<%= baseUrl %>page=1">1</a></li>
 <%          if (startPage > 2) { %>
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
-                            </li>
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
 <%          }
         }
 
@@ -227,13 +223,9 @@
         if (endPage < totalPages) {
             if (endPage < totalPages - 1) {
 %>
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
-                            </li>
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
 <%          } %>
-                            <li class="page-item">
-                                <a class="page-link" href="<%= baseUrl %>page=<%= totalPages %>"><%= totalPages %></a>
-                            </li>
+                            <li class="page-item"><a class="page-link" href="<%= baseUrl %>page=<%= totalPages %>"><%= totalPages %></a></li>
 <%      } %>
                             <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
                                 <a class="page-link" href="<%= baseUrl %>page=<%= currentPage + 1 %>">Tiếp</a>
