@@ -323,7 +323,7 @@
             <div id="cashInputSection">
                 <label class="text-label-md text-on-surface-variant block mb-2">Khách thanh toán</label>
                 <div class="relative">
-                    <input id="modalCashInput" type="number" class="w-full text-headline-lg text-primary font-bold bg-surface-container-low rounded-xl pl-5 pr-14 py-4 border-2 border-primary outline-none text-right" oninput="calcChange()">
+                    <input id="modalCashInput" type="text" inputmode="numeric" class="w-full text-headline-lg text-primary font-bold bg-surface-container-low rounded-xl pl-5 pr-14 py-4 border-2 border-primary outline-none text-right" oninput="formatCashInput(this); calcChange();">
                     <span class="absolute right-5 top-1/2 -translate-y-1/2 text-headline-md text-outline font-bold">₫</span>
                 </div>
             </div>
@@ -611,7 +611,49 @@ async function cancelOrder() {
 
 function printPreview() {
     if (!cartState) return;
-    window.open(CTX + '/print/preview?tabId=' + cartState.activeTabId, '_blank');
+    var tab = cartState.activeTab;
+    if (!tab || !tab.items || tab.items.length === 0) return;
+
+    var empName = '${sessionScope.employee != null ? sessionScope.employee.fullName : "Nhân viên"}';
+    var now = new Date();
+    var dd = '0' + now.getDate(), mm = '0' + (now.getMonth() + 1),
+        hh = '0' + now.getHours(), mi = '0' + now.getMinutes();
+    var dateStr = dd.slice(-2) + '/' + mm.slice(-2) + '/' + now.getFullYear() + ' ' + hh.slice(-2) + ':' + mi.slice(-2);
+    var vatPct = tab.vatRate ? Math.round(tab.vatRate * 100) : 8;
+
+    document.getElementById('previewReceiptCode').innerHTML = 'Số HĐ: TẠM<br/>' + dateStr;
+
+    var ci = document.getElementById('previewCustomerInfo');
+    var customer = tab.selectedCustomer;
+    if (customer) {
+        ci.innerHTML = '<p style="margin:2px 0;">KH: ' + customer.fullName + '</p>' +
+            '<p style="margin:2px 0;">SĐT: ' + customer.phone + '</p>';
+    } else {
+        ci.innerHTML = '<p style="margin:2px 0;">KH: Khách vãng lai</p>';
+    }
+    ci.innerHTML += '<p style="margin:2px 0;">NVBH: ' + empName + '</p>';
+
+    var tbody = document.getElementById('previewReceiptItems');
+    tbody.innerHTML = '';
+    tab.items.forEach(function (item) {
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td>' + item.productName + '<br/>' + Number(item.sellingPrice).toLocaleString('vi-VN') + '</td>' +
+            '<td align="right" valign="bottom">' + item.quantity + '</td>' +
+            '<td align="right" valign="bottom">' + Number(item.lineTotal).toLocaleString('vi-VN') + '</td>';
+        tbody.appendChild(tr);
+    });
+
+    var tt = document.getElementById('previewReceiptTotals');
+    tt.innerHTML =
+        '<tr><td>Cộng tiền hàng:</td><td align="right">' + Number(tab.subtotal).toLocaleString('vi-VN') + ' ₫</td></tr>' +
+        (tab.discountAmount > 0 ? '<tr><td>Chiết khấu:</td><td align="right">-' + Number(tab.discountAmount).toLocaleString('vi-VN') + ' ₫</td></tr>' : '') +
+        '<tr><td>Thuế VAT (' + vatPct + '%):</td><td align="right">' + Number(tab.vatAmount).toLocaleString('vi-VN') + ' ₫</td></tr>' +
+        '<tr class="bold"><td>TỔNG CỘNG:</td><td align="right">' + Number(tab.totalAmount).toLocaleString('vi-VN') + ' ₫</td></tr>';
+
+    document.getElementById('printPreviewOverlay').classList.remove('hidden');
+    window.print();
+    document.getElementById('printPreviewOverlay').classList.add('hidden');
 }
 
 // ── Render UI ───────────────────────────────────────────
@@ -767,7 +809,7 @@ function openPaymentModal() {
     }
     const total = cartState.activeTab.totalAmount;
     document.getElementById('modalTotalDisplay').innerHTML = fmt(total).replace('₫','') + ' <span class="text-headline-md text-outline">₫</span>';
-    document.getElementById('modalCashInput').value = Math.ceil(total);
+    document.getElementById('modalCashInput').value = formatCash(Math.ceil(total));
     selectModalPayMethod(currentPayMethod);
     document.getElementById('paymentModal').classList.remove('hidden');
     if (currentPayMethod === 'CASH') {
@@ -791,12 +833,12 @@ function selectModalPayMethod(method) {
     }
 }
 
-function setQuickCash(amount) { document.getElementById('modalCashInput').value = amount; calcChange(); }
+function setQuickCash(amount) { document.getElementById('modalCashInput').value = formatCash(amount); calcChange(); }
 
 function calcChange() {
     if (!cartState) return;
     const total = cartState.activeTab.totalAmount;
-    const paid = parseFloat(document.getElementById('modalCashInput').value) || 0;
+    const paid = parseFloat(document.getElementById('modalCashInput').value.replace(/\./g, '')) || 0;
     const change = paid - total;
     const display = document.getElementById('changeDisplay');
     display.textContent = change >= 0 ? fmt(change) : 'Còn thiếu ' + fmt(Math.abs(change));
@@ -810,7 +852,7 @@ async function submitCheckout() {
 
     const body = new URLSearchParams();
     body.append('paymentMethod', modalPayMethod);
-    body.append('cashReceived', modalPayMethod === 'CASH' ? document.getElementById('modalCashInput').value : '999999999');
+    body.append('cashReceived', modalPayMethod === 'CASH' ? document.getElementById('modalCashInput').value.replace(/\./g, '') : '999999999');
     body.append('tabId', cartState.activeTabId);
     body.append('csrfToken', CSRF_TOKEN);
     try {
@@ -1284,6 +1326,11 @@ window.addEventListener('keydown', e => {
 });
 
 // ── Helpers ─────────────────────────────────────────────
+function formatCash(n) { return Math.round(n).toLocaleString('vi-VN'); }
+function formatCashInput(el) {
+    var val = el.value.replace(/\./g, '').replace(/\D/g, '');
+    if (val) el.value = parseInt(val).toLocaleString('vi-VN');
+}
 function fmt(n) { return Math.round(n).toLocaleString('vi-VN') + ' ₫'; }
 function esc(s) { if (!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 function showAlert(msg) { alert(msg); }
@@ -1295,5 +1342,50 @@ function showToast(title, message) {
     setTimeout(() => t.classList.add('hidden'), 4000);
 }
 </script>
+
+<!-- Hidden Print Preview Overlay -->
+<div id="printPreviewOverlay" class="hidden">
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #printPreviewOverlay { display: block !important; }
+            #printPreviewOverlay, #printPreviewOverlay * { visibility: visible; }
+            #printPreviewOverlay {
+                position: absolute; left: 0; top: 0;
+                width: 80mm; padding: 5mm;
+                font-family: 'Courier New', monospace;
+                font-size: 12px; color: #000;
+            }
+            .header { text-align: center; margin-bottom: 6px; }
+            .divider { border-bottom: 1px dashed #000; margin: 5px 0; }
+            table { width: 100%; border-collapse: collapse; }
+            .text-right { text-align: right; }
+            .bold { font-weight: bold; }
+            .footer { text-align: center; margin-top: 8px; font-size: 10px; }
+        }
+    </style>
+    <div class="header">
+        <h2 style="margin: 0; font-size: 16px;">FINORA STORE</h2>
+        <p style="margin: 3px 0;">HÓA ĐƠN TẠM TÍNH</p>
+        <p id="previewReceiptCode" style="margin: 3px 0;"></p>
+    </div>
+    <div class="divider"></div>
+    <div id="previewCustomerInfo"></div>
+    <div class="divider"></div>
+    <table>
+        <thead>
+            <tr><th align="left">Tên SP</th><th align="right">SL</th><th align="right">T.Tiền</th></tr>
+        </thead>
+        <tbody id="previewReceiptItems"></tbody>
+    </table>
+    <div class="divider"></div>
+    <table id="previewReceiptTotals"></table>
+    <div class="divider"></div>
+    <div class="footer">
+        <p>Cảm ơn Quý khách. Hẹn gặp lại!</p>
+        <p>Powered by Finora</p>
+    </div>
+</div>
+
 </body>
 </html>

@@ -353,18 +353,11 @@
 
                                     <!-- Panel Footer -->
                                     <div class="p-6 border-t border-outline-variant bg-surface space-y-3 shrink-0">
-                                        <div class="grid grid-cols-2 gap-3">
-                                            <button
-                                                class="h-11 border border-outline-variant text-on-surface rounded-xl hover:bg-surface-container-high transition-colors font-semibold text-sm flex items-center justify-center gap-2">
-                                                <span class="material-symbols-outlined text-[20px]">print</span>
-                                                <span>In hóa đơn</span>
-                                            </button>
-                                            <button
-                                                class="h-11 border border-outline-variant text-on-surface rounded-xl hover:bg-surface-container-high transition-colors font-semibold text-sm flex items-center justify-center gap-2">
-                                                <span class="material-symbols-outlined text-[20px]">mail</span>
-                                                <span>Gửi Email</span>
-                                            </button>
-                                        </div>
+                                        <button onclick="printInvoice()"
+                                            class="w-full h-11 border border-outline-variant text-on-surface rounded-xl hover:bg-surface-container-high transition-colors font-semibold text-sm flex items-center justify-center gap-2">
+                                            <span class="material-symbols-outlined text-[20px]">print</span>
+                                            <span>In hóa đơn</span>
+                                        </button>
                                     </div>
 
                                 </div>
@@ -376,6 +369,7 @@
 
                     <script>
                         let activeSelectedOrderId = 0;
+                        let currentOrderDetailData = null;
 
                         function formatVND(amount) {
                             return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
@@ -391,6 +385,7 @@
                                         alert(data.error);
                                         return;
                                     }
+                                    currentOrderDetailData = data;
 
                                     document.getElementById('detailOrderCode').innerText = data.orderCode;
                                     document.getElementById('detailTime').innerText = data.createdAt;
@@ -454,6 +449,96 @@
                         }
 
 
+                    </script>
+                    <!-- Hidden Invoice Print Template (giống layout In thử nhưng có sẵn số HĐ & ngày thực tế) -->
+                    <div id="printReceiptTemplate" class="hidden">
+                        <style>
+                            @media print {
+                                body * { visibility: hidden; }
+                                #printReceiptTemplate { display: block !important; }
+                                #printReceiptTemplate, #printReceiptTemplate * { visibility: visible; }
+                                #printReceiptTemplate {
+                                    position: absolute; left: 0; top: 0;
+                                    width: 80mm; padding: 5mm;
+                                    font-family: 'Courier New', monospace;
+                                    font-size: 12px; color: #000;
+                                }
+                                .header { text-align: center; margin-bottom: 6px; }
+                                .divider { border-bottom: 1px dashed #000; margin: 5px 0; }
+                                table { width: 100%; border-collapse: collapse; }
+                                .text-right { text-align: right; }
+                                .bold { font-weight: bold; }
+                                .footer { text-align: center; margin-top: 8px; font-size: 10px; }
+                            }
+                        </style>
+                        <div class="header">
+                            <h2 style="margin: 0; font-size: 16px;">FINORA STORE</h2>
+                            <p style="margin: 3px 0;">HÓA ĐƠN THANH TOÁN</p>
+                            <p id="printReceiptCodeLine" style="margin: 3px 0;"></p>
+                        </div>
+                        <div class="divider"></div>
+                        <div id="printReceiptCustomerInfo"></div>
+                        <div class="divider"></div>
+                        <table>
+                            <thead>
+                                <tr><th align="left">Tên SP</th><th align="right">SL</th><th align="right">T.Tiền</th></tr>
+                            </thead>
+                            <tbody id="printReceiptItems"></tbody>
+                        </table>
+                        <div class="divider"></div>
+                        <table id="printReceiptTotals"></table>
+                        <div class="divider"></div>
+                        <div class="footer">
+                            <p>Cảm ơn Quý khách. Hẹn gặp lại!</p>
+                            <p>Powered by Finora</p>
+                        </div>
+                    </div>
+
+                    <script>
+                        function formatDate(dtStr) {
+                            if (!dtStr) return '--/--/---- --:--';
+                            try {
+                                var d = new Date(dtStr);
+                                if (isNaN(d.getTime())) return dtStr;
+                                var dd = '0' + d.getDate(), mm = '0' + (d.getMonth() + 1),
+                                    hh = '0' + d.getHours(), mi = '0' + d.getMinutes();
+                                return dd.slice(-2) + '/' + mm.slice(-2) + '/' + d.getFullYear() + ' ' + hh.slice(-2) + ':' + mi.slice(-2);
+                            } catch (e) { return dtStr; }
+                        }
+                        function printInvoice() {
+                            if (!currentOrderDetailData) return;
+                            var d = currentOrderDetailData;
+
+                            document.getElementById('printReceiptCodeLine').innerHTML =
+                                'Số HĐ: ' + d.orderCode + '<br/>' + formatDate(d.createdAt);
+
+                            var ci = document.getElementById('printReceiptCustomerInfo');
+                            ci.innerHTML = '<p style="margin:2px 0;">KH: ' + d.customerName + (d.customerPhone ? ' - ' + d.customerPhone : '') + '</p>' +
+                                '<p style="margin:2px 0;">NVBH: ' + d.employeeName + '</p>';
+
+                            var tbody = document.getElementById('printReceiptItems');
+                            tbody.innerHTML = '';
+                            (d.items || []).forEach(function (item) {
+                                var tr = document.createElement('tr');
+                                tr.innerHTML =
+                                    '<td>' + item.productName + '<br/>' + Number(item.unitPrice).toLocaleString('vi-VN') + '</td>' +
+                                    '<td align="right" valign="bottom">' + item.quantity + '</td>' +
+                                    '<td align="right" valign="bottom">' + Number(item.totalPrice).toLocaleString('vi-VN') + '</td>';
+                                tbody.appendChild(tr);
+                            });
+
+                            var tt = document.getElementById('printReceiptTotals');
+                            var vatPercent = d.vatPercentage || 8;
+                            var totalBeforeTax = d.subtotal - d.discountAmount;
+                            var vat = totalBeforeTax * vatPercent / 100;
+                            tt.innerHTML =
+                                '<tr><td>Cộng tiền hàng:</td><td align="right">' + Number(d.subtotal).toLocaleString('vi-VN') + ' ₫</td></tr>' +
+                                (d.discountAmount > 0 ? '<tr><td>Chiết khấu:</td><td align="right">-' + Number(d.discountAmount).toLocaleString('vi-VN') + ' ₫</td></tr>' : '') +
+                                '<tr><td>Thuế VAT (' + vatPercent + '%):</td><td align="right">' + vat.toLocaleString('vi-VN') + ' ₫</td></tr>' +
+                                '<tr class="bold"><td>TỔNG CỘNG:</td><td align="right">' + Number(d.totalAmount).toLocaleString('vi-VN') + ' ₫</td></tr>';
+
+                            window.print();
+                        }
                     </script>
                     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
                 </body>
