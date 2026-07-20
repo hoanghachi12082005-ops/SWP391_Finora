@@ -15,12 +15,12 @@
     <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-8 text-center">
         <c:choose>
             <c:when test="${status == 'success'}">
-                <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-5">
-                    <svg class="w-10 h-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
+                    <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 3h13l-1.5-3M7 13h10m-8 6a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z"/>
                     </svg>
                 </div>
-                <h1 class="text-2xl font-bold text-amber-700 mb-2">Đơn hàng đang được xử lý</h1>
+                <h1 class="text-2xl font-bold text-green-700 mb-2">Đơn hàng đang được xử lý</h1>
                 <p class="text-gray-500 mb-6">Chúng tôi sẽ liên hệ với bạn sau</p>
             </c:when>
             <c:otherwise>
