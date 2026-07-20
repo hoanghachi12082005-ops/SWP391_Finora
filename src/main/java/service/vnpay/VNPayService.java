@@ -178,64 +178,6 @@ public class VNPayService {
         };
     }
 
-    // ==================== XỬ LÝ TRANSACTION (cho IPN) ====================
-
-    /** Xử lý thành công trong transaction (dùng cho IPN). */
-    public void processSuccessInTransaction(Connection conn, String orderCode,
-                                             String transactionNo, long amount, String bankCode) throws Exception {
-        int orderId = orderDAO.findIdByCode(conn, orderCode);
-        if (orderId == 0) throw new Exception("Order not found: " + orderCode);
-
-        String status = orderDAO.getStatus(conn, orderId);
-        if ("COMPLETED".equals(status) || "PAID".equals(status)) {
-            throw new Exception("Order already confirmed: " + orderCode);
-        }
-
-        orderDAO.updateStatus(conn, orderId, "COMPLETED");
-
-        Payment payment = new Payment();
-        payment.setOrderId(orderId);
-        payment.setAmount(amount / 100.0);
-        payment.setStatus("PAID");
-        payment.setName("VNPAY-" + (transactionNo != null ? transactionNo : "N/A"));
-        payment.setMethod("VNPAY");
-        payment.setPaymentType("INCOME");
-        payment.setDescription("Thanh toán VNPAY đơn hàng " + orderCode
-                + ", GD: " + (transactionNo != null ? transactionNo : "N/A"));
-
-        paymentDAO.insert(conn, payment);
-
-        // Earn loyalty points
-        Order order = orderDAO.findByCode(conn, orderCode);
-        if (order != null && order.getCustomerId() != null && order.getCustomerId() > 0) {
-            new CustomerPointDAO().addPoints(conn, order.getCustomerId(), order.getTotalAmount(), orderId);
-        }
-    }
-
-    /** Xử lý thất bại trong transaction (dùng cho IPN). */
-    public void processFailedInTransaction(Connection conn, String orderCode, String responseCode) throws Exception {
-        int orderId = orderDAO.findIdByCode(conn, orderCode);
-        if (orderId == 0) throw new Exception("Order not found: " + orderCode);
-
-        String newStatus = "24".equals(responseCode) ? "CANCELLED" : "FAILED";
-        orderDAO.updateStatus(conn, orderId, newStatus);
-
-        // Hoàn kho
-        Order order = orderDAO.findByCode(conn, orderCode);
-        if (order != null) {
-            int warehouseId = order.getWarehouseId();
-            java.util.List<OrderDetail> details = orderDetailDAO.findByOrderId(conn, orderId);
-            for (OrderDetail d : details) {
-                inventoryDAO.increaseStock(conn, warehouseId, d.getProductId(), d.getQuantity());
-            }
-
-            // Hoàn voucher (nếu có)
-            if (order.getVoucherId() != null && order.getVoucherId() > 0) {
-                voucherDAO.decrementUsedQuantity(conn, order.getVoucherId());
-            }
-        }
-    }
-
     // ==================== HELPERS ====================
 
     /** Sắp xếp params + tạo chữ ký + trả về query string. */
