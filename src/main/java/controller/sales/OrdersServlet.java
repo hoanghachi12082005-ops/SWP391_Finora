@@ -22,7 +22,7 @@ import java.sql.SQLException;
 import java.util.List;
 import util.database.DBContext;
 
-@WebServlet(urlPatterns = {"/orders", "/orders/detail", "/orders/refund"})
+@WebServlet(urlPatterns = {"/orders", "/orders/detail"})
 public class OrdersServlet extends HttpServlet {
 
     private final OrderDAO orderDao = new OrderDAO();

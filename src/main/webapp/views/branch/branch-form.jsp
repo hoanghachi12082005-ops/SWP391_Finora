@@ -12,8 +12,8 @@
     <jsp:include page="/views/common/sidebar.jsp"/>
 
     <main class="main-content">
-        
-        
+
+
         <div class="container-fluid py-4">
             <div class="page-header">
                 <div class="page-title">
@@ -43,13 +43,13 @@
                   method="post"
                   enctype="multipart/form-data"
                   class="branch-form">
-                
+
                 <input type="hidden" name="returnPage" value="${page}">
-<input type="hidden" name="returnSizeValue" value="${sizeValue}">
-<input type="hidden" name="returnKeyword" value="${keyword}">
-<input type="hidden" name="returnStatus" value="${status}">
-<input type="hidden" name="returnCity" value="${city}">
-                
+                <input type="hidden" name="returnSizeValue" value="${sizeValue}">
+                <input type="hidden" name="returnKeyword" value="${keyword}">
+                <input type="hidden" name="returnStatus" value="${status}">
+                <input type="hidden" name="returnCity" value="${city}">
+
                 <c:choose>
                     <c:when test="${branch == null || branch.branchId <= 0}">
 
@@ -369,7 +369,7 @@
                 });
             });
         </script>
-        </div>
-    </main>
+</div>
+</main>
 </div>
 <jsp:include page="/views/common/footer.jsp"/>

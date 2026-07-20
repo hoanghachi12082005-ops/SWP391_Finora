@@ -13,8 +13,8 @@
 <div class="app-container">
     <jsp:include page="/views/common/sidebar.jsp"/> 
     <main class="main-content">
-        
-        
+
+
         <div class="container-fluid py-4">
             <c:if test="${param.success == 'delete'}">
                 <div style="background-color: #dcfce7; color: #15803d; padding: 15px; margin-bottom: 20px; border-radius: 8px; font-weight: 600;">
@@ -96,17 +96,17 @@
                 <div class="card-body p-4">
                     <form method="GET" action="${pageContext.request.contextPath}/branch" class="row g-3 align-items-center">
                         <input type="hidden" name="action" value="list">
-                        
+
                         <!-- Keyword Search -->
                         <div class="col-md-4">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0">
-                                    <span class="material-icons text-muted">search</span>
-                                </span>
-                                <input type="text" class="form-control border-start-0" name="keyword" value="${param.keyword}" placeholder="Tìm kiếm cửa hàng, mã số...">
+                            <div class="branch-search-wrapper">
+                                <span class="material-icons branch-search-icon">search</span>
+                                <input type="text" class="branch-search-input" name="keyword"
+                                       value="${param.keyword}"
+                                       placeholder="Tìm kiếm cửa hàng, mã số...">
                             </div>
                         </div>
-                        
+
                         <!-- Status Filter -->
                         <div class="col-md-3">
                             <select class="form-select" name="status">
@@ -115,7 +115,7 @@
                                 <option value="INACTIVE" ${selectedStatus == 'INACTIVE' ? 'selected' : ''}>Ngừng hoạt động</option>
                             </select>
                         </div>
-                        
+
                         <!-- City Filter -->
                         <div class="col-md-3">
                             <select class="form-select" name="city">
@@ -125,7 +125,7 @@
                                 </c:forEach>
                             </select>
                         </div>
-                        
+
                         <!-- Submit & Reset Buttons -->
                         <div class="col-md-2 d-flex gap-2">
                             <button type="submit" class="btn btn-danger flex-grow-1" style="background-color: var(--primary-color); border-color: var(--primary-color);">Lọc</button>
@@ -140,9 +140,7 @@
             <div class="table-card">
 
                 <div class="table-header">
-
                     <h3>Danh sách chi nhánh</h3>
-
                 </div>
                 <table class="table branch-table">
                     <thead>
@@ -205,114 +203,114 @@
                                             <span class="branch-badge locked">Ngừng hoạt động</span>
                                         </c:otherwise>
                                     </c:choose>
-                                    </td>
+                                </td>
 
-                                    <td>
-                                        <div class="action-group">
-                                            <a class="btn-view"
-                                               href="branch?action=detail&id=${b.branchId}">
-                                                <span class="material-icons" style="color: rgb(24, 49, 83); font-size: 1.0rem; vertical-align: middle;">visibility</span>
-                                            </a>
+                                <td>
+                                    <div class="action-group">
+                                        <a class="btn-view"
+                                           href="branch?action=detail&id=${b.branchId}">
+                                            <span class="material-icons" style="color: rgb(24, 49, 83); font-size: 1.0rem; vertical-align: middle;">visibility</span>
+                                        </a>
 
-                                            <a class="btn-edit"
-                                               href="branch?action=edit&id=${b.branchId}">
-                                                <span class="material-icons" style="color: rgb(24, 49, 83); font-size: 1.0rem; vertical-align: middle;">edit</span>
-                                            </a>
+                                        <a class="btn-edit"
+                                           href="branch?action=edit&id=${b.branchId}">
+                                            <span class="material-icons" style="color: rgb(24, 49, 83); font-size: 1.0rem; vertical-align: middle;">edit</span>
+                                        </a>
 
-                                            <button type="button"
-                                                    class="btn-delete"
-                                                    data-id="${b.branchId}"
-                                                    data-name="${fn:escapeXml(b.branchName)}"
-                                                    onclick="openDeleteModal(this)">
-                                                <span class="material-icons" style="color: rgb(24, 49, 83); font-size: 1.0rem; vertical-align: middle;">delete</span>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </c:forEach>
-                        </tbody>
+                                        <button type="button"
+                                                class="btn-delete"
+                                                data-id="${b.branchId}"
+                                                data-name="${fn:escapeXml(b.branchName)}"
+                                                onclick="openDeleteModal(this)">
+                                            <span class="material-icons" style="color: rgb(24, 49, 83); font-size: 1.0rem; vertical-align: middle;">delete</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </c:forEach>
+                    </tbody>
 
-                    </table>
+                </table>
 
-                    <jsp:include page="/views/common/pagination.jsp">
-                        <jsp:param name="baseUrl" value="${baseUrl}"/>
-                        <jsp:param name="queryString" value="&action=list&status=${empty selectedStatus ? '' : selectedStatus}&city=${empty selectedCity ? '' : selectedCity}"/>
-                    </jsp:include>
-                </div>
-
+                <jsp:include page="/views/common/pagination.jsp">
+                    <jsp:param name="baseUrl" value="${baseUrl}"/>
+                    <jsp:param name="queryString" value="&action=list&status=${empty selectedStatus ? '' : selectedStatus}&city=${empty selectedCity ? '' : selectedCity}"/>
+                </jsp:include>
             </div>
 
-            <jsp:include page="delete-modal.jsp"/>
-
-
-            <script>
-                (function () {
-                    const CONFIRM_PHRASE = 'XAC NHAN';
-                    const contextPath = '${pageContext.request.contextPath}';
-
-                    const modal = document.getElementById('deleteModal');
-                    const nameEl = document.getElementById('deleteBranchName');
-                    const inputEl = document.getElementById('deleteConfirmInput');
-                    const confirmBtn = document.getElementById('deleteConfirmBtn');
-                    const errorEl = document.getElementById('deleteConfirmError');
-
-                    let pendingDeleteId = null;
-
-                    function isPhraseMatched() {
-                        return inputEl.value.trim().toUpperCase() === CONFIRM_PHRASE;
-                    }
-
-                    function updateConfirmButton() {
-                        const matched = isPhraseMatched();
-                        confirmBtn.disabled = !matched;
-                        errorEl.hidden = matched || inputEl.value.trim() === '';
-                    }
-
-                    window.openDeleteModal = function (trigger) {
-                        pendingDeleteId = trigger.getAttribute('data-id');
-                        nameEl.textContent = trigger.getAttribute('data-name') || '';
-                        inputEl.value = '';
-                        errorEl.hidden = true;
-                        confirmBtn.disabled = true;
-                        modal.classList.add('is-open');
-                        inputEl.focus();
-                    };
-
-                    window.closeDeleteModal = function () {
-                        modal.classList.remove('is-open');
-                        pendingDeleteId = null;
-                        inputEl.value = '';
-                        confirmBtn.disabled = true;
-                        errorEl.hidden = true;
-                    };
-
-                    inputEl.addEventListener('input', updateConfirmButton);
-
-                    inputEl.addEventListener('keydown', function (e) {
-                        if (e.key === 'Enter' && isPhraseMatched() && pendingDeleteId) {
-                            confirmBtn.click();
-                        }
-                        if (e.key === 'Escape') {
-                            closeDeleteModal();
-                        }
-                    });
-
-                    confirmBtn.addEventListener('click', function () {
-                        if (!pendingDeleteId || !isPhraseMatched()) {
-                            errorEl.hidden = false;
-                            return;
-                        }
-                        window.location.href = contextPath + '/branch?action=delete&id=' + pendingDeleteId;
-                    });
-
-                    modal.addEventListener('click', function (e) {
-                        if (e.target === modal) {
-                            closeDeleteModal();
-                        }
-                    });
-                })();
-            </script>
         </div>
-    </main>
+
+        <jsp:include page="delete-modal.jsp"/>
+
+
+        <script>
+            (function () {
+                const CONFIRM_PHRASE = 'XAC NHAN';
+                const contextPath = '${pageContext.request.contextPath}';
+
+                const modal = document.getElementById('deleteModal');
+                const nameEl = document.getElementById('deleteBranchName');
+                const inputEl = document.getElementById('deleteConfirmInput');
+                const confirmBtn = document.getElementById('deleteConfirmBtn');
+                const errorEl = document.getElementById('deleteConfirmError');
+
+                let pendingDeleteId = null;
+
+                function isPhraseMatched() {
+                    return inputEl.value.trim().toUpperCase() === CONFIRM_PHRASE;
+                }
+
+                function updateConfirmButton() {
+                    const matched = isPhraseMatched();
+                    confirmBtn.disabled = !matched;
+                    errorEl.hidden = matched || inputEl.value.trim() === '';
+                }
+
+                window.openDeleteModal = function (trigger) {
+                    pendingDeleteId = trigger.getAttribute('data-id');
+                    nameEl.textContent = trigger.getAttribute('data-name') || '';
+                    inputEl.value = '';
+                    errorEl.hidden = true;
+                    confirmBtn.disabled = true;
+                    modal.classList.add('is-open');
+                    inputEl.focus();
+                };
+
+                window.closeDeleteModal = function () {
+                    modal.classList.remove('is-open');
+                    pendingDeleteId = null;
+                    inputEl.value = '';
+                    confirmBtn.disabled = true;
+                    errorEl.hidden = true;
+                };
+
+                inputEl.addEventListener('input', updateConfirmButton);
+
+                inputEl.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' && isPhraseMatched() && pendingDeleteId) {
+                        confirmBtn.click();
+                    }
+                    if (e.key === 'Escape') {
+                        closeDeleteModal();
+                    }
+                });
+
+                confirmBtn.addEventListener('click', function () {
+                    if (!pendingDeleteId || !isPhraseMatched()) {
+                        errorEl.hidden = false;
+                        return;
+                    }
+                    window.location.href = contextPath + '/branch?action=delete&id=' + pendingDeleteId;
+                });
+
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) {
+                        closeDeleteModal();
+                    }
+                });
+            })();
+        </script>
+</div>
+</main>
 </div>
 <jsp:include page="/views/common/footer.jsp"/>

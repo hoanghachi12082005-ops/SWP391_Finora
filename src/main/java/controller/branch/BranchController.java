@@ -405,7 +405,7 @@ public class BranchController extends HttpServlet {
         String submittedFileName = imagePart.getSubmittedFileName();
 
         if (submittedFileName == null || submittedFileName.trim().isEmpty()) {
-            return null;
+            return   null;
         }
 
         // Read all bytes from the input stream first

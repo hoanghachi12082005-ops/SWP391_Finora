@@ -15,7 +15,7 @@
 <body>
     <div class="pos-layout">
         <!-- Sidebar Navigation -->
-        <aside class="pos-sidebar">
+        <aside class="pos-sidebar"
             <div class="sidebar-logo">
                 <h2>POS</h2>
                 <span>V1.0</span>

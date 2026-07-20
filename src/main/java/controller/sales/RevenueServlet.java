@@ -30,14 +30,7 @@ public class RevenueServlet extends HttpServlet {
         req.setAttribute("activePage", "revenue");
 
         HttpSession session = req.getSession();
-        Employee emp = (Employee) session.getAttribute("employee");
-        if (emp == null) {
-            emp = new Employee();
-            emp.setEmpId(1);
-            emp.setBranchId(1);
-            emp.setFullName("Thu ngân #1");
-            session.setAttribute("employee", emp);
-        }
+        Employee emp = (Employee) session.getAttribute("employee"); 
 
         int branchId = emp.getBranchId();
 

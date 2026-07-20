@@ -1369,3 +1369,7 @@ input[type=number] {
 #comingSoonToast .material-icons {
     font-size: 20px;
 }
+
+#posPhoneSearch {
+    border: hidden;
+}

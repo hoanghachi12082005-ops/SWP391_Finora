@@ -46,7 +46,13 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1{
+    font-family: var(--font-main);
+    font-weight: 700;
+    color: #6894ffe3
+}
+
+h2, h3, h4, h5, h6 {
     font-family: var(--font-main);
     font-weight: 700;
     color: #0f172a;

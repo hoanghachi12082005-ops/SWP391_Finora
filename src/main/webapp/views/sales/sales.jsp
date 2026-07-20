@@ -151,40 +151,40 @@
             </div>
         </div>
 
-        <!-- ═══ RIGHT: CART PANEL (340px) ═══ -->
+        <!-- ═══ RIGHT: CART PANEL ═══ -->
         <aside class="w-[340px] bg-white border-l border-outline-variant flex flex-col shrink-0">
 
             <!-- Customer Section - Phone Search -->
-            <div class="p-4 border-b border-outline-variant space-y-2">
-                <div class="text-caption text-outline">Khách hàng</div>
+            <div class="px-4 py-3 border-b border-outline-variant space-y-2">
+                <div class="text-[12px] text-outline font-medium">Khách hàng</div>
                 <div class="flex items-center gap-2">
                     <div class="flex-1 relative">
-                        <div class="flex items-center bg-surface-container-low rounded-xl px-3 h-10 gap-2 border border-transparent focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/10 transition-all">
-                            <span class="material-symbols-outlined text-outline text-[18px]">phone</span>
-                            <input id="posPhoneSearch" type="text" placeholder="Nhập SĐT khách hàng..." class="bg-transparent outline-none flex-1 text-body-md" autocomplete="off">
-                            <button id="posClearSearch" class="text-outline hover:text-error transition-colors hidden text-[18px] leading-none">&times;</button>
-                            <span id="posSearchSpinner" class="hidden w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+                        <div class="flex items-center bg-surface-container-low rounded-lg px-3 h-9 gap-2 border border-transparent focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/10 transition-all">
+                            <span class="material-symbols-outlined text-outline text-[16px]">phone</span>
+                            <input id="posPhoneSearch" type="text" placeholder="Nhập SĐT..." class="bg-transparent outline-none flex-1 text-[14px]" autocomplete="off">
+                            <button id="posClearSearch" class="text-outline hover:text-error transition-colors hidden text-[16px] leading-none">&times;</button>
+                            <span id="posSearchSpinner" class="hidden w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
                         </div>
                         <div id="posSearchDropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant search-dropdown z-50 animate-fadeIn"></div>
                     </div>
                 </div>
-                <div id="posCustomerInfo" class="hidden flex items-center justify-between p-2 bg-surface-container-low rounded-xl">
+                <div id="posCustomerInfo" class="hidden flex items-center justify-between p-2 bg-surface-container-low rounded-lg">
                     <div class="min-w-0">
-                        <div id="posCustName" class="text-label-md font-semibold truncate"></div>
-                        <div id="posCustPhone" class="text-caption text-outline"></div>
-                        <div id="posCustPoints" class="text-caption text-primary hidden mt-0.5">
+                        <div id="posCustName" class="text-[14px] font-semibold truncate"></div>
+                        <div id="posCustPhone" class="text-[12px] text-outline"></div>
+                        <div id="posCustPoints" class="text-[12px] text-primary hidden mt-0.5">
                             <span class="material-symbols-outlined text-[12px] align-text-bottom">stars</span>
-                            Điểm khả dụng: <span id="posCustPointsValue">0</span>
+                            Điểm: <span id="posCustPointsValue">0</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-1">
-                        <button id="posRemoveCustomerBtn" class="text-outline hover:text-error transition-colors hidden text-[18px] leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-error-container/30" title="Bỏ chọn khách hàng">&times;</button>
-                        <button id="posEditCustomerBtn" class="text-label-md text-outline hover:text-primary transition-colors hidden shrink-0">Sửa</button>
+                        <button id="posRemoveCustomerBtn" class="text-outline hover:text-error transition-colors hidden text-[16px] leading-none w-7 h-7 flex items-center justify-center rounded-lg hover:bg-error-container/30" title="Bỏ chọn khách hàng">&times;</button>
+                        <button id="posEditCustomerBtn" class="text-[13px] text-outline hover:text-primary transition-colors hidden shrink-0">Sửa</button>
                     </div>
                 </div>
-                <div id="posNoCustomer" class="hidden p-2 bg-surface-container-low rounded-xl text-center">
-                    <p class="text-caption text-outline">Không tìm thấy khách hàng</p>
-                    <button id="posAddCustomerBtn" class="text-label-md text-primary hover:underline mt-0.5">+ Thêm khách hàng mới</button>
+                <div id="posNoCustomer" class="hidden p-2 bg-surface-container-low rounded-lg text-center">
+                    <p class="text-[12px] text-outline">Không tìm thấy khách hàng</p>
+                    <button id="posAddCustomerBtn" class="text-[13px] text-primary hover:underline mt-0.5">+ Thêm khách hàng mới</button>
                 </div>
                     <input type="hidden" id="selectedCustomerId" value="">
                     <!-- Redeem Points Section -->
@@ -207,23 +207,23 @@
                 </div>
 
             <!-- Summary Section -->
-            <div class="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-3">
+            <div class="flex-1 overflow-y-auto scrollbar-thin px-4 py-3 space-y-2.5">
                 <!-- Cart Summary (ẩn khi VNPAY hiện) -->
                 <div id="cartSummaryContent">
-                <div class="flex justify-between text-body-md">
+                <div class="flex justify-between text-[14px]">
                     <span class="text-outline">Số lượng sản phẩm</span>
                     <span id="summaryItemCount" class="font-semibold">0</span>
                 </div>
-                <div class="flex justify-between text-body-md">
+                <div class="flex justify-between text-[14px]">
                     <span class="text-outline">Tổng tiền hàng</span>
                     <span id="summarySubtotal" class="font-semibold">0 ₫</span>
                 </div>
 
-                <div class="flex justify-between text-body-md">
+                <div class="flex justify-between text-[14px]">
                     <span class="text-outline">Chiết khấu đơn hàng</span>
                     <span id="summaryDiscount" class="text-error font-semibold">0 ₫</span>
                 </div>
-                <div class="flex justify-between text-body-md">
+                <div class="flex justify-between text-[14px]">
                     <span class="text-outline">Thuế (VAT <fmt:formatNumber value="${vatPercentage}" type="number" maxFractionDigits="1"/>%)</span>
                     <span id="summaryVat" class="font-semibold">0 ₫</span>
                 </div>
@@ -231,8 +231,8 @@
                  <!-- Voucher -->
                  <div class="pt-2 border-t border-outline-variant">
                      <div class="flex items-center gap-2 relative">
-                         <span class="material-symbols-outlined text-outline text-[18px] absolute left-3 top-1/2 -translate-y-1/2">sell</span>
-                         <select id="voucherSelect" onchange="changeVoucher(this.value)" class="w-full text-body-md bg-surface-container-low rounded-lg pl-10 pr-3 py-2.5 border border-transparent focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none appearance-none cursor-pointer">
+                         <span class="material-symbols-outlined text-outline text-[16px] absolute left-3 top-1/2 -translate-y-1/2">sell</span>
+                         <select id="voucherSelect" onchange="changeVoucher(this.value)" class="w-full text-[14px] bg-surface-container-low rounded-lg pl-9 pr-3 py-2 border border-transparent focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none appearance-none cursor-pointer">
                              <option value="0">-- Chọn mã giảm giá --</option>
                              <c:forEach items="${vouchers}" var="v">
                                  <option value="${v.voucherId}">
@@ -241,63 +241,63 @@
                              </c:forEach>
                          </select>
                      </div>
-                     <div id="voucherMessage" class="hidden text-caption mt-1 px-7"></div>
+                     <div id="voucherMessage" class="hidden text-[12px] mt-0.5 px-7"></div>
                  </div>
 
                 <!-- Grand Total -->
-                <div class="pt-3 border-t border-outline-variant">
+                <div class="pt-2.5 border-t border-outline-variant">
                     <div class="flex justify-between items-end">
-                        <span class="text-title-lg font-bold">Tổng cộng</span>
-                        <span id="summaryTotal" class="text-display-lg text-primary font-bold leading-none">0 <span class="text-headline-md">₫</span></span>
+                        <span class="text-[16px] font-bold">Tổng cộng</span>
+                        <span id="summaryTotal" class="text-[24px] text-primary font-bold leading-none">0 <span class="text-[18px]">₫</span></span>
                     </div>
                 </div>
 
                 <!-- Notes -->
                 <div class="pt-2">
-                    <textarea id="orderNotes" rows="2" placeholder="Ghi chú đơn hàng..." class="w-full text-body-md bg-surface-container-low rounded-xl px-4 py-3 border border-transparent focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none resize-none"></textarea>
+                    <textarea id="orderNotes" rows="1" placeholder="Ghi chú đơn hàng..." class="w-full text-[14px] bg-surface-container-low rounded-lg px-3 py-2 border border-transparent focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none resize-none"></textarea>
                 </div>
                 </div>
 
                 <!-- VNPAY Payment Panel (hiện khi thanh toán VNPAY) -->
-                <div id="vnpayQRPanel" class="hidden flex flex-col items-center justify-center py-6 text-center">
-                    <div class="w-full max-w-[300px] bg-white rounded-2xl border border-outline-variant p-6 shadow-sm space-y-4">
-                        <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                            <span class="material-symbols-outlined text-[32px] text-primary">account_balance</span>
+                <div id="vnpayQRPanel" class="hidden flex flex-col items-center justify-center py-5 text-center">
+                    <div class="w-full max-w-[280px] bg-white rounded-xl border border-outline-variant p-5 shadow-sm space-y-3">
+                        <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                            <span class="material-symbols-outlined text-[28px] text-primary">account_balance</span>
                         </div>
                         <div>
-                            <p class="text-title-md font-bold">Thanh toán VNPAY</p>
-                            <p class="text-caption text-outline mt-1">Mã đơn: <span id="qrOrderCode" class="text-primary font-semibold">...</span></p>
+                            <p class="text-[15px] font-bold">Thanh toán VNPAY</p>
+                            <p class="text-[12px] text-outline mt-0.5">Mã đơn: <span id="qrOrderCode" class="text-primary font-semibold">...</span></p>
                         </div>
-                        <button onclick="openVNPayWindow()" class="w-full py-3 bg-primary text-white rounded-xl font-button-text hover:bg-secondary transition-colors flex items-center justify-center gap-2">
-                            <span class="material-symbols-outlined">open_in_new</span> Mở VNPAY thanh toán
+                        <button onclick="openVNPayWindow()" class="w-full py-2.5 bg-primary text-white rounded-lg text-[14px] font-semibold hover:bg-secondary transition-colors flex items-center justify-center gap-1.5">
+                            <span class="material-symbols-outlined text-[18px]">open_in_new</span> Mở VNPAY thanh toán
                         </button>
-                        <div id="qrStatusBadge" class="flex items-center justify-center gap-2 py-2.5 px-4 bg-warning/10 rounded-xl text-sm text-warning font-semibold">
-                            <div class="w-4 h-4 border-2 border-warning border-t-transparent rounded-full animate-spin"></div>
+                        <div id="qrStatusBadge" class="flex items-center justify-center gap-1.5 py-2 px-4 bg-warning/10 rounded-lg text-[13px] text-warning font-semibold">
+                            <div class="w-3.5 h-3.5 border-2 border-warning border-t-transparent rounded-full animate-spin"></div>
                             <span>Đang chờ thanh toán...</span>
                         </div>
-                        <button onclick="cancelVNPayQR()" class="text-sm text-outline hover:text-error transition-colors">Hủy thanh toán</button>
+                        <button onclick="cancelVNPayQR()" class="text-[13px] text-outline hover:text-error transition-colors">Hủy thanh toán</button>
                     </div>
                 </div>
             </div>
 
             <!-- Payment Buttons (sticky bottom) -->
-            <div class="bg-surface-container-low border-t border-outline-variant p-4 space-y-3">
+            <div class="bg-surface-container-low border-t border-outline-variant px-4 py-3 space-y-2.5">
                 <!-- Payment Method Toggle -->
                 <div class="flex gap-2">
-                    <button id="btnCash" onclick="selectPayMethod('CASH')" class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-primary ring-2 ring-primary/10 text-primary bg-white font-label-md transition-all">
-                        <span class="material-symbols-outlined text-[18px]">payments</span> Tiền mặt
+                    <button id="btnCash" onclick="selectPayMethod('CASH')" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border-2 border-primary ring-2 ring-primary/10 text-primary bg-white text-[13px] font-semibold transition-all">
+                        <span class="material-symbols-outlined text-[16px]">payments</span> Tiền mặt
                     </button>
-                    <button id="btnBank" onclick="selectPayMethod('BANK_TRANSFER')" class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-outline-variant text-on-surface-variant bg-white font-label-md transition-all hover:border-outline">
-                        <span class="material-symbols-outlined text-[18px]">account_balance</span> VNPAY
+                    <button id="btnBank" onclick="selectPayMethod('BANK_TRANSFER')" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border-2 border-outline-variant text-on-surface-variant bg-white text-[13px] font-semibold transition-all hover:border-outline">
+                        <span class="material-symbols-outlined text-[16px]">account_balance</span> VNPAY
                     </button>
                 </div>
                 <!-- Checkout Button -->
-                <button onclick="openPaymentModal()" id="btnCheckout" class="w-full h-16 bg-primary text-on-primary rounded-xl font-button-text text-lg flex items-center justify-center gap-3 hover:bg-secondary transition-colors shadow-lg">
-                    <span class="material-symbols-outlined text-[24px]">shopping_cart_checkout</span>
+                <button onclick="openPaymentModal()" id="btnCheckout" class="w-full h-14 bg-primary text-on-primary rounded-lg text-[15px] font-bold flex items-center justify-center gap-2 hover:bg-secondary transition-colors shadow-md">
+                    <span class="material-symbols-outlined text-[22px]">shopping_cart_checkout</span>
                     THANH TOÁN
                 </button>
                 <!-- Small Actions -->
-                <div class="flex gap-2 text-label-md">
+                <div class="flex gap-2 text-[13px] font-semibold">
                     <button onclick="holdOrder()" class="flex-1 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors">LƯU TẠM</button>
                     <button onclick="printPreview()" class="flex-1 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors">IN THỬ</button>
                     <button onclick="cancelOrder()" class="flex-1 py-2 rounded-lg text-error hover:bg-error-container transition-colors">HUỶ ĐƠN</button>
@@ -512,7 +512,7 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<!-- ═══════════════ JAVASCRIPT ════════════════════════════ -->
+<!-- ═══════════════ JAVASCRIPT ═════════════════════════ -->
 <!-- ═══════════════════════════════════════════════════════ -->
 <script>
 const CTX = '${pageContext.request.contextPath}';
