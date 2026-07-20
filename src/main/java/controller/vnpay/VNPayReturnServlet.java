@@ -48,6 +48,6 @@ public class VNPayReturnServlet extends HttpServlet {
         session.setAttribute("paymentBankCode", bankCode);
 
         // Redirect — URL sạch
-        resp.sendRedirect(req.getContextPath() + (isSuccess ? "/payment/success" : "/payment/failed"));
+        resp.sendRedirect(req.getContextPath() + (isSuccess ? "/payment/process" : "/payment/failed"));
     }
 }
