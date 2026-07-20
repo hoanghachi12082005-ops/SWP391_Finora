@@ -14,8 +14,7 @@ import java.util.Map;
 
 /**
  * Xử lý kết quả thanh toán VNPay trả về qua browser (Return URL).
- * Sau khi verify signature + xử lý, redirect sang /vnpay/result với token
- * để không lộ raw VNPay params trên URL trình duyệt.
+ * Verify signature + update DB, rồi redirect sang trang kết quả sạch sẽ.
  * GET /vnpay/return
  */
 @WebServlet("/vnpay/return")
@@ -46,19 +45,13 @@ public class VNPayReturnServlet extends HttpServlet {
             vnpay.processFailed(orderCode, responseCode);
         }
 
-        // Redirect sạch — chỉ còn 1 tham số t=token trên URL
-        String status   = isSuccess ? "success" : "error";
-        String message  = vnpay.getResponseMessage(responseCode);
-        String amount   = amountStr != null ? String.valueOf(Long.parseLong(amountStr) / 100) : "0";
-
-        String token = vnpay.encodeResultToken(
-                orderCode, status, message, amount,
-                transactionNo, bankCode, payDate);
-
-        resp.sendRedirect(req.getContextPath() + "/vnpay/result?t=" + urlEncode(token));
-    }
-
-    private static String urlEncode(String s) {
-        return URLEncoder.encode(s, StandardCharsets.UTF_8);
+        // Redirect sạch — URL không còn lộ tham số VNPay
+        if (isSuccess) {
+            resp.sendRedirect(req.getContextPath() + "/payment/result?status=success&orderCode=" + orderCode);
+        } else {
+            String message = vnpay.getResponseMessage(responseCode);
+            String encodedMsg = URLEncoder.encode(message, StandardCharsets.UTF_8);
+            resp.sendRedirect(req.getContextPath() + "/payment/result?status=failed&orderCode=" + orderCode + "&message=" + encodedMsg);
+        }
     }
 }
