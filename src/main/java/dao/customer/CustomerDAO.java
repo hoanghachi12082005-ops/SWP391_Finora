@@ -18,8 +18,7 @@ import java.util.logging.Logger;
 import model.Customer;
 import model.CustomerOverview;
 import model.Branch;
-import model.Voucher;
-import dao.sales.VoucherDAO;
+import model.LoyaltyPointSetting;
 import util.database.DBContext;
 
 public class CustomerDAO {
@@ -853,10 +852,10 @@ public class CustomerDAO {
 
     private int calculatePoints(BigDecimal spent) {
         if (spent == null) return 0;
-        // Dùng POINT_EARN_CONFIG từ bảng voucher: ? VNĐ = 1 điểm
-        Voucher earnConfig = new VoucherDAO().getByCode("POINT_EARN_CONFIG");
-        double amountPerPoint = (earnConfig != null && earnConfig.getDiscountValue() > 0)
-                ? earnConfig.getDiscountValue() : 100000;
+        // Dùng loyalty_point_setting.amount_per_point: ? VNĐ = 1 điểm
+        LoyaltyPointSetting setting = new LoyaltyPointSettingDAO().getSetting();
+        double amountPerPoint = (setting != null && setting.getAmountPerPoint().intValue() > 0)
+                ? setting.getAmountPerPoint().doubleValue() : 100000;
         if (amountPerPoint <= 0) return 0;
         BigDecimal bdAmount = BigDecimal.valueOf(amountPerPoint);
         return spent.divide(bdAmount, 0, java.math.RoundingMode.DOWN).intValue();
