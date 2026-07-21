@@ -269,7 +269,7 @@ public class StockController extends InventoryBaseController {
                         double totalCost = 0.0;
                         
                         try {
-                            for (int i = 0; i < productIds.length; i++) {
+                            for (int i = 0; i < productIds.length; i++) {                           
                                 int pId = Integer.parseInt(productIds[i].trim());
                                 int qty = Integer.parseInt(quantities[i].trim());
                                 int sId = Integer.parseInt(supplierIds[i].trim());

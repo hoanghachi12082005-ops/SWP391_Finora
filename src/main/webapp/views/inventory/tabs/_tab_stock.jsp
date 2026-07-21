@@ -93,7 +93,7 @@
             <thead>
                 <tr>
                     <th>Sản Phẩm</th>
-                    <th>Mã SKU</th>
+                    <!--<th>Mã SKU</th>-->
                     <th>Danh Mục</th>
                     <th>Giá Bán</th>
                     <th>Chi Nhánh</th>
@@ -147,7 +147,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td>${item.productCodebar}</td>
+                                <!--<td>${item.productCodebar}</td>-->
                                 <td>${item.categoryName}</td>
                                 <td><fmt:formatNumber value="${item.sellingPrice}" type="currency" currencySymbol="VNĐ" maxFractionDigits="0"/></td>
                                 <td>${item.warehouseName}</td>

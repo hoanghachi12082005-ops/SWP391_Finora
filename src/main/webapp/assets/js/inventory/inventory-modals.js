@@ -412,8 +412,8 @@ function parseImportExcel(rows) {
     const excelEmptyRow = document.getElementById('excelImportEmptyRow');
     if (!excelTableBody) return;
 
-    if (!rows || rows.length < 3) {
-        alert('Tệp Excel không đúng mẫu hoặc không chứa dữ liệu sản phẩm.');
+    if (!rows || rows.length < 2) {
+        alert('Tệp Excel không chứa dữ liệu sản phẩm.');
         return;
     }
 
@@ -427,15 +427,22 @@ function parseImportExcel(rows) {
     let headerRowIdx = -1;
     for (let i = 0; i < Math.min(10, rows.length); i++) {
         const r = rows[i];
-        if (r && r.map(c => removeAccents(String(c || '').toLowerCase())).join(' ').indexOf('ma ncc') > -1) {
-            headerRowIdx = i;
-            break;
+        if (r) {
+            const joinedText = removeAccents(r.map(c => String(c || '').toLowerCase()).join(' '));
+            if (joinedText.indexOf('ma ncc') > -1 || joinedText.indexOf('supplier id') > -1 || joinedText.indexOf('ma nha cung cap') > -1 || joinedText.indexOf('ten san pham') > -1 || joinedText.indexOf('san pham') > -1) {
+                headerRowIdx = i;
+                break;
+            }
         }
     }
 
     if (headerRowIdx === -1) {
-        alert('Không tìm thấy tiêu đề cột hợp lệ (Tên Sản Phẩm, Mã NCC (Supplier ID), Tên NCC, Số Lượng Nhập).');
-        return;
+        if (rows[0] && rows[0].length > 0) {
+            headerRowIdx = 0;
+        } else {
+            alert('Không tìm thấy tiêu đề cột hợp lệ (Tên Sản Phẩm, Mã NCC (Supplier ID), Tên NCC, Số Lượng Nhập).');
+            return;
+        }
     }
 
     const headers = rows[headerRowIdx];
@@ -444,32 +451,32 @@ function parseImportExcel(rows) {
         const val = removeAccents(String(headers[j] || '').toLowerCase().trim());
         
         // Match product name
-        if (val.indexOf('ten san pham') > -1) {
+        if (val.indexOf('ten san pham') > -1 || val.indexOf('ten sp') > -1) {
             nameIdx = j;
         } else if (val.indexOf('san pham') > -1 && nameIdx === -1) {
+            nameIdx = j;
+        } else if (val.indexOf('sp') > -1 && nameIdx === -1) {
             nameIdx = j;
         }
         
         // Match supplier ID
-        if (val.indexOf('ma ncc') > -1 || val.indexOf('supplier id') > -1) {
+        if (val.indexOf('ma ncc') > -1 || val.indexOf('supplier id') > -1 || val.indexOf('ma nha cung cap') > -1 || val.indexOf('ma supplier') > -1) {
             supplierIdIdx = j;
         }
         
         // Match supplier name
-        if (val.indexOf('ten ncc') > -1) {
+        if (val.indexOf('ten ncc') > -1 || val.indexOf('ten nha cung cap') > -1 || val.indexOf('supplier name') > -1) {
             supplierNameIdx = j;
         }
         
         // Match quantity
-        if (val.indexOf('so luong nhap') > -1) {
-            qtyIdx = j;
-        } else if (val.indexOf('so luong') > -1 && qtyIdx === -1) {
+        if (val.indexOf('so luong nhap') > -1 || val.indexOf('so luong') > -1 || val.indexOf('qty') > -1 || val.indexOf('quantity') > -1 || val.indexOf('sl') > -1) {
             qtyIdx = j;
         }
     }
 
     if (nameIdx === -1 || supplierIdIdx === -1 || qtyIdx === -1) {
-        alert('Tệp thiếu cột bắt buộc. V vui lòng sử dụng file mẫu tải từ hệ thống.');
+        alert('Tệp thiếu cột bắt buộc. Vui lòng sử dụng file mẫu tải từ hệ thống hoặc tạo file có các cột: Tên sản phẩm, Mã NCC, Số lượng.');
         return;
     }
 
@@ -481,6 +488,7 @@ function parseImportExcel(rows) {
             if (excelEmptyRow) excelEmptyRow.style.display = 'none';
 
             let validCount = 0;
+            const groups = {};
 
             for (let i = headerRowIdx + 1; i < rows.length; i++) {
                 const r = rows[i];
@@ -493,7 +501,37 @@ function parseImportExcel(rows) {
                 const excelProductName = (r[nameIdx] !== undefined && r[nameIdx] !== null) ? String(r[nameIdx]).trim() : '';
                 const rawSupplierId = (r[supplierIdIdx] !== undefined && r[supplierIdIdx] !== null) ? String(r[supplierIdIdx]).trim() : '';
                 const sId = parseInt(rawSupplierId);
-                const rawQty = (r[qtyIdx] !== undefined && r[qtyIdx] !== null) ? String(r[qtyIdx]).trim() : '';
+                const rawQtyStr = (r[qtyIdx] !== undefined && r[qtyIdx] !== null) ? String(r[qtyIdx]).trim() : '';
+                const qtyVal = parseInt(rawQtyStr);
+                const isQtyValid = /^[1-9]\d*$/.test(rawQtyStr);
+
+                const key = `${excelProductName.toLowerCase().trim()}||${rawSupplierId.toLowerCase().trim()}`;
+                
+                if (!groups[key]) {
+                    groups[key] = {
+                        excelProductName,
+                        rawSupplierId,
+                        sId,
+                        qty: 0,
+                        rawQtyStr: rawQtyStr,
+                        hasInvalidQty: !isQtyValid
+                    };
+                }
+
+                if (isQtyValid) {
+                    groups[key].qty += qtyVal;
+                    groups[key].rawQtyStr = String(groups[key].qty);
+                } else {
+                    groups[key].hasInvalidQty = true;
+                    groups[key].rawQtyStr = rawQtyStr; // Keep original invalid string
+                }
+            }
+
+            Object.values(groups).forEach(group => {
+                const excelProductName = group.excelProductName;
+                const rawSupplierId = group.rawSupplierId;
+                const sId = group.sId;
+                const rawQty = group.rawQtyStr;
 
                 // Validate Product
                 let apiProd = null;
@@ -523,7 +561,9 @@ function parseImportExcel(rows) {
                 }
 
                 if (!hasValidSupplier && !isNaN(sId) && sId > 0) {
-                    const supName = supplierNameIdx > -1 && r[supplierNameIdx] ? String(r[supplierNameIdx]).trim() : ('NCC #' + sId);
+                    const activeSuppliers = window.ACTIVE_SUPPLIERS || [];
+                    const foundSup = activeSuppliers.find(sup => sup.supplierId === sId);
+                    const supName = foundSup ? foundSup.supplierName : ('NCC #' + sId);
                     selectOptions += `<option value="${sId}" selected data-price="0" data-linked="false">${supName} (Lỗi: Nhà cung cấp này không có sản phẩm này)</option>`;
                 }
 
@@ -601,7 +641,7 @@ function parseImportExcel(rows) {
 
                 excelTableBody.appendChild(tr);
                 validCount++;
-            }
+            });
 
             checkExcelImportState();
             const totalRows = excelTableBody.querySelectorAll('tr.excel-data-row').length;
