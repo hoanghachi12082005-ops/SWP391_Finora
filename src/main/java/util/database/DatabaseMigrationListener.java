@@ -19,35 +19,24 @@ public class DatabaseMigrationListener implements ServletContextListener {
         try (Connection conn = DBContext.getConnection()) {
             DatabaseMetaData metaData = conn.getMetaData();
             
-            // Check if failed_login_count column exists in Employee table
-            boolean failedLoginExists = false;
-            String columnName = null;
-            try (ResultSet rs = metaData.getColumns(null, null, "Employee", "failed_login_count")) {
-                if (rs.next()) { failedLoginExists = true; columnName = "failed_login_count"; }
+            // Check if count_login_fail column exists in Employee table
+            boolean countLoginFailExists = false;
+            try (ResultSet rs = metaData.getColumns(null, null, "Employee", "count_login_fail")) {
+                if (rs.next()) { countLoginFailExists = true; }
             }
-            if (!failedLoginExists) {
-                try (ResultSet rs = metaData.getColumns(null, null, "employee", "failed_login_count")) {
-                    if (rs.next()) { failedLoginExists = true; columnName = "failed_login_count"; }
-                }
-            }
-            if (!failedLoginExists) {
-                try (ResultSet rs = metaData.getColumns(null, null, "Employee", "FailedLoginCount")) {
-                    if (rs.next()) { failedLoginExists = true; columnName = "FailedLoginCount"; }
-                }
-            }
-            if (!failedLoginExists) {
-                try (ResultSet rs = metaData.getColumns(null, null, "employee", "FailedLoginCount")) {
-                    if (rs.next()) { failedLoginExists = true; columnName = "FailedLoginCount"; }
+            if (!countLoginFailExists) {
+                try (ResultSet rs = metaData.getColumns(null, null, "employee", "count_login_fail")) {
+                    if (rs.next()) { countLoginFailExists = true; }
                 }
             }
 
-            if (failedLoginExists) {
-                System.out.println("Column '" + columnName + "' exists. Dropping column from Employee table...");
+            if (!countLoginFailExists) {
+                System.out.println("Column 'count_login_fail' does not exist. Adding column to Employee table...");
                 try (Statement stmt = conn.createStatement()) {
-                    stmt.execute("ALTER TABLE Employee DROP COLUMN " + columnName);
-                    System.out.println("Column '" + columnName + "' dropped successfully from Employee table.");
+                    stmt.execute("ALTER TABLE Employee ADD count_login_fail INT DEFAULT 0 NOT NULL");
+                    System.out.println("Column 'count_login_fail' added successfully to Employee table.");
                 } catch (SQLException ex) {
-                    System.err.println("Failed to drop column '" + columnName + "' from Employee table: " + ex.getMessage());
+                    System.err.println("Failed to add column 'count_login_fail' to Employee table: " + ex.getMessage());
                 }
             }
 

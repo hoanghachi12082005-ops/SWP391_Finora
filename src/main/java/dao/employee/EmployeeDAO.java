@@ -27,6 +27,7 @@ public class EmployeeDAO {
                 + "  e.phone AS Phone, "
                 + "  e.passwordHash AS PasswordHash, "
                 + "  e.status AS Status, "
+                + "  e.count_login_fail AS CountLoginFail, "
                 + "  r.role_name AS RoleName, "
                 + "  b.branch_name AS BranchName "
                 + "FROM Employee e "
@@ -64,6 +65,36 @@ public class EmployeeDAO {
             ps.executeUpdate();
         } catch (SQLException e) {
             System.err.println("Lỗi lockEmployee: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Tăng số lần đăng nhập sai của nhân viên lên 1.
+     */
+    public void incrementFailedLoginCount(int employeeId) {
+        String sql = "UPDATE Employee SET count_login_fail = count_login_fail + 1, update_at = CURRENT_TIMESTAMP WHERE emp_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, employeeId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Lỗi incrementFailedLoginCount: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Reset số lần đăng nhập sai của nhân viên về 0.
+     */
+    public void resetFailedLoginCount(int employeeId) {
+        String sql = "UPDATE Employee SET count_login_fail = 0, update_at = CURRENT_TIMESTAMP WHERE emp_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, employeeId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Lỗi resetFailedLoginCount: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -252,6 +283,12 @@ public class EmployeeDAO {
         e.setStatus(rs.getString("Status"));
         e.setRoleName(rs.getString("RoleName"));
         e.setBranchName(rs.getString("BranchName"));
+
+        int countLoginFail = 0;
+        try {
+            countLoginFail = rs.getInt("CountLoginFail");
+        } catch (SQLException ignored) {}
+        e.setCountLoginFail(countLoginFail);
 
         return e;
     }

@@ -142,12 +142,13 @@ public class UserManagementDao extends DBContext {
 
     public boolean updateOwnerStatus(int employeeId, String status) {
         String sql =
-                "UPDATE Employee SET status = ?, update_at = GETDATE() WHERE emp_id = ? " +
+                "UPDATE Employee SET status = ?, count_login_fail = CASE WHEN ? = 'ACTIVE' THEN 0 ELSE count_login_fail END, update_at = GETDATE() WHERE emp_id = ? " +
                 "AND EXISTS (SELECT 1 FROM Role rr WHERE rr.role_id = Employee.role_id AND rr.role_name = 'Owner')";
         try (Connection connection = DBContext.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, status);
-            ps.setInt(2, employeeId);
+            ps.setString(2, status != null ? status.toUpperCase() : "");
+            ps.setInt(3, employeeId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -203,11 +204,12 @@ public class UserManagementDao extends DBContext {
     }
 
     public boolean updateEmployeeStatusByAdmin(int employeeId, String status) {
-        String sql = "UPDATE Employee SET status = ?, update_at = GETDATE() WHERE emp_id = ?";
+        String sql = "UPDATE Employee SET status = ?, count_login_fail = CASE WHEN ? = 'ACTIVE' THEN 0 ELSE count_login_fail END, update_at = GETDATE() WHERE emp_id = ?";
         try (Connection connection = DBContext.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, status);
-            ps.setInt(2, employeeId);
+            ps.setString(2, status != null ? status.toUpperCase() : "");
+            ps.setInt(3, employeeId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -692,6 +694,7 @@ public class UserManagementDao extends DBContext {
         String sql =
                 "UPDATE Employee " +
                 "SET status = ?, " +
+                "    count_login_fail = CASE WHEN ? = 'ACTIVE' THEN 0 ELSE count_login_fail END, " +
                 "    update_at = GETDATE() " +
                 "WHERE emp_id = ? " +
                 "AND NOT EXISTS (SELECT 1 FROM Role rr WHERE rr.role_id = Employee.role_id AND rr.role_name IN ('Admin', 'Owner'))";
@@ -699,7 +702,8 @@ public class UserManagementDao extends DBContext {
         try (Connection connection = DBContext.getConnection(); 
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, status);
-            ps.setInt(2, employeeId);
+            ps.setString(2, status != null ? status.toUpperCase() : "");
+            ps.setInt(3, employeeId);
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {

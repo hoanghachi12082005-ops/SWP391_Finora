@@ -30,7 +30,7 @@ public class AuthService {
         // ─────────────────────────────────────────────────────────────
 
         if (!"ACTIVE".equalsIgnoreCase(employee.getStatus())) {
-            throw new RuntimeException("Tài khoản của bạn đã bị khóa hoặc chưa được kích hoạt");
+            throw new RuntimeException("Tài khoản của bạn đã bị khóa hoặc chưa được kích hoạt. Vui lòng liên hệ Admin/Owner để mở khóa.");
         }
 
         boolean verify = PasswordUtil.verify(password, dbHash);
@@ -40,30 +40,20 @@ public class AuthService {
         System.out.println("[DEBUG AUTH] ===== KẾT THÚC SO SÁNH MẬT KHẨU =====\n");
         // ─────────────────────────────────────────────────────────────
 
-        String sessionKey = "failed_attempts_" + username.trim().toLowerCase();
-
         if (!verify) {
-            int failedAttempts = 0;
-            if (session != null) {
-                Integer count = (Integer) session.getAttribute(sessionKey);
-                failedAttempts = (count != null ? count : 0) + 1;
-                session.setAttribute(sessionKey, failedAttempts);
-            }
+            employeeDAO.incrementFailedLoginCount(employee.getEmployeeID());
+            int failedAttempts = employee.getCountLoginFail() + 1;
             int remaining = Employee.MAX_FAILED_LOGIN - failedAttempts;
             if (remaining <= 0) {
                 employeeDAO.lockEmployee(employee.getEmployeeID());
-                if (session != null) {
-                    session.removeAttribute(sessionKey);
-                }
-                throw new RuntimeException("Tài khoản của bạn đã bị khóa do đăng nhập sai quá 5 lần.");
+                throw new RuntimeException("Tài khoản của bạn đã bị khóa do đăng nhập sai quá 5 lần. Vui lòng liên hệ Admin/Owner để mở khóa.");
             } else {
                 throw new RuntimeException("Mật khẩu không chính xác. Bạn còn " + remaining + " lần nhập lại.");
             }
         }
 
-        if (session != null) {
-            session.removeAttribute(sessionKey);
-        }
+        // Reset login failures on success
+        employeeDAO.resetFailedLoginCount(employee.getEmployeeID());
 
         return employee;
     }

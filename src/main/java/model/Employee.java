@@ -31,6 +31,7 @@ public class Employee {
     private String    phone;
     private String    passwordHash;
     private String    status;
+    private int       countLoginFail;
 
 
     private Timestamp createdAt;
@@ -122,6 +123,9 @@ public class Employee {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public int getCountLoginFail() { return countLoginFail; }
+    public void setCountLoginFail(int countLoginFail) { this.countLoginFail = countLoginFail; }
 
 
 
