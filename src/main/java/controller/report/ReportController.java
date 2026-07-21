@@ -1,11 +1,8 @@
 package controller.report;
 
 import controller.common.BaseController;
-import dao.report.EmployeeSalesReportDAO;
-import dao.report.BranchSalesReportDAO;
 import dao.report.InventoryReportDAO;
 import dao.report.CustomerLoyaltyReportDAO;
-import dao.report.FinanceDetailReportDAO;
 import dao.user.UserManagementDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,19 +10,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
-import model.Branch;
 import model.Employee;
-import model.EmployeeOverview;
-import model.EmployeeSalesSummary;
-import model.Order;
-import model.Payment;
-import model.FinanceDetailReportOverview;
 import util.pagination.PaginationHelper;
 import util.pagination.PaginationHelper.PageResult;
 import util.report.ExcelExportUtil;
@@ -57,20 +46,14 @@ import util.report.PdfReportUtil;
     })
 public class ReportController extends BaseController {
 
-    private EmployeeSalesReportDAO employeeSalesReportDAO;
-    private BranchSalesReportDAO branchSalesReportDAO;
     private InventoryReportDAO inventoryReportDAO;
     private CustomerLoyaltyReportDAO customerLoyaltyReportDAO;
-    private FinanceDetailReportDAO financeDetailReportDAO;
     private UserManagementDao userManagementDao;
 
     @Override
     public void init() throws ServletException {
-        employeeSalesReportDAO = new EmployeeSalesReportDAO();
-        branchSalesReportDAO = new BranchSalesReportDAO();
         inventoryReportDAO = new InventoryReportDAO();
         customerLoyaltyReportDAO = new CustomerLoyaltyReportDAO();
-        financeDetailReportDAO = new FinanceDetailReportDAO();
         userManagementDao = new UserManagementDao();
     }
 
@@ -78,76 +61,23 @@ public class ReportController extends BaseController {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String path = request.getServletPath();
+        String ctx = request.getContextPath();
 
-        if ("/reports/employee-sales".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            loadEmployeeSalesReport(request);
-            forward(request, response, "reports/employee-sales");
-            return;
-        }
-
-        if ("/reports/employee-sales-preview".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            loadFullReportPreview(request);
-            forward(request, response, "reports/employee-sales-preview");
-            return;
-        }
-
-        if ("/reports/employee-sales-detail".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            showEmployeeDetail(request, response);
-            return;
-        }
-
-        if ("/reports/employee-sales-detail-export".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            exportEmployeeDetailExcel(request, response);
-            return;
-        }
-
-        if ("/reports/employee-sales-export".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            exportEmployeeSalesPdf(request, response);
-            return;
-        }
-
-        if ("/reports/employee-sales-export-excel".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            exportEmployeeSalesExcel(request, response);
-            return;
-        }
-
-        if ("/reports/sales-by-store".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            loadBranchSalesReport(request);
-            forward(request, response, "reports/sales-by-store");
-            return;
-        }
-
-        if ("/reports/sales-by-store-preview".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            loadBranchSalesPreview(request);
-            forward(request, response, "reports/sales-by-store-preview");
-            return;
-        }
-
-        if ("/reports/sales-by-store-export".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            exportBranchSalesPdf(request, response);
-            return;
-        }
-
-        if ("/reports/sales-by-store-export-excel".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            exportBranchSalesExcel(request, response);
+        // Redirect consolidated order reports to new Order Report Center
+        if ("/reports/employee-sales".equals(path)
+                || "/reports/employee-sales-preview".equals(path)
+                || "/reports/employee-sales-detail".equals(path)
+                || "/reports/employee-sales-detail-export".equals(path)
+                || "/reports/employee-sales-export".equals(path)
+                || "/reports/employee-sales-export-excel".equals(path)
+                || "/reports/sales-by-store".equals(path)
+                || "/reports/sales-by-store-preview".equals(path)
+                || "/reports/sales-by-store-export".equals(path)
+                || "/reports/sales-by-store-export-excel".equals(path)
+                || "/reports/finance-detail".equals(path)
+                || "/reports/finance-detail-preview".equals(path)
+                || "/reports/finance-detail-export-excel".equals(path)) {
+            response.sendRedirect(ctx + "/reports/orders");
             return;
         }
 
@@ -207,32 +137,9 @@ public class ReportController extends BaseController {
             return;
         }
 
-        if ("/reports/finance-detail".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            loadFinanceDetailReport(request);
-            forward(request, response, "reports/finance-detail");
-            return;
-        }
-
-        if ("/reports/finance-detail-preview".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            loadFinanceDetailPreview(request);
-            forward(request, response, "reports/finance-detail-preview");
-            return;
-        }
-
-        if ("/reports/finance-detail-export-excel".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            exportFinanceDetailExcel(request, response);
-            return;
-        }
-
         switch (path) {
             default:
-                response.sendRedirect(request.getContextPath() + "/reports/employee-sales");
+                response.sendRedirect(ctx + "/reports/orders");
                 break;
         }
     }
@@ -241,50 +148,6 @@ public class ReportController extends BaseController {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doGet(request, response);
-    }
-
-    private void loadBranchSalesReport(HttpServletRequest request) {
-        String keyword = trim(request.getParameter("keyword"));
-        String branchId = trim(request.getParameter("branchId"));
-        if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
-            branchId = String.valueOf(request.getAttribute("managerBranchId"));
-        }
-        String dateFromRaw = trim(request.getParameter("dateFrom"));
-        String dateToRaw = trim(request.getParameter("dateTo"));
-
-        LocalDate dateFrom = parseDate(dateFromRaw);
-        LocalDate dateTo = parseDate(dateToRaw);
-
-        int page = parseInt(request.getParameter("page"), 1);
-        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
-
-        int totalBranches = branchSalesReportDAO.countBranchSalesReport(keyword, branchId);
-        PageResult pr = PaginationHelper.compute(totalBranches, page, sizeValue);
-        pr.setAttributes(request);
-
-        request.setAttribute(
-                "salesReports",
-                branchSalesReportDAO.getBranchSalesReport(
-                        keyword, branchId, dateFrom, dateTo, pr.getCurrentPage(), pr.getPageSize())
-        );
-        request.setAttribute(
-                "reportOverview",
-                branchSalesReportDAO.getReportOverview(keyword, branchId, dateFrom, dateTo)
-        );
-        request.setAttribute("branches", userManagementDao.getAllBranches());
-
-        request.setAttribute("pageTitle", "Báo cáo doanh số theo chi nhánh");
-        request.setAttribute(
-                "pageSubtitle",
-                "Xem chỉ số doanh thu và đơn hàng của các chi nhánh"
-        );
-        request.setAttribute("baseUrl", request.getContextPath() + "/reports/sales-by-store");
-
-        request.setAttribute("keyword", keyword);
-        request.setAttribute("branchFilter", parseInt(branchId, -1));
-        request.setAttribute("dateFrom", dateFromRaw);
-        request.setAttribute("dateTo", dateToRaw);
-        request.setAttribute("totalBranches", totalBranches);
     }
 
     private void loadInventoryReport(HttpServletRequest request) {
@@ -353,348 +216,6 @@ public class ReportController extends BaseController {
 
         request.setAttribute("keyword", keyword);
         request.setAttribute("totalCustomers", totalCustomers);
-    }
-
-    private void loadEmployeeSalesReport(HttpServletRequest request) {
-        String keyword = trim(request.getParameter("keyword"));
-        String branchId = trim(request.getParameter("branchId"));
-        if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
-            branchId = String.valueOf(request.getAttribute("managerBranchId"));
-        }
-        String dateFromRaw = trim(request.getParameter("dateFrom"));
-        String dateToRaw = trim(request.getParameter("dateTo"));
-
-        LocalDate dateFrom = parseDate(dateFromRaw);
-        LocalDate dateTo = parseDate(dateToRaw);
-
-        int page = parseInt(request.getParameter("page"), 1);
-        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
-
-        int totalEmployees = employeeSalesReportDAO.countEmployeeSalesReport(keyword, branchId);
-        PageResult pr = PaginationHelper.compute(totalEmployees, page, sizeValue);
-        pr.setAttributes(request);
-
-        request.setAttribute(
-                "salesReports",
-                employeeSalesReportDAO.getEmployeeSalesReport(
-                        keyword, branchId, dateFrom, dateTo, pr.getCurrentPage(), pr.getPageSize())
-        );
-        request.setAttribute(
-                "reportOverview",
-                employeeSalesReportDAO.getReportOverview(keyword, branchId, dateFrom, dateTo)
-        );
-        request.setAttribute("branches", userManagementDao.getAllBranches());
-
-        request.setAttribute("pageTitle", "Báo cáo doanh số nhân viên");
-        request.setAttribute(
-                "pageSubtitle",
-                "Xem chỉ số hiệu suất bán hàng của nhân viên"
-        );
-        request.setAttribute("baseUrl", request.getContextPath() + "/reports/employee-sales");
-
-        request.setAttribute("keyword", keyword);
-        request.setAttribute("branchFilter", parseInt(branchId, -1));
-        request.setAttribute("dateFrom", dateFromRaw);
-        request.setAttribute("dateTo", dateToRaw);
-        request.setAttribute("totalEmployees", totalEmployees);
-    }
-
-    private void loadFullReportPreview(HttpServletRequest request) {
-        String keyword = trim(request.getParameter("keyword"));
-        String branchId = trim(request.getParameter("branchId"));
-        if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
-            branchId = String.valueOf(request.getAttribute("managerBranchId"));
-        }
-        String dateFromRaw = trim(request.getParameter("dateFrom"));
-        String dateToRaw = trim(request.getParameter("dateTo"));
-
-        LocalDate dateFrom = parseDate(dateFromRaw);
-        LocalDate dateTo = parseDate(dateToRaw);
-
-        List<EmployeeSalesSummary> allData = employeeSalesReportDAO.getAllEmployeeSalesReport(
-                keyword, branchId, dateFrom, dateTo);
-        EmployeeOverview overview = employeeSalesReportDAO.getReportOverview(
-                keyword, branchId, dateFrom, dateTo);
-
-        int ec = overview.getTotalEmployees();
-        if (ec > 0) {
-            overview.setAvgRevenuePerEmployee(
-                overview.getTotalRevenue().divide(BigDecimal.valueOf(ec), 2, RoundingMode.HALF_UP)
-            );
-        }
-
-        request.setAttribute("allSalesReports", allData);
-        request.setAttribute("reportOverview", overview);
-        request.setAttribute("branches", userManagementDao.getAllBranches());
-
-        final int finalBranchId = parseInt(branchId, -1);
-        String branchName = null;
-        if (!isBlank(branchId)) {
-            var branches = userManagementDao.getAllBranches();
-            if (branches != null) {
-                branchName = branches.stream()
-                        .filter(b -> b.getBranchID() == finalBranchId)
-                        .findFirst()
-                        .map(b -> b.getName())
-                        .orElse(null);
-            }
-        }
-        request.setAttribute("reportBranchName", branchName);
-
-        request.setAttribute("keyword", keyword);
-        request.setAttribute("branchFilter", finalBranchId);
-        request.setAttribute("dateFrom", dateFromRaw);
-        request.setAttribute("dateTo", dateToRaw);
-        request.setAttribute("pageTitle", "Xem trước báo cáo doanh số nhân viên");
-    }
-
-    private void exportEmployeeSalesPdf(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        try {
-            String keyword = trim(request.getParameter("keyword"));
-            String branchId = trim(request.getParameter("branchId"));
-            if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
-                branchId = String.valueOf(request.getAttribute("managerBranchId"));
-            }
-            String dateFromRaw = trim(request.getParameter("dateFrom"));
-            String dateToRaw = trim(request.getParameter("dateTo"));
-
-            LocalDate dateFrom = parseDate(dateFromRaw);
-            LocalDate dateTo = parseDate(dateToRaw);
-
-            List<EmployeeSalesSummary> allData = employeeSalesReportDAO.getAllEmployeeSalesReport(
-                    keyword, branchId, dateFrom, dateTo);
-            EmployeeOverview overview = employeeSalesReportDAO.getReportOverview(
-                    keyword, branchId, dateFrom, dateTo);
-
-            String generatedBy = "Unknown";
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                Employee currentUser = (Employee) session.getAttribute("currentUser");
-                if (currentUser != null) {
-                    generatedBy = currentUser.getFullName();
-                }
-            }
-
-            String companyName = "Finora Retail";
-            final int pdfBranchId = parseInt(branchId, -1);
-            String branchName = null;
-            if (!isBlank(branchId)) {
-                var branches = userManagementDao.getAllBranches();
-                if (branches != null) {
-                    branchName = branches.stream()
-                            .filter(b -> b.getBranchID() == pdfBranchId)
-                            .findFirst()
-                            .map(b -> b.getName())
-                            .orElse(null);
-                }
-            }
-
-            byte[] pdfBytes = PdfReportUtil.generateEmployeeSalesReport(
-                    companyName, generatedBy, allData, overview,
-                    keyword, branchName, dateFrom, dateTo);
-
-            if (pdfBytes == null || pdfBytes.length == 0) {
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                        "PDF generation returned empty content.");
-                return;
-            }
-
-            String fileName = ExportUtil.buildExportFileName("EmployeeSalesReport");
-
-            response.setContentType("application/pdf");
-            response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + ".pdf\"");
-            response.setContentLength(pdfBytes.length);
-            response.getOutputStream().write(pdfBytes);
-            response.getOutputStream().flush();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            if (!response.isCommitted()) {
-                response.reset();
-                String msg = e.getMessage();
-                if (e.getCause() != null) {
-                    msg = e.getCause().getMessage() != null ? e.getCause().getMessage() : msg;
-                }
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                        "Failed to generate PDF: " + msg);
-            }
-        }
-    }
-
-    private void showEmployeeDetail(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        int empId = parseInt(request.getParameter("empId"), -1);
-        if (empId <= 0) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid employee ID");
-            return;
-        }
-
-        String dateFromRaw = trim(request.getParameter("dateFrom"));
-        String dateToRaw = trim(request.getParameter("dateTo"));
-        String orderKeyword = trim(request.getParameter("orderKeyword"));
-
-        LocalDate dateFrom = parseDate(dateFromRaw);
-        LocalDate dateTo = parseDate(dateToRaw);
-
-        // Store Manager can only view employees in their own branch
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            Employee currentUser = (Employee) session.getAttribute("currentUser");
-            if (currentUser != null && "StoreManager".equalsIgnoreCase(currentUser.getRoleName())) {
-                // Verify the employee belongs to the manager's branch
-                var empSummary = employeeSalesReportDAO.getAllEmployeeSalesReport(null, String.valueOf(currentUser.getBranchID()), null, null);
-                boolean found = empSummary.stream().anyMatch(e -> e.getEmployeeId() == empId);
-                if (!found) {
-                    response.sendError(403, "Cannot view employees from other branches.");
-                    return;
-                }
-            }
-        }
-
-        // Get employee summary
-        List<EmployeeSalesSummary> empList = employeeSalesReportDAO.getAllEmployeeSalesReport(
-                null, null, dateFrom, dateTo);
-        EmployeeSalesSummary empInfo = empList.stream()
-                .filter(e -> e.getEmployeeId() == empId)
-                .findFirst()
-                .orElse(null);
-        if (empInfo == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Employee not found");
-            return;
-        }
-
-        // Get daily revenue
-        List<java.util.Map<String, Object>> dailyRevenue = employeeSalesReportDAO.getDailyRevenue(
-                empId, dateFrom, dateTo);
-
-        // Get orders with pagination
-        int page = parseInt(request.getParameter("page"), 1);
-        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
-        int totalOrders = employeeSalesReportDAO.countEmployeeOrders(empId, dateFrom, dateTo, orderKeyword);
-        PageResult pr = PaginationHelper.compute(totalOrders, page, sizeValue);
-        pr.setAttributes(request);
-
-        List<Order> orders = employeeSalesReportDAO.getEmployeeOrders(
-                empId, dateFrom, dateTo, orderKeyword, pr.getCurrentPage(), pr.getPageSize());
-
-        request.setAttribute("employeeInfo", empInfo);
-        request.setAttribute("dailyRevenue", dailyRevenue);
-        request.setAttribute("orders", orders);
-        request.setAttribute("orderKeyword", orderKeyword);
-        request.setAttribute("dateFrom", dateFromRaw);
-        request.setAttribute("dateTo", dateToRaw);
-        request.setAttribute("baseUrl", request.getContextPath() + "/reports/employee-sales-detail");
-        request.setAttribute("pageTitle", "Chi tiết doanh số nhân viên - " + empInfo.getFullName());
-
-        forward(request, response, "reports/employee-sales-detail");
-    }
-
-    private void exportEmployeeSalesExcel(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        try {
-            String keyword = trim(request.getParameter("keyword"));
-            String branchId = trim(request.getParameter("branchId"));
-            if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
-                branchId = String.valueOf(request.getAttribute("managerBranchId"));
-            }
-            String dateFromRaw = trim(request.getParameter("dateFrom"));
-            String dateToRaw = trim(request.getParameter("dateTo"));
-
-            LocalDate dateFrom = parseDate(dateFromRaw);
-            LocalDate dateTo = parseDate(dateToRaw);
-
-            List<EmployeeSalesSummary> allData = employeeSalesReportDAO.getAllEmployeeSalesReport(
-                    keyword, branchId, dateFrom, dateTo);
-            EmployeeOverview overview = employeeSalesReportDAO.getReportOverview(
-                    keyword, branchId, dateFrom, dateTo);
-
-            String generatedBy = "Unknown";
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                Employee currentUser = (Employee) session.getAttribute("currentUser");
-                if (currentUser != null) generatedBy = currentUser.getFullName();
-            }
-
-            final int excelBranchId = parseInt(branchId, -1);
-            String branchName = null;
-            if (!isBlank(branchId)) {
-                var branches = userManagementDao.getAllBranches();
-                if (branches != null) {
-                    branchName = branches.stream()
-                            .filter(b -> b.getBranchID() == excelBranchId)
-                            .findFirst()
-                            .map(b -> b.getName())
-                            .orElse(null);
-                }
-            }
-
-            byte[] excelBytes = ExcelExportUtil.generateEmployeeSalesReport(
-                    generatedBy, allData, overview, keyword, branchName, dateFrom, dateTo);
-
-            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            response.setHeader("Content-Disposition", "attachment; filename=\"" +
-                    ExportUtil.buildExportFileName("EmployeeSalesReport") + ".xlsx\"");
-            response.setContentLength(excelBytes.length);
-            response.getOutputStream().write(excelBytes);
-            response.getOutputStream().flush();
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendError(500, "Excel export failed: " + e.getMessage());
-        }
-    }
-
-    private void exportBranchSalesExcel(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        try {
-            String keyword = trim(request.getParameter("keyword"));
-            String branchId = trim(request.getParameter("branchId"));
-            if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
-                branchId = String.valueOf(request.getAttribute("managerBranchId"));
-            }
-            String dateFromRaw = trim(request.getParameter("dateFrom"));
-            String dateToRaw = trim(request.getParameter("dateTo"));
-
-            LocalDate dateFrom = parseDate(dateFromRaw);
-            LocalDate dateTo = parseDate(dateToRaw);
-
-            var allData = branchSalesReportDAO.getBranchSalesReport(
-                    keyword, branchId, dateFrom, dateTo, 1, 1000000);
-            var overview = branchSalesReportDAO.getReportOverview(keyword, branchId, dateFrom, dateTo);
-
-            String generatedBy = "Unknown";
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                Employee currentUser = (Employee) session.getAttribute("currentUser");
-                if (currentUser != null) generatedBy = currentUser.getFullName();
-            }
-
-            final int excelBranchId = parseInt(branchId, -1);
-            String branchName = null;
-            if (!isBlank(branchId)) {
-                var branches = userManagementDao.getAllBranches();
-                if (branches != null) {
-                    branchName = branches.stream()
-                            .filter(b -> b.getBranchID() == excelBranchId)
-                            .findFirst()
-                            .map(b -> b.getName())
-                            .orElse(null);
-                }
-            }
-
-            byte[] excelBytes = ExcelExportUtil.generateBranchSalesReport(
-                    generatedBy, allData, overview, keyword, branchName, dateFrom, dateTo);
-
-            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            response.setHeader("Content-Disposition", "attachment; filename=\"" +
-                    ExportUtil.buildExportFileName("BranchSalesReport") + ".xlsx\"");
-            response.setContentLength(excelBytes.length);
-            response.getOutputStream().write(excelBytes);
-            response.getOutputStream().flush();
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendError(500, "Excel export failed: " + e.getMessage());
-        }
     }
 
     private void exportInventoryExcel(HttpServletRequest request, HttpServletResponse response)
@@ -774,59 +295,6 @@ public class ReportController extends BaseController {
         }
     }
 
-    private void exportEmployeeDetailExcel(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        try {
-            int empId = parseInt(request.getParameter("empId"), -1);
-            if (empId <= 0) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid employee ID");
-                return;
-            }
-
-            String dateFromRaw = trim(request.getParameter("dateFrom"));
-            String dateToRaw = trim(request.getParameter("dateTo"));
-
-            LocalDate dateFrom = parseDate(dateFromRaw);
-            LocalDate dateTo = parseDate(dateToRaw);
-
-            List<EmployeeSalesSummary> empList = employeeSalesReportDAO.getAllEmployeeSalesReport(
-                    null, null, dateFrom, dateTo);
-            EmployeeSalesSummary empInfo = empList.stream()
-                    .filter(e -> e.getEmployeeId() == empId)
-                    .findFirst()
-                    .orElse(null);
-            if (empInfo == null) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Employee not found");
-                return;
-            }
-
-            List<java.util.Map<String, Object>> dailyRevenue = employeeSalesReportDAO.getDailyRevenue(
-                    empId, dateFrom, dateTo);
-            List<Order> orders = employeeSalesReportDAO.getEmployeeOrders(
-                    empId, dateFrom, dateTo, null, 1, 1000000);
-
-            String generatedBy = "Unknown";
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                Employee currentUser = (Employee) session.getAttribute("currentUser");
-                if (currentUser != null) generatedBy = currentUser.getFullName();
-            }
-
-            byte[] excelBytes = ExcelExportUtil.generateEmployeeDetailReport(
-                    generatedBy, empInfo, dailyRevenue, orders, dateFrom, dateTo);
-
-            String fileName = ExportUtil.buildExportFileName("EmployeeDetailReport_" + empInfo.getFullName().replaceAll("\\s+", "_"));
-            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + ".xlsx\"");
-            response.setContentLength(excelBytes.length);
-            response.getOutputStream().write(excelBytes);
-            response.getOutputStream().flush();
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendError(500, "Excel export failed: " + e.getMessage());
-        }
-    }
-
     private boolean isOwnerOrManager(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession(false);
@@ -866,11 +334,6 @@ public class ReportController extends BaseController {
         }
     }
 
-    private String getParam(HttpServletRequest request, String name, String defaultValue) {
-        String value = request.getParameter(name);
-        return isBlank(value) ? defaultValue : value.trim();
-    }
-
     private int parseInt(String value, int defaultValue) {
         try {
             return Integer.parseInt(value);
@@ -895,99 +358,6 @@ public class ReportController extends BaseController {
             return LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE);
         } catch (DateTimeParseException e) {
             return null;
-        }
-    }
-
-    private void loadBranchSalesPreview(HttpServletRequest request) {
-        String keyword = trim(request.getParameter("keyword"));
-        String branchId = trim(request.getParameter("branchId"));
-        if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
-            branchId = String.valueOf(request.getAttribute("managerBranchId"));
-        }
-        String dateFromRaw = trim(request.getParameter("dateFrom"));
-        String dateToRaw = trim(request.getParameter("dateTo"));
-
-        LocalDate dateFrom = parseDate(dateFromRaw);
-        LocalDate dateTo = parseDate(dateToRaw);
-
-        request.setAttribute(
-                "allReports",
-                branchSalesReportDAO.getBranchSalesReport(
-                        keyword, branchId, dateFrom, dateTo, 1, 1000000)
-        );
-        request.setAttribute(
-                "reportOverview",
-                branchSalesReportDAO.getReportOverview(keyword, branchId, dateFrom, dateTo)
-        );
-
-        final int finalBranchId = parseInt(branchId, -1);
-        String branchName = null;
-        if (!isBlank(branchId)) {
-            var branches = userManagementDao.getAllBranches();
-            if (branches != null) {
-                branchName = branches.stream()
-                        .filter(b -> b.getBranchID() == finalBranchId)
-                        .findFirst()
-                        .map(b -> b.getName())
-                        .orElse(null);
-            }
-        }
-        request.setAttribute("reportBranchName", branchName);
-        request.setAttribute("pageTitle", "Xem trước báo cáo doanh số chi nhánh");
-    }
-
-    private void exportBranchSalesPdf(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        try {
-            String keyword = trim(request.getParameter("keyword"));
-            String branchId = trim(request.getParameter("branchId"));
-            if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
-                branchId = String.valueOf(request.getAttribute("managerBranchId"));
-            }
-            String dateFromRaw = trim(request.getParameter("dateFrom"));
-            String dateToRaw = trim(request.getParameter("dateTo"));
-
-            LocalDate dateFrom = parseDate(dateFromRaw);
-            LocalDate dateTo = parseDate(dateToRaw);
-
-            var allData = branchSalesReportDAO.getBranchSalesReport(
-                    keyword, branchId, dateFrom, dateTo, 1, 1000000);
-            var overview = branchSalesReportDAO.getReportOverview(keyword, branchId, dateFrom, dateTo);
-
-            String generatedBy = "Unknown";
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                Employee currentUser = (Employee) session.getAttribute("currentUser");
-                if (currentUser != null) {
-                    generatedBy = currentUser.getFullName();
-                }
-            }
-
-            final int pdfBranchId = parseInt(branchId, -1);
-            String branchName = null;
-            if (!isBlank(branchId)) {
-                var branches = userManagementDao.getAllBranches();
-                if (branches != null) {
-                    branchName = branches.stream()
-                            .filter(b -> b.getBranchID() == pdfBranchId)
-                            .findFirst()
-                            .map(b -> b.getName())
-                            .orElse(null);
-                }
-            }
-
-            byte[] pdfBytes = PdfReportUtil.generateBranchSalesReport(
-                    "Finora Retail", generatedBy, allData, overview,
-                    keyword, branchName, dateFrom, dateTo);
-
-            response.setContentType("application/pdf");
-            response.setHeader("Content-Disposition", "inline; filename=\"BranchSalesReport.pdf\"");
-            response.setContentLength(pdfBytes.length);
-            response.getOutputStream().write(pdfBytes);
-            response.getOutputStream().flush();
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendError(500, e.getMessage());
         }
     }
 
@@ -1119,147 +489,4 @@ public class ReportController extends BaseController {
         }
     }
 
-    private void loadFinanceDetailReport(HttpServletRequest request) {
-        String keyword = trim(request.getParameter("keyword"));
-        String branchId = trim(request.getParameter("branchId"));
-        if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
-            branchId = String.valueOf(request.getAttribute("managerBranchId"));
-        }
-        String typeFilter = trim(request.getParameter("typeFilter")); // INCOME, EXPENSE
-        String dateFromRaw = trim(request.getParameter("dateFrom"));
-        String dateToRaw = trim(request.getParameter("dateTo"));
-
-        LocalDate dateFrom = parseDate(dateFromRaw);
-        LocalDate dateTo = parseDate(dateToRaw);
-
-        int page = parseInt(request.getParameter("page"), 1);
-        int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
-
-        int totalRecords = financeDetailReportDAO.countFinanceDetailReport(keyword, branchId, typeFilter, dateFrom, dateTo);
-        PageResult pr = PaginationHelper.compute(totalRecords, page, sizeValue);
-        pr.setAttributes(request);
-
-        request.setAttribute(
-                "financeReports",
-                financeDetailReportDAO.getFinanceDetailReport(
-                        keyword, branchId, typeFilter, dateFrom, dateTo, pr.getCurrentPage(), pr.getPageSize())
-        );
-        request.setAttribute(
-                "reportOverview",
-                financeDetailReportDAO.getReportOverview(keyword, branchId, typeFilter, dateFrom, dateTo)
-        );
-        request.setAttribute("branches", userManagementDao.getAllBranches());
-
-        request.setAttribute("pageTitle", "Báo cáo doanh thu chi tiết");
-        request.setAttribute(
-                "pageSubtitle",
-                "Xem chi tiết các khoản thu, chi và lợi nhuận của cửa hàng"
-        );
-        request.setAttribute("baseUrl", request.getContextPath() + "/reports/finance-detail");
-
-        request.setAttribute("keyword", keyword);
-        request.setAttribute("branchFilter", parseInt(branchId, -1));
-        request.setAttribute("typeFilter", typeFilter);
-        request.setAttribute("dateFrom", dateFromRaw);
-        request.setAttribute("dateTo", dateToRaw);
-        request.setAttribute("totalRecords", totalRecords);
-    }
-
-    private void loadFinanceDetailPreview(HttpServletRequest request) {
-        String keyword = trim(request.getParameter("keyword"));
-        String branchId = trim(request.getParameter("branchId"));
-        if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
-            branchId = String.valueOf(request.getAttribute("managerBranchId"));
-        }
-        String typeFilter = trim(request.getParameter("typeFilter"));
-        String dateFromRaw = trim(request.getParameter("dateFrom"));
-        String dateToRaw = trim(request.getParameter("dateTo"));
-
-        LocalDate dateFrom = parseDate(dateFromRaw);
-        LocalDate dateTo = parseDate(dateToRaw);
-
-        List<Payment> allData = financeDetailReportDAO.getFinanceDetailReport(
-                keyword, branchId, typeFilter, dateFrom, dateTo, 1, 1000000);
-        FinanceDetailReportOverview overview = financeDetailReportDAO.getReportOverview(
-                keyword, branchId, typeFilter, dateFrom, dateTo);
-
-        request.setAttribute("allFinanceReports", allData);
-        request.setAttribute("reportOverview", overview);
-        request.setAttribute("branches", userManagementDao.getAllBranches());
-
-        final int finalBranchId = parseInt(branchId, -1);
-        String branchName = null;
-        if (!isBlank(branchId)) {
-            var branches = userManagementDao.getAllBranches();
-            if (branches != null) {
-                branchName = branches.stream()
-                        .filter(b -> b.getBranchID() == finalBranchId)
-                        .findFirst()
-                        .map(b -> b.getName())
-                        .orElse(null);
-            }
-        }
-        request.setAttribute("reportBranchName", branchName);
-
-        request.setAttribute("keyword", keyword);
-        request.setAttribute("branchFilter", finalBranchId);
-        request.setAttribute("typeFilter", typeFilter);
-        request.setAttribute("dateFrom", dateFromRaw);
-        request.setAttribute("dateTo", dateToRaw);
-        request.setAttribute("pageTitle", "Xem trước báo cáo doanh thu chi tiết");
-    }
-
-    private void exportFinanceDetailExcel(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        try {
-            String keyword = trim(request.getParameter("keyword"));
-            String branchId = trim(request.getParameter("branchId"));
-            if (isBlank(branchId) && request.getAttribute("managerBranchId") != null) {
-                branchId = String.valueOf(request.getAttribute("managerBranchId"));
-            }
-            String typeFilter = trim(request.getParameter("typeFilter"));
-            String dateFromRaw = trim(request.getParameter("dateFrom"));
-            String dateToRaw = trim(request.getParameter("dateTo"));
-
-            LocalDate dateFrom = parseDate(dateFromRaw);
-            LocalDate dateTo = parseDate(dateToRaw);
-
-            var allData = financeDetailReportDAO.getFinanceDetailReport(
-                    keyword, branchId, typeFilter, dateFrom, dateTo, 1, 1000000);
-            var overview = financeDetailReportDAO.getReportOverview(keyword, branchId, typeFilter, dateFrom, dateTo);
-
-            String generatedBy = "Unknown";
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                Employee currentUser = (Employee) session.getAttribute("currentUser");
-                if (currentUser != null) generatedBy = currentUser.getFullName();
-            }
-
-            final int excelBranchId = parseInt(branchId, -1);
-            String branchName = null;
-            if (!isBlank(branchId)) {
-                var branches = userManagementDao.getAllBranches();
-                if (branches != null) {
-                    branchName = branches.stream()
-                            .filter(b -> b.getBranchID() == excelBranchId)
-                            .findFirst()
-                            .map(b -> b.getName())
-                            .orElse(null);
-                }
-            }
-
-            byte[] excelBytes = ExcelExportUtil.generateFinanceDetailReport(
-                    generatedBy, allData, overview, keyword, branchName, typeFilter, dateFrom, dateTo);
-
-            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            response.setHeader("Content-Disposition", "attachment; filename=\"" +
-                    ExportUtil.buildExportFileName("FinanceDetailReport") + ".xlsx\"");
-            response.setContentLength(excelBytes.length);
-            response.getOutputStream().write(excelBytes);
-            response.getOutputStream().flush();
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendError(500, "Excel export failed: " + e.getMessage());
-        }
-    }
 }
