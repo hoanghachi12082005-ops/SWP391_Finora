@@ -9,15 +9,15 @@
             <thead>
             <tr>
                 <th>#</th>
-                <th>Ma don</th>
-                <th>Chi nhanh</th>
-                <th>Nhan vien</th>
-                <th>Khach hang</th>
-                <th class="text-right">Tong tien</th>
-                <th>Phuong thuc</th>
-                <th>Trang thai</th>
-                <th>Ngay tao</th>
-                <th>Thao tac</th>
+                <th>Mã đơn</th>
+                <th>Chi nhánh</th>
+                <th>Nhân viên</th>
+                <th>Khách hàng</th>
+                <th class="text-right">Tổng tiền</th>
+                <th>Phương thức</th>
+                <th>Trạng thái</th>
+                <th>Ngày tạo</th>
+                <th>Thao tác</th>
             </tr>
             </thead>
             <tbody>
@@ -27,8 +27,8 @@
                         <td colspan="10" class="empty-row">
                             <div class="empty-state">
                                 <span class="material-symbols-outlined">receipt_long</span>
-                                <h4>Khong tim thay don hang</h4>
-                                <p>Hay dieu chinh bo loc hoac khoang thoi gian.</p>
+                                <h4>Không tìm thấy đơn hàng</h4>
+                                <p>Hãy điều chỉnh bộ lọc hoặc khoảng thời gian.</p>
                             </div>
                         </td>
                     </tr>
@@ -40,13 +40,13 @@
                             <td><strong>${o.orderCode}</strong></td>
                             <td>${o.branchName}</td>
                             <td>${o.employeeName}</td>
-                            <td>${empty o.customerName ? 'Khach vang lai' : o.customerName}</td>
+                            <td>${empty o.customerName ? 'Khách vãng lai' : o.customerName}</td>
                             <td class="text-right"><fmt:formatNumber value="${o.totalAmount}" type="number" groupingUsed="true"/> ₫</td>
                             <td>
                                 <c:choose>
-                                    <c:when test="${o.paymentMethod == 'CASH'}">Tien mat</c:when>
-                                    <c:when test="${o.paymentMethod == 'CARD'}">The</c:when>
-                                    <c:when test="${o.paymentMethod == 'TRANSFER'}">Chuyen khoan</c:when>
+                                    <c:when test="${o.paymentMethod == 'CASH'}">Tiền mặt</c:when>
+                                    <c:when test="${o.paymentMethod == 'CARD'}">Thẻ</c:when>
+                                    <c:when test="${o.paymentMethod == 'TRANSFER'}">Chuyển khoản</c:when>
                                     <c:otherwise>${o.paymentMethod}</c:otherwise>
                                 </c:choose>
                             </td>
@@ -62,7 +62,7 @@
                             <td>${fn:substring(o.createdAt, 0, 10)}</td>
                             <td>
                                 <div class="table-actions">
-                                    <button type="button" class="btn-icon" title="Xem chi tiet"
+                                    <button type="button" class="btn-icon" title="Xem chi tiết"
                                             onclick="openOrderDetail(${o.orderId})">
                                         <span class="material-symbols-outlined">visibility</span>
                                     </button>

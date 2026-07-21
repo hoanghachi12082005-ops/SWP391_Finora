@@ -217,49 +217,52 @@
                                 </div>
                             </div>
 
-                            <div class="profile-card">
-                                <div class="card-header">
-                                    <h3>Lịch sử đơn hàng</h3>
-                                    <p>Đơn hàng gần đây của bạn</p>
-                                </div>
-
-                                <c:choose>
-                                    <c:when test="${empty orderHistory}">
-                                        <p class="text-muted">Không tìm thấy đơn hàng.</p>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <div class="profile-order-table-wrap">
-                                            <table class="profile-order-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Mã</th>
-                                                        <th>Khách hàng</th>
-                                                        <th>Tổng</th>
-                                                        <th>Thanh toán</th>
-                                                        <th>Trạng thái</th>
-                                                        <th>Ngày</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <c:forEach var="ord" items="${orderHistory}">
-                                                        <tr>
-                                                            <td>${ord.orderCode}</td>
-                                                            <td>${empty ord.customerName ? '—' : ord.customerName}</td>
-                                                            <td class="amount"><fmt:formatNumber value="${ord.totalAmount}" type="number" groupingUsed="true"/> ₫</td>
-                                                            <td class="payment">${ord.paymentMethod}</td>
-                                                            <td><span class="status-badge ${ord.status == 'COMPLETED' ? 'active' : 'locked'}">${ord.status}</span></td>
-                                                            <td class="date">${ord.createdAt}</td>
-                                                        </tr>
-                                                    </c:forEach>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </c:otherwise>
-                                </c:choose>
-                            </div>
                         </c:if>
 
                     </section>
+
+                    <c:if test="${showSalesSection}">
+                        <div class="profile-card profile-card-order">
+                            <div class="card-header">
+                                <h3>Lịch sử đơn hàng</h3>
+                                <p>Đơn hàng gần đây của bạn</p>
+                            </div>
+
+                            <c:choose>
+                                <c:when test="${empty orderHistory}">
+                                    <p class="text-muted">Không tìm thấy đơn hàng.</p>
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="profile-order-table-wrap">
+                                        <table class="profile-order-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Mã</th>
+                                                    <th>Khách hàng</th>
+                                                    <th>Tổng</th>
+                                                    <th>Thanh toán</th>
+                                                    <th>Trạng thái</th>
+                                                    <th>Ngày</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <c:forEach var="ord" items="${orderHistory}">
+                                                    <tr>
+                                                        <td>${ord.orderCode}</td>
+                                                        <td>${empty ord.customerName ? '—' : ord.customerName}</td>
+                                                        <td class="amount"><fmt:formatNumber value="${ord.totalAmount}" type="number" groupingUsed="true"/> ₫</td>
+                                                        <td class="payment">${ord.paymentMethod}</td>
+                                                        <td><span class="status-badge ${ord.status == 'COMPLETED' ? 'active' : 'locked'}">${ord.status}</span></td>
+                                                        <td class="date">${ord.createdAt}</td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                    </c:if>
 
                     <c:if test="${not readOnlyProfile}">
                         <section class="profile-grid">

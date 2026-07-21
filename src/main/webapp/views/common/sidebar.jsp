@@ -145,7 +145,7 @@ class="sidebar-menu-item ${originalUri.contains('/products') ? 'active' : ''}">
                                     <c:set var="isSalesPage"
                                         value="${originalUri.contains('/sales.jsp') || (!originalUri.contains('/views/') && originalUri.contains('/sales'))}" />
                                     <c:set var="isOrdersPage"
-                                        value="${originalUri.contains('/orders.jsp') || (!originalUri.contains('/views/') && originalUri.contains('/orders'))}" />
+                                        value="${originalUri.contains('/orders.jsp') || (!originalUri.contains('/views/') && originalUri.contains('/orders') && !originalUri.contains('/reports/'))}" />
                                     <c:set var="isShiftPage"
                                         value="${originalUri.contains('/shift.jsp') || (!originalUri.contains('/views/') && originalUri.contains('/shift'))}" />
                                     <c:set var="isSalesActive" value="${isSalesPage || isOrdersPage || isShiftPage}" />
@@ -382,6 +382,12 @@ class="sidebar-menu-item ${originalUri.contains('/manager/emp') ? 'active' : ''}
                                                 <span class="material-icons"
                                                     style="font-size: 1rem; margin-right: 4px;">receipt_long</span>
                                                 Đơn hàng
+                                            </a>
+                                            <a href="${pageContext.request.contextPath}/reports/finance-detail"
+                                                class="sidebar-submenu-item ${originalUri.contains('/reports/finance-detail') ? 'active' : ''}">
+                                                <span class="material-icons"
+                                                    style="font-size: 1rem; margin-right: 4px;">account_balance</span>
+                                                Giao dịch & Doanh thu
                                             </a>
                                             <a href="${pageContext.request.contextPath}/reports/inventory"
                                                 class="sidebar-submenu-item ${originalUri.contains('/reports/inventory') ? 'active' : ''}">

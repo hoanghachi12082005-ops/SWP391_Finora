@@ -6,11 +6,11 @@
     <div class="modal-overlay" onclick="closeOrderDetail()"></div>
     <div class="modal-content modal-lg">
         <div class="modal-header">
-            <h3 id="modalOrderCode">Chi tiet don hang</h3>
+            <h3 id="modalOrderCode">Chi tiết đơn hàng</h3>
             <button type="button" class="modal-close" onclick="closeOrderDetail()">&times;</button>
         </div>
         <div class="modal-body" id="modalBody">
-            <div class="detail-loading">Dang tai...</div>
+            <div class="detail-loading">Đang tải...</div>
         </div>
     </div>
 </div>
@@ -40,14 +40,14 @@ function openOrderDetail(orderId) {
     var modal = document.getElementById('orderDetailModal');
     var body = document.getElementById('modalBody');
     modal.style.display = 'flex';
-    body.innerHTML = '<div class="detail-loading">Dang tai...</div>';
+    body.innerHTML = '<div class="detail-loading">Đang tải...</div>';
 
     fetch('${pageContext.request.contextPath}/orders/detail?id=' + orderId)
         .then(function(r) { return r.json(); })
         .then(function(d) {
             if (d.error) { body.innerHTML = '<p class="detail-loading">' + d.error + '</p>'; return; }
-            var statusMap = {PENDING:'Cho thanh toan',PAID:'Da thanh toan',COMPLETED:'Hoan thanh',CANCELLED:'Da huy'};
-            document.getElementById('modalOrderCode').textContent = 'Don hang ' + d.orderCode;
+            var statusMap = {PENDING:'Chờ thanh toán',PAID:'Đã thanh toán',COMPLETED:'Hoàn thành',CANCELLED:'Đã hủy'};
+            document.getElementById('modalOrderCode').textContent = 'Đơn hàng ' + d.orderCode;
 
             var itemsHtml = '';
             for (var i = 0; i < d.items.length; i++) {
@@ -57,21 +57,21 @@ function openOrderDetail(orderId) {
 
             body.innerHTML =
                 '<div class="detail-grid">' +
-                    '<div class="detail-field"><label>Ma don</label><span>' + d.orderCode + '</span></div>' +
-                    '<div class="detail-field"><label>Ngay tao</label><span>' + d.createdAt + '</span></div>' +
-                    '<div class="detail-field"><label>Chi nhanh</label><span>' + d.branchName + '</span></div>' +
-                    '<div class="detail-field"><label>Nhan vien</label><span>' + d.employeeName + '</span></div>' +
-                    '<div class="detail-field"><label>Khach hang</label><span>' + d.customerName + '</span></div>' +
-                    '<div class="detail-field"><label>Phuong thuc</label><span>' + d.paymentMethod + '</span></div>' +
-                    '<div class="detail-field"><label>Trang thai</label><span>' + (statusMap[d.status] || d.status) + '</span></div>' +
+                    '<div class="detail-field"><label>Mã đơn</label><span>' + d.orderCode + '</span></div>' +
+                    '<div class="detail-field"><label>Ngày tạo</label><span>' + d.createdAt + '</span></div>' +
+                    '<div class="detail-field"><label>Chi nhánh</label><span>' + d.branchName + '</span></div>' +
+                    '<div class="detail-field"><label>Nhân viên</label><span>' + d.employeeName + '</span></div>' +
+                    '<div class="detail-field"><label>Khách hàng</label><span>' + d.customerName + '</span></div>' +
+                    '<div class="detail-field"><label>Phương thức</label><span>' + d.paymentMethod + '</span></div>' +
+                    '<div class="detail-field"><label>Trạng thái</label><span>' + (statusMap[d.status] || d.status) + '</span></div>' +
                 '</div>' +
-                '<h4 style="font-size:14px;margin:16px 0 8px;font-weight:600;">San pham</h4>' +
-                '<table class="detail-table"><thead><tr><th>San pham</th><th class="text-right">SL</th><th class="text-right">Don gia</th><th class="text-right">Thanh tien</th></tr></thead><tbody>' + itemsHtml + '</tbody>' +
-                '<tfoot><tr><td colspan="3" class="text-right">Tam tinh</td><td class="text-right">' + fmt(d.subtotal) + ' ₫</td></tr>' +
-                '<tr><td colspan="3" class="text-right">Giam gia</td><td class="text-right">- ' + fmt(d.discountAmount) + ' ₫</td></tr>' +
-                '<tr><td colspan="3" class="text-right"><strong>Tong cong</strong></td><td class="text-right"><strong>' + fmt(d.totalAmount) + ' ₫</strong></td></tr></tfoot></table>';
+                '<h4 style="font-size:14px;margin:16px 0 8px;font-weight:600;">Sản phẩm</h4>' +
+                '<table class="detail-table"><thead><tr><th>Sản phẩm</th><th class="text-right">SL</th><th class="text-right">Đơn giá</th><th class="text-right">Thành tiền</th></tr></thead><tbody>' + itemsHtml + '</tbody>' +
+                '<tfoot><tr><td colspan="3" class="text-right">Tạm tính</td><td class="text-right">' + fmt(d.subtotal) + ' ₫</td></tr>' +
+                '<tr><td colspan="3" class="text-right">Giảm giá</td><td class="text-right">- ' + fmt(d.discountAmount) + ' ₫</td></tr>' +
+                '<tr><td colspan="3" class="text-right"><strong>Tổng cộng</strong></td><td class="text-right"><strong>' + fmt(d.totalAmount) + ' ₫</strong></td></tr></tfoot></table>';
         })
-        .catch(function() { body.innerHTML = '<p class="detail-loading">Loi tai du lieu.</p>'; });
+        .catch(function() { body.innerHTML = '<p class="detail-loading">Lỗi tải dữ liệu.</p>'; });
 }
 
 function closeOrderDetail() {

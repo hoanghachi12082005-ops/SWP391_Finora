@@ -1,6 +1,7 @@
 ﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -11,6 +12,7 @@
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/base.css?v=20260601"/>
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/assets/css/layout.css?v=20260601"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-management.css?v=2"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/report-kpi.css?v=1"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -27,21 +29,42 @@
                 </div>
                 <div class="filter-actions">
                     <a class="btn-primary" style="font-size:13px;padding:6px 14px;" href="${baseUrl}/export-excel${not empty pageContext.request.queryString ? '?' : ''}${pageContext.request.queryString}">
-                        <span class="material-symbols-outlined" style="font-size:16px;">file_download</span> Xuat Excel
+                        <span class="material-symbols-outlined" style="font-size:16px;">file_download</span> Xuất Excel
+                    </a>
+                    <a class="btn-primary" style="font-size:13px;padding:6px 14px;background:#d32f2f;" href="${baseUrl}/export-pdf${not empty pageContext.request.queryString ? '?' : ''}${pageContext.request.queryString}">
+                        <span class="material-symbols-outlined" style="font-size:16px;">picture_as_pdf</span> Xuất PDF
                     </a>
                 </div>
             </section>
 
+            <div class="report-tabs">
+                <a class="report-tab ${activeTab == 'orders' ? 'active' : ''}"
+                   href="${baseUrl}?tab=orders${not empty baseQueryString ? '&' : ''}${baseQueryString}">
+                    <span class="material-symbols-outlined">receipt_long</span> Orders
+                </a>
+                <a class="report-tab ${activeTab == 'kpi' ? 'active' : ''}"
+                   href="${baseUrl}?tab=kpi${not empty baseQueryString ? '&' : ''}${baseQueryString}">
+                    <span class="material-symbols-outlined">bar_chart</span> KPI Dashboard
+                </a>
+            </div>
+
             <jsp:include page="/views/reports/_filter.jsp"/>
 
-            <jsp:include page="/views/reports/_table.jsp"/>
+            <c:choose>
+                <c:when test="${activeTab == 'kpi'}">
+                    <jsp:include page="/views/reports/_kpi_dashboard.jsp"/>
+                </c:when>
+                <c:otherwise>
+                    <jsp:include page="/views/reports/_table.jsp"/>
 
-            <jsp:include page="/views/common/pagination.jsp">
-                <jsp:param name="baseUrl" value="${baseUrl}"/>
-                <jsp:param name="queryString" value="&datePreset=${empty datePreset ? '' : datePreset}&dateFrom=${empty filter.dateFrom ? '' : filter.dateFrom}&dateTo=${empty filter.dateTo ? '' : filter.dateTo}&empId=${empty filter.empId ? '' : filter.empId}&branchId=${empty filter.branchId ? '' : filter.branchId}&orderId=${empty filter.orderId ? '' : filter.orderId}&customerId=${empty filter.customerId ? '' : filter.customerId}&orderStatus=${empty filter.orderStatus ? '' : filter.orderStatus}&paymentMethod=${empty filter.paymentMethod ? '' : filter.paymentMethod}&keyword=${empty filter.keyword ? '' : filter.keyword}&sortBy=${empty filter.sortBy ? '' : filter.sortBy}&sortDir=${empty filter.sortDir ? '' : filter.sortDir}"/>
-            </jsp:include>
+                    <jsp:include page="/views/common/pagination.jsp">
+                        <jsp:param name="baseUrl" value="${baseUrl}"/>
+                        <jsp:param name="queryString" value="&tab=orders&datePreset=${empty datePreset ? '' : datePreset}&dateFrom=${empty filter.dateFrom ? '' : filter.dateFrom}&dateTo=${empty filter.dateTo ? '' : filter.dateTo}&empId=${empty filter.empId ? '' : filter.empId}&branchId=${empty filter.branchId ? '' : filter.branchId}&orderId=${empty filter.orderId ? '' : filter.orderId}&customerId=${empty filter.customerId ? '' : filter.customerId}&orderStatus=${empty filter.orderStatus ? '' : filter.orderStatus}&paymentMethod=${empty filter.paymentMethod ? '' : filter.paymentMethod}&keyword=${empty filter.keyword ? '' : filter.keyword}&sortBy=${empty filter.sortBy ? '' : filter.sortBy}&sortDir=${empty filter.sortDir ? '' : filter.sortDir}"/>
+                    </jsp:include>
 
-            <jsp:include page="/views/reports/_order_detail_modal.jsp"/>
+                    <jsp:include page="/views/reports/_order_detail_modal.jsp"/>
+                </c:otherwise>
+            </c:choose>
         </main>
     </div>
 </div>

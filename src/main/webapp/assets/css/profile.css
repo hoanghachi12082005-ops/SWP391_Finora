@@ -202,6 +202,11 @@
     height: auto;
 }
 
+/* ── Full-width order history card ── */
+.profile-card-order {
+    margin-bottom: 24px;
+}
+
 /* ── Order history table (profile-specific) ── */
 .profile-order-table-wrap {
     overflow-x: auto;

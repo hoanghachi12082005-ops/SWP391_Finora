@@ -11,7 +11,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 
 public final class ExcelExportUtil {
 
@@ -20,70 +19,6 @@ public final class ExcelExportUtil {
     private static final DateTimeFormatter DATETIME_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private ExcelExportUtil() {}
-
-    public static byte[] generateEmployeeSalesReport(
-            String generatedBy, List<EmployeeSalesSummary> rows, EmployeeOverview overview,
-            String keyword, String branchName, LocalDate dateFrom, LocalDate dateTo) {
-        try (Workbook wb = new XSSFWorkbook()) {
-            Sheet sheet = wb.createSheet("Employee Sales Report");
-            setupReport(wb, sheet, "Employee Sales Report", generatedBy, keyword, branchName, dateFrom, dateTo);
-            String[] headers = {"Employee ID", "Employee", "Branch", "Role", "Total Orders", "Total Revenue", "Avg Order Value", "Completed", "Cancelled"};
-            int[] widths = {14, 30, 20, 15, 15, 20, 20, 15, 15};
-            int rowNum = fillHeader(wb, sheet, headers, widths, 4);
-            CellStyle currencyStyle = createCurrencyStyle(wb);
-            for (EmployeeSalesSummary r : rows) {
-                Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(r.getEmployeeId());
-                row.createCell(1).setCellValue(r.getFullName());
-                row.createCell(2).setCellValue(nullToDash(r.getBranchName()));
-                row.createCell(3).setCellValue(nullToDash(r.getRoleName()));
-                row.createCell(4).setCellValue(r.getTotalOrders());
-                Cell revCell = row.createCell(5);
-                revCell.setCellValue(doubleValue(r.getTotalRevenue()));
-                revCell.setCellStyle(currencyStyle);
-                Cell avgCell = row.createCell(6);
-                avgCell.setCellValue(doubleValue(r.getAverageOrderValue()));
-                avgCell.setCellStyle(currencyStyle);
-                row.createCell(7).setCellValue(r.getCompletedOrders());
-                row.createCell(8).setCellValue(r.getCancelledOrders());
-            }
-            addSummary(sheet, rowNum + 1, overview, currencyStyle);
-            return toBytes(wb);
-        } catch (Exception e) {
-            throw new RuntimeException("Excel generation failed", e);
-        }
-    }
-
-    public static byte[] generateBranchSalesReport(
-            String generatedBy, List<BranchSalesSummary> rows, BranchSalesOverview overview,
-            String keyword, String branchName, LocalDate dateFrom, LocalDate dateTo) {
-        try (Workbook wb = new XSSFWorkbook()) {
-            Sheet sheet = wb.createSheet("Sales by Store");
-            setupReport(wb, sheet, "Sales by Store Report", generatedBy, keyword, branchName, dateFrom, dateTo);
-            String[] headers = {"Branch", "Address", "Total Orders", "Completed", "Cancelled", "Total Revenue", "Avg Order Value"};
-            int[] widths = {25, 30, 15, 15, 15, 20, 20};
-            int rowNum = fillHeader(wb, sheet, headers, widths, 4);
-            CellStyle currencyStyle = createCurrencyStyle(wb);
-            for (BranchSalesSummary r : rows) {
-                Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(r.getBranchName());
-                row.createCell(1).setCellValue(nullToDash(r.getAddress()));
-                row.createCell(2).setCellValue(r.getTotalOrders());
-                row.createCell(3).setCellValue(r.getCompletedOrders());
-                row.createCell(4).setCellValue(r.getCancelledOrders());
-                Cell revCell = row.createCell(5);
-                revCell.setCellValue(doubleValue(r.getTotalRevenue()));
-                revCell.setCellStyle(currencyStyle);
-                Cell avgCell = row.createCell(6);
-                avgCell.setCellValue(doubleValue(r.getAverageOrderValue()));
-                avgCell.setCellStyle(currencyStyle);
-            }
-            addBranchSummary(sheet, rowNum + 1, overview, currencyStyle);
-            return toBytes(wb);
-        } catch (Exception e) {
-            throw new RuntimeException("Excel generation failed", e);
-        }
-    }
 
     public static byte[] generateInventoryReport(
             String generatedBy, List<InventoryReportItem> rows, InventoryReportOverview overview,
@@ -144,101 +79,6 @@ public final class ExcelExportUtil {
         }
     }
 
-    public static byte[] generateEmployeeDetailReport(
-            String generatedBy, EmployeeSalesSummary employeeInfo,
-            List<Map<String, Object>> dailyRevenue, List<Order> orders,
-            LocalDate dateFrom, LocalDate dateTo) {
-        try (Workbook wb = new XSSFWorkbook()) {
-            Sheet sheet = wb.createSheet("Employee Detail Report");
-            CellStyle currencyStyle = createCurrencyStyle(wb);
-            CellStyle headerStyle = createHeaderStyle(wb);
-
-            int rowNum = 0;
-            Row titleRow = sheet.createRow(rowNum++);
-            Cell titleCell = titleRow.createCell(0);
-            titleCell.setCellValue("Employee Detail Report - " + employeeInfo.getFullName());
-            Font titleFont = wb.createFont();
-            titleFont.setBold(true);
-            titleFont.setFontHeightInPoints((short) 16);
-            CellStyle ts = wb.createCellStyle();
-            ts.setFont(titleFont);
-            titleCell.setCellStyle(ts);
-            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 7));
-
-            sheet.createRow(rowNum++).createCell(0).setCellValue(COMPANY);
-            sheet.createRow(rowNum++).createCell(0).setCellValue("Generated: " + LocalDateTime.now().format(DATETIME_FMT) + " | By: " + generatedBy);
-            rowNum++;
-
-            sheet.createRow(rowNum++).createCell(0).setCellValue("Employee: " + employeeInfo.getFullName() + " | Branch: " + nullToDash(employeeInfo.getBranchName()) + " | Role: " + nullToDash(employeeInfo.getRoleName()));
-            rowNum++;
-
-            sheet.createRow(rowNum++).createCell(0).setCellValue("Total Revenue: " + formatCurrency(employeeInfo.getTotalRevenue()) + " | Total Orders: " + employeeInfo.getTotalOrders() + " | Avg: " + formatCurrency(employeeInfo.getAverageOrderValue()));
-            rowNum++;
-
-            String dateRange = "Period: " + (dateFrom != null ? dateFrom.format(DATE_FMT) : "Earliest") + " — " + (dateTo != null ? dateTo.format(DATE_FMT) : "Latest");
-            sheet.createRow(rowNum++).createCell(0).setCellValue(dateRange);
-            rowNum++;
-
-            sheet.setColumnWidth(0, 4000); sheet.setColumnWidth(1, 3000); sheet.setColumnWidth(2, 3000);
-            sheet.setColumnWidth(3, 3000); sheet.setColumnWidth(4, 3000); sheet.setColumnWidth(5, 3000);
-            sheet.setColumnWidth(6, 3000); sheet.setColumnWidth(7, 3000);
-
-            Row dh = sheet.createRow(rowNum++);
-            String[] dailyHeaders = {"Date", "Total Orders", "Total Revenue", "Avg Order Value"};
-            for (int i = 0; i < dailyHeaders.length; i++) {
-                Cell c = dh.createCell(i);
-                c.setCellValue(dailyHeaders[i]);
-                c.setCellStyle(headerStyle);
-            }
-            if (dailyRevenue != null) {
-                for (Map<String, Object> dr : dailyRevenue) {
-                    Row r = sheet.createRow(rowNum++);
-                    r.createCell(0).setCellValue(dr.get("date") != null ? dr.get("date").toString() : "");
-                    r.createCell(1).setCellValue(dr.get("totalOrders") != null ? ((Number) dr.get("totalOrders")).intValue() : 0);
-                    Cell rc = r.createCell(2);
-                    rc.setCellValue(dr.get("totalRevenue") != null ? ((Number) dr.get("totalRevenue")).doubleValue() : 0);
-                    rc.setCellStyle(currencyStyle);
-                    Cell ac = r.createCell(3);
-                    ac.setCellValue(dr.get("avgOrderValue") != null ? ((Number) dr.get("avgOrderValue")).doubleValue() : 0);
-                    ac.setCellStyle(currencyStyle);
-                }
-            }
-            rowNum++;
-
-            Row oh = sheet.createRow(rowNum++);
-            String[] orderHeaders = {"Order Code", "Date", "Customer", "Payment Method", "Subtotal", "Discount", "Total"};
-            for (int i = 0; i < orderHeaders.length; i++) {
-                Cell c = oh.createCell(i);
-                c.setCellValue(orderHeaders[i]);
-                c.setCellStyle(headerStyle);
-            }
-            if (orders != null) {
-                for (Order o : orders) {
-                    Row r = sheet.createRow(rowNum++);
-                    r.createCell(0).setCellValue(nullToDash(o.getOrderCode()));
-                    r.createCell(1).setCellValue(nullToDash(o.getCreatedAt()));
-                    r.createCell(2).setCellValue(nullToDash(o.getCustomerName()));
-                    r.createCell(3).setCellValue(nullToDash(o.getPaymentMethod()));
-                    
-                    Cell subtotalCell = r.createCell(4);
-                    subtotalCell.setCellValue(o.getSubtotal());
-                    subtotalCell.setCellStyle(currencyStyle);
-                    
-                    Cell discountCell = r.createCell(5);
-                    discountCell.setCellValue(o.getDiscountAmount());
-                    discountCell.setCellStyle(currencyStyle);
-                    
-                    Cell fc = r.createCell(6);
-                    fc.setCellValue(o.getTotalAmount());
-                    fc.setCellStyle(currencyStyle);
-                }
-            }
-            return toBytes(wb);
-        } catch (Exception e) {
-            throw new RuntimeException("Excel generation failed", e);
-        }
-    }
-
     private static void setupReport(Workbook wb, Sheet sheet, String title,
                                      String generatedBy, String keyword, String branchName,
                                      LocalDate dateFrom, LocalDate dateTo) {
@@ -280,35 +120,6 @@ public final class ExcelExportUtil {
             c.setCellStyle(headerStyle);
         }
         return startRow + 1;
-    }
-
-    private static void addSummary(Sheet sheet, int rowNum, EmployeeOverview overview,
-                                    CellStyle currencyStyle) {
-        if (overview == null) return;
-        rowNum++;
-        Row title = sheet.createRow(rowNum++);
-        title.createCell(0).setCellValue("Summary");
-        addSumRow(sheet, rowNum++, "Total Employees", overview.getTotalEmployees(), null);
-        addSumRow(sheet, rowNum++, "Total Orders", overview.getTotalOrders(), null);
-        addSumRow(sheet, rowNum++, "Total Revenue", doubleValue(overview.getTotalRevenue()), currencyStyle);
-        if (overview.getTopEmployeeName() != null) {
-            addSumRow(sheet, rowNum++, "Top Employee", overview.getTopEmployeeName());
-            addSumRow(sheet, rowNum++, "Highest Revenue", doubleValue(overview.getTopEmployeeRevenue()), currencyStyle);
-        }
-    }
-
-    private static void addBranchSummary(Sheet sheet, int rowNum, BranchSalesOverview overview, CellStyle currencyStyle) {
-        if (overview == null) return;
-        rowNum++;
-        Row title = sheet.createRow(rowNum++);
-        title.createCell(0).setCellValue("Summary");
-        addSumRow(sheet, rowNum++, "Total Branches", overview.getTotalBranches(), null);
-        addSumRow(sheet, rowNum++, "Total Orders", overview.getTotalOrders(), null);
-        addSumRow(sheet, rowNum++, "Total Revenue", doubleValue(overview.getTotalRevenue()), currencyStyle);
-        if (overview.getTopBranchName() != null) {
-            addSumRow(sheet, rowNum++, "Top Branch", overview.getTopBranchName());
-            addSumRow(sheet, rowNum++, "Highest Revenue", doubleValue(overview.getTopBranchRevenue()), currencyStyle);
-        }
     }
 
     private static void addInventorySummary(Sheet sheet, int rowNum, InventoryReportOverview overview, CellStyle currencyStyle) {
@@ -390,78 +201,6 @@ public final class ExcelExportUtil {
         return df.format(v);
     }
 
-    private static void addFinanceSummary(Sheet sheet, int rowNum, FinanceDetailReportOverview overview, CellStyle currencyStyle) {
-        if (overview == null) return;
-        rowNum++;
-        Row title = sheet.createRow(rowNum++);
-        title.createCell(0).setCellValue("Summary");
-        addSumRow(sheet, rowNum++, "Total Transactions", overview.getTotalTransactions(), null);
-        addSumRow(sheet, rowNum++, "Total Income", doubleValue(overview.getTotalIncome()), currencyStyle);
-        addSumRow(sheet, rowNum++, "Total Expense", doubleValue(overview.getTotalExpense()), currencyStyle);
-        addSumRow(sheet, rowNum++, "Net Profit", doubleValue(overview.getNetProfit()), currencyStyle);
-    }
-
-    public static byte[] generateFinanceDetailReport(
-            String generatedBy, List<Payment> rows, FinanceDetailReportOverview overview,
-            String keyword, String branchName, String typeFilter, LocalDate dateFrom, LocalDate dateTo) {
-        try (Workbook wb = new XSSFWorkbook()) {
-            Sheet sheet = wb.createSheet("Finance Detail Report");
-            
-            // Re-implement setupReport custom metadata to support type filter
-            CellStyle titleStyle = wb.createCellStyle();
-            Font titleFont = wb.createFont();
-            titleFont.setBold(true);
-            titleFont.setFontHeightInPoints((short) 16);
-            titleStyle.setFont(titleFont);
-
-            Row titleRow = sheet.createRow(0);
-            Cell tc = titleRow.createCell(0);
-            tc.setCellValue("Finance Detail Report");
-            tc.setCellStyle(titleStyle);
-            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 8));
-
-            sheet.createRow(1).createCell(0).setCellValue(COMPANY);
-
-            Row metaRow = sheet.createRow(2);
-            String meta = "Generated: " + LocalDateTime.now().format(DATETIME_FMT) + " | By: " + generatedBy;
-            if (keyword != null && !keyword.isEmpty()) meta += " | Search: " + keyword;
-            metaRow.createCell(0).setCellValue(meta);
-
-            Row filterRow = sheet.createRow(3);
-            String filter = "Branch: " + (branchName != null ? branchName : "All") +
-                    " | Type: " + (typeFilter != null && !typeFilter.isEmpty() ? typeFilter : "All") +
-                    " | Period: " + (dateFrom != null ? dateFrom.format(DATE_FMT) : "Earliest") +
-                    " — " + (dateTo != null ? dateTo.format(DATE_FMT) : "Latest");
-            filterRow.createCell(0).setCellValue(filter);
-
-            String[] headers = {"Mã GD", "Loại", "Số tiền", "Phương thức", "Ngày GD", "Chi nhánh", "Người thực hiện", "Mô tả"};
-            int[] widths = {15, 12, 18, 15, 20, 22, 22, 35};
-            int rowNum = fillHeader(wb, sheet, headers, widths, 4);
-            CellStyle currencyStyle = createCurrencyStyle(wb);
-            
-            for (Payment r : rows) {
-                Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(r.getName());
-                row.createCell(1).setCellValue("INCOME".equals(r.getPaymentType()) ? "Thu" : "Chi");
-                
-                Cell amtCell = row.createCell(2);
-                amtCell.setCellValue(r.getAmount());
-                amtCell.setCellStyle(currencyStyle);
-                
-                row.createCell(3).setCellValue(r.getMethod());
-                row.createCell(4).setCellValue(r.getPaymentDate() != null ? r.getPaymentDate().toLocalDateTime().format(DATETIME_FMT) : "");
-                row.createCell(5).setCellValue(nullToDash(r.getBranchName()));
-                row.createCell(6).setCellValue(nullToDash(r.getCreatorName()));
-                row.createCell(7).setCellValue(nullToDash(r.getDescription()));
-            }
-            
-            addFinanceSummary(sheet, rowNum + 1, overview, currencyStyle);
-            return toBytes(wb);
-        } catch (Exception e) {
-            throw new RuntimeException("Excel generation failed", e);
-        }
-    }
-
     public static byte[] generateSupplierReport(
             String generatedBy, List<Supplier> rows, String keyword) {
         try (Workbook wb = new XSSFWorkbook()) {
@@ -491,5 +230,83 @@ public final class ExcelExportUtil {
         } catch (Exception e) {
             throw new RuntimeException("Failed to write Excel", e);
         }
+    }
+
+    public static byte[] generateSalesTransactionReport(
+            String generatedBy, List<SalesTransaction> rows, SalesTransactionKpi kpi, String filterDesc) {
+        try (Workbook wb = new XSSFWorkbook()) {
+            Sheet sheet = wb.createSheet("Báo cáo giao dịch & doanh thu");
+            CellStyle titleStyle = wb.createCellStyle();
+            Font titleFont = wb.createFont();
+            titleFont.setBold(true);
+            titleFont.setFontHeightInPoints((short) 16);
+            titleStyle.setFont(titleFont);
+
+            int r = 0;
+            Row titleRow = sheet.createRow(r++);
+            titleRow.createCell(0).setCellValue("BÁO CÁO GIAO DỊCH & DOANH THU");
+            titleRow.getCell(0).setCellStyle(titleStyle);
+            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 8));
+
+            sheet.createRow(r++).createCell(0).setCellValue("Ngày tạo: " + LocalDateTime.now().format(DATETIME_FMT) + " | Người tạo: " + generatedBy);
+            sheet.createRow(r++).createCell(0).setCellValue("Bộ lọc: " + filterDesc);
+
+            r++;
+            Row kpiTitle = sheet.createRow(r++);
+            kpiTitle.createCell(0).setCellValue("TỔNG QUAN KPI");
+            kpiTitle.getCell(0).setCellStyle(titleStyle);
+
+            CellStyle labelStyle = wb.createCellStyle();
+            Font labelFont = wb.createFont();
+            labelFont.setBold(true);
+            labelFont.setFontHeightInPoints((short) 10);
+            labelStyle.setFont(labelFont);
+
+            r = writeKpiRow(sheet, r, labelStyle, "Tổng số giao dịch", String.valueOf(kpi.getTotalTransactions()));
+            r = writeKpiRow(sheet, r, labelStyle, "Tổng doanh thu", String.format("%,.0f ₫", kpi.getTotalRevenue()));
+            r = writeKpiRow(sheet, r, labelStyle, "Tổng chi phí", String.format("%,.0f ₫", kpi.getTotalExpense()));
+            r = writeKpiRow(sheet, r, labelStyle, "Dòng tiền ròng", String.format("%,.0f ₫", kpi.getNetCashFlow()));
+            r = writeKpiRow(sheet, r, labelStyle, "Giá trị giao dịch TB", String.format("%,.0f ₫", kpi.getAvgTransactionValue()));
+            r = writeKpiRow(sheet, r, labelStyle, "Tổng đơn hàng", String.valueOf(kpi.getTotalSalesOrders()));
+
+            r++;
+            CellStyle headerStyle = createHeaderStyle(wb);
+            Row header = sheet.createRow(r++);
+            String[] cols = {"Mã giao dịch", "Ngày", "Loại", "Phương thức", "Số tiền", "Mô tả", "Chi nhánh", "Nhân viên", "Trạng thái"};
+            for (int i = 0; i < cols.length; i++) {
+                Cell c = header.createCell(i);
+                c.setCellValue(cols[i]);
+                c.setCellStyle(headerStyle);
+            }
+
+            CellStyle currencyStyle = createCurrencyStyle(wb);
+            for (SalesTransaction t : rows) {
+                Row row = sheet.createRow(r++);
+                row.createCell(0).setCellValue(t.getTransactionCode());
+                row.createCell(1).setCellValue(t.getPaymentDate() != null ? t.getPaymentDate().toString() : "");
+                row.createCell(2).setCellValue(t.getTransactionType());
+                row.createCell(3).setCellValue(t.getPaymentMethod());
+                Cell amt = row.createCell(4);
+                amt.setCellValue(t.getAmount());
+                amt.setCellStyle(currencyStyle);
+                row.createCell(5).setCellValue(t.getDescription() != null ? t.getDescription() : "");
+                row.createCell(6).setCellValue(t.getBranchName() != null ? t.getBranchName() : "");
+                row.createCell(7).setCellValue(t.getEmployeeName() != null ? t.getEmployeeName() : "");
+                row.createCell(8).setCellValue(t.getStatus() != null ? t.getStatus() : "");
+            }
+
+            for (int i = 0; i < cols.length; i++) sheet.autoSizeColumn(i);
+            return toBytes(wb);
+        } catch (Exception e) {
+            throw new RuntimeException("Excel generation failed", e);
+        }
+    }
+
+    private static int writeKpiRow(Sheet sheet, int r, CellStyle style, String label, String value) {
+        Row row = sheet.createRow(r);
+        row.createCell(0).setCellValue(label);
+        row.getCell(0).setCellStyle(style);
+        row.createCell(1).setCellValue(value);
+        return r + 1;
     }
 }

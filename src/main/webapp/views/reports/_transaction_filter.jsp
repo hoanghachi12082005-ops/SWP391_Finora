@@ -1,11 +1,8 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
-
 <form class="filter-card" method="get" action="${baseUrl}">
     <input type="hidden" name="page" value="1"/>
     <input type="hidden" name="sizeValue" value="${sizeValue}"/>
-    <input type="hidden" name="tab" value="${empty activeTab ? 'orders' : activeTab}"/>
 
     <div class="filter-grid">
         <div class="form-group">
@@ -14,12 +11,8 @@
                 <option value="">Tùy chọn</option>
                 <option value="today" ${datePreset == 'today' ? 'selected' : ''}>Hôm nay</option>
                 <option value="yesterday" ${datePreset == 'yesterday' ? 'selected' : ''}>Hôm qua</option>
-                <option value="7days" ${datePreset == '7days' ? 'selected' : ''}>7 ngày</option>
-                <option value="30days" ${datePreset == '30days' ? 'selected' : ''}>30 ngày</option>
+                <option value="this_week" ${datePreset == 'this_week' ? 'selected' : ''}>Tuần này</option>
                 <option value="this_month" ${datePreset == 'this_month' ? 'selected' : ''}>Tháng này</option>
-                <option value="last_month" ${datePreset == 'last_month' ? 'selected' : ''}>Tháng trước</option>
-                <option value="this_year" ${datePreset == 'this_year' ? 'selected' : ''}>Năm nay</option>
-                <option value="1year" ${datePreset == '1year' ? 'selected' : ''}>1 năm</option>
             </select>
         </div>
 
@@ -34,13 +27,37 @@
         </div>
 
         <div class="form-group">
-            <label>Nhân viên</label>
-            <select name="empId">
-                        <option value="">Tất cả nhân viên</option>
-                <c:forEach var="emp" items="${employees}">
-                    <option value="${emp.employeeID}" ${filter.empId == emp.employeeID ? 'selected' : ''}>${emp.fullName}</option>
+            <label>Mã giao dịch / Hóa đơn</label>
+            <input name="transactionCode" value="${filter.transactionCode}" type="text" placeholder="Tìm mã..."/>
+        </div>
+
+        <div class="form-group">
+            <label>Loại giao dịch</label>
+            <select name="transactionType">
+                <option value="">Tất cả loại</option>
+                <c:forEach var="t" items="${transactionTypes}">
+                    <option value="${t}" ${filter.transactionType == t ? 'selected' : ''}>${t}</option>
                 </c:forEach>
             </select>
+        </div>
+
+        <div class="form-group">
+            <label>Phương thức thanh toán</label>
+            <select name="paymentMethod">
+                <option value="">Tất cả</option>
+                <option value="CASH" ${filter.paymentMethod == 'CASH' ? 'selected' : ''}>Tiền mặt</option>
+                <option value="BANK_TRANSFER" ${filter.paymentMethod == 'BANK_TRANSFER' ? 'selected' : ''}>Chuyển khoản</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Số tiền từ</label>
+            <input type="number" name="amountFrom" value="${filter.amountFrom}" placeholder="Thấp nhất..." step="0.01"/>
+        </div>
+
+        <div class="form-group">
+            <label>Số tiền đến</label>
+            <input type="number" name="amountTo" value="${filter.amountTo}" placeholder="Cao nhất..." step="0.01"/>
         </div>
 
         <c:choose>
@@ -61,41 +78,28 @@
         </c:choose>
 
         <div class="form-group">
-            <label>Mã đơn hàng</label>
-            <input type="number" name="orderId" value="${filter.orderId}" placeholder="Nhập mã đơn..."/>
-        </div>
-
-        <div class="form-group">
-            <label>Trạng thái đơn</label>
-            <select name="orderStatus">
-                <option value="">Tất cả</option>
-                <option value="PENDING" ${filter.orderStatus == 'PENDING' ? 'selected' : ''}>Chờ thanh toán</option>
-                <option value="PAID" ${filter.orderStatus == 'PAID' ? 'selected' : ''}>Đã thanh toán</option>
-                <option value="COMPLETED" ${filter.orderStatus == 'COMPLETED' ? 'selected' : ''}>Hoàn thành</option>
-                <option value="CANCELLED" ${filter.orderStatus == 'CANCELLED' ? 'selected' : ''}>Đã hủy</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Phương thức thanh toán</label>
-            <select name="paymentMethod">
-                <option value="">Tất cả</option>
-                <option value="CASH" ${filter.paymentMethod == 'CASH' ? 'selected' : ''}>Tiền mặt</option>
-                <option value="CARD" ${filter.paymentMethod == 'CARD' ? 'selected' : ''}>Thẻ</option>
-                <option value="TRANSFER" ${filter.paymentMethod == 'TRANSFER' ? 'selected' : ''}>Chuyển khoản</option>
+            <label>Nhân viên</label>
+            <select name="empId">
+                <option value="">Tất cả nhân viên</option>
+                <c:forEach var="emp" items="${employees}">
+                    <option value="${emp.employeeID}" ${filter.empId == emp.employeeID ? 'selected' : ''}>${emp.fullName}</option>
+                </c:forEach>
             </select>
         </div>
 
         <div class="form-group filter-search">
-            <label>Tìm kiếm</label>
-            <input name="keyword" value="${filter.keyword}" type="text" placeholder="Mã đơn, tên khách, nhân viên, chi nhánh..."/>
+            <label>Từ khóa</label>
+            <input name="keyword" value="${filter.keyword}" type="text" placeholder="Mã, mô tả, nhân viên..."/>
         </div>
 
         <div class="form-group">
             <label>Sắp xếp</label>
             <select name="sortBy">
-                <option value="created_at" ${empty filter.sortBy || filter.sortBy == 'created_at' ? 'selected' : ''}>Ngày tạo</option>
-                <option value="total_amount" ${filter.sortBy == 'total_amount' ? 'selected' : ''}>Tổng tiền</option>
+                <option value="payment_date" ${empty filter.sortBy || filter.sortBy == 'payment_date' ? 'selected' : ''}>Ngày</option>
+                <option value="payment_amount" ${filter.sortBy == 'payment_amount' ? 'selected' : ''}>Số tiền</option>
+                <option value="PaymentType" ${filter.sortBy == 'PaymentType' ? 'selected' : ''}>Loại giao dịch</option>
+                <option value="branch_name" ${filter.sortBy == 'branch_name' ? 'selected' : ''}>Chi nhánh</option>
+                <option value="employee_name" ${filter.sortBy == 'employee_name' ? 'selected' : ''}>Nhân viên</option>
             </select>
             <select name="sortDir" style="margin-top:4px;">
                 <option value="DESC" ${empty filter.sortDir || filter.sortDir == 'DESC' ? 'selected' : ''}>Mới nhất / Cao nhất</option>

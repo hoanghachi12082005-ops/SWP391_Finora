@@ -3,11 +3,15 @@ package service.finance;
 import dao.finance.ExpenseVoucherDAO;
 import dao.finance.PaymentDAO;
 import dao.finance.ReceiptVoucherDAO;
+import dao.report.SalesTransactionReportDAO;
 import dao.sales.OrderDAO;
 import model.ExpenseVoucher;
 import model.Order;
 import model.Payment;
 import model.ReceiptVoucher;
+import model.SalesTransaction;
+import model.SalesTransactionFilter;
+import model.SalesTransactionKpi;
 import util.database.DBContext;
 
 import java.sql.Connection;
@@ -19,6 +23,7 @@ public class PaymentService {
     private final OrderDAO orderDAO = new OrderDAO();
     private final ReceiptVoucherDAO receiptVoucherDAO = new ReceiptVoucherDAO();
     private final ExpenseVoucherDAO expenseVoucherDAO = new ExpenseVoucherDAO();
+    private final SalesTransactionReportDAO reportDAO = new SalesTransactionReportDAO();
 
     public List<Payment> getTransactionsPaging(
             String keyword,
@@ -72,6 +77,22 @@ public class PaymentService {
 
     public List<Order> getRecentOrders(int limit) {
         return orderDAO.getAllSaleOrders(null, 0).stream().limit(limit).toList();
+    }
+
+    public SalesTransactionKpi getTransactionKpi(SalesTransactionFilter f) {
+        return reportDAO.calculateKpi(f);
+    }
+
+    public List<SalesTransaction> searchTransactions(SalesTransactionFilter f, int page, int pageSize) {
+        return reportDAO.searchTransactions(f, page, pageSize);
+    }
+
+    public int countTransactions(SalesTransactionFilter f) {
+        return reportDAO.countTransactions(f);
+    }
+
+    public List<String> getDistinctTransactionTypes() {
+        return reportDAO.getDistinctTransactionTypes();
     }
 
     private String createVoucher(int orderId, Payment payment, int employeeId, int branchId, boolean isReceipt) throws Exception {

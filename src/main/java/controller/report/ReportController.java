@@ -39,10 +39,7 @@ import util.report.PdfReportUtil;
         "/reports/inventory",
         "/reports/inventory-preview",
         "/reports/inventory-export",
-        "/reports/inventory-export-excel",
-        "/reports/finance-detail",
-        "/reports/finance-detail-preview",
-        "/reports/finance-detail-export-excel"
+        "/reports/inventory-export-excel"
     })
 public class ReportController extends BaseController {
 
@@ -74,9 +71,7 @@ public class ReportController extends BaseController {
                 || "/reports/sales-by-store-preview".equals(path)
                 || "/reports/sales-by-store-export".equals(path)
                 || "/reports/sales-by-store-export-excel".equals(path)
-                || "/reports/finance-detail".equals(path)
-                || "/reports/finance-detail-preview".equals(path)
-                || "/reports/finance-detail-export-excel".equals(path)) {
+                ) {
             response.sendRedirect(ctx + "/reports/orders");
             return;
         }
