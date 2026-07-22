@@ -1,4 +1,3 @@
-package dao.system;
 
 import model.AuditLog;
 import util.database.DBContext;
