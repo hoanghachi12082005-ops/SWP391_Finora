@@ -323,8 +323,8 @@
                             <select name="gender">
                                 <option value="">-- Chọn --</option>
                                 <option value="Nam" ${isEdit && formCust.gender == 'Nam' ? 'selected' : ''}>Nam</option>
-                                <option value="Nß╗»" ${isEdit && formCust.gender == 'Nß╗»' ? 'selected' : ''}>Nß╗»</option>
-                                <option value="Kh├íc" ${isEdit && formCust.gender == 'Kh├íc' ? 'selected' : ''}>Kh├íc</option>
+                                <option value="Nữ" ${isEdit && formCust.gender == 'Nữ' ? 'selected' : ''}>Nữ</option>
+                                <option value="Khác" ${isEdit && formCust.gender == 'Khác' ? 'selected' : ''}>Khác</option>
                             </select>
                         </div>
                     </div>

@@ -7,8 +7,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +15,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import model.Customer;
 import model.CustomerOverview;
-import model.Branch;
 import model.LoyaltyPointSetting;
 import util.database.DBContext;
 

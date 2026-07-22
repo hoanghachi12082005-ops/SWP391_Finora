@@ -40,7 +40,7 @@ public class SalesServlet extends HttpServlet {
             session.setAttribute("employee", emp);
         }
 
-        /*
+        
         // Bắt buộc phải mở ca làm việc mới được sử dụng máy POS
         ShiftDAO shiftDao = new ShiftDAO();
         Shift activeShift = shiftDao.getOpenShiftByEmp(emp.getEmpId());
@@ -48,7 +48,7 @@ public class SalesServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/shift?error=need_open_shift");
             return;
         }
-        */
+        
 
         // Xác định warehouse_id từ branch_id
         int warehouseId = getWarehouseId(emp.getBranchId());

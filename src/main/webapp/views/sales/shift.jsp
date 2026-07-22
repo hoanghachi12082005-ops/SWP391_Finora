@@ -75,7 +75,7 @@
         <!-- Scrollable Dashboard / Form Content -->
         <div class="flex-1 overflow-y-auto p-6 scrollbar-thin space-y-6">
 
-            <%--
+            
             <c:if test="${param.error == 'need_open_shift'}">
                 <div class="bg-error-container text-on-error-container px-6 py-4 rounded-xl shadow-sm border border-red-200 flex items-center gap-3 animate-fadeIn">
                     <span class="material-symbols-outlined text-[24px]">warning</span>
@@ -85,7 +85,7 @@
                     </div>
                 </div>
             </c:if>
-            --%>
+            
 
             <c:choose>
                 <c:when test="${not empty activeShift}">
