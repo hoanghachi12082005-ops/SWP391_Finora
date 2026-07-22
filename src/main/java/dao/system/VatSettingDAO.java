@@ -9,6 +9,7 @@ import java.util.List;
 public class VatSettingDAO {
 
     public VatSetting getSetting() {
+        // Ưu tiên lấy VAT mặc định (category_id IS NULL)
         String sql = "SELECT TOP 1 s.setting_id, s.vat_percentage, s.category_id, s.updated_by, s.updated_at, "
                    + "c.category_name FROM vat_setting s "
                    + "LEFT JOIN category c ON s.category_id = c.category_id "
@@ -22,6 +23,22 @@ public class VatSettingDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        // Fallback: lấy bất kỳ setting nào có category_id không NULL (DB chưa migration)
+        String fallbackSql = "SELECT TOP 1 s.setting_id, s.vat_percentage, s.category_id, s.updated_by, s.updated_at, "
+                           + "c.category_name FROM vat_setting s "
+                           + "LEFT JOIN category c ON s.category_id = c.category_id "
+                           + "ORDER BY s.setting_id DESC";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(fallbackSql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return extractVatSetting(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         return new VatSetting(); // trả về mặc định 8%
     }
 
