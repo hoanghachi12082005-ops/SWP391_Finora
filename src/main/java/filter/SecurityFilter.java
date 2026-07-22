@@ -114,7 +114,8 @@ public class SecurityFilter implements Filter {
 
         if (allowedRoles != null && !allowedRoles.contains(role)) {
             // Ghi audit log cho truy cập bất hợp pháp
-            String message = "Truy cập trái phép: " + path + " (role=" + role + ")";
+            String vietPath = mapPathToVietnamese(path);
+            String message = "Truy cập trái phép: " + vietPath + " (vai trò: " + role + ")";
             try {
                 activityLogDAO.insertLog(employee.getEmployeeId(), "TỪ_CHỐI_TRUY_CẬP", "auth", null, null, message);
             } catch (Exception ignored) {}
@@ -156,6 +157,36 @@ public class SecurityFilter implements Filter {
             if (path.equals(p) || path.startsWith(p)) return true;
         }
         return false;
+    }
+
+    /** Chuyển đường dẫn URL thành tên tiếng Việt dễ đọc */
+    private String mapPathToVietnamese(String path) {
+        if (path.startsWith("/product"))       return "Quản lý sản phẩm";
+        if (path.startsWith("/category"))       return "Quản lý danh mục";
+        if (path.startsWith("/customer"))       return "Quản lý khách hàng";
+        if (path.startsWith("/supplier"))       return "Quản lý nhà cung cấp";
+        if (path.startsWith("/warehouse"))      return "Quản lý kho";
+        if (path.startsWith("/inventory"))      return "Tồn kho";
+        if (path.startsWith("/purchase"))       return "Phiếu nhập hàng";
+        if (path.startsWith("/branch"))         return "Chi nhánh";
+        if (path.startsWith("/system"))         return "Quản lý hệ thống";
+        if (path.startsWith("/configuration"))  return "Cấu hình";
+        if (path.startsWith("/admin"))          return "Quản trị";
+        if (path.startsWith("/finance"))        return "Tài chính";
+        if (path.startsWith("/activity"))       return "Trung tâm hoạt động";
+        if (path.startsWith("/settings"))       return "Cài đặt";
+        if (path.startsWith("/report"))         return "Báo cáo";
+        if (path.startsWith("/manager"))        return "Quản lý";
+        if (path.startsWith("/sales"))          return "Bán hàng";
+        if (path.startsWith("/cart"))           return "Giỏ hàng";
+        if (path.startsWith("/checkout"))       return "Thanh toán";
+        if (path.startsWith("/order"))          return "Đơn hàng";
+        if (path.startsWith("/dashboard"))      return "Bảng điều khiển";
+        if (path.startsWith("/revenue"))        return "Doanh thu";
+        if (path.startsWith("/shift"))          return "Ca làm việc";
+        if (path.startsWith("/print"))          return "In ấn";
+        if (path.startsWith("/profile"))        return "Hồ sơ cá nhân";
+        return path; // fallback về đường dẫn gốc nếu không map được
     }
 
     private Set<String> findRequiredRoles(String path) {
