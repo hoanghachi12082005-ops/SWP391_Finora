@@ -145,6 +145,10 @@ public class ActivityLog {
         String entity = getEntityLabel().toLowerCase();
         String code = getEntityCode();
         String act = getActionLabel();
+        // Tránh trùng lặp: nếu entity giống action (VD: "Đăng nhập" + "đăng nhập"), chỉ hiển thị action
+        if (entity != null && entity.equalsIgnoreCase(act)) {
+            return act;
+        }
         StringBuilder sb = new StringBuilder(act);
         if (entity != null && !entity.isBlank()) sb.append(' ').append(entity);
         if (code != null && !code.isBlank()) sb.append(' ').append(code);
