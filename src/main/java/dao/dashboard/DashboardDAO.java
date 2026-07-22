@@ -231,6 +231,7 @@ public class DashboardDAO {
 
     /** Gọi tất cả query và trả về model DashboardOverview hoàn chỉnh. */
     public DashboardOverview getOwnerOverview() throws SQLException {
+        String sql = "SELECT "
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
