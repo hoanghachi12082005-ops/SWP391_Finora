@@ -9,6 +9,38 @@ import java.util.List;
 
 public class OrderDAO {
 
+    public List<Order> getRecentSaleOrders(int limit) {
+        List<Order> list = new ArrayList<>();
+        String sql = """
+            SELECT TOP (?) o.*, 
+                   c.full_name AS customerName, 
+                   e.fullName AS employeeName, 
+                   b.branch_name AS branchName
+            FROM [order] o
+            LEFT JOIN Customer c ON o.customer_id = c.cus_id
+            JOIN Employee e ON o.emp_id = e.emp_id
+            JOIN Branch b ON o.branch_id = b.branch_id
+            WHERE o.order_type = 'SALE'
+            ORDER BY o.order_id DESC
+        """;
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Order o = mapRow(rs);
+                    o.setCustomerName(rs.getString("customerName"));
+                    o.setEmployeeName(rs.getString("employeeName"));
+                    o.setBranchName(rs.getString("branchName"));
+                    list.add(o);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public List<Order> getAllSaleOrders(String keyword, int branchId) {
         List<Order> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
