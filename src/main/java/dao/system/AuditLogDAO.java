@@ -1,4 +1,3 @@
-            ps.setString(6, log.getNewData());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
