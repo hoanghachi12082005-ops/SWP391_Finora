@@ -23,7 +23,7 @@
     <div class="setup-card">
         <span class="material-icons setup-icon">inventory_2</span>
         <h2>Thiết lập kho hàng</h2>
-        <p>Chào mừng bạn đến với module Quản lý Kho! Hãy khởi tạo kho hàng đầu tiên để bắt đầu lưu trữ sản phẩm.</p>
+        <p>Chào mừng bạn đến với module Quản lý! Hãy khởi tạo kho hàng đầu tiên để bắt đầu lưu trữ sản phẩm.</p>
         
         <form action="${pageContext.request.contextPath}/inventory" method="POST">
             <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">

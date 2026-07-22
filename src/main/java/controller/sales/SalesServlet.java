@@ -52,6 +52,15 @@ public class SalesServlet extends HttpServlet {
 
         // Xác định warehouse_id từ branch_id
         int warehouseId = getWarehouseId(emp.getBranchId());
+        if (warehouseId <= 0) {
+            String role = emp.getRoleName() != null ? emp.getRoleName().trim().toLowerCase() : "";
+            if (role.equals("storemanager") || role.equals("owner") || role.equals("admin")) {
+                resp.sendRedirect(req.getContextPath() + "/inventory");
+            } else {
+                req.getRequestDispatcher("/views/inventory/no_warehouse_notice.jsp").forward(req, resp);
+            }
+            return;
+        }
 
         ProductDAO productDao = new ProductDAO();
         CustomerDAO customerDao = new CustomerDAO();
@@ -145,10 +154,9 @@ public class SalesServlet extends HttpServlet {
      * Giả định: warehouse_id tương ứng 1-1 với branch_id (theo spec).
      */
     private int getWarehouseId(int branchId) {
-        // Có thể query DB: SELECT warehouse_id FROM warehouse WHERE branch_id = ?
-        // Nhưng theo spec giả định 1-1 mapping
+        if (branchId <= 0) return 0;
         try (var conn = util.database.DBContext.getConnection();
-             var ps = conn.prepareStatement("SELECT TOP 1 warehouse_id FROM warehouse WHERE branch_id = ?")) {
+             var ps = conn.prepareStatement("SELECT TOP 1 warehouse_id FROM warehouse WHERE branch_id = ? AND status = 'ACTIVE'")) {
             ps.setInt(1, branchId);
             try (var rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt("warehouse_id");
@@ -156,7 +164,7 @@ public class SalesServlet extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return branchId; // fallback
+        return 0;
     }
 
     // ── JSON helpers (thủ công, không phụ thuộc thư viện ngoài) ──

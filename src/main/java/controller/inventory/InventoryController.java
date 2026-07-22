@@ -89,10 +89,18 @@ public class InventoryController extends BaseController {
             // Global access for Owner
             if (role.equals("owner")) {
                 allowedWarehouses = warehouseDAO.findAll();
+                if (allowedWarehouses.isEmpty()) {
+                    forward(request, response, "inventory/setup_warehouse");
+                    return;
+                }
             } else {
                 allowedWarehouses = myWarehouses; // Only own warehouses
                 if (allowedWarehouses.isEmpty()) {
-                    forward(request, response, "inventory/setup_warehouse");
+                    if (role.equals("storemanager") || role.equals("admin")) {
+                        forward(request, response, "inventory/setup_warehouse");
+                    } else {
+                        forward(request, response, "inventory/no_warehouse_notice");
+                    }
                     return;
                 }
             }

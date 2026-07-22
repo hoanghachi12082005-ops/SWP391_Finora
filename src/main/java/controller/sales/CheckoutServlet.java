@@ -87,6 +87,11 @@ public class CheckoutServlet extends HttpServlet {
         }
 
         int warehouseId = getWarehouseId(emp.getBranchId());
+        if (warehouseId <= 0) {
+            resp.setContentType("application/json;charset=UTF-8");
+            resp.getWriter().write("{\"status\":\"error\",\"message\":\"Kho hàng của cửa hàng chưa được tạo. Vui lòng liên hệ Quản lý cửa hàng hoặc Chủ cửa hàng.\"}");
+            return;
+        }
 
         // ── Tính toán tổng ──────────────────────────────────────
         double subtotal = tab.getSubtotal();
@@ -304,7 +309,8 @@ public class CheckoutServlet extends HttpServlet {
     }
 
     private int getWarehouseId(int branchId) {
-        try (var conn = DBContext.getConnection(); var ps = conn.prepareStatement("SELECT TOP 1 warehouse_id FROM warehouse WHERE branch_id = ?")) {
+        if (branchId <= 0) return 0;
+        try (var conn = DBContext.getConnection(); var ps = conn.prepareStatement("SELECT TOP 1 warehouse_id FROM warehouse WHERE branch_id = ? AND status = 'ACTIVE'")) {
             ps.setInt(1, branchId);
             try (var rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -314,7 +320,7 @@ public class CheckoutServlet extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return branchId;
+        return 0;
     }
 
     private String escJson(String s) {
