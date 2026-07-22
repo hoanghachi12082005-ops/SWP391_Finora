@@ -269,6 +269,7 @@ public class DashboardDAO {
                 ov.setTotalCustomers(rs.getInt("total_customers"));
                 ov.setNewCustomersThisMonth(rs.getInt("new_customers"));
                 ov.setActiveCustomers(rs.getInt("active_customers"));
+                ov.setTotalProducts(rs.getInt("total_products"));
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
