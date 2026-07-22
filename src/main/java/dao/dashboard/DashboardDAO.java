@@ -245,6 +245,7 @@ public class DashboardDAO {
                 + "(SELECT COUNT(*) FROM customer) AS total_customers, "
                 + "(SELECT COUNT(*) FROM customer WHERE YEAR(created_at)=YEAR(GETDATE()) AND MONTH(created_at)=MONTH(GETDATE())) AS new_customers, "
                 + "(SELECT COUNT(*) FROM customer WHERE status='ACTIVE') AS active_customers, "
+                + "(SELECT COUNT(*) FROM product) AS total_products, "
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
