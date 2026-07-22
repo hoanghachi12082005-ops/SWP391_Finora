@@ -504,9 +504,7 @@
                                     document.getElementById('detailDiscount').innerText = '-' + formatVND(data.discountAmount);
 
                                     // VAT calculation
-                                    let totalBeforeTax = data.subtotal - data.discountAmount;
-                                    let vatRate = (data.vatPercentage || 8) / 100;
-                                    let vat = totalBeforeTax * vatRate;
+                                    let vat = data.vatAmount || 0;
                                     document.getElementById('detailTax').innerText = formatVND(vat);
                                     document.getElementById('detailTotal').innerText = formatVND(data.totalAmount);
 
@@ -605,7 +603,7 @@
                             var tt = document.getElementById('printReceiptTotals');
                             var vatPercent = d.vatPercentage || 8;
                             var totalBeforeTax = d.subtotal - d.discountAmount;
-                            var vat = totalBeforeTax * vatPercent / 100;
+                            var vat = d.vatAmount || (totalBeforeTax * vatPercent / 100);
                             tt.innerHTML =
                                 '<tr><td>Cộng tiền hàng:</td><td align="right">' + Number(d.subtotal).toLocaleString('vi-VN') + ' ₫</td></tr>' +
                                 (d.discountAmount > 0 ? '<tr><td>Chiết khấu:</td><td align="right">-' + Number(d.discountAmount).toLocaleString('vi-VN') + ' ₫</td></tr>' : '') +
