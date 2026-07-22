@@ -49,9 +49,9 @@ public class PaymentDAO {
                 p.payment_method AS PaymentMethod,
                 e.fullName AS CreatorName,
                 b.branch_name AS BranchName
-            FROM payment p
-            LEFT JOIN Employee e ON p.EmployeeID = e.emp_id
-            LEFT JOIN Branch b ON p.BranchID = b.branch_id
+            FROM payment p WITH (NOLOCK)
+            LEFT JOIN Employee e WITH (NOLOCK) ON p.EmployeeID = e.emp_id
+            LEFT JOIN Branch b WITH (NOLOCK) ON p.BranchID = b.branch_id
             WHERE 1=1
         """);
 

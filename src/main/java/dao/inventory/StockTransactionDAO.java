@@ -31,10 +31,10 @@ public class StockTransactionDAO {
             "    '' as product_codebar, " +
             "    MIN(e.fullName) as created_by_name, " +
             "    MIN(w.warehouse_name) as warehouse_name " +
-            "FROM stock_transaction st " +
-            "JOIN product p ON st.product_id = p.product_id " +
-            "JOIN warehouse w ON st.warehouse_id = w.warehouse_id " +
-            "LEFT JOIN Employee e ON st.created_by = e.emp_id " +
+            "FROM stock_transaction st WITH (NOLOCK) " +
+            "JOIN product p WITH (NOLOCK) ON st.product_id = p.product_id " +
+            "JOIN warehouse w WITH (NOLOCK) ON st.warehouse_id = w.warehouse_id " +
+            "LEFT JOIN Employee e WITH (NOLOCK) ON st.created_by = e.emp_id " +
             "WHERE 1=1"
         );
 
@@ -104,10 +104,10 @@ public class StockTransactionDAO {
             "    '' as product_codebar, " +
             "    MIN(e.fullName) as created_by_name, " +
             "    MIN(w.warehouse_name) as warehouse_name " +
-            "FROM stock_transaction st " +
-            "JOIN product p ON st.product_id = p.product_id " +
-            "JOIN warehouse w ON st.warehouse_id = w.warehouse_id " +
-            "LEFT JOIN Employee e ON st.created_by = e.emp_id " +
+            "FROM stock_transaction st WITH (NOLOCK) " +
+            "JOIN product p WITH (NOLOCK) ON st.product_id = p.product_id " +
+            "JOIN warehouse w WITH (NOLOCK) ON st.warehouse_id = w.warehouse_id " +
+            "LEFT JOIN Employee e WITH (NOLOCK) ON st.created_by = e.emp_id " +
             "WHERE 1=1"
         );
 

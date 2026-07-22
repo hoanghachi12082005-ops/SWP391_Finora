@@ -16,10 +16,10 @@ public class OrderDAO {
                    c.full_name AS customerName, 
                    e.fullName AS employeeName, 
                    b.branch_name AS branchName
-            FROM [order] o
-            LEFT JOIN Customer c ON o.customer_id = c.cus_id
-            JOIN Employee e ON o.emp_id = e.emp_id
-            JOIN Branch b ON o.branch_id = b.branch_id
+            FROM [order] o WITH (NOLOCK)
+            LEFT JOIN Customer c WITH (NOLOCK) ON o.customer_id = c.cus_id
+            JOIN Employee e WITH (NOLOCK) ON o.emp_id = e.emp_id
+            JOIN Branch b WITH (NOLOCK) ON o.branch_id = b.branch_id
             WHERE o.order_type = 'SALE'
             """);
         
@@ -67,10 +67,10 @@ public class OrderDAO {
                    s.supplier_name AS supplierName, 
                    e.fullName AS employeeName, 
                    w.warehouse_name AS warehouseName
-            FROM [order] o
-            LEFT JOIN Supplier s ON o.supplier_id = s.supplier_id
-            JOIN Employee e ON o.emp_id = e.emp_id
-            JOIN Warehouse w ON o.warehouse_id = w.warehouse_id
+            FROM [order] o WITH (NOLOCK)
+            LEFT JOIN Supplier s WITH (NOLOCK) ON o.supplier_id = s.supplier_id
+            JOIN Employee e WITH (NOLOCK) ON o.emp_id = e.emp_id
+            JOIN Warehouse w WITH (NOLOCK) ON o.warehouse_id = w.warehouse_id
             WHERE o.order_type IN ('PURCHASE', 'EXPORT') AND o.status = 'PENDING'
             """);
         

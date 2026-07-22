@@ -125,14 +125,34 @@ public class Product {
     //  JSON array parsing helpers (không dùng thư viện ngoài)
     // =========================================================
 
+    public static String normalizeUrl(String url) {
+        if (url == null || url.isBlank()) return "";
+        String clean = url.trim();
+        if (clean.startsWith("/SWP391_Finora/")) {
+            clean = clean.substring("/SWP391_Finora".length());
+        } else if (clean.startsWith("/SWP391_Finora-thang/")) {
+            clean = clean.substring("/SWP391_Finora-thang".length());
+        }
+        return clean;
+    }
+
+    public static String formatDisplayUrl(String rawUrl, String contextPath) {
+        if (rawUrl == null || rawUrl.isBlank()) return "";
+        String clean = normalizeUrl(rawUrl);
+        if (contextPath != null && !contextPath.isEmpty() && clean.startsWith("/") && !clean.startsWith(contextPath + "/")) {
+            clean = contextPath + clean;
+        }
+        return clean;
+    }
+
     /** Parse ["a","b","c"] -> List["a","b","c"] */
     public static List<String> parseJsonArray(String json) {
         List<String> result = new ArrayList<>();
         if (json == null || json.isBlank()) return result;
         String trimmed = json.trim();
         if (!trimmed.startsWith("[") || !trimmed.endsWith("]")) {
-            // Không phải JSON, coi như URL đơn lẻ (backward compat)
-            result.add(trimmed);
+            String norm = normalizeUrl(trimmed);
+            if (!norm.isEmpty()) result.add(norm);
             return result;
         }
         String inner = trimmed.substring(1, trimmed.length() - 1).trim();
@@ -143,7 +163,8 @@ public class Product {
             String clean = part.trim();
             if (clean.startsWith("\"")) clean = clean.substring(1);
             if (clean.endsWith("\"")) clean = clean.substring(0, clean.length() - 1);
-            if (!clean.isEmpty()) result.add(clean);
+            String norm = normalizeUrl(clean);
+            if (!norm.isEmpty()) result.add(norm);
         }
         return result;
     }
@@ -154,7 +175,7 @@ public class Product {
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < urls.size(); i++) {
             if (i > 0) sb.append(",");
-            sb.append("\"").append(urls.get(i)).append("\"");
+            sb.append("\"").append(normalizeUrl(urls.get(i))).append("\"");
         }
         sb.append("]");
         return sb.toString();

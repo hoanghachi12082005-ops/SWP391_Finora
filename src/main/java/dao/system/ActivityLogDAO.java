@@ -29,8 +29,8 @@ public class ActivityLogDAO {
     public List<ActivityLog> findRecent(int limit) throws SQLException {
         String sql = "SELECT TOP (?) a.audit_log_id, a.emp_id, a.action_name, a.table_name, a.record_id, a.old_data, a.new_data, a.created_at, "
                    + "e.fullName AS emp_name, e.branch_id, b.branch_name "
-                   + "FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id "
-                   + "LEFT JOIN branch b ON e.branch_id = b.branch_id "
+                   + "FROM audit_log a WITH (NOLOCK) LEFT JOIN employee e WITH (NOLOCK) ON a.emp_id = e.emp_id "
+                   + "LEFT JOIN branch b WITH (NOLOCK) ON e.branch_id = b.branch_id "
                    + "ORDER BY a.audit_log_id DESC";
         List<ActivityLog> list = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();

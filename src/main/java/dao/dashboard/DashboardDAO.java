@@ -23,10 +23,12 @@ public class DashboardDAO {
 
     // ──────────────────────── REVENUE ────────────────────────
 
+    // ──────────────────────── REVENUE ────────────────────────
+
     /** Tổng doanh thu hôm nay (đơn COMPLETED, loại SALE). */
     public BigDecimal getRevenueToday() throws SQLException {
         String sql = "SELECT ISNULL(SUM(total_amount), 0) "
-                   + "FROM [order] "
+                   + "FROM [order] WITH (NOLOCK) "
                    + "WHERE status = 'COMPLETED' AND order_type = 'SALE' "
                    + "  AND CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)";
         return queryBigDecimal(sql);
@@ -35,7 +37,7 @@ public class DashboardDAO {
     /** Tổng doanh thu hôm qua. */
     public BigDecimal getRevenueYesterday() throws SQLException {
         String sql = "SELECT ISNULL(SUM(total_amount), 0) "
-                   + "FROM [order] "
+                   + "FROM [order] WITH (NOLOCK) "
                    + "WHERE status = 'COMPLETED' AND order_type = 'SALE' "
                    + "  AND CAST(created_at AS DATE) = CAST(DATEADD(DAY, -1, GETDATE()) AS DATE)";
         return queryBigDecimal(sql);
@@ -44,7 +46,7 @@ public class DashboardDAO {
     /** Tổng doanh thu tháng này. */
     public BigDecimal getRevenueThisMonth() throws SQLException {
         String sql = "SELECT ISNULL(SUM(total_amount), 0) "
-                   + "FROM [order] "
+                   + "FROM [order] WITH (NOLOCK) "
                    + "WHERE status = 'COMPLETED' AND order_type = 'SALE' "
                    + "  AND YEAR(created_at) = YEAR(GETDATE()) AND MONTH(created_at) = MONTH(GETDATE())";
         return queryBigDecimal(sql);
@@ -53,7 +55,7 @@ public class DashboardDAO {
     /** Tổng doanh thu tháng trước. */
     public BigDecimal getRevenueLastMonth() throws SQLException {
         String sql = "SELECT ISNULL(SUM(total_amount), 0) "
-                   + "FROM [order] "
+                   + "FROM [order] WITH (NOLOCK) "
                    + "WHERE status = 'COMPLETED' AND order_type = 'SALE' "
                    + "  AND YEAR(created_at) = YEAR(DATEADD(MONTH, -1, GETDATE())) "
                    + "  AND MONTH(created_at) = MONTH(DATEADD(MONTH, -1, GETDATE()))";
@@ -63,7 +65,7 @@ public class DashboardDAO {
     /** Tổng doanh thu năm nay. */
     public BigDecimal getRevenueThisYear() throws SQLException {
         String sql = "SELECT ISNULL(SUM(total_amount), 0) "
-                   + "FROM [order] "
+                   + "FROM [order] WITH (NOLOCK) "
                    + "WHERE status = 'COMPLETED' AND order_type = 'SALE' "
                    + "  AND YEAR(created_at) = YEAR(GETDATE())";
         return queryBigDecimal(sql);
@@ -73,7 +75,7 @@ public class DashboardDAO {
 
     /** Số đơn hàng bán hôm nay (COMPLETED). */
     public int getOrdersToday() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM [order] "
+        String sql = "SELECT COUNT(*) FROM [order] WITH (NOLOCK) "
                    + "WHERE order_type = 'SALE' AND status = 'COMPLETED' "
                    + "  AND CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)";
         return queryInt(sql);
@@ -81,7 +83,7 @@ public class DashboardDAO {
 
     /** Số đơn hàng bán tháng này (COMPLETED). */
     public int getOrdersThisMonth() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM [order] "
+        String sql = "SELECT COUNT(*) FROM [order] WITH (NOLOCK) "
                    + "WHERE order_type = 'SALE' AND status = 'COMPLETED' "
                    + "  AND YEAR(created_at) = YEAR(GETDATE()) AND MONTH(created_at) = MONTH(GETDATE())";
         return queryInt(sql);
@@ -89,19 +91,19 @@ public class DashboardDAO {
 
     /** Tổng số đơn hàng bán (tất cả trạng thái). */
     public int getTotalOrders() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM [order] WHERE order_type = 'SALE'";
+        String sql = "SELECT COUNT(*) FROM [order] WITH (NOLOCK) WHERE order_type = 'SALE'";
         return queryInt(sql);
     }
 
     /** Số đơn đang chờ xử lý. */
     public int getPendingOrders() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM [order] WHERE order_type = 'SALE' AND status = 'PENDING'";
+        String sql = "SELECT COUNT(*) FROM [order] WITH (NOLOCK) WHERE order_type = 'SALE' AND status = 'PENDING'";
         return queryInt(sql);
     }
 
     /** Giá trị trung bình mỗi đơn hàng (COMPLETED, SALE). */
     public BigDecimal getAverageOrderValue() throws SQLException {
-        String sql = "SELECT ISNULL(AVG(total_amount), 0) FROM [order] "
+        String sql = "SELECT ISNULL(AVG(total_amount), 0) FROM [order] WITH (NOLOCK) "
                    + "WHERE order_type = 'SALE' AND status = 'COMPLETED'";
         return queryBigDecimal(sql);
     }
@@ -110,20 +112,20 @@ public class DashboardDAO {
 
     /** Tổng số khách hàng. */
     public int getTotalCustomers() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM customer";
+        String sql = "SELECT COUNT(*) FROM customer WITH (NOLOCK)";
         return queryInt(sql);
     }
 
     /** Số khách mới tháng này. */
     public int getNewCustomersThisMonth() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM customer "
+        String sql = "SELECT COUNT(*) FROM customer WITH (NOLOCK) "
                    + "WHERE YEAR(created_at) = YEAR(GETDATE()) AND MONTH(created_at) = MONTH(GETDATE())";
         return queryInt(sql);
     }
 
     /** Khách hàng đang hoạt động. */
     public int getActiveCustomers() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM customer WHERE status = 'ACTIVE'";
+        String sql = "SELECT COUNT(*) FROM customer WITH (NOLOCK) WHERE status = 'ACTIVE'";
         return queryInt(sql);
     }
 
@@ -131,26 +133,26 @@ public class DashboardDAO {
 
     /** Tổng số sản phẩm trong hệ thống. */
     public int getTotalProducts() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM [product]";
+        String sql = "SELECT COUNT(*) FROM [product] WITH (NOLOCK)";
         return queryInt(sql);
     }
 
     /** Số sản phẩm hết hàng (quantity_in_stock = 0 hoặc status OUT_OF_STOCK). */
     public int getOutOfStockItems() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM inventory WHERE quantity_in_stock = 0 OR status = 'OUT_OF_STOCK'";
+        String sql = "SELECT COUNT(*) FROM inventory WITH (NOLOCK) WHERE quantity_in_stock = 0 OR status = 'OUT_OF_STOCK'";
         return queryInt(sql);
     }
 
     /** Số sản phẩm tồn kho thấp (<=10 và > 0). */
     public int getLowStockItems() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM inventory WHERE quantity_in_stock > 0 AND quantity_in_stock <= 10";
+        String sql = "SELECT COUNT(*) FROM inventory WITH (NOLOCK) WHERE quantity_in_stock > 0 AND quantity_in_stock <= 10";
         return queryInt(sql);
     }
 
     /** Tổng giá trị hàng tồn kho (quantity * selling_price). */
     public BigDecimal getTotalStockValue() throws SQLException {
         String sql = "SELECT ISNULL(SUM(i.quantity_in_stock * p.selling_price), 0) "
-                   + "FROM inventory i JOIN [product] p ON i.product_id = p.product_id";
+                   + "FROM inventory i WITH (NOLOCK) JOIN [product] p WITH (NOLOCK) ON i.product_id = p.product_id";
         return queryBigDecimal(sql);
     }
 
@@ -158,13 +160,13 @@ public class DashboardDAO {
 
     /** Tổng số chi nhánh đang hoạt động. */
     public int getTotalStores() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM Branch WHERE status = 'ACTIVE'";
+        String sql = "SELECT COUNT(*) FROM Branch WITH (NOLOCK) WHERE status = 'ACTIVE'";
         return queryInt(sql);
     }
 
     /** Tổng số nhân viên đang hoạt động. */
     public int getTotalEmployees() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM Employee WHERE status = 'ACTIVE'";
+        String sql = "SELECT COUNT(*) FROM Employee WITH (NOLOCK) WHERE status = 'ACTIVE'";
         return queryInt(sql);
     }
 
@@ -174,8 +176,8 @@ public class DashboardDAO {
     public List<BranchRevenue> getBranchRevenues() throws SQLException {
         String sql = "SELECT b.branch_id, b.branch_name, b.branch_code, "
                    + "       ISNULL(SUM(o.total_amount), 0) AS revenue, COUNT(o.order_id) AS order_count "
-                   + "FROM Branch b "
-                   + "LEFT JOIN [order] o ON o.branch_id = b.branch_id "
+                   + "FROM Branch b WITH (NOLOCK) "
+                   + "LEFT JOIN [order] o WITH (NOLOCK) ON o.branch_id = b.branch_id "
                    + "     AND o.status = 'COMPLETED' AND o.order_type = 'SALE' "
                    + "     AND YEAR(o.created_at) = YEAR(GETDATE()) "
                    + "     AND MONTH(o.created_at) = MONTH(GETDATE()) "
@@ -204,9 +206,9 @@ public class DashboardDAO {
         String sql = "SELECT TOP 5 p.product_id, p.product_name, "
                    + "       SUM(od.quantity) AS quantity_sold, "
                    + "       SUM(od.total_price) AS revenue "
-                   + "FROM order_detail od "
-                   + "JOIN [order] o ON od.order_id = o.order_id "
-                   + "JOIN [product] p ON od.product_id = p.product_id "
+                   + "FROM order_detail od WITH (NOLOCK) "
+                   + "JOIN [order] o WITH (NOLOCK) ON od.order_id = o.order_id "
+                   + "JOIN [product] p WITH (NOLOCK) ON od.product_id = p.product_id "
                    + "WHERE o.status = 'COMPLETED' AND o.order_type = 'SALE' "
                    + "  AND YEAR(o.created_at) = YEAR(GETDATE()) AND MONTH(o.created_at) = MONTH(GETDATE()) "
                    + "GROUP BY p.product_id, p.product_name "
@@ -232,25 +234,25 @@ public class DashboardDAO {
     /** Gọi tất cả query và trả về model DashboardOverview hoàn chỉnh. */
     public DashboardOverview getOwnerOverview() throws SQLException {
         String sql = "SELECT "
-                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WHERE status='COMPLETED' AND order_type='SALE' AND CAST(created_at AS DATE)=CAST(GETDATE() AS DATE)) AS revenue_today, "
-                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WHERE status='COMPLETED' AND order_type='SALE' AND CAST(created_at AS DATE)=CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)) AS revenue_yesterday, "
-                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WHERE status='COMPLETED' AND order_type='SALE' AND YEAR(created_at)=YEAR(GETDATE()) AND MONTH(created_at)=MONTH(GETDATE())) AS revenue_this_month, "
-                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WHERE status='COMPLETED' AND order_type='SALE' AND YEAR(created_at)=YEAR(DATEADD(MONTH,-1,GETDATE())) AND MONTH(created_at)=MONTH(DATEADD(MONTH,-1,GETDATE()))) AS revenue_last_month, "
-                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WHERE status='COMPLETED' AND order_type='SALE' AND YEAR(created_at)=YEAR(GETDATE())) AS revenue_this_year, "
-                + "(SELECT COUNT(*) FROM [order] WHERE order_type='SALE' AND status='COMPLETED' AND CAST(created_at AS DATE)=CAST(GETDATE() AS DATE)) AS orders_today, "
-                + "(SELECT COUNT(*) FROM [order] WHERE order_type='SALE' AND status='COMPLETED' AND YEAR(created_at)=YEAR(GETDATE()) AND MONTH(created_at)=MONTH(GETDATE())) AS orders_this_month, "
-                + "(SELECT COUNT(*) FROM [order] WHERE order_type='SALE') AS total_orders, "
-                + "(SELECT COUNT(*) FROM [order] WHERE order_type='SALE' AND status='PENDING') AS pending_orders, "
-                + "(SELECT ISNULL(AVG(total_amount),0) FROM [order] WHERE order_type='SALE' AND status='COMPLETED') AS avg_order_value, "
-                + "(SELECT COUNT(*) FROM customer) AS total_customers, "
-                + "(SELECT COUNT(*) FROM customer WHERE YEAR(created_at)=YEAR(GETDATE()) AND MONTH(created_at)=MONTH(GETDATE())) AS new_customers, "
-                + "(SELECT COUNT(*) FROM customer WHERE status='ACTIVE') AS active_customers, "
-                + "(SELECT COUNT(*) FROM product) AS total_products, "
-                + "(SELECT COUNT(*) FROM inventory WHERE quantity_in_stock=0 OR status='OUT_OF_STOCK') AS out_of_stock, "
-                + "(SELECT COUNT(*) FROM inventory WHERE quantity_in_stock>0 AND quantity_in_stock<=10) AS low_stock, "
-                + "(SELECT ISNULL(SUM(i.quantity_in_stock*p.selling_price),0) FROM inventory i JOIN product p ON i.product_id=p.product_id) AS total_stock_value, "
-                + "(SELECT COUNT(*) FROM Branch WHERE status='ACTIVE') AS total_stores, "
-                + "(SELECT COUNT(*) FROM Employee WHERE status='ACTIVE') AS total_employees";
+                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WITH (NOLOCK) WHERE status='COMPLETED' AND order_type='SALE' AND CAST(created_at AS DATE)=CAST(GETDATE() AS DATE)) AS revenue_today, "
+                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WITH (NOLOCK) WHERE status='COMPLETED' AND order_type='SALE' AND CAST(created_at AS DATE)=CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)) AS revenue_yesterday, "
+                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WITH (NOLOCK) WHERE status='COMPLETED' AND order_type='SALE' AND YEAR(created_at)=YEAR(GETDATE()) AND MONTH(created_at)=MONTH(GETDATE())) AS revenue_this_month, "
+                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WITH (NOLOCK) WHERE status='COMPLETED' AND order_type='SALE' AND YEAR(created_at)=YEAR(DATEADD(MONTH,-1,GETDATE())) AND MONTH(created_at)=MONTH(DATEADD(MONTH,-1,GETDATE()))) AS revenue_last_month, "
+                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WITH (NOLOCK) WHERE status='COMPLETED' AND order_type='SALE' AND YEAR(created_at)=YEAR(GETDATE())) AS revenue_this_year, "
+                + "(SELECT COUNT(*) FROM [order] WITH (NOLOCK) WHERE order_type='SALE' AND status='COMPLETED' AND CAST(created_at AS DATE)=CAST(GETDATE() AS DATE)) AS orders_today, "
+                + "(SELECT COUNT(*) FROM [order] WITH (NOLOCK) WHERE order_type='SALE' AND status='COMPLETED' AND YEAR(created_at)=YEAR(GETDATE()) AND MONTH(created_at)=MONTH(GETDATE())) AS orders_this_month, "
+                + "(SELECT COUNT(*) FROM [order] WITH (NOLOCK) WHERE order_type='SALE') AS total_orders, "
+                + "(SELECT COUNT(*) FROM [order] WITH (NOLOCK) WHERE order_type='SALE' AND status='PENDING') AS pending_orders, "
+                + "(SELECT ISNULL(AVG(total_amount),0) FROM [order] WITH (NOLOCK) WHERE order_type='SALE' AND status='COMPLETED') AS avg_order_value, "
+                + "(SELECT COUNT(*) FROM customer WITH (NOLOCK)) AS total_customers, "
+                + "(SELECT COUNT(*) FROM customer WITH (NOLOCK) WHERE YEAR(created_at)=YEAR(GETDATE()) AND MONTH(created_at)=MONTH(GETDATE())) AS new_customers, "
+                + "(SELECT COUNT(*) FROM customer WITH (NOLOCK) WHERE status='ACTIVE') AS active_customers, "
+                + "(SELECT COUNT(*) FROM product WITH (NOLOCK)) AS total_products, "
+                + "(SELECT COUNT(*) FROM inventory WITH (NOLOCK) WHERE quantity_in_stock=0 OR status='OUT_OF_STOCK') AS out_of_stock, "
+                + "(SELECT COUNT(*) FROM inventory WITH (NOLOCK) WHERE quantity_in_stock>0 AND quantity_in_stock<=10) AS low_stock, "
+                + "(SELECT ISNULL(SUM(i.quantity_in_stock*p.selling_price),0) FROM inventory i WITH (NOLOCK) JOIN product p WITH (NOLOCK) ON i.product_id=p.product_id) AS total_stock_value, "
+                + "(SELECT COUNT(*) FROM Branch WITH (NOLOCK) WHERE status='ACTIVE') AS total_stores, "
+                + "(SELECT COUNT(*) FROM Employee WITH (NOLOCK) WHERE status='ACTIVE') AS total_employees";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -323,25 +325,25 @@ public class DashboardDAO {
         }
 
         // 1. Total Revenue
-        String revSql = "SELECT ISNULL(SUM(o.total_amount), 0) FROM [order] o WHERE o.status = 'COMPLETED' AND o.order_type = 'SALE' " + orderTimeFilter;
+        String revSql = "SELECT ISNULL(SUM(o.total_amount), 0) FROM [order] o WITH (NOLOCK) WHERE o.status = 'COMPLETED' AND o.order_type = 'SALE' " + orderTimeFilter;
         fd.totalRevenue = queryBigDecimal(revSql);
 
         // 2. Total Expenses
-        String expSql = "SELECT ISNULL(SUM(p.payment_amount), 0) FROM payment p WHERE p.payment_status = 'PAID' AND p.PaymentType = 'EXPENSE' " + paymentTimeFilter;
+        String expSql = "SELECT ISNULL(SUM(p.payment_amount), 0) FROM payment p WITH (NOLOCK) WHERE p.payment_status = 'PAID' AND p.PaymentType = 'EXPENSE' " + paymentTimeFilter;
         fd.totalExpenses = queryBigDecimal(expSql);
 
         // 3. Net Profit
         fd.netProfit = fd.totalRevenue.subtract(fd.totalExpenses);
 
         // 4. Total Invoices
-        String invSql = "SELECT COUNT(*) FROM [order] o WHERE o.status = 'COMPLETED' AND o.order_type = 'SALE' " + orderTimeFilter;
+        String invSql = "SELECT COUNT(*) FROM [order] o WITH (NOLOCK) WHERE o.status = 'COMPLETED' AND o.order_type = 'SALE' " + orderTimeFilter;
         fd.totalInvoices = queryInt(invSql);
 
         // 5. Branch Revenues / Performance
         String branchSql = "SELECT b.branch_id, b.branch_name, b.branch_code, b.status, "
                          + "       ISNULL(SUM(o.total_amount), 0) AS revenue, COUNT(o.order_id) AS order_count "
-                         + "FROM Branch b "
-                         + "LEFT JOIN [order] o ON o.branch_id = b.branch_id "
+                         + "FROM Branch b WITH (NOLOCK) "
+                         + "LEFT JOIN [order] o WITH (NOLOCK) ON o.branch_id = b.branch_id "
                          + "     AND o.status = 'COMPLETED' AND o.order_type = 'SALE' "
                          + orderTimeFilter
                          + "GROUP BY b.branch_id, b.branch_name, b.branch_code, b.status "
@@ -389,12 +391,12 @@ public class DashboardDAO {
                    + "  SELECT o.order_code AS TransactionCode, o.created_at AS PaymentDate, 'INCOME' AS PaymentType, "
                    + "         o.payment_method AS PaymentMethod, o.total_amount AS PaymentAmount, "
                    + "         N'Bán hàng - Hóa đơn ' + o.order_code AS Description "
-                   + "  FROM [order] o "
+                   + "  FROM [order] o WITH (NOLOCK) "
                    + "  WHERE o.status = 'COMPLETED' AND o.order_type = 'SALE' " + orderBranchFilter + orderTimeFilter
                    + "  UNION ALL "
                    + "  SELECT p.transaction_code AS TransactionCode, p.payment_date AS PaymentDate, p.PaymentType AS PaymentType, "
                    + "         p.payment_method AS PaymentMethod, p.payment_amount AS PaymentAmount, p.Description AS Description "
-                   + "  FROM payment p "
+                   + "  FROM payment p WITH (NOLOCK) "
                    + "  WHERE p.PaymentType = 'EXPENSE' " + paymentBranchFilter + paymentTimeFilter
                    + ") t "
                    + "ORDER BY PaymentDate DESC";

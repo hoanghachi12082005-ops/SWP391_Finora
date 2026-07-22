@@ -148,7 +148,7 @@
                                 <td>
                                     <% if (imgCount > 0) { %>
                                         <div class="d-flex align-items-center gap-1" style="min-width:60px;">
-                                            <img src="<%= imgUrls.get(0) %>" alt="product" 
+                                            <img src="<%= Product.formatDisplayUrl(imgUrls.get(0), request.getContextPath()) %>" alt="product" 
                                                  style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #eee;">
                                             <% if (imgCount > 1) { %>
                                                 <span class="badge bg-secondary" style="font-size:10px;" 

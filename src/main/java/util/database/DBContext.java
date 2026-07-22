@@ -48,6 +48,10 @@ public class DBContext {
 
     public static Connection getConnection() throws SQLException {
         Connection conn = DriverManager.getConnection(url, user, password);
+        try {
+            conn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+        } catch (SQLException ignored) {}
+        
         // Set session context cho trigger audit log
         Integer empId = currentEmployeeId.get();
         if (empId != null) {

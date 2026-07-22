@@ -49,8 +49,8 @@ public class SecurityFilter implements Filter {
         ROLE_MAP.put("/reports/",        Set.of("admin", "owner", "storemanager"));
         ROLE_MAP.put("/inventory/",      Set.of("owner", "storemanager", "warehousestaff"));
         ROLE_MAP.put("/warehouse/",      Set.of("owner", "storemanager", "warehousestaff"));
-        ROLE_MAP.put("/product/",        Set.of("owner"));
-        ROLE_MAP.put("/products",        Set.of("owner"));
+        ROLE_MAP.put("/product/",        Set.of("admin", "owner", "storemanager", "warehousestaff"));
+        ROLE_MAP.put("/products",        Set.of("admin", "owner", "storemanager", "warehousestaff"));
         ROLE_MAP.put("/category/",       Set.of("admin", "owner", "storemanager"));
         ROLE_MAP.put("/customer/",       Set.of("admin", "owner", "storemanager", "salesstaff"));
         ROLE_MAP.put("/configuration/",  Set.of("admin", "owner"));
