@@ -15,6 +15,8 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import util.validation.InventoryValidator;
+import util.validation.ValidationResult;
 
 /**
  * Controller xử lý các thao tác kiểm kho (Inventory Check).
@@ -105,28 +107,22 @@ public class InventoryCheckController extends InventoryBaseController {
 
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
 
+                    // Backend Validation khi lập phiếu kiểm kho
+                    ValidationResult valResult = InventoryValidator.validateCheckRequest(currentWarehouseId, productIds, actualQtys, notes);
+                    if (!valResult.isValid()) {
+                        request.getSession().setAttribute("error", valResult.getFirstError());
+                        redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
+                        return;
+                    }
+
                     if (productIds != null && productIds.length > 0) {
-                        if (actualQtys == null || actualQtys.length != productIds.length) {
-                            request.getSession().setAttribute("error", "Lỗi: Dữ liệu kiểm kho không hợp lệ.");
-                            redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
-                            return;
-                        }
-
-                        for (String qty : actualQtys) {
-                            if (qty == null || qty.trim().isEmpty() || !qty.trim().matches("^\\d+$")) {
-                                request.getSession().setAttribute("error", "Lỗi: Số lượng thực tế phải là số nguyên dương hợp lệ và không chứa ký tự khác.");
-                                redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
-                                return;
-                            }
-                        }
-
                         List<model.InventoryCheckDetail> details = new ArrayList<>();
                         int totalDiscrepancy = 0;
 
                         for (int i = 0; i < productIds.length; i++) {
-                            int pId = Integer.parseInt(productIds[i]);
-                            int sysQty = Integer.parseInt(systemQtys[i]);
-                            int actQty = Integer.parseInt(actualQtys[i]);
+                            int pId = Integer.parseInt(productIds[i].trim());
+                            int sysQty = Integer.parseInt(systemQtys[i].trim());
+                            int actQty = Integer.parseInt(actualQtys[i].trim());
                             String note = (notes != null && notes.length > i) ? notes[i] : "";
 
                             int disc = actQty - sysQty;
@@ -146,7 +142,9 @@ public class InventoryCheckController extends InventoryBaseController {
                         check.setWarehouseId(currentWarehouseId);
                         check.setCreatedBy(currentUser.getEmployeeId());
                         
-                        boolean isApprover = "Owner".equals(currentUser.getRoleName()) || "StoreManager".equals(currentUser.getRoleName());
+                        String role = currentUser.getRoleName();
+                        boolean isApprover = ("Owner".equalsIgnoreCase(role) || "StoreManager".equalsIgnoreCase(role) || "Admin".equalsIgnoreCase(role)) && !"Staff".equalsIgnoreCase(role);
+                        // Nhân viên (Staff) tạo phiếu -> BẮT BUỘC trạng thái PENDING
                         check.setStatus(isApprover ? "APPROVED" : "PENDING");
                         check.setTotalDiscrepancy(totalDiscrepancy);
 
@@ -180,33 +178,26 @@ public class InventoryCheckController extends InventoryBaseController {
                     String[] notes = request.getParameterValues("note[]");
 
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
-                    if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"Admin".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
+                    if (currentUser == null || "Staff".equalsIgnoreCase(currentUser.getRoleName()) || (!"Owner".equalsIgnoreCase(currentUser.getRoleName()) && !"Admin".equalsIgnoreCase(currentUser.getRoleName()) && !"StoreManager".equalsIgnoreCase(currentUser.getRoleName()))) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
                     }
 
+                    ValidationResult valResult = InventoryValidator.validateCheckRequest(currentWarehouseId, productIds, actualQtys, notes);
+                    if (!valResult.isValid()) {
+                        request.getSession().setAttribute("error", valResult.getFirstError());
+                        redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
+                        return;
+                    }
+
                     if (productIds != null && productIds.length > 0) {
-                        if (actualQtys == null || actualQtys.length != productIds.length) {
-                            request.getSession().setAttribute("error", "Lỗi: Dữ liệu kiểm kho không hợp lệ.");
-                            redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
-                            return;
-                        }
-
-                        for (String qty : actualQtys) {
-                            if (qty == null || qty.trim().isEmpty() || !qty.trim().matches("^\\d+$")) {
-                                request.getSession().setAttribute("error", "Lỗi: Số lượng thực tế phải là số nguyên dương hợp lệ và không chứa ký tự khác.");
-                                redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
-                                return;
-                            }
-                        }
-
                         List<model.InventoryCheckDetail> details = new ArrayList<>();
                         int totalDiscrepancy = 0;
 
                         for (int i = 0; i < productIds.length; i++) {
-                            int pId = Integer.parseInt(productIds[i]);
-                            int sysQty = Integer.parseInt(systemQtys[i]);
-                            int actQty = Integer.parseInt(actualQtys[i]);
+                            int pId = Integer.parseInt(productIds[i].trim());
+                            int sysQty = Integer.parseInt(systemQtys[i].trim());
+                            int actQty = Integer.parseInt(actualQtys[i].trim());
                             String note = (notes != null && notes.length > i) ? notes[i] : "";
 
                             int disc = actQty - sysQty;
@@ -236,7 +227,9 @@ public class InventoryCheckController extends InventoryBaseController {
                 case "approveCheck": {
                     int checkId = Integer.parseInt(request.getParameter("checkId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
-                    if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
+                    
+                    ValidationResult permResult = InventoryValidator.validateStaffApprovalPermission(currentUser, action);
+                    if (!permResult.isValid() || currentUser == null || (!"Owner".equalsIgnoreCase(currentUser.getRoleName()) && !"StoreManager".equalsIgnoreCase(currentUser.getRoleName()) && !"Admin".equalsIgnoreCase(currentUser.getRoleName()))) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
                     }
@@ -256,7 +249,9 @@ public class InventoryCheckController extends InventoryBaseController {
                 case "rejectCheck": {
                     int checkId = Integer.parseInt(request.getParameter("checkId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
-                    if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
+                    
+                    ValidationResult permResult = InventoryValidator.validateStaffApprovalPermission(currentUser, action);
+                    if (!permResult.isValid() || currentUser == null || (!"Owner".equalsIgnoreCase(currentUser.getRoleName()) && !"StoreManager".equalsIgnoreCase(currentUser.getRoleName()) && !"Admin".equalsIgnoreCase(currentUser.getRoleName()))) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
                     }

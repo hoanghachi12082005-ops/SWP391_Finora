@@ -18,6 +18,8 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import util.validation.InventoryValidator;
+import util.validation.ValidationResult;
 
 /**
  * Controller xử lý các thao tác điều chuyển kho (Stock Transfer).
@@ -137,19 +139,37 @@ public class TransferController extends InventoryBaseController {
                     String[] partnerWarehouseIds = request.getParameterValues("partnerWarehouseId[]");
                     String[] quantities = request.getParameterValues("quantity[]");
                     String[] actionTypes = request.getParameterValues("actionType[]");
+                    String note = request.getParameter("note");
                     
                     int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
-                    boolean isOwner = "Owner".equals(currentUser.getRoleName());
+                    boolean isOwner = "Owner".equalsIgnoreCase(currentUser.getRoleName());
+                    boolean isStaff = "Staff".equalsIgnoreCase(currentUser.getRoleName());
                     
+                    // Backend Validation khi tạo đơn
+                    ValidationResult valResult = InventoryValidator.validateTransferCreation(
+                        currentWarehouseId, productIds, partnerWarehouseIds, quantities, note, inventoryDAO
+                    );
+
+                    if (!valResult.isValid()) {
+                        request.getSession().setAttribute("error", valResult.getFirstError());
+                        redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + currentWarehouseId);
+                        return;
+                    }
+
+                    // Lưu các cảnh báo tồn kho thiếu (nếu có) vào session để cảnh báo cho người dùng
+                    if (valResult.hasWarnings()) {
+                        request.getSession().setAttribute("warning", String.join("\n", valResult.getWarnings()));
+                    }
+
                     if (productIds != null && productIds.length > 0) {
                         java.util.Map<String, List<model.StockTransferDetail>> groupedDetails = new java.util.HashMap<>();
                         java.util.Map<String, int[]> groupInfo = new java.util.HashMap<>();
                         
                         for (int i = 0; i < productIds.length; i++) {
-                            int pId = Integer.parseInt(productIds[i]);
-                            int partnerWId = Integer.parseInt(partnerWarehouseIds[i]);
-                            int qty = Integer.parseInt(quantities[i]);
+                            int pId = Integer.parseInt(productIds[i].trim());
+                            int partnerWId = Integer.parseInt(partnerWarehouseIds[i].trim());
+                            int qty = Integer.parseInt(quantities[i].trim());
                             String actType = (actionTypes != null && actionTypes.length > i) ? actionTypes[i] : "RECEIVE";
                             
                             if (qty > 0) {
@@ -179,8 +199,9 @@ public class TransferController extends InventoryBaseController {
                             transfer.setTransferCode(transferCode);
                             transfer.setFromWarehouseId(fromWId);
                             transfer.setToWarehouseId(toWId);
-                            // Owner tạo -> tự động duyệt (PENDING_PARTNER), nhân viên tạo -> PENDING_OWNER
-                            transfer.setStatus(isOwner ? "PENDING_PARTNER" : "PENDING_OWNER");
+                            // Nhân viên (Staff) tạo -> ÉP BUỘC trạng thái PENDING_OWNER (Chờ Owner duyệt)
+                            // Owner tạo -> PENDING_PARTNER
+                            transfer.setStatus((isOwner && !isStaff) ? "PENDING_PARTNER" : "PENDING_OWNER");
                             transfer.setCreatedBy(currentUser.getEmployeeId());
                             transfer.setDetails(details);
                             transferList.add(transfer);
@@ -188,7 +209,7 @@ public class TransferController extends InventoryBaseController {
                         transferDAO.createTransfers(transferList);
                     }
 
-                    if (isOwner) {
+                    if (isOwner && !isStaff) {
                         request.getSession().setAttribute("message", "Đã tạo phiếu điều chuyển (Đã tự động duyệt, đang chờ các kho đối tác duyệt).");
                     } else {
                         request.getSession().setAttribute("message", "Đã tạo phiếu điều chuyển (Chờ duyệt).");
@@ -202,6 +223,26 @@ public class TransferController extends InventoryBaseController {
                     int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     
+                    // Chặn Staff xuất kho
+                    ValidationResult permResult = InventoryValidator.validateStaffApprovalPermission(currentUser, action);
+                    if (!permResult.isValid()) {
+                        request.getSession().setAttribute("error", permResult.getFirstError());
+                        redirect(response, request.getContextPath() + "/inventory?tab=transfer&subtab=transfer_process&warehouseId=" + currentWarehouseId);
+                        return;
+                    }
+
+                    model.StockTransfer st = transferDAO.findById(transferId);
+                    if (st != null) {
+                        List<model.StockTransferDetail> details = transferDAO.getTransferDetails(transferId);
+                        // Backend Validate khi Ấn Xuất kho -> CHẶN REJECT HOÀN TOÀN nếu tồn kho thực tế nhỏ hơn số lượng xuất
+                        ValidationResult execResult = InventoryValidator.validateTransferExecution(st.getFromWarehouseId(), details, inventoryDAO);
+                        if (!execResult.isValid()) {
+                            request.getSession().setAttribute("error", execResult.getFirstError());
+                            redirect(response, request.getContextPath() + "/inventory?tab=transfer&subtab=transfer_process&warehouseId=" + currentWarehouseId);
+                            return;
+                        }
+                    }
+
                     new service.inventory.TransferService().dispatchTransfer(transferId, currentUser.getEmployeeId());
                     
                     request.getSession().setAttribute("message", "Đã xuất kho thành công. Hàng đang trên đường vận chuyển.");
@@ -214,6 +255,13 @@ public class TransferController extends InventoryBaseController {
                     int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     
+                    ValidationResult permResult = InventoryValidator.validateStaffApprovalPermission(currentUser, action);
+                    if (!permResult.isValid()) {
+                        request.getSession().setAttribute("error", permResult.getFirstError());
+                        redirect(response, request.getContextPath() + "/inventory?tab=transfer&subtab=transfer_process&warehouseId=" + currentWarehouseId);
+                        return;
+                    }
+
                     new service.inventory.TransferService().rejectDispatch(transferId, currentUser.getEmployeeId());
                     
                     request.getSession().setAttribute("message", "Đã từ chối xuất kho trung chuyển.");
@@ -226,6 +274,13 @@ public class TransferController extends InventoryBaseController {
                     int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     
+                    ValidationResult permResult = InventoryValidator.validateStaffApprovalPermission(currentUser, action);
+                    if (!permResult.isValid()) {
+                        request.getSession().setAttribute("error", permResult.getFirstError());
+                        redirect(response, request.getContextPath() + "/inventory?tab=transfer&subtab=transfer_process&warehouseId=" + currentWarehouseId);
+                        return;
+                    }
+
                     new service.inventory.TransferService().receiveTransfer(transferId, currentUser.getEmployeeId());
                     
                     request.getSession().setAttribute("message", "Đã nhập kho thành công. Phiếu điều chuyển hoàn tất.");
@@ -238,6 +293,13 @@ public class TransferController extends InventoryBaseController {
                     int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     
+                    ValidationResult permResult = InventoryValidator.validateStaffApprovalPermission(currentUser, action);
+                    if (!permResult.isValid()) {
+                        request.getSession().setAttribute("error", permResult.getFirstError());
+                        redirect(response, request.getContextPath() + "/inventory?tab=transfer&subtab=transfer_process&warehouseId=" + currentWarehouseId);
+                        return;
+                    }
+
                     new service.inventory.TransferService().rejectReceive(transferId, currentUser.getEmployeeId());
                     
                     request.getSession().setAttribute("message", "Đã từ chối nhận kho trung chuyển.");

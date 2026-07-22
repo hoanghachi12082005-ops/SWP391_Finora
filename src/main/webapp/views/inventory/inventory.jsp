@@ -79,6 +79,17 @@
                                 <span class="material-icons">category</span>
                             </div>
                         </div>
+
+                        <div class="kpi-card" style="cursor: pointer;" onclick="window.location.href='${pageContext.request.contextPath}/inventory?tab=approval'">
+                            <div class="kpi-card-info">
+                                <p>Phiếu Chờ Xử Lý</p>
+                                <h3 style="color: #f59e0b;">${pendingApprovalCount != null ? pendingApprovalCount : 0}</h3>
+                                <span class="kpi-subtext" style="color: #d97706;">Tất cả phiếu chờ duyệt</span>
+                            </div>
+                            <div class="kpi-card-icon" style="background: rgba(245,158,11,0.1); color: #f59e0b;">
+                                <span class="material-icons">pending_actions</span>
+                            </div>
+                        </div>
                     </div>
 
 
@@ -208,11 +219,11 @@
                                 </div>
                             </div>
 
-                            <div class="kpi-card" style="cursor: pointer;" onclick="window.location.href='?tab=transfer&warehouseId=${selectedWarehouseId}'">
+                            <div class="kpi-card" style="cursor: pointer;" onclick="window.location.href='${pageContext.request.contextPath}/inventory?tab=approval${not empty selectedWarehouseId ? '&warehouseId='.concat(selectedWarehouseId) : ''}'">
                                 <div class="kpi-card-info">
                                     <p>Phiếu Chờ Xử Lý</p>
-                                    <h3 style="color: #f59e0b;">${pendingTransferCount != null ? pendingTransferCount : 0}</h3>
-                                    <span class="kpi-subtext" style="color: #d97706;">Điều chuyển cần duyệt</span>
+                                    <h3 style="color: #f59e0b;">${pendingApprovalCount != null ? pendingApprovalCount : 0}</h3>
+                                    <span class="kpi-subtext" style="color: #d97706;">Tất cả phiếu chờ duyệt</span>
                                 </div>
                                 <div class="kpi-card-icon" style="background: rgba(245,158,11,0.1); color: #f59e0b;">
                                     <span class="material-icons">pending_actions</span>

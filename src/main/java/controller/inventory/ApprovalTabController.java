@@ -12,6 +12,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import util.validation.InventoryValidator;
+import util.validation.ValidationResult;
 
 import java.io.IOException;
 import java.util.List;
@@ -50,12 +52,18 @@ public class ApprovalTabController extends InventoryBaseController {
             return;
         }
 
+        Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+        ValidationResult permCheck = InventoryValidator.validateStaffApprovalPermission(currentUser, action);
+        if (!permCheck.isValid()) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, permCheck.getFirstError());
+            return;
+        }
+
         try {
             switch (action) {
                 // [MOVED FROM InventoryController] - Original lines 1598-1612
                 case "approveTransfer": {
                     int transferId = Integer.parseInt(request.getParameter("transferId"));
-                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
@@ -71,7 +79,6 @@ public class ApprovalTabController extends InventoryBaseController {
                 // [MOVED FROM InventoryController] - Original lines 1613-1627
                 case "rejectTransfer": {
                     int transferId = Integer.parseInt(request.getParameter("transferId"));
-                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
@@ -87,7 +94,6 @@ public class ApprovalTabController extends InventoryBaseController {
                 // [MOVED FROM InventoryController] - Original lines 1628-1651
                 case "partnerApproveTransfer": {
                     int transferId = Integer.parseInt(request.getParameter("transferId"));
-                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     if (currentUser == null || (!"Owner".equalsIgnoreCase(currentUser.getRoleName()) && !"Admin".equalsIgnoreCase(currentUser.getRoleName()) && !"StoreManager".equalsIgnoreCase(currentUser.getRoleName()))) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
@@ -112,7 +118,6 @@ public class ApprovalTabController extends InventoryBaseController {
                 // [MOVED FROM InventoryController] - Original lines 1652-1675
                 case "partnerRejectTransfer": {
                     int transferId = Integer.parseInt(request.getParameter("transferId"));
-                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     if (currentUser == null || (!"Owner".equalsIgnoreCase(currentUser.getRoleName()) && !"Admin".equalsIgnoreCase(currentUser.getRoleName()) && !"StoreManager".equalsIgnoreCase(currentUser.getRoleName()))) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
@@ -137,7 +142,6 @@ public class ApprovalTabController extends InventoryBaseController {
                 // [MOVED FROM InventoryController] - Original lines 1676-1690
                 case "partnerApproveTransferAll": {
                     int transferId = Integer.parseInt(request.getParameter("transferId"));
-                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     if (currentUser == null || (!"Owner".equalsIgnoreCase(currentUser.getRoleName()) && !"Admin".equalsIgnoreCase(currentUser.getRoleName()))) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
@@ -153,7 +157,6 @@ public class ApprovalTabController extends InventoryBaseController {
                 // [MOVED FROM InventoryController] - Original lines 1691-1705
                 case "partnerRejectTransferAll": {
                     int transferId = Integer.parseInt(request.getParameter("transferId"));
-                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
                     if (currentUser == null || (!"Owner".equalsIgnoreCase(currentUser.getRoleName()) && !"Admin".equalsIgnoreCase(currentUser.getRoleName()))) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
@@ -185,8 +188,12 @@ public class ApprovalTabController extends InventoryBaseController {
      * Kiểm kho chờ duyệt), sắp xếp theo ngày tạo mới nhất và gom nhóm dữ liệu hiển thị hợp nhất.
      */
     void handleApprovalTab(HttpServletRequest request, String role) throws Exception {
-        if (!"Owner".equalsIgnoreCase(role) && !"StoreManager".equalsIgnoreCase(role)) {
-            request.setAttribute("error", "Bạn không có quyền truy cập tab này.");
+        boolean isAuthorized = "Owner".equalsIgnoreCase(role) || "Admin".equalsIgnoreCase(role) || "StoreManager".equalsIgnoreCase(role);
+        if (!isAuthorized) {
+            request.setAttribute("unifiedApprovals", new ArrayList<>());
+            if ("approval".equals(request.getParameter("tab"))) {
+                request.setAttribute("error", "Bạn không có quyền truy cập tab này.");
+            }
             return;
         }
 

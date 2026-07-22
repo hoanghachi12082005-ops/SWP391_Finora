@@ -317,12 +317,11 @@ public class PaymentDAO {
     }
 
     /**
-     * Sinh mã giao dịch tăng tự động (ví dụ: PT00001, PC00001)
+     * Sinh mã giao dịch tăng tự động (ví dụ: PT00001, PC00001) trong cùng Connection
      */
-    public String generateTransactionCode(String type, String prefix) {
+    public String generateTransactionCode(Connection conn, String type, String prefix) {
         String sql = "SELECT MAX(transaction_code) FROM payment WHERE PaymentType = ? AND transaction_code LIKE ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, type);
             ps.setString(2, prefix + "%");
@@ -344,6 +343,18 @@ public class PaymentDAO {
             e.printStackTrace();
         }
 
+        return prefix + "00001";
+    }
+
+    /**
+     * Sinh mã giao dịch tăng tự động (ví dụ: PT00001, PC00001)
+     */
+    public String generateTransactionCode(String type, String prefix) {
+        try (Connection conn = DBContext.getConnection()) {
+            return generateTransactionCode(conn, type, prefix);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return prefix + "00001";
     }
 

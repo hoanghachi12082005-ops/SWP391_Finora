@@ -77,6 +77,36 @@
         </script>
         <c:remove var="errorMessage" scope="session" />
     </c:if>
+    <c:if test="${not empty sessionScope.warning}">
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var msg = '${sessionScope.warning}'.trim();
+                if (msg && msg !== 'null') {
+                    Toast.fire({
+                        icon: 'warning',
+                        title: msg,
+                        timer: 5000
+                    });
+                }
+            });
+        </script>
+        <c:remove var="warning" scope="session" />
+    </c:if>
+    <c:if test="${not empty sessionScope.warningMessage}">
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var msg = '${sessionScope.warningMessage}'.trim();
+                if (msg && msg !== 'null') {
+                    Toast.fire({
+                        icon: 'warning',
+                        title: msg,
+                        timer: 5000
+                    });
+                }
+            });
+        </script>
+        <c:remove var="warningMessage" scope="session" />
+    </c:if>
 
     <!-- Custom JS -->
     <script src="${pageContext.request.contextPath}/assets/js/main.js"></script>

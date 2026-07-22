@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Controller trung tâm quản lý giao diện Kho hàng.
@@ -175,6 +176,13 @@ public class InventoryController extends BaseController {
 
             int pendingTransferCount = transferDAO.getPendingCount(selectedWarehouseId != null ? selectedWarehouseId : 0);
             request.setAttribute("pendingTransferCount", pendingTransferCount);
+
+            // Calculate total pending approvals across all types (Transfers, Orders, Checks)
+            new ApprovalTabController().handleApprovalTab(request, role);
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> unifiedApprovals = (List<Map<String, Object>>) request.getAttribute("unifiedApprovals");
+            int pendingApprovalCount = (unifiedApprovals != null) ? unifiedApprovals.size() : 0;
+            request.setAttribute("pendingApprovalCount", pendingApprovalCount);
 
             String tab = request.getParameter("tab");
             if ("createTransfer".equals(action)) {

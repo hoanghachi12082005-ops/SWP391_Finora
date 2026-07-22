@@ -17,6 +17,8 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import util.validation.InventoryValidator;
+import util.validation.ValidationResult;
 
 @WebServlet(name = "StockController", urlPatterns = {"/inventory-stock"})
 public class StockController extends InventoryBaseController {
@@ -263,6 +265,17 @@ public class StockController extends InventoryBaseController {
                         redirect(response, request.getContextPath() + "/inventory?tab=stock&warehouseId=" + currentWarehouseId);
                         break;
                     }
+
+                    // Tầng Backend Validation
+                    ValidationResult valResult = InventoryValidator.validateImportRequest(
+                        currentWarehouseId, productIds, quantities, supplierIds, importPrices, note
+                    );
+
+                    if (!valResult.isValid()) {
+                        request.getSession().setAttribute("errorMessage", valResult.getFirstError());
+                        redirect(response, request.getContextPath() + "/inventory?tab=stock&warehouseId=" + currentWarehouseId);
+                        break;
+                    }
                     
                     if (productIds != null && productIds.length > 0) {
                         List<model.OrderDetail> allDetails = new ArrayList<>();
@@ -276,10 +289,6 @@ public class StockController extends InventoryBaseController {
                                 double price = 0.0;
                                 if (importPrices != null && importPrices.length > i) {
                                     price = Double.parseDouble(importPrices[i].trim());
-                                }
-                                
-                                if (pId <= 0 || qty <= 0 || sId <= 0 || price < 0) {
-                                    throw new IllegalArgumentException("Dữ liệu nhập hàng không hợp lệ.");
                                 }
                                 
                                 model.OrderDetail detail = new model.OrderDetail();
@@ -333,6 +342,20 @@ public class StockController extends InventoryBaseController {
                                                 d.getQuantity(), beforeQty, beforeQty + d.getQuantity(),
                                                 "Nhập hàng từ phiếu PO-" + orderId, currentUser.getEmployeeId());
                                     }
+
+                                    // Ghi nhận phiếu chi vào Sổ quỹ (bảng payment)
+                                    dao.finance.PaymentDAO paymentDAO = new dao.finance.PaymentDAO();
+                                    model.Payment payment = new model.Payment();
+                                    payment.setOrderId(orderId);
+                                    payment.setAmount(totalCost);
+                                    payment.setStatus("PAID");
+                                    payment.setName(paymentDAO.generateTransactionCode(conn, "EXPENSE", "PC"));
+                                    payment.setPaymentType("EXPENSE");
+                                    payment.setMethod(purchaseOrder.getPaymentMethod() != null ? purchaseOrder.getPaymentMethod() : "BANK_TRANSFER");
+                                    payment.setDescription("Chi tiền nhập hàng cho đơn " + purchaseOrder.getOrderCode());
+                                    payment.setEmployeeId(currentUser.getEmployeeId());
+                                    payment.setBranchId(purchaseOrder.getBranchId());
+                                    paymentDAO.insert(conn, payment);
                                 }
                                 
                                 conn.commit();
