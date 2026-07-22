@@ -1,4 +1,3 @@
-    
     public boolean insert(AuditLog log) {
         String sql = """
             INSERT INTO audit_log (emp_id, action_name, table_name, record_id, old_data, new_data, created_at)
