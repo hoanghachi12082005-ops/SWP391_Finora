@@ -234,10 +234,6 @@ class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab ==
                                                         class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'check' ? 'active' : ''}">
                                                         Kiểm kho
                                                     </a>
-                                                    <a href="${pageContext.request.contextPath}/inventory?tab=import&warehouseId=${sessionScope.selectedWarehouseId}"
-class="sidebar-submenu-item ${originalUri.contains('/inventory') && (activeTab == 'import' || activeTab == 'export') ? 'active' : ''}">
-                                                        Phiếu Nhập / Xuất
-                                                    </a>
                                                     <a href="${pageContext.request.contextPath}/inventory?tab=history&warehouseId=${sessionScope.selectedWarehouseId}"
                                                         class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'history' ? 'active' : ''}">
                                                         Lịch sử xuất nhập kho
@@ -308,9 +304,9 @@ class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab ==
                                     </a>
                                 </c:if>
 
-                                <!-- Financial Dashboard (Tài chính) (Admin, Owner, StoreManager) -->
+                                <!-- Financial Dashboard (Tài chính) (Admin, Owner) -->
                                 <c:if
-                                    test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+                                    test="${roleName == 'Admin' || roleName == 'Owner'}">
                                     <a href="${pageContext.request.contextPath}/dashboard/financial"
                                         class="sidebar-menu-item ${originalUri.contains('/dashboard/financial') ? 'active' : ''}">
                                         <span class="material-icons">payments</span>

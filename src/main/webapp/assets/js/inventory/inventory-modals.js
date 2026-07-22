@@ -480,6 +480,29 @@ function parseImportExcel(rows) {
         return;
     }
 
+    // Check for blank rows between data rows
+    let firstDataRowIdx = -1;
+    let lastDataRowIdx = -1;
+    for (let i = headerRowIdx + 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (r && !r.every(cell => cell === null || cell === undefined || String(cell).trim() === '')) {
+            if (firstDataRowIdx === -1) firstDataRowIdx = i;
+            lastDataRowIdx = i;
+        }
+    }
+
+    if (firstDataRowIdx !== -1 && lastDataRowIdx !== -1) {
+        for (let i = firstDataRowIdx; i <= lastDataRowIdx; i++) {
+            const r = rows[i];
+            const isRowEmpty = !r || r.every(cell => cell === null || cell === undefined || String(cell).trim() === '');
+            if (isRowEmpty) {
+                const excelRowNumber = i + 1;
+                alert('Tệp Excel chứa dòng trống ở vị trí dòng ' + excelRowNumber + '. Vui lòng xóa các dòng trống đan xen trước khi tải lên.');
+                return;
+            }
+        }
+    }
+
     const url = getContextPath() + '/inventory?action=searchImportProductsApi&keyword=%25&warehouseId=' + getSelectedWarehouseId();
     fetch(url)
         .then(res => res.json())

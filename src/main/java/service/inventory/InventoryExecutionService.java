@@ -59,18 +59,23 @@ public class InventoryExecutionService {
 
                 // Ghi nhận phiếu chi vào Sổ quỹ (bảng payment) nếu đây là đơn nhập hàng
                 if ("PURCHASE".equals(order.getOrderType())) {
-                    dao.finance.PaymentDAO paymentDAO = new dao.finance.PaymentDAO();
-                    model.Payment payment = new model.Payment();
-                    payment.setOrderId(orderId);
-                    payment.setAmount(order.getTotalAmount());
-                    payment.setStatus("PAID");
-                    payment.setName(paymentDAO.generateTransactionCode(conn, "EXPENSE", "PC"));
-                    payment.setPaymentType("EXPENSE");
-                    payment.setMethod(order.getPaymentMethod() != null ? order.getPaymentMethod() : "BANK_TRANSFER");
-                    payment.setDescription("Chi tiền nhập hàng cho đơn " + order.getOrderCode());
-                    payment.setEmployeeId(approverId);
-                    payment.setBranchId(order.getBranchId());
-                    paymentDAO.insert(conn, payment);
+                    try {
+                        dao.finance.PaymentDAO paymentDAO = new dao.finance.PaymentDAO();
+                        model.Payment payment = new model.Payment();
+                        payment.setOrderId(orderId);
+                        payment.setAmount(order.getTotalAmount());
+                        payment.setStatus("PAID");
+                        payment.setName(order.getOrderCode());
+                        payment.setPaymentType("EXPENSE");
+                        payment.setMethod(order.getPaymentMethod() != null ? order.getPaymentMethod() : "BANK_TRANSFER");
+                        payment.setDescription("Chi tiền nhập hàng cho đơn " + order.getOrderCode());
+                        payment.setEmployeeId(approverId > 0 ? approverId : order.getEmpId());
+                        payment.setBranchId(order.getBranchId() > 0 ? order.getBranchId() : 1);
+                        paymentDAO.insert(conn, payment);
+                    } catch (Exception payEx) {
+                        System.err.println("WARN: Lỗi tạo phiếu chi thanh toán Sổ quỹ cho đơn nhập #" + orderId + ": " + payEx.getMessage());
+                        payEx.printStackTrace();
+                    }
                 }
                 
                 conn.commit();

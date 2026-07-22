@@ -21,6 +21,17 @@ public class PaymentDAO {
             String timeRange,
             int page,
             int pageSize) {
+        return getTransactionsPaging(keyword, type, paymentMethod, timeRange, null, page, pageSize);
+    }
+
+    public List<Payment> getTransactionsPaging(
+            String keyword,
+            String type,
+            String paymentMethod,
+            String timeRange,
+            Integer branchId,
+            int page,
+            int pageSize) {
 
         List<Payment> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
@@ -62,6 +73,11 @@ public class PaymentDAO {
             params.add(paymentMethod);
         }
 
+        if (branchId != null && branchId > 0) {
+            sql.append(" AND p.BranchID = ? ");
+            params.add(branchId);
+        }
+
         applyTimeRangeFilter(sql, timeRange);
 
         sql.append(" ORDER BY p.payment_date DESC, p.payment_id DESC ");
@@ -98,6 +114,15 @@ public class PaymentDAO {
             String type,
             String paymentMethod,
             String timeRange) {
+        return countTransactions(keyword, type, paymentMethod, timeRange, null);
+    }
+
+    public int countTransactions(
+            String keyword,
+            String type,
+            String paymentMethod,
+            String timeRange,
+            Integer branchId) {
 
         StringBuilder sql = new StringBuilder("""
             SELECT COUNT(*)
@@ -121,6 +146,11 @@ public class PaymentDAO {
         if (paymentMethod != null && !paymentMethod.isBlank()) {
             sql.append(" AND p.payment_method = ? ");
             params.add(paymentMethod);
+        }
+
+        if (branchId != null && branchId > 0) {
+            sql.append(" AND p.BranchID = ? ");
+            params.add(branchId);
         }
 
         applyTimeRangeFilter(sql, timeRange);
@@ -150,6 +180,18 @@ public class PaymentDAO {
      * Tính tổng số dư quỹ tiền mặt (Thu - Chi bằng CASH)
      */
     public double getTotalCashBalance() {
+        return getTotalCashBalance(null);
+    }
+
+    public double getTotalCashBalance(Integer branchId) {
+        if (branchId != null && branchId > 0) {
+            String sql = """
+                SELECT SUM(CASE WHEN PaymentType = 'INCOME' THEN payment_amount ELSE -payment_amount END)
+                FROM payment
+                WHERE payment_method = 'CASH' AND BranchID = ?
+            """;
+            return getDoubleScalarWithIntParam(sql, branchId);
+        }
         String sql = """
             SELECT SUM(CASE WHEN PaymentType = 'INCOME' THEN payment_amount ELSE -payment_amount END)
             FROM payment
@@ -162,6 +204,18 @@ public class PaymentDAO {
      * Tính tổng số dư quỹ ngân hàng (Thu - Chi bằng BANK_TRANSFER)
      */
     public double getTotalBankBalance() {
+        return getTotalBankBalance(null);
+    }
+
+    public double getTotalBankBalance(Integer branchId) {
+        if (branchId != null && branchId > 0) {
+            String sql = """
+                SELECT SUM(CASE WHEN PaymentType = 'INCOME' THEN payment_amount ELSE -payment_amount END)
+                FROM payment
+                WHERE payment_method = 'BANK_TRANSFER' AND BranchID = ?
+            """;
+            return getDoubleScalarWithIntParam(sql, branchId);
+        }
         String sql = """
             SELECT SUM(CASE WHEN PaymentType = 'INCOME' THEN payment_amount ELSE -payment_amount END)
             FROM payment
@@ -174,6 +228,18 @@ public class PaymentDAO {
      * Tính tổng thu theo phương thức
      */
     public double getSumIncome(String paymentMethod) {
+        return getSumIncome(paymentMethod, null);
+    }
+
+    public double getSumIncome(String paymentMethod, Integer branchId) {
+        if (branchId != null && branchId > 0) {
+            String sql = """
+                SELECT SUM(payment_amount)
+                FROM payment
+                WHERE PaymentType = 'INCOME' AND payment_method = ? AND BranchID = ?
+            """;
+            return getDoubleScalarWithParams(sql, paymentMethod, branchId);
+        }
         String sql = """
             SELECT SUM(payment_amount)
             FROM payment
@@ -186,6 +252,18 @@ public class PaymentDAO {
      * Tính tổng chi theo phương thức
      */
     public double getSumExpense(String paymentMethod) {
+        return getSumExpense(paymentMethod, null);
+    }
+
+    public double getSumExpense(String paymentMethod, Integer branchId) {
+        if (branchId != null && branchId > 0) {
+            String sql = """
+                SELECT SUM(payment_amount)
+                FROM payment
+                WHERE PaymentType = 'EXPENSE' AND payment_method = ? AND BranchID = ?
+            """;
+            return getDoubleScalarWithParams(sql, paymentMethod, branchId);
+        }
         String sql = """
             SELECT SUM(payment_amount)
             FROM payment
@@ -198,6 +276,10 @@ public class PaymentDAO {
      * Lấy dữ liệu tổng quan thu chi theo từng tuần trong tháng hiện tại
      */
     public List<Map<String, Object>> getWeeklyOverview(String keyword, String type, String paymentMethod, String timeRange) {
+        return getWeeklyOverview(keyword, type, paymentMethod, timeRange, null);
+    }
+
+    public List<Map<String, Object>> getWeeklyOverview(String keyword, String type, String paymentMethod, String timeRange, Integer branchId) {
         List<Map<String, Object>> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
             SELECT 
@@ -224,6 +306,11 @@ public class PaymentDAO {
         if (paymentMethod != null && !paymentMethod.isBlank()) {
             sql.append(" AND p.payment_method = ? ");
             params.add(paymentMethod);
+        }
+
+        if (branchId != null && branchId > 0) {
+            sql.append(" AND p.BranchID = ? ");
+            params.add(branchId);
         }
 
         applyTimeRangeFilter(sql, timeRange);
@@ -320,7 +407,7 @@ public class PaymentDAO {
      * Sinh mã giao dịch tăng tự động (ví dụ: PT00001, PC00001) trong cùng Connection
      */
     public String generateTransactionCode(Connection conn, String type, String prefix) {
-        String sql = "SELECT MAX(transaction_code) FROM payment WHERE PaymentType = ? AND transaction_code LIKE ?";
+        String sql = "SELECT MAX(transaction_code) FROM payment WITH (NOLOCK) WHERE PaymentType = ? AND transaction_code LIKE ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, type);
@@ -386,6 +473,37 @@ public class PaymentDAO {
         return 0.0;
     }
 
+    private double getDoubleScalarWithIntParam(String sql, int param) {
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, param);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble(1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0.0;
+    }
+
+    private double getDoubleScalarWithParams(String sql, String p1, int p2) {
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, p1);
+            ps.setInt(2, p2);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble(1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0.0;
+    }
+
     private void applyTimeRangeFilter(StringBuilder sql, String timeRange) {
         if (timeRange == null || timeRange.isBlank() || "all".equalsIgnoreCase(timeRange)) {
             return;
@@ -433,23 +551,27 @@ public class PaymentDAO {
         return p;
     }
 
-    // --- Dùng trong transaction (sales/POS/VNPay) ---
+    // --- Dùng trong transaction (sales/POS/VNPay/Import) ---
     public int insert(Connection conn, Payment p) throws SQLException {
         String sql = "INSERT INTO payment (order_id, payment_amount, payment_date, payment_status, transaction_code, PaymentType, Description, EmployeeID, BranchID, payment_method) "
                    + "VALUES (?, ?, GETDATE(), ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, p.getOrderId());
+            if (p.getOrderId() != null && p.getOrderId() > 0) {
+                ps.setInt(1, p.getOrderId());
+            } else {
+                ps.setNull(1, Types.INTEGER);
+            }
             ps.setDouble(2, p.getAmount());
             ps.setString(3, p.getStatus() != null ? p.getStatus() : "PAID");
             ps.setString(4, p.getName());
             ps.setString(5, p.getPaymentType() != null ? p.getPaymentType() : "INCOME");
             ps.setString(6, p.getDescription() != null ? p.getDescription() : "Thanh toán đơn hàng " + p.getOrderId());
-            if (p.getEmployeeId() != null) {
+            if (p.getEmployeeId() != null && p.getEmployeeId() > 0) {
                 ps.setInt(7, p.getEmployeeId());
             } else {
                 ps.setNull(7, java.sql.Types.INTEGER);
             }
-            if (p.getBranchId() != null) {
+            if (p.getBranchId() != null && p.getBranchId() > 0) {
                 ps.setInt(8, p.getBranchId());
             } else {
                 ps.setNull(8, java.sql.Types.INTEGER);
@@ -462,7 +584,7 @@ public class PaymentDAO {
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) return keys.getInt(1);
             }
-            throw new SQLException("Không lấy được ID thanh toán.");
+            return 0;
         }
     }
 }

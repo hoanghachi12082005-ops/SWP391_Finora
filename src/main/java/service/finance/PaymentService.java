@@ -32,7 +32,18 @@ public class PaymentService {
             String timeRange,
             int page,
             int pageSize) {
-        return paymentDAO.getTransactionsPaging(keyword, type, paymentMethod, timeRange, page, pageSize);
+        return paymentDAO.getTransactionsPaging(keyword, type, paymentMethod, timeRange, null, page, pageSize);
+    }
+
+    public List<Payment> getTransactionsPaging(
+            String keyword,
+            String type,
+            String paymentMethod,
+            String timeRange,
+            Integer branchId,
+            int page,
+            int pageSize) {
+        return paymentDAO.getTransactionsPaging(keyword, type, paymentMethod, timeRange, branchId, page, pageSize);
     }
 
     public int countTransactions(
@@ -40,27 +51,56 @@ public class PaymentService {
             String type,
             String paymentMethod,
             String timeRange) {
-        return paymentDAO.countTransactions(keyword, type, paymentMethod, timeRange);
+        return paymentDAO.countTransactions(keyword, type, paymentMethod, timeRange, null);
+    }
+
+    public int countTransactions(
+            String keyword,
+            String type,
+            String paymentMethod,
+            String timeRange,
+            Integer branchId) {
+        return paymentDAO.countTransactions(keyword, type, paymentMethod, timeRange, branchId);
     }
 
     public double getTotalCashBalance() {
-        return paymentDAO.getTotalCashBalance();
+        return paymentDAO.getTotalCashBalance(null);
+    }
+
+    public double getTotalCashBalance(Integer branchId) {
+        return paymentDAO.getTotalCashBalance(branchId);
     }
 
     public double getTotalBankBalance() {
-        return paymentDAO.getTotalBankBalance();
+        return paymentDAO.getTotalBankBalance(null);
+    }
+
+    public double getTotalBankBalance(Integer branchId) {
+        return paymentDAO.getTotalBankBalance(branchId);
     }
 
     public double getSumIncome(String paymentMethod) {
-        return paymentDAO.getSumIncome(paymentMethod);
+        return paymentDAO.getSumIncome(paymentMethod, null);
+    }
+
+    public double getSumIncome(String paymentMethod, Integer branchId) {
+        return paymentDAO.getSumIncome(paymentMethod, branchId);
     }
 
     public double getSumExpense(String paymentMethod) {
-        return paymentDAO.getSumExpense(paymentMethod);
+        return paymentDAO.getSumExpense(paymentMethod, null);
+    }
+
+    public double getSumExpense(String paymentMethod, Integer branchId) {
+        return paymentDAO.getSumExpense(paymentMethod, branchId);
     }
 
     public List<Map<String, Object>> getWeeklyOverview(String keyword, String type, String paymentMethod, String timeRange) {
-        return paymentDAO.getWeeklyOverview(keyword, type, paymentMethod, timeRange);
+        return paymentDAO.getWeeklyOverview(keyword, type, paymentMethod, timeRange, null);
+    }
+
+    public List<Map<String, Object>> getWeeklyOverview(String keyword, String type, String paymentMethod, String timeRange, Integer branchId) {
+        return paymentDAO.getWeeklyOverview(keyword, type, paymentMethod, timeRange, branchId);
     }
 
     public boolean insert(Payment payment) {

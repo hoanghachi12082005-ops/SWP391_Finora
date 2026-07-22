@@ -38,6 +38,23 @@ public class IncomeExpenseController extends BaseController {
     private void showCashbook(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        Employee user = (Employee) request.getSession().getAttribute("currentUser");
+        String roleLower = (user != null && user.getRoleName() != null) ? user.getRoleName().trim().toLowerCase() : "";
+
+        Integer targetBranchId = null;
+        if ("storemanager".equals(roleLower) || "st manager".equals(roleLower) || roleLower.contains("manager")) {
+            // Store Manager strictly accesses their assigned branch ONLY
+            targetBranchId = (user != null) ? user.getBranchID() : null;
+        } else if ("owner".equals(roleLower) || "admin".equals(roleLower)) {
+            // Owner / Admin can filter by branchId parameter if provided, or view all if empty/null
+            String branchParam = request.getParameter("branchId");
+            if (branchParam != null && !branchParam.isBlank()) {
+                try {
+                    targetBranchId = Integer.parseInt(branchParam);
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+
         String keyword = request.getParameter("keyword");
         String type = request.getParameter("type");
         String paymentMethod = request.getParameter("paymentMethod");
@@ -56,20 +73,20 @@ public class IncomeExpenseController extends BaseController {
         }
         int pageSize = 10;
 
-        List<Payment> transactions = service.getTransactionsPaging(keyword, type, paymentMethod, timeRange, page, pageSize);
-        int totalRecords = service.countTransactions(keyword, type, paymentMethod, timeRange);
+        List<Payment> transactions = service.getTransactionsPaging(keyword, type, paymentMethod, timeRange, targetBranchId, page, pageSize);
+        int totalRecords = service.countTransactions(keyword, type, paymentMethod, timeRange, targetBranchId);
         int totalPage = (int) Math.ceil((double) totalRecords / pageSize);
 
-        double totalCash = service.getTotalCashBalance();
-        double totalBank = service.getTotalBankBalance();
+        double totalCash = service.getTotalCashBalance(targetBranchId);
+        double totalBank = service.getTotalBankBalance(targetBranchId);
         double totalFund = totalCash + totalBank;
 
-        double cashIncome = service.getSumIncome("CASH");
-        double cashExpense = service.getSumExpense("CASH");
-        double bankIncome = service.getSumIncome("BANK_TRANSFER");
-        double bankExpense = service.getSumExpense("BANK_TRANSFER");
+        double cashIncome = service.getSumIncome("CASH", targetBranchId);
+        double cashExpense = service.getSumExpense("CASH", targetBranchId);
+        double bankIncome = service.getSumIncome("BANK_TRANSFER", targetBranchId);
+        double bankExpense = service.getSumExpense("BANK_TRANSFER", targetBranchId);
 
-        List<Map<String, Object>> weeklyStats = service.getWeeklyOverview(keyword, type, paymentMethod, timeRange);
+        List<Map<String, Object>> weeklyStats = service.getWeeklyOverview(keyword, type, paymentMethod, timeRange, targetBranchId);
         double[] weeklyIncome = new double[5];
         double[] weeklyExpense = new double[5];
         for (Map<String, Object> stat : weeklyStats) {
@@ -100,6 +117,7 @@ public class IncomeExpenseController extends BaseController {
         request.setAttribute("type", type);
         request.setAttribute("paymentMethod", paymentMethod);
         request.setAttribute("timeRange", timeRange);
+        request.setAttribute("selectedBranchId", targetBranchId);
 
         request.setAttribute("totalCash", totalCash);
         request.setAttribute("totalBank", totalBank);

@@ -62,8 +62,12 @@ public class DashboardController extends BaseController {
             }
         }
 
-        // Nạp dữ liệu Overview cho Financial Dashboard
+        // Nạp dữ liệu Overview cho Financial Dashboard (Chỉ dành cho Owner/Admin)
         if ("/dashboard/financial".equals(path)) {
+            if (!isOwner(request)) {
+                response.sendError(403, "Bạn không có quyền truy cập chức năng Tài chính.");
+                return;
+            }
             String range = request.getParameter("range");
             if (range == null || range.trim().isEmpty()) {
                 range = "month";
@@ -106,6 +110,8 @@ public class DashboardController extends BaseController {
         Object user = (session == null) ? null : session.getAttribute("currentUser");
         if (!(user instanceof Employee)) return false;
         String role = ((Employee) user).getRoleName();
-        return role != null && "Owner".equalsIgnoreCase(role.trim());
+        if (role == null) return false;
+        String r = role.trim().toLowerCase();
+        return "owner".equals(r) || "admin".equals(r);
     }
 }

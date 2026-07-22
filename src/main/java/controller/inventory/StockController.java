@@ -95,6 +95,25 @@ public class StockController extends InventoryBaseController {
 
                     if (data != null && !data.trim().isEmpty()) {
                         String[] lines = data.split("\\|");
+
+                        // Check for blank lines between data lines
+                        int firstLineIdx = -1;
+                        int lastLineIdx = -1;
+                        for (int i = 0; i < lines.length; i++) {
+                            if (!lines[i].trim().isEmpty()) {
+                                if (firstLineIdx == -1) firstLineIdx = i;
+                                lastLineIdx = i;
+                            }
+                        }
+                        if (firstLineIdx != -1 && lastLineIdx != -1) {
+                            for (int i = firstLineIdx; i <= lastLineIdx; i++) {
+                                if (lines[i].trim().isEmpty()) {
+                                    int excelRow = i + 2;
+                                    errors.add("Dòng " + excelRow + ": Tệp Excel có dòng trống ở giữa.");
+                                }
+                            }
+                        }
+
                         for (int lineIdx = 0; lineIdx < lines.length; lineIdx++) {
                             String line = lines[lineIdx].trim();
                             if (line.isEmpty()) continue;
@@ -344,18 +363,23 @@ public class StockController extends InventoryBaseController {
                                     }
 
                                     // Ghi nhận phiếu chi vào Sổ quỹ (bảng payment)
-                                    dao.finance.PaymentDAO paymentDAO = new dao.finance.PaymentDAO();
-                                    model.Payment payment = new model.Payment();
-                                    payment.setOrderId(orderId);
-                                    payment.setAmount(totalCost);
-                                    payment.setStatus("PAID");
-                                    payment.setName(paymentDAO.generateTransactionCode(conn, "EXPENSE", "PC"));
-                                    payment.setPaymentType("EXPENSE");
-                                    payment.setMethod(purchaseOrder.getPaymentMethod() != null ? purchaseOrder.getPaymentMethod() : "BANK_TRANSFER");
-                                    payment.setDescription("Chi tiền nhập hàng cho đơn " + purchaseOrder.getOrderCode());
-                                    payment.setEmployeeId(currentUser.getEmployeeId());
-                                    payment.setBranchId(purchaseOrder.getBranchId());
-                                    paymentDAO.insert(conn, payment);
+                                    try {
+                                        dao.finance.PaymentDAO paymentDAO = new dao.finance.PaymentDAO();
+                                        model.Payment payment = new model.Payment();
+                                        payment.setOrderId(orderId);
+                                        payment.setAmount(totalCost);
+                                        payment.setStatus("PAID");
+                                        payment.setName(purchaseOrder.getOrderCode());
+                                        payment.setPaymentType("EXPENSE");
+                                        payment.setMethod(purchaseOrder.getPaymentMethod() != null ? purchaseOrder.getPaymentMethod() : "BANK_TRANSFER");
+                                        payment.setDescription("Chi tiền nhập hàng cho đơn " + purchaseOrder.getOrderCode());
+                                        payment.setEmployeeId(currentUser.getEmployeeId());
+                                        payment.setBranchId(purchaseOrder.getBranchId() > 0 ? purchaseOrder.getBranchId() : 1);
+                                        paymentDAO.insert(conn, payment);
+                                    } catch (Exception payEx) {
+                                        System.err.println("WARN: Lỗi tạo phiếu chi Sổ quỹ khi Owner nhập hàng: " + payEx.getMessage());
+                                        payEx.printStackTrace();
+                                    }
                                 }
                                 
                                 conn.commit();

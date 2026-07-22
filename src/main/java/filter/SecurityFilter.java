@@ -37,10 +37,14 @@ public class SecurityFilter implements Filter {
         ROLE_MAP.put("/branch",          Set.of("admin", "owner", "storemanager"));
         ROLE_MAP.put("/supplier",        Set.of("admin", "owner", "storemanager", "warehousestaff"));
         ROLE_MAP.put("/purchase/",       Set.of("admin", "owner", "storemanager", "warehousestaff"));
+        ROLE_MAP.put("/cashbook",        Set.of("admin", "owner", "storemanager"));
         ROLE_MAP.put("/finance/",        Set.of("admin", "owner"));
+        ROLE_MAP.put("/payments",        Set.of("admin", "owner"));
+        ROLE_MAP.put("/invoices",        Set.of("admin", "owner"));
         ROLE_MAP.put("/activity-log",    Set.of("admin", "owner"));
         ROLE_MAP.put("/activity/",       Set.of("admin", "owner"));
         ROLE_MAP.put("/settings",        Set.of("admin", "owner"));
+        ROLE_MAP.put("/reports/finance-detail", Set.of("admin", "owner"));
         ROLE_MAP.put("/report/",         Set.of("admin", "owner", "storemanager"));
         ROLE_MAP.put("/reports/",        Set.of("admin", "owner", "storemanager"));
         ROLE_MAP.put("/inventory/",      Set.of("owner", "storemanager", "warehousestaff"));
@@ -57,6 +61,7 @@ public class SecurityFilter implements Filter {
         ROLE_MAP.put("/print/",          Set.of("admin", "owner", "storemanager", "salesstaff"));
         ROLE_MAP.put("/search-product",  Set.of("admin", "owner", "storemanager", "salesstaff"));
         ROLE_MAP.put("/cash-transaction",Set.of("admin", "owner", "storemanager"));
+        ROLE_MAP.put("/dashboard/financial", Set.of("admin", "owner"));
         ROLE_MAP.put("/dashboard/",      Set.of("admin", "owner", "storemanager", "salesstaff", "warehousestaff"));
         ROLE_MAP.put("/revenue/",        Set.of("admin", "owner", "storemanager"));
         ROLE_MAP.put("/shift/",          Set.of("admin", "owner", "storemanager", "salesstaff"));
