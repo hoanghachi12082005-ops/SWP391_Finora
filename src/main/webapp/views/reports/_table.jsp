@@ -13,10 +13,10 @@
                 <th>Chi nhánh</th>
                 <th>Nhân viên</th>
                 <th>Khách hàng</th>
-                <th class="text-right">Tổng tiền</th>
                 <th>Phương thức</th>
                 <th>Trạng thái</th>
                 <th>Ngày tạo</th>
+                <th class="text-right">Tổng tiền</th>
                 <th>Thao tác</th>
             </tr>
             </thead>
@@ -41,7 +41,6 @@
                             <td>${o.branchName}</td>
                             <td>${o.employeeName}</td>
                             <td>${empty o.customerName ? 'Khách vãng lai' : o.customerName}</td>
-                            <td class="text-right"><fmt:formatNumber value="${o.totalAmount}" type="number" groupingUsed="true"/> ₫</td>
                             <td>
                                 <c:choose>
                                     <c:when test="${o.paymentMethod == 'CASH'}">Tiền mặt</c:when>
@@ -60,6 +59,7 @@
                                 </span>
                             </td>
                             <td>${fn:substring(o.createdAt, 0, 10)}</td>
+                            <td class="text-right"><fmt:formatNumber value="${o.totalAmount}" type="number" groupingUsed="true"/> ₫</td>
                             <td>
                                 <div class="table-actions">
                                     <button type="button" class="btn-icon" title="Xem chi tiết"

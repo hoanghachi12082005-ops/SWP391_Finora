@@ -55,7 +55,27 @@
                     <jsp:include page="/views/reports/_kpi_dashboard.jsp"/>
                 </c:when>
                 <c:otherwise>
+                    <div class="revenue-card">
+                        <div class="revenue-card-info">
+                            <p>Tổng doanh thu (Đã hoàn thành)</p>
+                            <h3><fmt:formatNumber value="${kpi.totalRevenue}" maxFractionDigits="0"/> ₫</h3>
+                        </div>
+                        <div class="revenue-card-icon">
+                            <span class="material-symbols-outlined">payments</span>
+                        </div>
+                    </div>
+
                     <jsp:include page="/views/reports/_table.jsp"/>
+
+                    <div class="revenue-card">
+                        <div class="revenue-card-info">
+                            <p>Tổng doanh thu (Đã hoàn thành)</p>
+                            <h3><fmt:formatNumber value="${kpi.totalRevenue}" maxFractionDigits="0"/> ₫</h3>
+                        </div>
+                        <div class="revenue-card-icon">
+                            <span class="material-symbols-outlined">payments</span>
+                        </div>
+                    </div>
 
                     <jsp:include page="/views/common/pagination.jsp">
                         <jsp:param name="baseUrl" value="${baseUrl}"/>
