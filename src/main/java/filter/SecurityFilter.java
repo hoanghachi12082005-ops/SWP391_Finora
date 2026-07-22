@@ -63,6 +63,8 @@ public class SecurityFilter implements Filter {
         ROLE_MAP.put("/profile/",        Set.of("admin", "owner", "storemanager", "salesstaff", "warehousestaff"));
     }
 
+    private final ActivityLogDAO activityLogDAO = new ActivityLogDAO();
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
