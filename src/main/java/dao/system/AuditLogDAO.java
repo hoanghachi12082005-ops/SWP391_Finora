@@ -1,4 +1,3 @@
-            ps.setInt(1, log.getEmpId());
             ps.setString(2, log.getActionName());
             ps.setString(3, log.getTableName());
             ps.setInt(4, log.getRecordId());
