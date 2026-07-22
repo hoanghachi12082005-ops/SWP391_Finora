@@ -1,4 +1,3 @@
-            ps.setInt(4, log.getRecordId());
             ps.setString(5, log.getOldData());
             ps.setString(6, log.getNewData());
             return ps.executeUpdate() > 0;
