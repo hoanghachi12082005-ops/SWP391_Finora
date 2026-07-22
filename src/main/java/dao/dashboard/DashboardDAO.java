@@ -235,6 +235,7 @@ public class DashboardDAO {
                 + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WHERE status='COMPLETED' AND order_type='SALE' AND CAST(created_at AS DATE)=CAST(GETDATE() AS DATE)) AS revenue_today, "
                 + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WHERE status='COMPLETED' AND order_type='SALE' AND CAST(created_at AS DATE)=CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)) AS revenue_yesterday, "
                 + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WHERE status='COMPLETED' AND order_type='SALE' AND YEAR(created_at)=YEAR(GETDATE()) AND MONTH(created_at)=MONTH(GETDATE())) AS revenue_this_month, "
+                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WHERE status='COMPLETED' AND order_type='SALE' AND YEAR(created_at)=YEAR(DATEADD(MONTH,-1,GETDATE())) AND MONTH(created_at)=MONTH(DATEADD(MONTH,-1,GETDATE()))) AS revenue_last_month, "
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
