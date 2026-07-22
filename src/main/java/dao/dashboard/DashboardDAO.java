@@ -263,6 +263,7 @@ public class DashboardDAO {
                 ov.setRevenueThisYear(rs.getBigDecimal("revenue_this_year"));
                 ov.setOrdersToday(rs.getInt("orders_today"));
                 ov.setOrdersThisMonth(rs.getInt("orders_this_month"));
+                ov.setTotalOrders(rs.getInt("total_orders"));
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
