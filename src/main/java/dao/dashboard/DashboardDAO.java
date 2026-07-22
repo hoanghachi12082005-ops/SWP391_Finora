@@ -285,6 +285,7 @@ public class DashboardDAO {
             ov.setTopProducts(getTopProducts());
             return ov;
         }
+    }
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
