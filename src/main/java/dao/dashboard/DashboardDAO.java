@@ -283,6 +283,7 @@ public class DashboardDAO {
                 ov.setTopStoreRevenue(branches.get(0).getRevenue());
             }
             ov.setTopProducts(getTopProducts());
+            return ov;
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
