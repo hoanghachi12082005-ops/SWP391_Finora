@@ -76,7 +76,7 @@ public class PaymentService {
     }
 
     public List<Order> getRecentOrders(int limit) {
-        return orderDAO.getAllSaleOrders(null, 0).stream().limit(limit).toList();
+        return orderDAO.getRecentSaleOrders(limit);
     }
 
     public SalesTransactionKpi getTransactionKpi(SalesTransactionFilter f) {
