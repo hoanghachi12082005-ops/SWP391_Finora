@@ -232,6 +232,7 @@ public class DashboardDAO {
     /** Gọi tất cả query và trả về model DashboardOverview hoàn chỉnh. */
     public DashboardOverview getOwnerOverview() throws SQLException {
         String sql = "SELECT "
+                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WHERE status='COMPLETED' AND order_type='SALE' AND CAST(created_at AS DATE)=CAST(GETDATE() AS DATE)) AS revenue_today, "
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
