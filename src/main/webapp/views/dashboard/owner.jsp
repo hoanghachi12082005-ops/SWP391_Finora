@@ -268,10 +268,7 @@
                                             <span class="material-icons" style="font-size: 16px;">${act.iconName}</span>
                                         </div>
                                         <div class="activity-details">
-                                            <p>
-                                                ${act.description}
-                                                <c:if test="${not empty act.entityCode}"> &middot; <strong>${act.entityCode}</strong></c:if>
-                                            </p>
+                                            <p>${act.description}</p>
                                             <small>
                                                 <c:if test="${not empty act.createdAtFormatted}">${act.createdAtFormatted} - </c:if>
                                                 ${act.actorLabel}

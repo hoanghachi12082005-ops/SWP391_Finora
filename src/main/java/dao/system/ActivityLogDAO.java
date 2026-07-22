@@ -31,7 +31,7 @@ public class ActivityLogDAO {
                    + "e.fullName AS emp_name, e.branch_id, b.branch_name "
                    + "FROM audit_log a LEFT JOIN employee e ON a.emp_id = e.emp_id "
                    + "LEFT JOIN branch b ON e.branch_id = b.branch_id "
-                   + "ORDER BY a.created_at DESC, a.audit_log_id DESC";
+                   + "ORDER BY a.audit_log_id DESC";
         List<ActivityLog> list = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
