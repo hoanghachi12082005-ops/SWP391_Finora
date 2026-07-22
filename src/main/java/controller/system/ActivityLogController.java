@@ -66,12 +66,10 @@ public class ActivityLogController extends BaseController {
             if (a != null && !a.isBlank()) afterId  = Integer.parseInt(a.trim());
         } catch (NumberFormatException ignored) {}
 
-        // Giới hạn bảng được phép hiển thị
+        // Giới hạn bảng được phép hiển thị (chỉ giữ các bảng còn trigger + auth login)
         List<String> allowedTableNames = java.util.Arrays.asList(
-            "order", "orders", "order_detail",
-            "product",
-            "inventory", "stock_transaction", "stock_transfer",
-            "branch", "store"
+            "product", "category", "customer", "supplier",
+            "employee", "branch", "store", "role", "auth"
         );
         if (tableName != null && !allowedTableNames.contains(tableName.toLowerCase())) {
             tableName = null;
