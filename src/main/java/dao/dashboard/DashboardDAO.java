@@ -266,6 +266,7 @@ public class DashboardDAO {
                 ov.setTotalOrders(rs.getInt("total_orders"));
                 ov.setPendingOrders(rs.getInt("pending_orders"));
                 ov.setAverageOrderValue(rs.getBigDecimal("avg_order_value"));
+                ov.setTotalCustomers(rs.getInt("total_customers"));
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
