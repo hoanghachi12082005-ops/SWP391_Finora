@@ -240,6 +240,7 @@ public class DashboardDAO {
                 + "(SELECT COUNT(*) FROM [order] WHERE order_type='SALE' AND status='COMPLETED' AND CAST(created_at AS DATE)=CAST(GETDATE() AS DATE)) AS orders_today, "
                 + "(SELECT COUNT(*) FROM [order] WHERE order_type='SALE' AND status='COMPLETED' AND YEAR(created_at)=YEAR(GETDATE()) AND MONTH(created_at)=MONTH(GETDATE())) AS orders_this_month, "
                 + "(SELECT COUNT(*) FROM [order] WHERE order_type='SALE') AS total_orders, "
+                + "(SELECT COUNT(*) FROM [order] WHERE order_type='SALE' AND status='PENDING') AS pending_orders, "
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
