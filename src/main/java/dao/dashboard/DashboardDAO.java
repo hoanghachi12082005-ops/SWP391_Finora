@@ -257,6 +257,7 @@ public class DashboardDAO {
             DashboardOverview ov = new DashboardOverview();
             if (rs.next()) {
                 ov.setRevenueToday(rs.getBigDecimal("revenue_today"));
+                ov.setRevenueYesterday(rs.getBigDecimal("revenue_yesterday"));
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
