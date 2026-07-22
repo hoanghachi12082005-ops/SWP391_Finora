@@ -252,6 +252,7 @@ public class DashboardDAO {
                 + "(SELECT COUNT(*) FROM Branch WHERE status='ACTIVE') AS total_stores, "
                 + "(SELECT COUNT(*) FROM Employee WHERE status='ACTIVE') AS total_employees";
         try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
