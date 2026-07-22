@@ -1,4 +1,3 @@
-            """;
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, log.getEmpId());
