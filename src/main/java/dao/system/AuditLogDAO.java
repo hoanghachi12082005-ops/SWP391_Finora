@@ -1,4 +1,3 @@
-             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, log.getEmpId());
             ps.setString(2, log.getActionName());
             ps.setString(3, log.getTableName());
