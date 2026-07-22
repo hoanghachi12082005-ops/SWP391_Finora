@@ -124,7 +124,7 @@ public class SalesTransactionReportController extends BaseController {
         f.setSortBy(trim(request.getParameter("sortBy")));
         f.setSortDir(trim(request.getParameter("sortDir")));
 
-        if (request.getAttribute("managerBranchId") != null && f.getBranchId() == null) {
+        if (request.getAttribute("managerBranchId") != null) {
             f.setBranchId((Integer) request.getAttribute("managerBranchId"));
         }
         return f;
@@ -209,9 +209,8 @@ public class SalesTransactionReportController extends BaseController {
         if (session == null) return;
         Employee u = (Employee) session.getAttribute("currentUser");
         if (u != null && "StoreManager".equalsIgnoreCase(u.getRoleName())) {
-            if (request.getParameter("branchId") == null) {
-                request.setAttribute("managerBranchId", u.getBranchID());
-            }
+            Integer bId = u.getBranchId() != null ? u.getBranchId() : u.getBranchID();
+            request.setAttribute("managerBranchId", bId);
         }
     }
 

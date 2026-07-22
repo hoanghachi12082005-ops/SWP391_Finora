@@ -46,6 +46,28 @@
         color: #198754;
         font-size: 0.85rem;
     }
+    .date-filter-control {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 50rem;
+        padding: 6px 16px;
+        font-size: 0.875rem;
+        color: #495057;
+        box-shadow: none;
+        transition: all 0.2s ease-in-out;
+    }
+    .date-filter-control:focus {
+        background-color: #ffffff;
+        border-color: #8b0000;
+        box-shadow: 0 0 0 0.2rem rgba(139, 0, 0, 0.15);
+    }
+    input[type="date"].date-filter-control::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.7;
+    }
+    input[type="date"].date-filter-control::-webkit-calendar-picker-indicator:hover {
+        opacity: 1;
+    }
 </style>
 
 <div class="app-container">
@@ -172,36 +194,60 @@
                 <!-- Right: Transaction History Table -->
                 <div class="col-lg-8">
                     <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-white py-3 border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                            <h5 class="card-title fw-bold mb-0">Lịch Sử Giao Dịch</h5>
+                        <div class="card-header bg-white py-3 border-0">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title fw-bold mb-0">Lịch Sử Giao Dịch</h5>
+                            </div>
                             
                             <!-- Filter Options Form -->
-                            <form method="get" action="${pageContext.request.contextPath}/cashbook" class="d-flex flex-wrap gap-2 align-items-center">
-                                <div class="input-group input-group-sm" style="max-width: 200px;">
-                                    <input type="text" name="keyword" class="form-control" placeholder="Tìm mã, nội dung..." value="${keyword}">
+                            <form method="get" action="${pageContext.request.contextPath}/cashbook" class="d-flex flex-column gap-3">
+                                <!-- Row 1: Keyword, Method, Type -->
+                                <div class="d-flex flex-wrap gap-3 align-items-end">
+                                    <div class="flex-grow-1" style="min-width: 180px;">
+                                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Từ khóa</label>
+                                        <input type="text" name="keyword" class="form-control form-control-sm rounded-pill px-3" placeholder="Tìm mã, nội dung..." value="${keyword}">
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Phương thức</label>
+                                        <select name="paymentMethod" class="form-select form-select-sm rounded-pill px-3" style="width: 140px;">
+                                            <option value="" ${empty paymentMethod ? 'selected' : ''}>Mọi quỹ</option>
+                                            <option value="CASH" ${paymentMethod == 'CASH' ? 'selected' : ''}>Tiền mặt</option>
+                                            <option value="BANK_TRANSFER" ${paymentMethod == 'BANK_TRANSFER' ? 'selected' : ''}>Ngân hàng</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Loại giao dịch</label>
+                                        <select name="type" class="form-select form-select-sm rounded-pill px-3" style="width: 140px;">
+                                            <option value="" ${empty type ? 'selected' : ''}>Tất cả loại</option>
+                                            <option value="INCOME" ${type == 'INCOME' ? 'selected' : ''}>Phiếu thu (PT)</option>
+                                            <option value="EXPENSE" ${type == 'EXPENSE' ? 'selected' : ''}>Phiếu chi (PC)</option>
+                                        </select>
+                                    </div>
                                 </div>
 
-                                <select name="timeRange" class="form-select form-select-sm" style="width: 120px;" onchange="this.form.submit()">
-                                    <option value="all" ${timeRange == 'all' ? 'selected' : ''}>Tất cả thời gian</option>
-                                    <option value="today" ${timeRange == 'today' ? 'selected' : ''}>Hôm nay</option>
-                                    <option value="yesterday" ${timeRange == 'yesterday' ? 'selected' : ''}>Hôm qua</option>
-                                    <option value="this_month" ${timeRange == 'this_month' ? 'selected' : ''}>Tháng này</option>
-                                    <option value="last_month" ${timeRange == 'last_month' ? 'selected' : ''}>Tháng trước</option>
-                                </select>
+                                <!-- Row 2: Date pickers & Action Buttons -->
+                                <div class="d-flex flex-wrap gap-3 align-items-end">
+                                    <div>
+                                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Từ ngày</label>
+                                        <input type="date" name="fromDate" value="${fromDate}" class="form-control form-control-sm date-filter-control" style="width: 160px;">
+                                    </div>
 
-                                <select name="paymentMethod" class="form-select form-select-sm" style="width: 120px;" onchange="this.form.submit()">
-                                    <option value="" ${empty paymentMethod ? 'selected' : ''}>Mọi quỹ</option>
-                                    <option value="CASH" ${paymentMethod == 'CASH' ? 'selected' : ''}>Tiền mặt</option>
-                                    <option value="BANK_TRANSFER" ${paymentMethod == 'BANK_TRANSFER' ? 'selected' : ''}>Ngân hàng</option>
-                                </select>
+                                    <div>
+                                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Đến ngày</label>
+                                        <input type="date" name="toDate" value="${toDate}" class="form-control form-control-sm date-filter-control" style="width: 160px;">
+                                    </div>
 
-                                <select name="type" class="form-select form-select-sm" style="width: 120px;" onchange="this.form.submit()">
-                                    <option value="" ${empty type ? 'selected' : ''}>Tất cả loại</option>
-                                    <option value="INCOME" ${type == 'INCOME' ? 'selected' : ''}>Phiếu thu (PT)</option>
-                                    <option value="EXPENSE" ${type == 'EXPENSE' ? 'selected' : ''}>Phiếu chi (PC)</option>
-                                </select>
-
-                                <button type="submit" class="btn btn-sm btn-winered">Lọc</button>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-sm btn-winered rounded-pill px-4">Lọc</button>
+                                        <c:if test="${not empty fromDate or not empty toDate or not empty keyword or not empty paymentMethod or not empty type}">
+                                            <a href="${pageContext.request.contextPath}/cashbook" class="btn btn-sm btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 31px; height: 31px;" title="Đặt lại bộ lọc">
+                                                <span class="material-icons" style="font-size: 1rem;">refresh</span>
+                                            </a>
+                                        </c:if>
+                                    </div>
+                                </div>
                             </form>
                         </div>
 
@@ -276,15 +322,15 @@
                                 <nav aria-label="Page navigation">
                                     <ul class="pagination pagination-sm mb-0">
                                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                                            <a class="page-link" href="?page=${currentPage - 1}&keyword=${keyword}&type=${type}&paymentMethod=${paymentMethod}&timeRange=${timeRange}">Trước</a>
+                                            <a class="page-link" href="?page=${currentPage - 1}&keyword=${keyword}&type=${type}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">Trước</a>
                                         </li>
                                         <c:forEach var="p" begin="1" end="${totalPage}">
                                             <li class="page-item ${p == currentPage ? 'active' : ''}">
-                                                <a class="page-link ${p == currentPage ? 'bg-winered border-winered' : ''}" href="?page=${p}&keyword=${keyword}&type=${type}&paymentMethod=${paymentMethod}&timeRange=${timeRange}">${p}</a>
+                                                <a class="page-link ${p == currentPage ? 'bg-winered border-winered' : ''}" href="?page=${p}&keyword=${keyword}&type=${type}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">${p}</a>
                                             </li>
                                         </c:forEach>
                                         <li class="page-item ${currentPage == totalPage ? 'disabled' : ''}">
-                                            <a class="page-link" href="?page=${currentPage + 1}&keyword=${keyword}&type=${type}&paymentMethod=${paymentMethod}&timeRange=${timeRange}">Sau</a>
+                                            <a class="page-link" href="?page=${currentPage + 1}&keyword=${keyword}&type=${type}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">Sau</a>
                                         </li>
                                     </ul>
                                 </nav>

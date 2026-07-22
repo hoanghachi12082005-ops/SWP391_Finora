@@ -21,13 +21,26 @@ public class PaymentDAO {
             String timeRange,
             int page,
             int pageSize) {
-        return getTransactionsPaging(keyword, type, paymentMethod, timeRange, null, page, pageSize);
+        return getTransactionsPaging(keyword, type, paymentMethod, null, null, timeRange, null, page, pageSize);
     }
 
     public List<Payment> getTransactionsPaging(
             String keyword,
             String type,
             String paymentMethod,
+            String timeRange,
+            Integer branchId,
+            int page,
+            int pageSize) {
+        return getTransactionsPaging(keyword, type, paymentMethod, null, null, timeRange, branchId, page, pageSize);
+    }
+
+    public List<Payment> getTransactionsPaging(
+            String keyword,
+            String type,
+            String paymentMethod,
+            String fromDate,
+            String toDate,
             String timeRange,
             Integer branchId,
             int page,
@@ -78,7 +91,7 @@ public class PaymentDAO {
             params.add(branchId);
         }
 
-        applyTimeRangeFilter(sql, timeRange);
+        applyDateFilter(sql, params, fromDate, toDate, timeRange);
 
         sql.append(" ORDER BY p.payment_date DESC, p.payment_id DESC ");
         sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
@@ -114,13 +127,24 @@ public class PaymentDAO {
             String type,
             String paymentMethod,
             String timeRange) {
-        return countTransactions(keyword, type, paymentMethod, timeRange, null);
+        return countTransactions(keyword, type, paymentMethod, null, null, timeRange, null);
     }
 
     public int countTransactions(
             String keyword,
             String type,
             String paymentMethod,
+            String timeRange,
+            Integer branchId) {
+        return countTransactions(keyword, type, paymentMethod, null, null, timeRange, branchId);
+    }
+
+    public int countTransactions(
+            String keyword,
+            String type,
+            String paymentMethod,
+            String fromDate,
+            String toDate,
             String timeRange,
             Integer branchId) {
 
@@ -153,7 +177,7 @@ public class PaymentDAO {
             params.add(branchId);
         }
 
-        applyTimeRangeFilter(sql, timeRange);
+        applyDateFilter(sql, params, fromDate, toDate, timeRange);
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -276,10 +300,21 @@ public class PaymentDAO {
      * Lấy dữ liệu tổng quan thu chi theo từng tuần trong tháng hiện tại
      */
     public List<Map<String, Object>> getWeeklyOverview(String keyword, String type, String paymentMethod, String timeRange) {
-        return getWeeklyOverview(keyword, type, paymentMethod, timeRange, null);
+        return getWeeklyOverview(keyword, type, paymentMethod, null, null, timeRange, null);
     }
 
     public List<Map<String, Object>> getWeeklyOverview(String keyword, String type, String paymentMethod, String timeRange, Integer branchId) {
+        return getWeeklyOverview(keyword, type, paymentMethod, null, null, timeRange, branchId);
+    }
+
+    public List<Map<String, Object>> getWeeklyOverview(
+            String keyword,
+            String type,
+            String paymentMethod,
+            String fromDate,
+            String toDate,
+            String timeRange,
+            Integer branchId) {
         List<Map<String, Object>> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
             SELECT 
@@ -313,7 +348,7 @@ public class PaymentDAO {
             params.add(branchId);
         }
 
-        applyTimeRangeFilter(sql, timeRange);
+        applyDateFilter(sql, params, fromDate, toDate, timeRange);
 
         sql.append("""
              GROUP BY DATEPART(week, p.payment_date) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, p.payment_date), 0)) + 1
@@ -504,25 +539,37 @@ public class PaymentDAO {
         return 0.0;
     }
 
-    private void applyTimeRangeFilter(StringBuilder sql, String timeRange) {
-        if (timeRange == null || timeRange.isBlank() || "all".equalsIgnoreCase(timeRange)) {
-            return;
+    private void applyDateFilter(StringBuilder sql, List<Object> params, String fromDate, String toDate, String timeRange) {
+        boolean hasCustomDate = false;
+
+        if (fromDate != null && !fromDate.isBlank()) {
+            sql.append(" AND CAST(p.payment_date AS DATE) >= ? ");
+            params.add(fromDate.trim());
+            hasCustomDate = true;
         }
 
-        switch (timeRange.toLowerCase()) {
-            case "today":
-                sql.append(" AND CAST(p.payment_date AS DATE) = CAST(GETDATE() AS DATE) ");
-                break;
-            case "yesterday":
-                sql.append(" AND CAST(p.payment_date AS DATE) = CAST(DATEADD(day, -1, GETDATE()) AS DATE) ");
-                break;
-            case "this_month":
-                sql.append(" AND MONTH(p.payment_date) = MONTH(GETDATE()) AND YEAR(p.payment_date) = YEAR(GETDATE()) ");
-                break;
-            case "last_month":
-                sql.append(" AND p.payment_date >= DATEADD(month, DATEDIFF(month, 0, GETDATE()) - 1, 0) ")
-                   .append(" AND p.payment_date < DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) ");
-                break;
+        if (toDate != null && !toDate.isBlank()) {
+            sql.append(" AND CAST(p.payment_date AS DATE) <= ? ");
+            params.add(toDate.trim());
+            hasCustomDate = true;
+        }
+
+        if (!hasCustomDate && timeRange != null && !timeRange.isBlank() && !"all".equalsIgnoreCase(timeRange)) {
+            switch (timeRange.toLowerCase()) {
+                case "today":
+                    sql.append(" AND CAST(p.payment_date AS DATE) = CAST(GETDATE() AS DATE) ");
+                    break;
+                case "yesterday":
+                    sql.append(" AND CAST(p.payment_date AS DATE) = CAST(DATEADD(day, -1, GETDATE()) AS DATE) ");
+                    break;
+                case "this_month":
+                    sql.append(" AND MONTH(p.payment_date) = MONTH(GETDATE()) AND YEAR(p.payment_date) = YEAR(GETDATE()) ");
+                    break;
+                case "last_month":
+                    sql.append(" AND p.payment_date >= DATEADD(month, DATEDIFF(month, 0, GETDATE()) - 1, 0) ")
+                       .append(" AND p.payment_date < DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) ");
+                    break;
+            }
         }
     }
 

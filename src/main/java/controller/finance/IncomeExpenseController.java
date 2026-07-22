@@ -58,6 +58,8 @@ public class IncomeExpenseController extends BaseController {
         String keyword = request.getParameter("keyword");
         String type = request.getParameter("type");
         String paymentMethod = request.getParameter("paymentMethod");
+        String fromDate = request.getParameter("fromDate");
+        String toDate = request.getParameter("toDate");
         String timeRange = request.getParameter("timeRange");
 
         if (timeRange == null) {
@@ -73,8 +75,8 @@ public class IncomeExpenseController extends BaseController {
         }
         int pageSize = 10;
 
-        List<Payment> transactions = service.getTransactionsPaging(keyword, type, paymentMethod, timeRange, targetBranchId, page, pageSize);
-        int totalRecords = service.countTransactions(keyword, type, paymentMethod, timeRange, targetBranchId);
+        List<Payment> transactions = service.getTransactionsPaging(keyword, type, paymentMethod, fromDate, toDate, timeRange, targetBranchId, page, pageSize);
+        int totalRecords = service.countTransactions(keyword, type, paymentMethod, fromDate, toDate, timeRange, targetBranchId);
         int totalPage = (int) Math.ceil((double) totalRecords / pageSize);
 
         double totalCash = service.getTotalCashBalance(targetBranchId);
@@ -86,7 +88,7 @@ public class IncomeExpenseController extends BaseController {
         double bankIncome = service.getSumIncome("BANK_TRANSFER", targetBranchId);
         double bankExpense = service.getSumExpense("BANK_TRANSFER", targetBranchId);
 
-        List<Map<String, Object>> weeklyStats = service.getWeeklyOverview(keyword, type, paymentMethod, timeRange, targetBranchId);
+        List<Map<String, Object>> weeklyStats = service.getWeeklyOverview(keyword, type, paymentMethod, fromDate, toDate, timeRange, targetBranchId);
         double[] weeklyIncome = new double[5];
         double[] weeklyExpense = new double[5];
         for (Map<String, Object> stat : weeklyStats) {
@@ -116,6 +118,8 @@ public class IncomeExpenseController extends BaseController {
         request.setAttribute("keyword", keyword);
         request.setAttribute("type", type);
         request.setAttribute("paymentMethod", paymentMethod);
+        request.setAttribute("fromDate", fromDate);
+        request.setAttribute("toDate", toDate);
         request.setAttribute("timeRange", timeRange);
         request.setAttribute("selectedBranchId", targetBranchId);
 
