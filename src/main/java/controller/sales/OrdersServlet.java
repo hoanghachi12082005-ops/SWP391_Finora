@@ -306,17 +306,8 @@ public class OrdersServlet extends HttpServlet {
             // 3. Cập nhật trạng thái đơn hàng
             orderDao.updateStatus(conn, orderId, "CANCELLED");
 
-            // 4. Ghi audit log
-            String auditSql = "INSERT INTO audit_log (emp_id, action_name, table_name, record_id, old_data, new_data, created_at) VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
-            try (PreparedStatement ps = conn.prepareStatement(auditSql)) {
-                ps.setInt(1, emp.getEmpId());
-                ps.setString(2, "REFUND");
-                ps.setString(3, "order");
-                ps.setInt(4, orderId);
-                ps.setString(5, "status=COMPLETED");
-                ps.setString(6, "status=CANCELLED");
-                ps.executeUpdate();
-            }
+            // 4. Không ghi audit log REFUND (tính năng không dùng đến)
+
 
             conn.commit();
             out.write("{\"status\":\"success\",\"message\":\"Hoàn trả đơn hàng thành công. Đã hoàn tồn kho và điểm.\"}");

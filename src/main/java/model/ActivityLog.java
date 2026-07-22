@@ -87,13 +87,7 @@ public class ActivityLog {
             case "employee":          return "Nhân viên";
             case "branch":
             case "store":             return "Chi nhánh";
-            case "purchase_order":
-            case "purchase":          return "Phiếu nhập";
-            case "purchase_detail":   return "Chi tiết phiếu nhập";
-            case "invoice":           return "Hóa đơn";
-            case "expense":           return "Chi phí";
-            case "income":            return "Thu nhập";
-            case "point_transaction": return "Điểm thưởng";
+            case "warehouse":         return "Kho hàng";
             case "role":              return "Vai trò";
             case "auth":              return "Đăng nhập";
             default:                  return tableName;
@@ -112,12 +106,7 @@ public class ActivityLog {
             case "supplier":               prefix = "NCC"; break;
             case "employee":               prefix = "NV"; break;
             case "branch": case "store":   prefix = "CN"; break;
-            case "purchase_order": case "purchase": prefix = "PN"; break;
-            case "purchase_detail":        prefix = "CTPN"; break;
-            case "invoice":                prefix = "HĐ"; break;
-            case "expense":                prefix = "CHI"; break;
-            case "income":                 prefix = "THU"; break;
-            case "point_transaction":      prefix = "DT"; break;
+            case "warehouse":              prefix = "KHO"; break;
             case "role":                   prefix = "RL"; break;
             default:                       prefix = "#";
         }
@@ -145,6 +134,10 @@ public class ActivityLog {
         String entity = getEntityLabel().toLowerCase();
         String code = getEntityCode();
         String act = getActionLabel();
+        // Tránh trùng lặp: nếu entity giống action (VD: "Đăng nhập" + "đăng nhập"), chỉ hiển thị action
+        if (entity != null && entity.equalsIgnoreCase(act)) {
+            return act;
+        }
         StringBuilder sb = new StringBuilder(act);
         if (entity != null && !entity.isBlank()) sb.append(' ').append(entity);
         if (code != null && !code.isBlank()) sb.append(' ').append(code);
