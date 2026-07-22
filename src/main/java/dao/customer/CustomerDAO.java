@@ -22,7 +22,6 @@ public class CustomerDAO {
 
     private static final Logger LOGGER = Logger.getLogger(CustomerDAO.class.getName());
     private static final String CURRENT_POINTS_COLUMN = "current_points";
-    private static final String LIFETIME_POINTS_COLUMN = "lifetime_points";
 
     // =====================================================
     // COMMON SELECT PART
@@ -31,7 +30,7 @@ public class CustomerDAO {
     private static final String CUSTOMER_SELECT =
             "SELECT c.cus_id, c.full_name, c.gender, c.bod, c.address, " +
             "c.email, c.phone, c.total_spent, c.created_at, c.updated_at, " +
-            "c.status, cp.current_points, cp.lifetime_points " +
+            "c.status, cp.current_points " +
             "FROM customer c " +
             "LEFT JOIN customer_point cp ON cp.cus_id = c.cus_id ";
 
@@ -403,9 +402,9 @@ public class CustomerDAO {
     // UPDATE (Allows editing point records for Admin)
     // =====================================================
 
-    public boolean update(Customer customer, boolean updatePoints, int currentPoints, int lifetimePoints) {
+    public boolean update(Customer customer, boolean updatePoints, int currentPoints) {
         String sql = "UPDATE customer SET full_name = ?, gender = ?, bod = ?, address = ?, email = ?, phone = ?, total_spent = ?, updated_at = GETDATE() WHERE cus_id = ?";
-        String sqlPoint = "UPDATE customer_point SET current_points = ?, lifetime_points = ?, updated_at = GETDATE() WHERE cus_id = ?";
+        String sqlPoint = "UPDATE customer_point SET current_points = ?, updated_at = GETDATE() WHERE cus_id = ?";
 
         try (Connection connection = DBContext.getConnection()) {
             connection.setAutoCommit(false);
@@ -425,8 +424,7 @@ public class CustomerDAO {
                 if (updatePoints) {
                     try (PreparedStatement psPoint = connection.prepareStatement(sqlPoint)) {
                         psPoint.setInt(1, currentPoints);
-                        psPoint.setInt(2, lifetimePoints);
-                        psPoint.setInt(3, customer.getCustomerId());
+                        psPoint.setInt(2, customer.getCustomerId());
                         psPoint.executeUpdate();
                     }
                 }
@@ -561,12 +559,12 @@ public class CustomerDAO {
         String sql = "SELECT COALESCE(SUM(total_amount), 0) AS spent "
                 + "FROM [order] o "
                 + "WHERE o.customer_id = ? AND (LOWER(COALESCE(o.status, '')) = 'paid' OR EXISTS (SELECT 1 FROM payment p WHERE p.order_id = o.order_id AND LOWER(COALESCE(p.payment_status, '')) = 'paid'))";
-        String pointSql = "SELECT current_points, lifetime_points FROM customer_point WHERE cus_id = ?";
+        String pointSql = "SELECT current_points FROM customer_point WHERE cus_id = ?";
         String updateSql = "UPDATE customer SET total_spent = ?, updated_at = GETDATE() WHERE cus_id = ?";
         String upsertPointSql = "MERGE customer_point AS target "
                 + "USING (SELECT ? AS cus_id) AS source ON target.cus_id = source.cus_id "
-                + "WHEN MATCHED THEN UPDATE SET current_points = ?, lifetime_points = ?, updated_at = GETDATE() "
-                + "WHEN NOT MATCHED THEN INSERT (cus_id, current_points, lifetime_points, updated_at) VALUES (?, ?, ?, GETDATE());";
+                + "WHEN MATCHED THEN UPDATE SET current_points = ?, updated_at = GETDATE() "
+                + "WHEN NOT MATCHED THEN INSERT (cus_id, current_points, updated_at) VALUES (?, ?, GETDATE());";
 
         try (Connection connection = DBContext.getConnection()) {
             connection.setAutoCommit(false);
@@ -593,30 +591,22 @@ public class CustomerDAO {
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
                             int currentPoints = rs.getInt(CURRENT_POINTS_COLUMN);
-                            int lifetimePoints = rs.getInt(LIFETIME_POINTS_COLUMN);
                             if (points > currentPoints) {
                                 currentPoints = points;
-                            }
-                            if (points > lifetimePoints) {
-                                lifetimePoints = points;
                             }
                             try (PreparedStatement updatePs = connection.prepareStatement(upsertPointSql)) {
                                 updatePs.setInt(1, customerId);
                                 updatePs.setInt(2, currentPoints);
-                                updatePs.setInt(3, lifetimePoints);
-                                updatePs.setInt(4, customerId);
-                                updatePs.setInt(5, currentPoints);
-                                updatePs.setInt(6, lifetimePoints);
+                                updatePs.setInt(3, customerId);
+                                updatePs.setInt(4, currentPoints);
                                 updatePs.executeUpdate();
                             }
                         } else {
                             try (PreparedStatement insertPs = connection.prepareStatement(upsertPointSql)) {
                                 insertPs.setInt(1, customerId);
                                 insertPs.setInt(2, points);
-                                insertPs.setInt(3, points);
-                                insertPs.setInt(4, customerId);
-                                insertPs.setInt(5, points);
-                                insertPs.setInt(6, points);
+                                insertPs.setInt(3, customerId);
+                                insertPs.setInt(4, points);
                                 insertPs.executeUpdate();
                             }
                         }
@@ -709,13 +699,12 @@ public class CustomerDAO {
     // =====================================================
 
     public void earnPoints(Connection conn, int customerId, int earnedPoints, int orderId) throws SQLException {
-        String findSql = "SELECT cus_point_id, current_points, lifetime_points FROM customer_point WHERE cus_id = ?";
-        String updateSql = "UPDATE customer_point SET current_points = ?, lifetime_points = ?, updated_at = GETDATE() WHERE cus_point_id = ?";
+        String findSql = "SELECT cus_point_id, current_points FROM customer_point WHERE cus_id = ?";
+        String updateSql = "UPDATE customer_point SET current_points = ?, updated_at = GETDATE() WHERE cus_point_id = ?";
         String txSql = "INSERT INTO point_transaction (cus_point_id, order_id, before_points, after_points, description, created_at) VALUES (?, ?, ?, ?, ?, GETDATE())";
 
         int cusPointId;
         int beforePoints;
-        int lifetimePoints;
 
         try (PreparedStatement ps = conn.prepareStatement(findSql)) {
             ps.setInt(1, customerId);
@@ -723,21 +712,18 @@ public class CustomerDAO {
                 if (rs.next()) {
                     cusPointId = rs.getInt("cus_point_id");
                     beforePoints = rs.getInt(CURRENT_POINTS_COLUMN);
-                    lifetimePoints = rs.getInt(LIFETIME_POINTS_COLUMN);
                 } else {
                     cusPointId = -1;
                     beforePoints = 0;
-                    lifetimePoints = 0;
                 }
             }
         }
 
         if (cusPointId < 0) {
-            String insertSql = "INSERT INTO customer_point (cus_id, current_points, lifetime_points, updated_at) VALUES (?, ?, ?, GETDATE())";
+            String insertSql = "INSERT INTO customer_point (cus_id, current_points, updated_at) VALUES (?, ?, GETDATE())";
             try (PreparedStatement ps = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setInt(1, customerId);
                 ps.setInt(2, earnedPoints);
-                ps.setInt(3, earnedPoints);
                 ps.executeUpdate();
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (keys.next()) cusPointId = keys.getInt(1);
@@ -753,11 +739,9 @@ public class CustomerDAO {
             }
         } else {
             int afterPoints = beforePoints + earnedPoints;
-            int afterLifetime = lifetimePoints + earnedPoints;
             try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                 ps.setInt(1, afterPoints);
-                ps.setInt(2, afterLifetime);
-                ps.setInt(3, cusPointId);
+                ps.setInt(2, cusPointId);
                 ps.executeUpdate();
             }
             try (PreparedStatement ps = conn.prepareStatement(txSql)) {
@@ -840,7 +824,7 @@ public class CustomerDAO {
     // =====================================================
 
     private void insertPointRecord(Connection connection, int customerId) throws SQLException {
-        String sql = "INSERT INTO customer_point (cus_id, current_points, lifetime_points, updated_at) VALUES (?, 0, 0, GETDATE())";
+        String sql = "INSERT INTO customer_point (cus_id, current_points, updated_at) VALUES (?, 0, GETDATE())";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, customerId);
             ps.executeUpdate();
@@ -873,7 +857,6 @@ public class CustomerDAO {
         customer.setCreatedAt(rs.getObject("created_at", java.time.LocalDateTime.class));
         customer.setUpdatedAt(rs.getObject("updated_at", java.time.LocalDateTime.class));
         customer.setLoyaltyPoint(rs.getInt("current_points"));
-        customer.setLifetimePoints(rs.getInt("lifetime_points"));
 
         return customer;
     }

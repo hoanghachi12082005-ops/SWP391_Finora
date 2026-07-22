@@ -18,7 +18,6 @@ public class Customer {
     private String status;
     private BigDecimal totalSpent;
     private int loyaltyPoint;
-    private int lifetimePoints;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -59,9 +58,6 @@ public class Customer {
 
     public int getLoyaltyPoint() { return loyaltyPoint; }
     public void setLoyaltyPoint(int loyaltyPoint) { this.loyaltyPoint = loyaltyPoint; }
-
-    public int getLifetimePoints() { return lifetimePoints; }
-    public void setLifetimePoints(int lifetimePoints) { this.lifetimePoints = lifetimePoints; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
