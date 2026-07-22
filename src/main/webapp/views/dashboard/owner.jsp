@@ -25,10 +25,17 @@
             <!-- Page Header -->
             <div class="page-header">
                 <div class="page-title">
-                    <h2>Quản lý chuỗi cửa hàng</h2>
-                    <p>Tổng hợp kết quả kinh doanh và quản lý toàn bộ chi nhánh</p>
+                    <c:choose>
+                        <c:when test="${isStoreManagerView}">
+                            <h2>Tổng quan chi nhánh: ${currentBranch.branchName}</h2>
+                            <p>Tổng hợp kết quả kinh doanh và hoạt động của chi nhánh</p>
+                        </c:when>
+                        <c:otherwise>
+                            <h2>Quản lý chuỗi cửa hàng</h2>
+                            <p>Tổng hợp kết quả kinh doanh và quản lý toàn bộ chi nhánh</p>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
-                
             </div>
 
             <c:if test="${not empty overviewError}">
@@ -187,7 +194,14 @@
                 <div class="kpi-card">
                     <div class="kpi-card-info">
                         <p>Cửa hàng &amp; Nhân viên</p>
-                        <h3>${ov.totalStores} <small style="font-size:14px;color:#64748b;">cửa hàng</small></h3>
+                        <c:choose>
+                            <c:when test="${isStoreManagerView}">
+                                <h3>1 <small style="font-size:14px;color:#64748b;">chi nhánh</small></h3>
+                            </c:when>
+                            <c:otherwise>
+                                <h3>${ov.totalStores} <small style="font-size:14px;color:#64748b;">cửa hàng</small></h3>
+                            </c:otherwise>
+                        </c:choose>
                         <span class="kpi-subtext">${ov.totalEmployees} nhân viên đang hoạt động</span>
                     </div>
                     <div class="kpi-card-icon red">
@@ -201,13 +215,20 @@
                 <!-- Column 1: Chart Card -->
                 <div class="dashboard-card">
                     <div class="dashboard-card-title">
-                        <h5>Doanh thu theo chi nhánh (Tháng này)</h5>
-                        <c:if test="${not empty ov.topStoreName}">
-                            <span style="font-size:12px;color:#64748b;">
-                                Top: <strong style="color:#0f172a;">${ov.topStoreName}</strong>
-                                (<fmt:formatNumber value="${ov.topStoreRevenue}" type="number" maxFractionDigits="0"/> đ)
-                            </span>
-                        </c:if>
+                        <c:choose>
+                            <c:when test="${isStoreManagerView}">
+                                <h5>Doanh thu chi nhánh (7 ngày gần đây)</h5>
+                            </c:when>
+                            <c:otherwise>
+                                <h5>Doanh thu theo chi nhánh (Tháng này)</h5>
+                                <c:if test="${not empty ov.topStoreName}">
+                                    <span style="font-size:12px;color:#64748b;">
+                                        Top: <strong style="color:#0f172a;">${ov.topStoreName}</strong>
+                                        (<fmt:formatNumber value="${ov.topStoreRevenue}" type="number" maxFractionDigits="0"/> đ)
+                                    </span>
+                                </c:if>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
 
                     <c:choose>
@@ -248,9 +269,9 @@
                     </c:choose>
                 </div>
 
-                <!-- Column 2: Recent Activity (chỉ hiển thị cho Owner) -->
-                <c:set var="ownerRole" value="${sessionScope.currentUser != null ? sessionScope.currentUser.roleName : ''}" />
-                <c:if test="${ownerRole == 'Owner'}">
+                <!-- Column 2: Recent Activity -->
+                <c:set var="userRole" value="${sessionScope.currentUser != null ? sessionScope.currentUser.roleName : ''}" />
+                <c:if test="${userRole == 'Owner' || userRole == 'Admin' || isStoreManagerView}">
                 <div class="dashboard-card">
                     <div class="dashboard-card-title">
                         <h5>Hoạt động gần đây</h5>
@@ -325,66 +346,130 @@
                 </div>
             </div>
 
-            <!-- Bảng chi tiết theo chi nhánh -->
-            <div class="dashboard-card">
-                <div class="dashboard-card-title">
-                    <h5>Hiệu suất các chi nhánh</h5>
-                    <a href="${pageContext.request.contextPath}/stores" style="font-size:12px;font-weight:600;">Quản lý chi nhánh</a>
-                </div>
-                
-                <div class="premium-table-container">
-                    <table class="premium-table">
-                        <thead>
-                            <tr>
-                                <th>Chi nhánh &amp; Mã</th>
-                                <th style="text-align:right;">Số đơn (Tháng này)</th>
-                                <th style="text-align:right;">Doanh thu (Tháng này)</th>
-                                <th>Trạng thái</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <c:choose>
-                                <c:when test="${empty ov.branchRevenues}">
+            <c:choose>
+                <c:when test="${isStoreManagerView}">
+                    <!-- Bảng danh sách nhân viên chi nhánh -->
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-title">
+                            <h5>Nhân viên chi nhánh (${currentBranch.branchName})</h5>
+                        </div>
+                        
+                        <div class="premium-table-container">
+                            <table class="premium-table">
+                                <thead>
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted" style="padding:20px;font-size:13px;">
-                                            Chưa có chi nhánh nào.
-                                        </td>
+                                        <th>Nhân viên</th>
+                                        <th>Email &amp; Điện thoại</th>
+                                        <th>Vai trò</th>
+                                        <th>Trạng thái</th>
                                     </tr>
-                                </c:when>
-                                <c:otherwise>
-                                    <c:forEach var="br" items="${ov.branchRevenues}">
-                                        <tr>
-                                            <td>
-                                                <div class="product-cell">
-                                                    <div class="product-img-box">
-                                                        <span class="material-icons">store</span>
-                                                    </div>
-                                                    <div class="product-details">
-                                                        <h6>${br.branchName}</h6>
-                                                        <small>${not empty br.branchCode ? br.branchCode : '—'}</small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td style="text-align:right;"><fmt:formatNumber value="${br.orderCount}"/></td>
-                                            <td style="text-align:right;"><strong><fmt:formatNumber value="${br.revenue}" type="number" maxFractionDigits="0"/> đ</strong></td>
-                                            <td>
-                                                <span class="badge-status active">
-                                                    <span class="material-icons" style="font-size: 10px;">fiber_manual_record</span>
-                                                    <span>Đang hoạt động</span>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <a href="${pageContext.request.contextPath}/stores/detail?id=${br.branchId}" class="table-action-link">Chi tiết</a>
-                                            </td>
-                                        </tr>
-                                    </c:forEach>
-                                </c:otherwise>
-                            </c:choose>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                </thead>
+                                <tbody>
+                                    <c:choose>
+                                        <c:when test="${empty branchEmployees}">
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted" style="padding:20px;font-size:13px;">
+                                                    Chưa có nhân viên nào trong chi nhánh.
+                                                </td>
+                                            </tr>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:forEach var="emp" items="${branchEmployees}">
+                                                <tr>
+                                                    <td>
+                                                        <div class="product-cell">
+                                                            <div class="product-img-box">
+                                                                <span class="material-icons">person</span>
+                                                            </div>
+                                                            <div class="product-details">
+                                                                <h6>${emp.fullName}</h6>
+                                                                <small>ID: ${emp.employeeId}</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div>${empty emp.email ? '—' : emp.email}</div>
+                                                        <small style="color:#64748b;">${empty emp.phone ? '—' : emp.phone}</small>
+                                                    </td>
+                                                    <td><strong>${emp.roleName}</strong></td>
+                                                    <td>
+                                                        <span class="badge-status active">
+                                                            <span class="material-icons" style="font-size: 10px;">fiber_manual_record</span>
+                                                            <span>${emp.status}</span>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <!-- Bảng chi tiết theo chi nhánh (Dành cho Owner) -->
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-title">
+                            <h5>Hiệu suất các chi nhánh</h5>
+                            <a href="${pageContext.request.contextPath}/stores" style="font-size:12px;font-weight:600;">Quản lý chi nhánh</a>
+                        </div>
+                        
+                        <div class="premium-table-container">
+                            <table class="premium-table">
+                                <thead>
+                                    <tr>
+                                        <th>Chi nhánh &amp; Mã</th>
+                                        <th style="text-align:right;">Số đơn (Tháng này)</th>
+                                        <th style="text-align:right;">Doanh thu (Tháng này)</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <c:choose>
+                                        <c:when test="${empty ov.branchRevenues}">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted" style="padding:20px;font-size:13px;">
+                                                    Chưa có chi nhánh nào.
+                                                </td>
+                                            </tr>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:forEach var="br" items="${ov.branchRevenues}">
+                                                <tr>
+                                                    <td>
+                                                        <div class="product-cell">
+                                                            <div class="product-img-box">
+                                                                <span class="material-icons">store</span>
+                                                            </div>
+                                                            <div class="product-details">
+                                                                <h6>${br.branchName}</h6>
+                                                                <small>${not empty br.branchCode ? br.branchCode : '—'}</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td style="text-align:right;"><fmt:formatNumber value="${br.orderCount}"/></td>
+                                                    <td style="text-align:right;"><strong><fmt:formatNumber value="${br.revenue}" type="number" maxFractionDigits="0"/> đ</strong></td>
+                                                    <td>
+                                                        <span class="badge-status active">
+                                                            <span class="material-icons" style="font-size: 10px;">fiber_manual_record</span>
+                                                            <span>Đang hoạt động</span>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <a href="${pageContext.request.contextPath}/stores/detail?id=${br.branchId}" class="table-action-link">Chi tiết</a>
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </c:otherwise>
+            </c:choose>
             
         </div>
     </div>

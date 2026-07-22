@@ -40,7 +40,34 @@ public class BranchController extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
+        HttpSession session = req.getSession(false);
+        Employee currentUser = (session != null) ? (Employee) session.getAttribute("currentUser") : null;
+        String roleName = (currentUser != null && currentUser.getRoleName() != null) ? currentUser.getRoleName().trim().toLowerCase() : "";
+
         String action = req.getParameter("action");
+
+        // Giới hạn Store Manager chỉ xem tổng quan chi nhánh của chính họ
+        if ("storemanager".equals(roleName)) {
+            int userBranchId = (currentUser.getBranchId() != null) ? currentUser.getBranchId() : 0;
+            if ("detail".equals(action) || action == null) {
+                int detailId = parseId(req.getParameter("id"));
+                if (detailId <= 0 || detailId != userBranchId) {
+                    detailId = userBranchId;
+                }
+                Branch detailBranch = dao.findById(detailId);
+                if (detailBranch == null) {
+                    resp.sendRedirect(req.getContextPath() + "/branch?error=notfound");
+                    return;
+                }
+                loadBranchDetail(req, detailBranch);
+                forward(req, resp, "branch-detail.jsp");
+                return;
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/branch?action=detail&id=" + userBranchId);
+                return;
+            }
+        }
+
         if (action == null) {
             action = "list";
         }

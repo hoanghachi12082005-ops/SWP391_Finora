@@ -43,6 +43,26 @@ public class ActivityLogDAO {
         return list;
     }
 
+    /** Lấy danh sách hoạt động gần đây theo chi nhánh cho Store Manager. */
+    public List<ActivityLog> findRecentByBranch(int branchId, int limit) throws SQLException {
+        String sql = "SELECT TOP (?) a.audit_log_id, a.emp_id, a.action_name, a.table_name, a.record_id, a.old_data, a.new_data, a.created_at, "
+                   + "e.fullName AS emp_name, e.branch_id, b.branch_name "
+                   + "FROM audit_log a WITH (NOLOCK) LEFT JOIN employee e WITH (NOLOCK) ON a.emp_id = e.emp_id "
+                   + "LEFT JOIN branch b WITH (NOLOCK) ON e.branch_id = b.branch_id "
+                   + "WHERE e.branch_id = ? "
+                   + "ORDER BY a.audit_log_id DESC";
+        List<ActivityLog> list = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            ps.setInt(2, branchId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(extractWithBranch(rs));
+            }
+        }
+        return list;
+    }
+
     /**
      * Keyset pagination thuần.
      *

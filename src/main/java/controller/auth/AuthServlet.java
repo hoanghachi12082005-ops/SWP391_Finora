@@ -230,7 +230,7 @@ public class AuthServlet extends HttpServlet {
     }
 
     private String getRedirectPath(Employee employee) {
-        String redirectUrl = "/dashboard/owner";
+        String redirectUrl = "/dashboard";
         if (employee != null && employee.getRoleName() != null) {
             String role = employee.getRoleName().trim().toLowerCase();
             switch (role) {
@@ -239,6 +239,8 @@ public class AuthServlet extends HttpServlet {
                     redirectUrl = "/dashboard/owner";
                     break;
                 case "storemanager":
+                    redirectUrl = "/dashboard";
+                    break;
                 case "warehousestaff":
                     redirectUrl = "/inventory";
                     break;

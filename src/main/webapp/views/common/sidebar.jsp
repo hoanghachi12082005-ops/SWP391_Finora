@@ -52,7 +52,7 @@
 
                                 <!-- Nút quay lại trang quản trị (Chỉ dành cho Owner, StoreManager - Admin không vào POS) -->
                                 <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
-                                    <a href="${pageContext.request.contextPath}/dashboard/owner"
+                                    <a href="${pageContext.request.contextPath}/dashboard"
                                         class="sidebar-menu-item"
                                         style="background-color: rgba(175, 16, 26, 0.05); color: var(--primary-color); font-weight: 600;">
                                         <span class="material-icons"
@@ -133,8 +133,8 @@ class="sidebar-menu-item ${originalUri.contains('/products') ? 'active' : ''}">
                                 <!-- Dashboard Owner Overview (Admin, Owner, StoreManager) -->
                                 <c:if
                                     test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
-                                    <a href="${pageContext.request.contextPath}/dashboard/owner"
-                                        class="sidebar-menu-item ${originalUri.contains('/dashboard/owner') ? 'active' : ''}">
+                                    <a href="${pageContext.request.contextPath}/dashboard"
+                                        class="sidebar-menu-item ${originalUri.contains('/dashboard') || originalUri.contains('/branch') ? 'active' : ''}">
                                         <span class="material-icons">dashboard</span>
 <span>Tổng quan</span>
                                     </a>

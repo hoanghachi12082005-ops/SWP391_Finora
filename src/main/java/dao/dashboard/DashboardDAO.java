@@ -289,6 +289,126 @@ public class DashboardDAO {
         }
     }
 
+    /** Lấy dữ liệu Tổng quan cho Dashboard của Store Manager (lọc theo branch_id). */
+    public DashboardOverview getBranchOverview(int branchId) throws SQLException {
+        String sql = "SELECT "
+                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WITH (NOLOCK) WHERE branch_id=? AND status='COMPLETED' AND order_type='SALE' AND CAST(created_at AS DATE)=CAST(GETDATE() AS DATE)) AS revenue_today, "
+                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WITH (NOLOCK) WHERE branch_id=? AND status='COMPLETED' AND order_type='SALE' AND CAST(created_at AS DATE)=CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)) AS revenue_yesterday, "
+                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WITH (NOLOCK) WHERE branch_id=? AND status='COMPLETED' AND order_type='SALE' AND YEAR(created_at)=YEAR(GETDATE()) AND MONTH(created_at)=MONTH(GETDATE())) AS revenue_this_month, "
+                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WITH (NOLOCK) WHERE branch_id=? AND status='COMPLETED' AND order_type='SALE' AND YEAR(created_at)=YEAR(DATEADD(MONTH,-1,GETDATE())) AND MONTH(created_at)=MONTH(DATEADD(MONTH,-1,GETDATE()))) AS revenue_last_month, "
+                + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WITH (NOLOCK) WHERE branch_id=? AND status='COMPLETED' AND order_type='SALE' AND YEAR(created_at)=YEAR(GETDATE())) AS revenue_this_year, "
+                + "(SELECT COUNT(*) FROM [order] WITH (NOLOCK) WHERE branch_id=? AND order_type='SALE' AND status='COMPLETED' AND CAST(created_at AS DATE)=CAST(GETDATE() AS DATE)) AS orders_today, "
+                + "(SELECT COUNT(*) FROM [order] WITH (NOLOCK) WHERE branch_id=? AND order_type='SALE' AND status='COMPLETED' AND YEAR(created_at)=YEAR(GETDATE()) AND MONTH(created_at)=MONTH(GETDATE())) AS orders_this_month, "
+                + "(SELECT COUNT(*) FROM [order] WITH (NOLOCK) WHERE branch_id=? AND order_type='SALE') AS total_orders, "
+                + "(SELECT COUNT(*) FROM [order] WITH (NOLOCK) WHERE branch_id=? AND order_type='SALE' AND status='PENDING') AS pending_orders, "
+                + "(SELECT ISNULL(AVG(total_amount),0) FROM [order] WITH (NOLOCK) WHERE branch_id=? AND order_type='SALE' AND status='COMPLETED') AS avg_order_value, "
+                + "(SELECT COUNT(DISTINCT customer_id) FROM [order] WITH (NOLOCK) WHERE branch_id=? AND customer_id IS NOT NULL) AS total_customers, "
+                + "(SELECT COUNT(DISTINCT customer_id) FROM [order] WITH (NOLOCK) WHERE branch_id=? AND customer_id IS NOT NULL AND YEAR(created_at)=YEAR(GETDATE()) AND MONTH(created_at)=MONTH(GETDATE())) AS new_customers, "
+                + "(SELECT COUNT(DISTINCT i.product_id) FROM inventory i WITH (NOLOCK) JOIN warehouse w WITH (NOLOCK) ON i.warehouse_id=w.warehouse_id WHERE w.branch_id=?) AS total_products, "
+                + "(SELECT COUNT(DISTINCT i.product_id) FROM inventory i WITH (NOLOCK) JOIN warehouse w WITH (NOLOCK) ON i.warehouse_id=w.warehouse_id WHERE w.branch_id=? AND (i.quantity_in_stock=0 OR i.status='OUT_OF_STOCK')) AS out_of_stock, "
+                + "(SELECT COUNT(DISTINCT i.product_id) FROM inventory i WITH (NOLOCK) JOIN warehouse w WITH (NOLOCK) ON i.warehouse_id=w.warehouse_id WHERE w.branch_id=? AND i.quantity_in_stock>0 AND i.quantity_in_stock<=10) AS low_stock, "
+                + "(SELECT ISNULL(SUM(i.quantity_in_stock*p.selling_price),0) FROM inventory i WITH (NOLOCK) JOIN product p WITH (NOLOCK) ON i.product_id=p.product_id JOIN warehouse w WITH (NOLOCK) ON i.warehouse_id=w.warehouse_id WHERE w.branch_id=?) AS total_stock_value, "
+                + "(SELECT COUNT(*) FROM Employee WITH (NOLOCK) WHERE branch_id=? AND status='ACTIVE') AS total_employees";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 1; i <= 17; i++) {
+                ps.setInt(i, branchId);
+            }
+            DashboardOverview ov = new DashboardOverview();
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ov.setRevenueToday(rs.getBigDecimal("revenue_today"));
+                    ov.setRevenueYesterday(rs.getBigDecimal("revenue_yesterday"));
+                    ov.setRevenueThisMonth(rs.getBigDecimal("revenue_this_month"));
+                    ov.setRevenueLastMonth(rs.getBigDecimal("revenue_last_month"));
+                    ov.setRevenueThisYear(rs.getBigDecimal("revenue_this_year"));
+                    ov.setOrdersToday(rs.getInt("orders_today"));
+                    ov.setOrdersThisMonth(rs.getInt("orders_this_month"));
+                    ov.setTotalOrders(rs.getInt("total_orders"));
+                    ov.setPendingOrders(rs.getInt("pending_orders"));
+                    ov.setAverageOrderValue(rs.getBigDecimal("avg_order_value"));
+                    ov.setTotalCustomers(rs.getInt("total_customers"));
+                    ov.setNewCustomersThisMonth(rs.getInt("new_customers"));
+                    ov.setActiveCustomers(rs.getInt("total_customers"));
+                    ov.setTotalProducts(rs.getInt("total_products"));
+                    ov.setOutOfStockItems(rs.getInt("out_of_stock"));
+                    ov.setLowStockItems(rs.getInt("low_stock"));
+                    ov.setTotalStockValue(rs.getBigDecimal("total_stock_value"));
+                    ov.setTotalStores(1);
+                    ov.setTotalEmployees(rs.getInt("total_employees"));
+                }
+            }
+            List<BranchRevenue> dailyRevenues = getBranchDailyRevenues(branchId);
+            ov.setBranchRevenues(dailyRevenues);
+            ov.setTopProducts(getTopProductsByBranch(branchId));
+            return ov;
+        }
+    }
+
+    /** Lấy doanh thu 7 ngày gần đây của 1 chi nhánh để dựng biểu đồ. */
+    public List<BranchRevenue> getBranchDailyRevenues(int branchId) throws SQLException {
+        String sql = "WITH Last7Days AS ("
+                   + "  SELECT CAST(DATEADD(DAY, -i, GETDATE()) AS DATE) AS d_date "
+                   + "  FROM (VALUES (6),(5),(4),(3),(2),(1),(0)) AS T(i)"
+                   + ")"
+                   + "SELECT d.d_date, "
+                   + "       ISNULL(SUM(o.total_amount), 0) AS revenue, "
+                   + "       COUNT(o.order_id) AS order_count "
+                   + "FROM Last7Days d "
+                   + "LEFT JOIN [order] o WITH (NOLOCK) ON CAST(o.created_at AS DATE) = d.d_date "
+                   + "     AND o.branch_id = ? AND o.status = 'COMPLETED' AND o.order_type = 'SALE' "
+                   + "GROUP BY d.d_date "
+                   + "ORDER BY d.d_date ASC";
+        List<BranchRevenue> list = new ArrayList<>();
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM");
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    BranchRevenue br = new BranchRevenue();
+                    java.sql.Date dDate = rs.getDate("d_date");
+                    br.setBranchName(dDate != null ? sdf.format(dDate) : "");
+                    br.setRevenue(rs.getBigDecimal("revenue"));
+                    br.setOrderCount(rs.getInt("order_count"));
+                    list.add(br);
+                }
+            }
+        }
+        return list;
+    }
+
+    /** Top 5 sản phẩm bán chạy nhất tháng này của 1 chi nhánh. */
+    public List<TopProduct> getTopProductsByBranch(int branchId) throws SQLException {
+        String sql = "SELECT TOP 5 p.product_id, p.product_name, "
+                   + "       SUM(od.quantity) AS quantity_sold, "
+                   + "       SUM(od.total_price) AS revenue "
+                   + "FROM order_detail od WITH (NOLOCK) "
+                   + "JOIN [order] o WITH (NOLOCK) ON od.order_id = o.order_id "
+                   + "JOIN [product] p WITH (NOLOCK) ON od.product_id = p.product_id "
+                   + "WHERE o.branch_id = ? AND o.status = 'COMPLETED' AND o.order_type = 'SALE' "
+                   + "  AND YEAR(o.created_at) = YEAR(GETDATE()) AND MONTH(o.created_at) = MONTH(GETDATE()) "
+                   + "GROUP BY p.product_id, p.product_name "
+                   + "ORDER BY quantity_sold DESC";
+        List<TopProduct> list = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    TopProduct tp = new TopProduct();
+                    tp.setProductId(rs.getInt("product_id"));
+                    tp.setProductName(rs.getString("product_name"));
+                    tp.setQuantitySold(rs.getInt("quantity_sold"));
+                    tp.setRevenue(rs.getBigDecimal("revenue"));
+                    list.add(tp);
+                }
+            }
+        }
+        return list;
+    }
+
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
         public BigDecimal totalRevenue = BigDecimal.ZERO;

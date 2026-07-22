@@ -17,7 +17,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
-@WebServlet(name = "DashboardController", urlPatterns = {"/dashboard/owner", "/dashboard/inventory", "/dashboard/financial"})
+@WebServlet(name = "DashboardController", urlPatterns = {"/dashboard", "/dashboard/owner", "/dashboard/inventory", "/dashboard/financial"})
 public class DashboardController extends BaseController {
 
     private ActivityLogDAO activityLogDAO;
@@ -34,31 +34,57 @@ public class DashboardController extends BaseController {
             throws ServletException, IOException {
 
         String path = request.getServletPath();
+        HttpSession session = request.getSession(false);
+        Employee currentUser = (session == null) ? null : (Employee) session.getAttribute("currentUser");
+        String role = (currentUser != null && currentUser.getRoleName() != null) ? currentUser.getRoleName().trim().toLowerCase() : "";
 
-        // Card "Hoạt động gần đây" chỉ load dữ liệu khi user là Owner.
-        // Vai trò khác sẽ không thấy card này (xem owner.jsp).
-        if (isOwner(request)) {
-            try {
-                List<ActivityLog> recentActivities = activityLogDAO.findRecent(5);
-                request.setAttribute("recentActivities", recentActivities);
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                request.setAttribute("recentActivities", Collections.emptyList());
-            }
-        } else {
-            request.setAttribute("recentActivities", Collections.emptyList());
-        }
+        // Route cho /dashboard và /dashboard/owner
+        if ("/dashboard".equals(path) || "/dashboard/owner".equals(path)) {
+            if ("storemanager".equals(role)) {
+                int userBranchId = (currentUser != null && currentUser.getBranchId() != null) ? currentUser.getBranchId() : 1;
+                try {
+                    DashboardOverview overview = dashboardDAO.getBranchOverview(userBranchId);
+                    request.setAttribute("overview", overview);
+                    
+                    List<ActivityLog> recentActivities = activityLogDAO.findRecentByBranch(userBranchId, 5);
+                    request.setAttribute("recentActivities", recentActivities);
 
-        // Nạp dữ liệu Overview cho Owner Dashboard
-        if ("/dashboard/owner".equals(path)) {
-            try {
-                DashboardOverview overview = dashboardDAO.getOwnerOverview();
-                request.setAttribute("overview", overview);
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                request.setAttribute("overview", new DashboardOverview());
-                request.setAttribute("overviewError",
-                        "Không thể tải dữ liệu tổng quan. Vui lòng thử lại sau.");
+                    dao.branch.BranchDAO branchDAO = new dao.branch.BranchDAO();
+                    model.Branch branch = branchDAO.findById(userBranchId);
+                    request.setAttribute("currentBranch", branch);
+
+                    dao.employee.EmployeeDAO empDAO = new dao.employee.EmployeeDAO();
+                    List<Employee> branchEmployees = empDAO.getByBranch(userBranchId);
+                    request.setAttribute("branchEmployees", branchEmployees);
+
+                    request.setAttribute("isStoreManagerView", true);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    request.setAttribute("overview", new DashboardOverview());
+                }
+                forward(request, response, "dashboard/owner");
+                return;
+            } else if ("admin".equals(role) || "owner".equals(role)) {
+                try {
+                    DashboardOverview overview = dashboardDAO.getOwnerOverview();
+                    request.setAttribute("overview", overview);
+                    List<ActivityLog> recentActivities = activityLogDAO.findRecent(5);
+                    request.setAttribute("recentActivities", recentActivities);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    request.setAttribute("overview", new DashboardOverview());
+                }
+                forward(request, response, "dashboard/owner");
+                return;
+            } else if ("warehousestaff".equals(role)) {
+                response.sendRedirect(request.getContextPath() + "/inventory");
+                return;
+            } else if ("salesstaff".equals(role)) {
+                response.sendRedirect(request.getContextPath() + "/sales");
+                return;
+            } else {
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
             }
         }
 

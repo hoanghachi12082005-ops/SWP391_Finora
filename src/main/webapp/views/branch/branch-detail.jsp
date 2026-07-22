@@ -39,17 +39,15 @@
                 </div>
 
                 <div style="display: flex; gap: 10px;">
+                    <c:if test="${sessionScope.currentUser.roleName == 'Admin' || sessionScope.currentUser.roleName == 'Owner'}">
+                        <a href="branch" class="btn-cancel">
+                            Quay lại
+                        </a>
 
-                    <a href="branch"
-                       class="btn-cancel">
-                        Quay lại
-                    </a>
-
-                    <a href="branch?action=edit&id=${branch.branchId}"
-                       class="btn-add">
-                        Chỉnh sửa
-                    </a>
-
+                        <a href="branch?action=edit&id=${branch.branchId}" class="btn-add">
+                            Chỉnh sửa
+                        </a>
+                    </c:if>
                 </div>
 
             </div>
