@@ -72,7 +72,16 @@
                 <h4 style="margin-bottom: 0.75rem;">VAT theo ngành hàng</h4>
                 <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">Thiết lập tỷ lệ VAT riêng cho từng ngành hàng. Nếu chưa thiết lập, hệ thống sẽ dùng VAT mặc định.</p>
 
-                <table style="width: 100%; border-collapse: collapse;">
+                <!-- Ô tìm kiếm ngành hàng -->
+                <div style="margin-bottom: 1rem;">
+                    <input type="text" id="vatCategorySearch" class="form-control"
+                           placeholder="Tìm kiếm ngành hàng..."
+                           style="max-width: 350px; padding: 0.5rem 0.75rem;"
+                           onkeyup="filterVatCategories()">
+                </div>
+
+                <div style="overflow-x: auto;">
+                <table id="vatCategoryTable" style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr style="background: #f9fafb; text-align: left;">
                             <th style="padding: 0.75rem 1rem; border-bottom: 2px solid #e5e7eb; font-weight: 600;">Ngành hàng</th>
@@ -131,9 +140,30 @@
                         </c:forEach>
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
 
     </div>
 </div>
+<script>
+function filterVatCategories() {
+    var input = document.getElementById('vatCategorySearch');
+    var filter = input.value.toLowerCase().trim();
+    var table = document.getElementById('vatCategoryTable');
+    var rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    for (var i = 0; i < rows.length; i++) {
+        var nameCell = rows[i].getElementsByTagName('td')[0];
+        if (nameCell) {
+            var text = nameCell.textContent || nameCell.innerText;
+            if (text.toLowerCase().indexOf(filter) > -1) {
+                rows[i].style.display = '';
+            } else {
+                rows[i].style.display = 'none';
+            }
+        }
+    }
+}
+</script>
 <jsp:include page="/views/common/footer.jsp" />
