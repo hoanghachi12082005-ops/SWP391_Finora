@@ -80,9 +80,6 @@ public class ActivityLog {
     public String getEntityLabel() {
         if (tableName == null) return "Hệ thống";
         switch (tableName.toLowerCase()) {
-            case "order":
-            case "orders":            return "Đơn hàng";
-            case "order_detail":      return "Chi tiết đơn";
             case "product":           return "Sản phẩm";
             case "category":          return "Danh mục";
             case "customer":          return "Khách hàng";
@@ -90,17 +87,12 @@ public class ActivityLog {
             case "employee":          return "Nhân viên";
             case "branch":
             case "store":             return "Chi nhánh";
-            case "inventory":         return "Tồn kho";
-            case "stock_transaction": return "Giao dịch kho";
-            case "stock_transfer":    return "Phiếu chuyển kho";
             case "purchase_order":
             case "purchase":          return "Phiếu nhập";
             case "purchase_detail":   return "Chi tiết phiếu nhập";
-            case "payment":           return "Thanh toán";
             case "invoice":           return "Hóa đơn";
             case "expense":           return "Chi phí";
             case "income":            return "Thu nhập";
-            case "voucher":           return "Voucher";
             case "point_transaction": return "Điểm thưởng";
             case "role":              return "Vai trò";
             case "auth":              return "Đăng nhập";
@@ -108,36 +100,28 @@ public class ActivityLog {
         }
     }
 
-    /** Mã đối tượng hiển thị, ví dụ HD000003, SP005, KH012, NV02. */
+    /** Mã đối tượng hiển thị, ví dụ SP005, KH012, NV02. */
     public String getEntityCode() {
         if (recordId == null) return "";
         String prefix;
         if (tableName == null) prefix = "ID";
         else switch (tableName.toLowerCase()) {
-            case "order": case "orders":   prefix = "HD"; break;
-            case "order_detail":           prefix = "CT"; break;
             case "product":                prefix = "SP"; break;
             case "category":               prefix = "DM"; break;
             case "customer":               prefix = "KH"; break;
             case "supplier":               prefix = "NCC"; break;
             case "employee":               prefix = "NV"; break;
             case "branch": case "store":   prefix = "CN"; break;
-            case "inventory":              prefix = "TK"; break;
-            case "stock_transaction":      prefix = "GD"; break;
-            case "stock_transfer":         prefix = "PCK"; break;
             case "purchase_order": case "purchase": prefix = "PN"; break;
             case "purchase_detail":        prefix = "CTPN"; break;
-            case "payment":                prefix = "TT"; break;
             case "invoice":                prefix = "HĐ"; break;
             case "expense":                prefix = "CHI"; break;
             case "income":                 prefix = "THU"; break;
-            case "voucher":                prefix = "VC"; break;
             case "point_transaction":      prefix = "DT"; break;
             case "role":                   prefix = "RL"; break;
             default:                       prefix = "#";
         }
-        // HD000003 vs SP005: đơn hàng dùng 6 ký số, mặc định dùng 3 ký số.
-        int width = (prefix.equals("HD") || prefix.equals("HĐ")) ? 6 : 3;
+        int width = 3;
         return prefix + String.format("%0" + width + "d", recordId);
     }
 
