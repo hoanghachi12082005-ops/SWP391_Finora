@@ -255,6 +255,7 @@ public class DashboardDAO {
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             DashboardOverview ov = new DashboardOverview();
+            if (rs.next()) {
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
