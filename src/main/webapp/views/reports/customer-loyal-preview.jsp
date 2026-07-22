@@ -241,7 +241,6 @@
                     <th>Email</th>
                     <th>Tổng đơn mua</th>
                     <th>Điểm hiện tại</th>
-                    <th>Điểm trọn đời</th>
                     <th class="text-right">Tổng chi tiêu</th>
                 </tr>
             </thead>
@@ -253,7 +252,6 @@
                         <td>${empty row.email ? '—' : row.email}</td>
                         <td>${row.totalOrders}</td>
                         <td>${row.currentPoints}</td>
-                        <td>${row.lifetimePoints}</td>
                         <td class="text-right"><fmt:formatNumber value="${row.totalSpent}" type="number" groupingUsed="true"/> ₫</td>
                     </tr>
                 </c:forEach>
@@ -267,8 +265,6 @@
                 <span class="value">${reportOverview.totalCustomers}</span>
                 <span class="label">Tổng doanh thu từ KH</span>
                 <span class="value"><fmt:formatNumber value="${reportOverview.totalSpent}" type="number" groupingUsed="true"/> ₫</span>
-                <span class="label">Tổng điểm tích lũy</span>
-                <span class="value">${reportOverview.totalPoints} pts</span>
                 <c:if test="${not empty reportOverview.topCustomerName}">
                     <span class="label">Khách hàng VIP nhất</span>
                     <span class="value">${reportOverview.topCustomerName}</span>

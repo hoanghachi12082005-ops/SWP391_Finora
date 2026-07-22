@@ -220,7 +220,6 @@ Nhóm này bao gồm các bảng lưu trữ thông tin về khách hàng, nhà c
 | `cus_point_id` | INT | PK, IDENTITY(1,1), NOT NULL | Khóa chính tự động tăng, định danh duy nhất cho mỗi bản ghi điểm |
 | `cus_id` | INT | FK -> customer(cus_id), NOT NULL | Liên kết đến khách hàng sở hữu điểm thưởng |
 | `current_points` | INT | DEFAULT 0 | Số điểm hiện tại có thể sử dụng được |
-| `lifetime_points` | INT | DEFAULT 0 | Tổng số điểm khách hàng đã tích được trong toàn bộ thời gian |
 | `level_name` | NVARCHAR(50) | | Tên cấp bậc thành viên (ví dụ: Bronze, Silver, Gold, Platinum) |
 | `updated_at` | DATETIME | DEFAULT GETDATE() | Thời điểm bản ghi được cập nhật gần nhất |
 
@@ -239,9 +238,8 @@ Nhóm này bao gồm các bảng lưu trữ thông tin về khách hàng, nhà c
 
 **Ghi chú:**
 - Quan hệ một-một với bảng `customer`: mỗi khách hàng có đúng một bản ghi điểm
-- `current_points` giảm khi khách hàng đổi điểm, `lifetime_points` không giảm
+- `current_points` tăng khi tích lũy điểm và giảm khi đổi điểm
 - Lịch sử thay đổi điểm được ghi lại trong bảng `point_transaction`
-- Hệ thống cấp bậc có thể được tính toán dựa trên `lifetime_points`
 
 ---
 

@@ -62,15 +62,7 @@
                         </div>
                     </div>
 
-                    <div class="overview-card">
-                        <div class="overview-icon overview-icon-orders">
-                            <span class="material-symbols-outlined">stars</span>
-                        </div>
-                        <div class="overview-info">
-                            <p>Tổng điểm tích lũy</p>
-                            <h3>${reportOverview.totalPoints} pts</h3>
-                        </div>
-                    </div>
+
 
                     <div class="overview-card">
                         <div class="overview-icon overview-icon-warning">
@@ -123,7 +115,6 @@
                             <th>Email</th>
                             <th class="text-right">Tổng đơn mua</th>
                             <th class="text-right">Điểm hiện tại</th>
-                            <th class="text-right">Điểm trọn đời</th>
                             <th class="text-right">Tổng chi tiêu</th>
                         </tr>
                         </thead>
@@ -131,7 +122,7 @@
                         <c:choose>
                             <c:when test="${empty customerReports}">
                                 <tr>
-                                    <td colspan="8" class="empty-row">
+                                    <td colspan="7" class="empty-row">
                                         <div class="empty-state">
                                             <span class="material-symbols-outlined">groups</span>
                                             <h4>Không tìm thấy khách hàng thân thiết</h4>
@@ -163,7 +154,6 @@
                                         <td>${empty row.email ? '—' : row.email}</td>
                                         <td class="text-right">${row.totalOrders}</td>
                                         <td class="text-right text-success" style="font-weight: 600;">${row.currentPoints}</td>
-                                        <td class="text-right" style="color: #64748b;">${row.lifetimePoints}</td>
                                         <td class="text-right font-weight-bold">
                                             <fmt:formatNumber value="${row.totalSpent}" type="number" groupingUsed="true"/> ₫
                                         </td>

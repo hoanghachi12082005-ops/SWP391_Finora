@@ -633,7 +633,6 @@ private Category mapResultSetToCategory(ResultSet rs) throws SQLException {
 │                  │ INSERT vào bảng customer_point với:                              │
 │                  │ - cus_id = customer_id vừa lấy                                  │
 │                  │ - current_points = 0                                             │
-│                  │ - lifetime_points = 0                                            │
 │                  │ - level_name = 'Bronze'                                          │
 │                  ▼                                                                   │
 │         ┌──────────────────┐                                                        │
@@ -651,7 +650,7 @@ private Category mapResultSetToCategory(ResultSet rs) throws SQLException {
 | Bước | Bảng | Thao tác | Dữ liệu |
 |------|------|----------|----------|
 | 1 | `customer` | INSERT | full_name, gender, bod, address, email, phone, cus_type |
-| 2 | `customer_point` | INSERT | cus_id (FK), current_points=0, lifetime_points=0, level_name='Bronze' |
+| 2 | `customer_point` | INSERT | cus_id (FK), current_points=0, level_name='Bronze' |
 
 **Code mẫu:**
 
@@ -692,7 +691,6 @@ public class CustomerServlet extends HttpServlet {
             CustomerPoint points = new CustomerPoint();
             points.setCusId(cusId);
             points.setCurrentPoints(0);
-            points.setLifetimePoints(0);
             points.setLevelName("Bronze");
             pointDAO.insert(points);
             
@@ -866,7 +864,7 @@ public List<Category> getCategoryTree() {
 │  ║         │ .addPoints()        │                                                   ║ │
 │  ║         └──────────┬──────────┘                                                   ║ │
 │  ║                    │ UPDATE customer_point                                        ║ │
-│  ║                    │ SET current_points += earned, lifetime_points += earned      ║ │
+│  ║                    │ SET current_points += earned                                 ║ │
 │  ║                    ▼                                                               ║ │
 │  ║         ┌─────────────────────┐                                                   ║ │
 │  ║         │ PointTransactionDAO │                                                   ║ │
@@ -887,7 +885,7 @@ public List<Category> getCategoryTree() {
 | 2 | `order_detail` | INSERT (nhiều dòng) | order_id, product_id, quantity, unit_price, total_price |
 | 3 | `inventory` | UPDATE | quantity_in_stock -= quantity (tại warehouse_id) |
 | 4 | `stock_transaction` | INSERT | warehouse_id, product_id, 'ORDER', order_id, 'OUT', quantity |
-| 5 | `customer_point` | UPDATE | current_points += earned, lifetime_points += earned |
+| 5 | `customer_point` | UPDATE | current_points += earned |
 | 6 | `point_transaction` | INSERT | cus_point_id, order_id, before_points, after_points, description |
 | 7 | `voucher` | UPDATE (nếu có voucher) | used_quantity += 1 |
 

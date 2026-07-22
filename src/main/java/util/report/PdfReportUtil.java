@@ -318,13 +318,13 @@ public final class PdfReportUtil {
             }
 
             // Table
-            PdfPTable table = new PdfPTable(7);
+            PdfPTable table = new PdfPTable(6);
             table.setWidthPercentage(100);
-            table.setWidths(new float[]{4, 3, 4, 2, 2, 2, 3});
+            table.setWidths(new float[]{4, 3, 4, 2, 2, 3});
             table.setHeaderRows(1);
             
             // Header cells
-            String[] headers = {"Khách hàng", "Số điện thoại", "Email", "Tổng đơn", "Điểm hiện tại", "Điểm trọn đời", "Tổng chi tiêu"};
+            String[] headers = {"Khách hàng", "Số điện thoại", "Email", "Tổng đơn", "Điểm hiện tại", "Tổng chi tiêu"};
             Color bg = new Color(0x1a, 0x1a, 0x2e);
             for (String h : headers) {
                 PdfPCell cell = new PdfPCell(new Phrase(h, TABLE_HEADER_FONT));
@@ -341,7 +341,7 @@ public final class PdfReportUtil {
 
             if (rows == null || rows.isEmpty()) {
                 PdfPCell emptyCell = new PdfPCell(new Phrase("No report data available.", TABLE_CELL_FONT));
-                emptyCell.setColspan(7);
+                emptyCell.setColspan(6);
                 emptyCell.setHorizontalAlignment(Element.ALIGN_CENTER);
                 emptyCell.setPadding(12);
                 table.addCell(emptyCell);
@@ -352,7 +352,6 @@ public final class PdfReportUtil {
                     table.addCell(createCell(nullToDash(row.getEmail()), Element.ALIGN_LEFT));
                     table.addCell(createCell(String.valueOf(row.getTotalOrders()), Element.ALIGN_RIGHT));
                     table.addCell(createCell(String.valueOf(row.getCurrentPoints()), Element.ALIGN_RIGHT));
-                    table.addCell(createCell(String.valueOf(row.getLifetimePoints()), Element.ALIGN_RIGHT));
                     table.addCell(createCell(nf.format(row.getTotalSpent()) + " ₫", Element.ALIGN_RIGHT));
                 }
             }
@@ -373,7 +372,6 @@ public final class PdfReportUtil {
 
                 addSummaryRow(summaryTable, "Tổng số khách hàng", String.valueOf(overview.getTotalCustomers()));
                 addSummaryRow(summaryTable, "Tổng chi tiêu khách hàng", nf.format(overview.getTotalSpent()) + " ₫");
-                addSummaryRow(summaryTable, "Tổng điểm tích lũy", overview.getTotalPoints() + " pts");
                 if (overview.getTopCustomerName() != null) {
                     addSummaryRow(summaryTable, "Khách hàng VIP nhất", overview.getTopCustomerName());
                     addSummaryRow(summaryTable, "Chi tiêu nhiều nhất", nf.format(overview.getTopCustomerSpent()) + " ₫");

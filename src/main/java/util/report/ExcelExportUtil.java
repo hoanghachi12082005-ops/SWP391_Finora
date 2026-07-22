@@ -56,8 +56,8 @@ public final class ExcelExportUtil {
         try (Workbook wb = new XSSFWorkbook()) {
             Sheet sheet = wb.createSheet("Customer Loyalty Report");
             setupReport(wb, sheet, "Customer Loyalty Report", generatedBy, keyword, null, null, null);
-            String[] headers = {"Customer", "Phone", "Email", "Total Orders", "Current Points", "Lifetime Points", "Total Spent"};
-            int[] widths = {30, 18, 30, 15, 15, 15, 20};
+            String[] headers = {"Customer", "Phone", "Email", "Total Orders", "Current Points", "Total Spent"};
+            int[] widths = {30, 18, 30, 15, 15, 20};
             int rowNum = fillHeader(wb, sheet, headers, widths, 4);
             CellStyle currencyStyle = createCurrencyStyle(wb);
             for (LoyalCustomerSummary r : rows) {
@@ -67,8 +67,7 @@ public final class ExcelExportUtil {
                 row.createCell(2).setCellValue(nullToDash(r.getEmail()));
                 row.createCell(3).setCellValue(r.getTotalOrders());
                 row.createCell(4).setCellValue(r.getCurrentPoints());
-                row.createCell(5).setCellValue(r.getLifetimePoints());
-                Cell spentCell = row.createCell(6);
+                Cell spentCell = row.createCell(5);
                 spentCell.setCellValue(doubleValue(r.getTotalSpent()));
                 spentCell.setCellStyle(currencyStyle);
             }
@@ -140,7 +139,6 @@ public final class ExcelExportUtil {
         Row title = sheet.createRow(rowNum++);
         title.createCell(0).setCellValue("Summary");
         addSumRow(sheet, rowNum++, "Total Customers", overview.getTotalCustomers(), null);
-        addSumRow(sheet, rowNum++, "Total Points", overview.getTotalPoints(), null);
         addSumRow(sheet, rowNum++, "Total Spent", doubleValue(overview.getTotalSpent()), currencyStyle);
         if (overview.getTopCustomerName() != null) {
             addSumRow(sheet, rowNum++, "Top Customer", overview.getTopCustomerName());

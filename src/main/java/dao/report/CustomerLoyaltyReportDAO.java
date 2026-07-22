@@ -22,8 +22,7 @@ public class CustomerLoyaltyReportDAO {
             "    c.email, " +
             "    c.total_spent, " +
             "    COUNT(o.order_id) AS TotalOrders, " +
-            "    COALESCE(cp.current_points, 0) AS CurrentPoints, " +
-            "    COALESCE(cp.lifetime_points, 0) AS LifetimePoints ";
+            "    COALESCE(cp.current_points, 0) AS CurrentPoints ";
 
     private static final String CUSTOMER_FROM =
             "FROM customer c " +
@@ -31,7 +30,7 @@ public class CustomerLoyaltyReportDAO {
             "LEFT JOIN [Order] o ON c.cus_id = o.customer_id AND o.status = 'COMPLETED' " +
             "WHERE c.status = 'ACTIVE' " +
             "AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?) " +
-            "GROUP BY c.cus_id, c.full_name, c.phone, c.email, c.total_spent, cp.current_points, cp.lifetime_points";
+            "GROUP BY c.cus_id, c.full_name, c.phone, c.email, c.total_spent, cp.current_points";
 
     public List<LoyalCustomerSummary> getCustomerLoyaltyReport(String keyword,
                                                                int page,
@@ -89,10 +88,8 @@ public class CustomerLoyaltyReportDAO {
         // Count and spent
         String sql = "SELECT " +
                 "    COUNT(c.cus_id) AS TotalCustomers, " +
-                "    SUM(c.total_spent) AS TotalSpent, " +
-                "    SUM(COALESCE(cp.current_points, 0)) AS TotalPoints " +
+                "    SUM(c.total_spent) AS TotalSpent " +
                 "FROM customer c " +
-                "LEFT JOIN customer_point cp ON c.cus_id = cp.cus_id " +
                 "WHERE c.status = 'ACTIVE' " +
                 "AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?)";
 
@@ -105,7 +102,6 @@ public class CustomerLoyaltyReportDAO {
                     overview.setTotalCustomers(rs.getInt("TotalCustomers"));
                     BigDecimal spent = rs.getBigDecimal("TotalSpent");
                     overview.setTotalSpent(spent == null ? BigDecimal.ZERO : spent);
-                    overview.setTotalPoints(rs.getInt("TotalPoints"));
                 }
             }
         } catch (SQLException e) {
@@ -160,7 +156,6 @@ public class CustomerLoyaltyReportDAO {
         summary.setTotalSpent(rs.getBigDecimal("total_spent"));
         summary.setTotalOrders(rs.getInt("TotalOrders"));
         summary.setCurrentPoints(rs.getInt("CurrentPoints"));
-        summary.setLifetimePoints(rs.getInt("LifetimePoints"));
         return summary;
     }
 }

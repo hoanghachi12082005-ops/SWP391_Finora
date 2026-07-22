@@ -19,7 +19,7 @@ public class CustomerService {
     }
 
     public boolean updateCustomerFromPOS(Customer customer) {
-        return customerDAO.update(customer, false, 0, 0);
+        return customerDAO.update(customer, false, 0);
     }
 
     public boolean isEmailOrPhoneExists(String email, String phone, Integer excludeId) {
