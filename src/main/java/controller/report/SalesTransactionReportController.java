@@ -115,6 +115,7 @@ public class SalesTransactionReportController extends BaseController {
         }
         f.setTransactionCode(trim(request.getParameter("transactionCode")));
         f.setTransactionType(trim(request.getParameter("transactionType")));
+        f.setOrderType(trim(request.getParameter("orderType")));
         f.setPaymentMethod(trim(request.getParameter("paymentMethod")));
         f.setAmountFrom(parseDoubleNull(request.getParameter("amountFrom")));
         f.setAmountTo(parseDoubleNull(request.getParameter("amountTo")));

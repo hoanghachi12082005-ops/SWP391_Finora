@@ -7,6 +7,8 @@ public class Payment {
     private String name;
     private String status;
     private Integer orderId;
+    private String orderCode;
+    private String orderType;
     private double amount;
     private String method; // CASH, BANKING, CARD, etc.
     private String paymentType; // INCOME, EXPENSE
@@ -18,6 +20,12 @@ public class Payment {
     private Timestamp paymentDate;
 
     public Payment() {}
+
+    public String getOrderCode() { return orderCode; }
+    public void setOrderCode(String orderCode) { this.orderCode = orderCode; }
+
+    public String getOrderType() { return orderType; }
+    public void setOrderType(String orderType) { this.orderType = orderType; }
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }

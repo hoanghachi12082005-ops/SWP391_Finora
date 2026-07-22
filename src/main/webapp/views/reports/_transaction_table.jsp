@@ -9,14 +9,16 @@
             <thead>
             <tr>
                 <th>#</th>
-                <th>Mã giao dịch / Hóa đơn</th>
-                <th>Thời gian</th>
-                <th>Loại giao dịch</th>
+                <th>Mã giao dịch</th>
+                <th>Mã đơn hàng</th>
+                <th>Loại đơn</th>
+                <th>Loại phiếu</th>
                 <th>Phương thức</th>
                 <th class="text-right">Số tiền</th>
                 <th>Mô tả</th>
                 <th>Chi nhánh</th>
                 <th>Nhân viên</th>
+                <th>Thời gian</th>
                 <th>Trạng thái</th>
             </tr>
             </thead>
@@ -24,7 +26,7 @@
             <c:choose>
                 <c:when test="${empty transactions}">
                     <tr>
-                        <td colspan="10" class="empty-row">
+                        <td colspan="12" class="empty-row">
                             <div class="empty-state">
                                 <span class="material-symbols-outlined">payments</span>
                                 <h4>Không tìm thấy dữ liệu giao dịch.</h4>
@@ -38,11 +40,18 @@
                         <tr>
                             <td>${(currentPage - 1) * pageSize + st.index + 1}</td>
                             <td><strong>${t.transactionCode}</strong></td>
-                            <td>${fn:substring(t.paymentDate, 0, 19)}</td>
+                            <td>${empty t.orderCode ? '—' : t.orderCode}</td>
                             <td>
                                 <c:choose>
-                                    <c:when test="${t.transactionType == 'INCOME'}">Thu</c:when>
-                                    <c:when test="${t.transactionType == 'EXPENSE'}">Chi</c:when>
+                                    <c:when test="${t.orderType == 'SALE'}"><span class="badge badge-sale">SALE</span></c:when>
+                                    <c:when test="${t.orderType == 'PURCHASE'}"><span class="badge badge-purchase">PURCHASE</span></c:when>
+                                    <c:otherwise><span class="badge badge-other">${empty t.orderType ? 'OTHER' : t.orderType}</span></c:otherwise>
+                                </c:choose>
+                            </td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${t.transactionType == 'INCOME'}"><span class="text-success fw-bold">Thu</span></c:when>
+                                    <c:when test="${t.transactionType == 'EXPENSE'}"><span class="text-danger fw-bold">Chi</span></c:when>
                                     <c:otherwise>${t.transactionType}</c:otherwise>
                                 </c:choose>
                             </td>
@@ -57,8 +66,9 @@
                             <td>${empty t.description ? '—' : t.description}</td>
                             <td>${empty t.branchName ? '—' : t.branchName}</td>
                             <td>${empty t.employeeName ? '—' : t.employeeName}</td>
+                            <td>${fn:substring(t.paymentDate, 0, 19)}</td>
                             <td>
-                                <span class="status-badge ${t.status == 'PAID' ? 'completed' : ''} ${t.status == 'PENDING' ? 'pending' : ''} ${t.status == 'FAILED' ? 'cancelled' : ''}">
+                                <span class="status-badge ${t.status == 'PAID' || t.status == 'COMPLETED' ? 'completed' : ''} ${t.status == 'PENDING' ? 'pending' : ''} ${t.status == 'FAILED' ? 'cancelled' : ''}">
                                     ${t.status}
                                 </span>
                             </td>

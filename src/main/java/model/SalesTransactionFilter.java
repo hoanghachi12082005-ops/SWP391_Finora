@@ -8,6 +8,7 @@ public class SalesTransactionFilter {
     private LocalDate dateTo;
     private String transactionCode;
     private String transactionType;
+    private String orderType;
     private String paymentMethod;
     private Double amountFrom;
     private Double amountTo;
@@ -18,6 +19,9 @@ public class SalesTransactionFilter {
     private String sortDir;
 
     public SalesTransactionFilter() {}
+
+    public String getOrderType() { return orderType; }
+    public void setOrderType(String orderType) { this.orderType = orderType; }
 
     // Getters and setters for all fields
     public String getDatePreset() { return datePreset; }

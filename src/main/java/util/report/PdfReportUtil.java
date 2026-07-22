@@ -625,11 +625,11 @@ public final class PdfReportUtil {
                 document.add(new Paragraph(" "));
             }
 
-            PdfPTable table = new PdfPTable(9);
+            PdfPTable table = new PdfPTable(11);
             table.setWidthPercentage(100);
-            table.setWidths(new float[]{2, 2.5f, 1.5f, 2, 2, 3, 2.5f, 2.5f, 1.5f});
+            table.setWidths(new float[]{2, 2, 1.5f, 2.5f, 1.5f, 2, 2, 3, 2.5f, 2.5f, 1.5f});
             table.setHeaderRows(1);
-            String[] headers = {"Mã", "Ngày", "Loại", "Phương thức", "Số tiền", "Mô tả", "Chi nhánh", "Nhân viên", "Trạng thái"};
+            String[] headers = {"Mã phiếu", "Mã đơn", "Loại đơn", "Ngày", "Loại", "Phương thức", "Số tiền", "Mô tả", "Chi nhánh", "Nhân viên", "Trạng thái"};
             Color bg = new Color(0x1a, 0x1a, 0x2e);
             for (String h : headers) {
                 PdfPCell cell = new PdfPCell(new Phrase(h, TABLE_HEADER_FONT));
@@ -645,7 +645,7 @@ public final class PdfReportUtil {
             Color altColor = new Color(0xF5, 0xF5, 0xFA);
             if (rows == null || rows.isEmpty()) {
                 PdfPCell emptyCell = new PdfPCell(new Phrase("No transaction data found.", TABLE_CELL_FONT));
-                emptyCell.setColspan(9);
+                emptyCell.setColspan(11);
                 emptyCell.setHorizontalAlignment(Element.ALIGN_CENTER);
                 emptyCell.setPadding(12);
                 table.addCell(emptyCell);
@@ -654,6 +654,8 @@ public final class PdfReportUtil {
                 for (SalesTransaction t : rows) {
                     boolean odd = (idx++ % 2 != 0);
                     table.addCell(colCell(nullToDash(t.getTransactionCode()), Element.ALIGN_LEFT, odd, altColor));
+                    table.addCell(colCell(nullToDash(t.getOrderCode()), Element.ALIGN_LEFT, odd, altColor));
+                    table.addCell(colCell(nullToDash(t.getOrderType()), Element.ALIGN_CENTER, odd, altColor));
                     table.addCell(colCell(t.getPaymentDate() != null ? t.getPaymentDate().toString() : "", Element.ALIGN_LEFT, odd, altColor));
                     table.addCell(colCell(t.getTransactionType(), Element.ALIGN_CENTER, odd, altColor));
                     table.addCell(colCell(t.getPaymentMethod(), Element.ALIGN_CENTER, odd, altColor));

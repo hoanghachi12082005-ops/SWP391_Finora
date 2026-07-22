@@ -272,7 +272,7 @@ public final class ExcelExportUtil {
             r++;
             CellStyle headerStyle = createHeaderStyle(wb);
             Row header = sheet.createRow(r++);
-            String[] cols = {"Mã giao dịch", "Ngày", "Loại", "Phương thức", "Số tiền", "Mô tả", "Chi nhánh", "Nhân viên", "Trạng thái"};
+            String[] cols = {"Mã giao dịch", "Mã đơn hàng", "Loại đơn", "Ngày", "Loại", "Phương thức", "Số tiền", "Mô tả", "Chi nhánh", "Nhân viên", "Trạng thái"};
             for (int i = 0; i < cols.length; i++) {
                 Cell c = header.createCell(i);
                 c.setCellValue(cols[i]);
@@ -283,16 +283,18 @@ public final class ExcelExportUtil {
             for (SalesTransaction t : rows) {
                 Row row = sheet.createRow(r++);
                 row.createCell(0).setCellValue(t.getTransactionCode());
-                row.createCell(1).setCellValue(t.getPaymentDate() != null ? t.getPaymentDate().toString() : "");
-                row.createCell(2).setCellValue(t.getTransactionType());
-                row.createCell(3).setCellValue(t.getPaymentMethod());
-                Cell amt = row.createCell(4);
+                row.createCell(1).setCellValue(t.getOrderCode() != null ? t.getOrderCode() : "");
+                row.createCell(2).setCellValue(t.getOrderType() != null ? t.getOrderType() : "");
+                row.createCell(3).setCellValue(t.getPaymentDate() != null ? t.getPaymentDate().toString() : "");
+                row.createCell(4).setCellValue(t.getTransactionType());
+                row.createCell(5).setCellValue(t.getPaymentMethod());
+                Cell amt = row.createCell(6);
                 amt.setCellValue(t.getAmount());
                 amt.setCellStyle(currencyStyle);
-                row.createCell(5).setCellValue(t.getDescription() != null ? t.getDescription() : "");
-                row.createCell(6).setCellValue(t.getBranchName() != null ? t.getBranchName() : "");
-                row.createCell(7).setCellValue(t.getEmployeeName() != null ? t.getEmployeeName() : "");
-                row.createCell(8).setCellValue(t.getStatus() != null ? t.getStatus() : "");
+                row.createCell(7).setCellValue(t.getDescription() != null ? t.getDescription() : "");
+                row.createCell(8).setCellValue(t.getBranchName() != null ? t.getBranchName() : "");
+                row.createCell(9).setCellValue(t.getEmployeeName() != null ? t.getEmployeeName() : "");
+                row.createCell(10).setCellValue(t.getStatus() != null ? t.getStatus() : "");
             }
 
             for (int i = 0; i < cols.length; i++) sheet.autoSizeColumn(i);

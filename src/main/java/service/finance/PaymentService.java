@@ -12,6 +12,7 @@ import model.ReceiptVoucher;
 import model.SalesTransaction;
 import model.SalesTransactionFilter;
 import model.SalesTransactionKpi;
+import dao.system.ActivityLogDAO;
 import util.database.DBContext;
 
 import java.sql.Connection;
@@ -24,6 +25,7 @@ public class PaymentService {
     private final ReceiptVoucherDAO receiptVoucherDAO = new ReceiptVoucherDAO();
     private final ExpenseVoucherDAO expenseVoucherDAO = new ExpenseVoucherDAO();
     private final SalesTransactionReportDAO reportDAO = new SalesTransactionReportDAO();
+    private final ActivityLogDAO activityLogDAO = new ActivityLogDAO();
 
     public List<Payment> getTransactionsPaging(
             String keyword,
@@ -32,7 +34,7 @@ public class PaymentService {
             String timeRange,
             int page,
             int pageSize) {
-        return paymentDAO.getTransactionsPaging(keyword, type, paymentMethod, null, null, timeRange, null, page, pageSize);
+        return paymentDAO.getTransactionsPaging(keyword, type, null, paymentMethod, null, null, null, null, null, timeRange, null, page, pageSize);
     }
 
     public List<Payment> getTransactionsPaging(
@@ -43,7 +45,19 @@ public class PaymentService {
             Integer branchId,
             int page,
             int pageSize) {
-        return paymentDAO.getTransactionsPaging(keyword, type, paymentMethod, null, null, timeRange, branchId, page, pageSize);
+        return paymentDAO.getTransactionsPaging(keyword, type, null, paymentMethod, null, null, null, null, null, timeRange, branchId, page, pageSize);
+    }
+
+    public List<Payment> getTransactionsPaging(
+            String keyword,
+            String type,
+            String fromDate,
+            String toDate,
+            String timeRange,
+            Integer branchId,
+            int page,
+            int pageSize) {
+        return paymentDAO.getTransactionsPaging(keyword, type, null, null, null, null, null, fromDate, toDate, timeRange, branchId, page, pageSize);
     }
 
     public List<Payment> getTransactionsPaging(
@@ -56,7 +70,24 @@ public class PaymentService {
             Integer branchId,
             int page,
             int pageSize) {
-        return paymentDAO.getTransactionsPaging(keyword, type, paymentMethod, fromDate, toDate, timeRange, branchId, page, pageSize);
+        return paymentDAO.getTransactionsPaging(keyword, type, null, paymentMethod, null, null, null, fromDate, toDate, timeRange, branchId, page, pageSize);
+    }
+
+    public List<Payment> getTransactionsPaging(
+            String keyword,
+            String type,
+            String orderType,
+            String paymentMethod,
+            Integer employeeId,
+            Double amountFrom,
+            Double amountTo,
+            String fromDate,
+            String toDate,
+            String timeRange,
+            Integer branchId,
+            int page,
+            int pageSize) {
+        return paymentDAO.getTransactionsPaging(keyword, type, orderType, paymentMethod, employeeId, amountFrom, amountTo, fromDate, toDate, timeRange, branchId, page, pageSize);
     }
 
     public int countTransactions(
@@ -64,7 +95,7 @@ public class PaymentService {
             String type,
             String paymentMethod,
             String timeRange) {
-        return paymentDAO.countTransactions(keyword, type, paymentMethod, null, null, timeRange, null);
+        return paymentDAO.countTransactions(keyword, type, null, paymentMethod, null, null, null, null, null, timeRange, null);
     }
 
     public int countTransactions(
@@ -73,7 +104,7 @@ public class PaymentService {
             String paymentMethod,
             String timeRange,
             Integer branchId) {
-        return paymentDAO.countTransactions(keyword, type, paymentMethod, null, null, timeRange, branchId);
+        return paymentDAO.countTransactions(keyword, type, null, paymentMethod, null, null, null, null, null, timeRange, branchId);
     }
 
     public int countTransactions(
@@ -84,7 +115,22 @@ public class PaymentService {
             String toDate,
             String timeRange,
             Integer branchId) {
-        return paymentDAO.countTransactions(keyword, type, paymentMethod, fromDate, toDate, timeRange, branchId);
+        return paymentDAO.countTransactions(keyword, type, null, paymentMethod, null, null, null, fromDate, toDate, timeRange, branchId);
+    }
+
+    public int countTransactions(
+            String keyword,
+            String type,
+            String orderType,
+            String paymentMethod,
+            Integer employeeId,
+            Double amountFrom,
+            Double amountTo,
+            String fromDate,
+            String toDate,
+            String timeRange,
+            Integer branchId) {
+        return paymentDAO.countTransactions(keyword, type, orderType, paymentMethod, employeeId, amountFrom, amountTo, fromDate, toDate, timeRange, branchId);
     }
 
     public double getTotalCashBalance() {
@@ -135,12 +181,22 @@ public class PaymentService {
         return paymentDAO.insert(payment);
     }
 
+    public String createReceipt(Payment payment, int employeeId, int branchId) throws Exception {
+        return createVoucher(payment, employeeId, branchId, true);
+    }
+
+    public String createExpense(Payment payment, int employeeId, int branchId) throws Exception {
+        return createVoucher(payment, employeeId, branchId, false);
+    }
+
     public String createReceipt(int orderId, Payment payment, int employeeId, int branchId) throws Exception {
-        return createVoucher(orderId, payment, employeeId, branchId, true);
+        payment.setOrderId(orderId);
+        return createReceipt(payment, employeeId, branchId);
     }
 
     public String createExpense(int orderId, Payment payment, int employeeId, int branchId) throws Exception {
-        return createVoucher(orderId, payment, employeeId, branchId, false);
+        payment.setOrderId(orderId);
+        return createExpense(payment, employeeId, branchId);
     }
 
     public List<Order> getRecentOrders(int limit) {
@@ -163,56 +219,56 @@ public class PaymentService {
         return reportDAO.getDistinctTransactionTypes();
     }
 
-    private String createVoucher(int orderId, Payment payment, int employeeId, int branchId, boolean isReceipt) throws Exception {
+    private String createVoucher(Payment payment, int employeeId, int branchId, boolean isReceipt) throws Exception {
+        String paymentType = isReceipt ? "INCOME" : "EXPENSE";
         String prefix = isReceipt ? "PT" : "PC";
+        String orderCodePrefix = isReceipt ? "ORD-RV-" : "ORD-PV-";
         String voucherPrefix = isReceipt ? "PTV" : "PCV";
+
+        if (payment.getAmount() <= 0) {
+            throw new Exception("Số tiền phiếu phải lớn hơn 0.");
+        }
 
         try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                Order existing = orderDAO.findById(orderId);
-                if (existing == null) {
-                    throw new Exception("Đơn hàng không tồn tại: " + orderId);
-                }
+                // 1. Create specialized Order (order_type = OTHER, status = COMPLETED)
+                Order order = new Order();
+                String orderCode = orderCodePrefix + String.format("%06d", System.currentTimeMillis() % 1000000);
+                order.setOrderCode(orderCode);
+                order.setOrderType("OTHER");
+                order.setStatus(Order.OrderStatus.COMPLETED);
+                order.setBranchId(branchId);
+                order.setEmpId(employeeId);
+                order.setWarehouseId(1);
+                order.setSubtotal(payment.getAmount());
+                order.setDiscountAmount(0.0);
+                order.setTotalAmount(payment.getAmount());
+                order.setPaymentMethod(payment.getMethod() != null ? payment.getMethod() : "CASH");
 
+                int orderId = orderDAO.createOrderInTransaction(conn, order);
+
+                // 2. Create Payment linked to Order (payment_status = PAID)
                 payment.setOrderId(orderId);
                 payment.setEmployeeId(employeeId);
                 payment.setBranchId(branchId);
+                payment.setPaymentType(paymentType);
                 payment.setStatus("PAID");
 
-                String code = paymentDAO.generateTransactionCode(payment.getPaymentType(), prefix);
+                String code = paymentDAO.generateTransactionCode(conn, paymentType, prefix);
                 payment.setName(code);
 
                 int paymentId = paymentDAO.insert(conn, payment);
 
-                // Voucher amount must match Payment amount
-                if (payment.getAmount() != payment.getAmount()) {
-                    throw new Exception("Số tiền phiếu không khớp với số tiền thanh toán.");
-                }
-                // Payment status must be valid
-                if (payment.getStatus() == null || (!"PAID".equals(payment.getStatus()) && !"PENDING".equals(payment.getStatus()))) {
-                    throw new Exception("Trạng thái thanh toán không hợp lệ.");
-                }
-
-                String voucherNumber = paymentDAO.generateTransactionCode(payment.getPaymentType(), voucherPrefix);
-
-                if (isReceipt) {
-                    ReceiptVoucher v = new ReceiptVoucher();
-                    v.setPaymentId(paymentId);
-                    v.setVoucherNumber(voucherNumber);
-                    v.setAmount(payment.getAmount());
-                    v.setCreatedBy(employeeId);
-                    receiptVoucherDAO.insert(conn, v);
-                } else {
-                    ExpenseVoucher v = new ExpenseVoucher();
-                    v.setPaymentId(paymentId);
-                    v.setVoucherNumber(voucherNumber);
-                    v.setAmount(payment.getAmount());
-                    v.setCreatedBy(employeeId);
-                    expenseVoucherDAO.insert(conn, v);
-                }
-
                 conn.commit();
+
+                // Audit log
+                try {
+                    String actionName = isReceipt ? "TẠO_PHIẾU_THU" : "TẠO_PHIẾU_CHI";
+                    String logMsg = (isReceipt ? "Tạo phiếu thu " : "Tạo phiếu chi ") + code + " cho đơn hàng " + orderCode + " - Số tiền: " + payment.getAmount();
+                    activityLogDAO.insertLog(employeeId, actionName, "cashbook", paymentId, null, logMsg);
+                } catch (Exception ignored) {}
+
                 return null;
 
             } catch (Exception e) {

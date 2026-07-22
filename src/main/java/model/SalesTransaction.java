@@ -14,6 +14,8 @@ public class SalesTransaction {
     private String employeeName;
     private String status;
     private Integer orderId;
+    private String orderCode;
+    private String orderType;
 
     public int getId() { return id; }
     public void setId(int v) { this.id = v; }
@@ -37,4 +39,8 @@ public class SalesTransaction {
     public void setStatus(String v) { this.status = v; }
     public Integer getOrderId() { return orderId; }
     public void setOrderId(Integer v) { this.orderId = v; }
+    public String getOrderCode() { return orderCode; }
+    public void setOrderCode(String v) { this.orderCode = v; }
+    public String getOrderType() { return orderType; }
+    public void setOrderType(String v) { this.orderType = v; }
 }

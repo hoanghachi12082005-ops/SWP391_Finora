@@ -34,6 +34,22 @@ public final class AppConstants {
     public static final String ORDER_COMPLETED = "COMPLETED";
     public static final String ORDER_CANCELLED = "CANCELLED";
 
+    // Order type constants
+    public static final String ORDER_TYPE_SALE = "SALE";
+    public static final String ORDER_TYPE_PURCHASE = "PURCHASE";
+    public static final String ORDER_TYPE_OTHER = "OTHER";
+
+    // Payment type constants
+    public static final String PAYMENT_TYPE_INCOME = "INCOME";
+    public static final String PAYMENT_TYPE_EXPENSE = "EXPENSE";
+
+    // Payment status constants
+    public static final String PAYMENT_STATUS_COMPLETED = "COMPLETED";
+    public static final String PAYMENT_STATUS_PAID = "PAID";
+    public static final String PAYMENT_STATUS_PENDING = "PENDING";
+    public static final String PAYMENT_STATUS_FAILED = "FAILED";
+    public static final String PAYMENT_STATUS_CANCELLED = "CANCELLED";
+
     // Inventory ticket status
     public static final String TICKET_PENDING = "PENDING";
     public static final String TICKET_IN_TRANSIT = "IN_TRANSIT";

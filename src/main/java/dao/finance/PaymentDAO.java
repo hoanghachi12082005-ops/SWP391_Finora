@@ -45,12 +45,31 @@ public class PaymentDAO {
             Integer branchId,
             int page,
             int pageSize) {
+        return getTransactionsPaging(keyword, type, null, paymentMethod, null, null, null, fromDate, toDate, timeRange, branchId, page, pageSize);
+    }
+
+    public List<Payment> getTransactionsPaging(
+            String keyword,
+            String type,
+            String orderType,
+            String paymentMethod,
+            Integer employeeId,
+            Double amountFrom,
+            Double amountTo,
+            String fromDate,
+            String toDate,
+            String timeRange,
+            Integer branchId,
+            int page,
+            int pageSize) {
 
         List<Payment> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
             SELECT 
                 p.payment_id AS PaymentID,
                 p.order_id AS OrderID,
+                o.order_code AS OrderCode,
+                o.order_type AS OrderType,
                 p.payment_amount AS PaymentAmount,
                 p.payment_date AS PaymentDate,
                 p.payment_status AS PaymentStatus,
@@ -63,27 +82,50 @@ public class PaymentDAO {
                 e.fullName AS CreatorName,
                 b.branch_name AS BranchName
             FROM payment p WITH (NOLOCK)
+            LEFT JOIN [order] o WITH (NOLOCK) ON p.order_id = o.order_id
             LEFT JOIN Employee e WITH (NOLOCK) ON p.EmployeeID = e.emp_id
             LEFT JOIN Branch b WITH (NOLOCK) ON p.BranchID = b.branch_id
-            WHERE 1=1
+            WHERE p.payment_status IN ('COMPLETED', 'PAID')
         """);
 
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (p.transaction_code LIKE ? OR p.description LIKE ?) ");
-            params.add("%" + keyword.trim() + "%");
-            params.add("%" + keyword.trim() + "%");
+            sql.append(" AND (p.transaction_code LIKE ? OR o.order_code LIKE ? OR p.description LIKE ?) ");
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
         }
 
         if (type != null && !type.isBlank()) {
             sql.append(" AND p.PaymentType = ? ");
-            params.add(type);
+            params.add(type.trim());
+        }
+
+        if (orderType != null && !orderType.isBlank()) {
+            sql.append(" AND o.order_type = ? ");
+            params.add(orderType.trim());
         }
 
         if (paymentMethod != null && !paymentMethod.isBlank()) {
             sql.append(" AND p.payment_method = ? ");
-            params.add(paymentMethod);
+            params.add(paymentMethod.trim());
+        }
+
+        if (employeeId != null && employeeId > 0) {
+            sql.append(" AND p.EmployeeID = ? ");
+            params.add(employeeId);
+        }
+
+        if (amountFrom != null) {
+            sql.append(" AND p.payment_amount >= ? ");
+            params.add(amountFrom);
+        }
+
+        if (amountTo != null) {
+            sql.append(" AND p.payment_amount <= ? ");
+            params.add(amountTo);
         }
 
         if (branchId != null && branchId > 0) {
@@ -142,7 +184,32 @@ public class PaymentDAO {
     public int countTransactions(
             String keyword,
             String type,
+            String fromDate,
+            String toDate,
+            String timeRange,
+            Integer branchId) {
+        return countTransactions(keyword, type, null, null, null, null, null, fromDate, toDate, timeRange, branchId);
+    }
+
+    public int countTransactions(
+            String keyword,
+            String type,
             String paymentMethod,
+            String fromDate,
+            String toDate,
+            String timeRange,
+            Integer branchId) {
+        return countTransactions(keyword, type, null, paymentMethod, null, null, null, fromDate, toDate, timeRange, branchId);
+    }
+
+    public int countTransactions(
+            String keyword,
+            String type,
+            String orderType,
+            String paymentMethod,
+            Integer employeeId,
+            Double amountFrom,
+            Double amountTo,
             String fromDate,
             String toDate,
             String timeRange,
@@ -150,26 +217,49 @@ public class PaymentDAO {
 
         StringBuilder sql = new StringBuilder("""
             SELECT COUNT(*)
-            FROM payment p
-            WHERE 1=1
+            FROM payment p WITH (NOLOCK)
+            LEFT JOIN [order] o WITH (NOLOCK) ON p.order_id = o.order_id
+            WHERE p.payment_status IN ('COMPLETED', 'PAID')
         """);
 
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (p.transaction_code LIKE ? OR p.description LIKE ?) ");
-            params.add("%" + keyword.trim() + "%");
-            params.add("%" + keyword.trim() + "%");
+            sql.append(" AND (p.transaction_code LIKE ? OR o.order_code LIKE ? OR p.description LIKE ?) ");
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
         }
 
         if (type != null && !type.isBlank()) {
             sql.append(" AND p.PaymentType = ? ");
-            params.add(type);
+            params.add(type.trim());
+        }
+
+        if (orderType != null && !orderType.isBlank()) {
+            sql.append(" AND o.order_type = ? ");
+            params.add(orderType.trim());
         }
 
         if (paymentMethod != null && !paymentMethod.isBlank()) {
             sql.append(" AND p.payment_method = ? ");
-            params.add(paymentMethod);
+            params.add(paymentMethod.trim());
+        }
+
+        if (employeeId != null && employeeId > 0) {
+            sql.append(" AND p.EmployeeID = ? ");
+            params.add(employeeId);
+        }
+
+        if (amountFrom != null) {
+            sql.append(" AND p.payment_amount >= ? ");
+            params.add(amountFrom);
+        }
+
+        if (amountTo != null) {
+            sql.append(" AND p.payment_amount <= ? ");
+            params.add(amountTo);
         }
 
         if (branchId != null && branchId > 0) {
@@ -578,6 +668,12 @@ public class PaymentDAO {
         p.setId(rs.getInt("PaymentID"));
         p.setName(rs.getString("TransactionCode")); // BaseModel.name maps to TransactionCode
         p.setOrderId(rs.getObject("OrderID") != null ? rs.getInt("OrderID") : null);
+        try {
+            p.setOrderCode(rs.getString("OrderCode"));
+        } catch (SQLException ignored) {}
+        try {
+            p.setOrderType(rs.getString("OrderType"));
+        } catch (SQLException ignored) {}
         p.setMethod(rs.getString("PaymentMethod"));
         p.setAmount(rs.getDouble("PaymentAmount"));
         p.setPaymentDate(rs.getTimestamp("PaymentDate"));

@@ -41,26 +41,53 @@ public class IncomeExpenseController extends BaseController {
         Employee user = (Employee) request.getSession().getAttribute("currentUser");
         String roleLower = (user != null && user.getRoleName() != null) ? user.getRoleName().trim().toLowerCase() : "";
 
+        if ("admin".equals(roleLower)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Admin không có quyền truy cập Sổ Quỹ.");
+            return;
+        }
+
         Integer targetBranchId = null;
         if ("storemanager".equals(roleLower) || "st manager".equals(roleLower) || roleLower.contains("manager")) {
-            // Store Manager strictly accesses their assigned branch ONLY
+            // Store Manager strictly accesses their assigned branch ONLY - backend enforced
             targetBranchId = (user != null) ? user.getBranchID() : null;
-        } else if ("owner".equals(roleLower) || "admin".equals(roleLower)) {
-            // Owner / Admin can filter by branchId parameter if provided, or view all if empty/null
+        } else if ("owner".equals(roleLower)) {
+            // Owner can filter by branchId parameter if provided, or view all if empty/null
             String branchParam = request.getParameter("branchId");
             if (branchParam != null && !branchParam.isBlank()) {
                 try {
                     targetBranchId = Integer.parseInt(branchParam);
                 } catch (NumberFormatException ignored) {}
             }
+        } else {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập Sổ Quỹ.");
+            return;
         }
 
         String keyword = request.getParameter("keyword");
-        String type = request.getParameter("type");
+        String type = request.getParameter("type"); // PaymentType: INCOME, EXPENSE
+        String orderType = request.getParameter("orderType"); // OrderType: SALE, PURCHASE, OTHER
         String paymentMethod = request.getParameter("paymentMethod");
         String fromDate = request.getParameter("fromDate");
         String toDate = request.getParameter("toDate");
         String timeRange = request.getParameter("timeRange");
+        
+        Integer employeeId = null;
+        String empIdStr = request.getParameter("employeeId");
+        if (empIdStr != null && !empIdStr.isBlank()) {
+            try { employeeId = Integer.parseInt(empIdStr); } catch (NumberFormatException ignored) {}
+        }
+
+        Double amountFrom = null;
+        String amtFromStr = request.getParameter("amountFrom");
+        if (amtFromStr != null && !amtFromStr.isBlank()) {
+            try { amountFrom = Double.parseDouble(amtFromStr); } catch (NumberFormatException ignored) {}
+        }
+
+        Double amountTo = null;
+        String amtToStr = request.getParameter("amountTo");
+        if (amtToStr != null && !amtToStr.isBlank()) {
+            try { amountTo = Double.parseDouble(amtToStr); } catch (NumberFormatException ignored) {}
+        }
 
         if (timeRange == null) {
             timeRange = "all";
@@ -75,8 +102,8 @@ public class IncomeExpenseController extends BaseController {
         }
         int pageSize = 10;
 
-        List<Payment> transactions = service.getTransactionsPaging(keyword, type, paymentMethod, fromDate, toDate, timeRange, targetBranchId, page, pageSize);
-        int totalRecords = service.countTransactions(keyword, type, paymentMethod, fromDate, toDate, timeRange, targetBranchId);
+        List<Payment> transactions = service.getTransactionsPaging(keyword, type, orderType, paymentMethod, employeeId, amountFrom, amountTo, fromDate, toDate, timeRange, targetBranchId, page, pageSize);
+        int totalRecords = service.countTransactions(keyword, type, orderType, paymentMethod, employeeId, amountFrom, amountTo, fromDate, toDate, timeRange, targetBranchId);
         int totalPage = (int) Math.ceil((double) totalRecords / pageSize);
 
         double totalCash = service.getTotalCashBalance(targetBranchId);
@@ -117,11 +144,16 @@ public class IncomeExpenseController extends BaseController {
 
         request.setAttribute("keyword", keyword);
         request.setAttribute("type", type);
+        request.setAttribute("orderType", orderType);
         request.setAttribute("paymentMethod", paymentMethod);
         request.setAttribute("fromDate", fromDate);
         request.setAttribute("toDate", toDate);
         request.setAttribute("timeRange", timeRange);
+        request.setAttribute("employeeId", employeeId);
+        request.setAttribute("amountFrom", amountFrom);
+        request.setAttribute("amountTo", amountTo);
         request.setAttribute("selectedBranchId", targetBranchId);
+        request.setAttribute("userRole", roleLower);
 
         request.setAttribute("totalCash", totalCash);
         request.setAttribute("totalBank", totalBank);
@@ -148,20 +180,25 @@ public class IncomeExpenseController extends BaseController {
         String path = request.getServletPath();
         Employee user = (Employee) request.getSession().getAttribute("currentUser");
 
+        if (user == null) {
+            request.getSession().setAttribute("message", "Lỗi: Phiên đăng nhập hết hạn.");
+            request.getSession().setAttribute("messageType", "danger");
+            redirect(response, request.getContextPath() + "/cashbook");
+            return;
+        }
+
+        String roleLower = (user.getRoleName() != null) ? user.getRoleName().trim().toLowerCase() : "";
+        if ("admin".equals(roleLower)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Admin không có quyền tạo phiếu thu chi.");
+            return;
+        }
+
         if ("/cashbook/create-receipt".equals(path) || "/cashbook/create-payment".equals(path)) {
             try {
-                int orderId = Integer.parseInt(request.getParameter("orderId"));
                 double amount = Double.parseDouble(request.getParameter("amount"));
                 String method = request.getParameter("method");
                 String description = request.getParameter("description");
                 String paymentType = "/cashbook/create-receipt".equals(path) ? "INCOME" : "EXPENSE";
-
-                if (user == null) {
-                    request.getSession().setAttribute("message", "Lỗi: Phiên đăng nhập hết hạn.");
-                    request.getSession().setAttribute("messageType", "danger");
-                    redirect(response, request.getContextPath() + "/cashbook");
-                    return;
-                }
 
                 Payment p = new Payment();
                 p.setAmount(amount);
@@ -169,11 +206,18 @@ public class IncomeExpenseController extends BaseController {
                 p.setDescription(description);
                 p.setPaymentType(paymentType);
 
+                String orderIdStr = request.getParameter("orderId");
+                if (orderIdStr != null && !orderIdStr.isBlank()) {
+                    try {
+                        p.setOrderId(Integer.parseInt(orderIdStr));
+                    } catch (NumberFormatException ignored) {}
+                }
+
                 String error;
                 if ("/cashbook/create-receipt".equals(path)) {
-                    error = service.createReceipt(orderId, p, user.getEmployeeID(), user.getBranchID());
+                    error = service.createReceipt(p, user.getEmployeeID(), user.getBranchID());
                 } else {
-                    error = service.createExpense(orderId, p, user.getEmployeeID(), user.getBranchID());
+                    error = service.createExpense(p, user.getEmployeeID(), user.getBranchID());
                 }
 
                 if (error == null) {
@@ -185,7 +229,7 @@ public class IncomeExpenseController extends BaseController {
                     request.getSession().setAttribute("messageType", "danger");
                 }
             } catch (NumberFormatException e) {
-                request.getSession().setAttribute("message", "Lỗi: Dữ liệu nhập vào không hợp lệ.");
+                request.getSession().setAttribute("message", "Lỗi: Số tiền nhập vào không hợp lệ.");
                 request.getSession().setAttribute("messageType", "danger");
             } catch (Exception e) {
                 request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());

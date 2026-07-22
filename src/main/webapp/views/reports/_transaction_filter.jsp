@@ -32,11 +32,25 @@
         </div>
 
         <div class="form-group">
-            <label>Loại giao dịch</label>
+            <label>Loại đơn hàng</label>
+            <select name="orderType">
+                <option value="">Tất cả loại đơn</option>
+                <option value="SALE" ${filter.orderType == 'SALE' ? 'selected' : ''}>SALE (Bán hàng)</option>
+                <option value="PURCHASE" ${filter.orderType == 'PURCHASE' ? 'selected' : ''}>PURCHASE (Nhập hàng)</option>
+                <option value="OTHER" ${filter.orderType == 'OTHER' ? 'selected' : ''}>OTHER (Thu/Chi khác)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Loại phiếu</label>
             <select name="transactionType">
                 <option value="">Tất cả loại</option>
+                <option value="INCOME" ${filter.transactionType == 'INCOME' ? 'selected' : ''}>INCOME (Thu)</option>
+                <option value="EXPENSE" ${filter.transactionType == 'EXPENSE' ? 'selected' : ''}>EXPENSE (Chi)</option>
                 <c:forEach var="t" items="${transactionTypes}">
-                    <option value="${t}" ${filter.transactionType == t ? 'selected' : ''}>${t}</option>
+                    <c:if test="${t != 'INCOME' && t != 'EXPENSE'}">
+                        <option value="${t}" ${filter.transactionType == t ? 'selected' : ''}>${t}</option>
+                    </c:if>
                 </c:forEach>
             </select>
         </div>

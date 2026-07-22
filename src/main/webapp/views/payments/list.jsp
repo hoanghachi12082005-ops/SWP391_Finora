@@ -201,28 +201,38 @@
                             
                             <!-- Filter Options Form -->
                             <form method="get" action="${pageContext.request.contextPath}/cashbook" class="d-flex flex-column gap-3">
-                                <!-- Row 1: Keyword, Method, Type -->
+                                <!-- Row 1: Keyword, OrderType, PaymentType, Method -->
                                 <div class="d-flex flex-wrap gap-3 align-items-end">
                                     <div class="flex-grow-1" style="min-width: 180px;">
                                         <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Từ khóa</label>
-                                        <input type="text" name="keyword" class="form-control form-control-sm rounded-pill px-3" placeholder="Tìm mã, nội dung..." value="${keyword}">
+                                        <input type="text" name="keyword" class="form-control form-control-sm rounded-pill px-3" placeholder="Tìm mã phiếu, mã đơn, nội dung..." value="${keyword}">
                                     </div>
 
                                     <div>
-                                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Phương thức</label>
-                                        <select name="paymentMethod" class="form-select form-select-sm rounded-pill px-3" style="width: 140px;">
-                                            <option value="" ${empty paymentMethod ? 'selected' : ''}>Mọi quỹ</option>
-                                            <option value="CASH" ${paymentMethod == 'CASH' ? 'selected' : ''}>Tiền mặt</option>
-                                            <option value="BANK_TRANSFER" ${paymentMethod == 'BANK_TRANSFER' ? 'selected' : ''}>Ngân hàng</option>
+                                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Loại đơn hàng</label>
+                                        <select name="orderType" class="form-select form-select-sm rounded-pill px-3" style="width: 150px;">
+                                            <option value="" ${empty orderType ? 'selected' : ''}>Tất cả loại đơn</option>
+                                            <option value="SALE" ${orderType == 'SALE' ? 'selected' : ''}>Bán hàng (SALE)</option>
+                                            <option value="PURCHASE" ${orderType == 'PURCHASE' ? 'selected' : ''}>Nhập hàng (PURCHASE)</option>
+                                            <option value="OTHER" ${orderType == 'OTHER' ? 'selected' : ''}>Thu/Chi khác (OTHER)</option>
                                         </select>
                                     </div>
 
                                     <div>
-                                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Loại giao dịch</label>
-                                        <select name="type" class="form-select form-select-sm rounded-pill px-3" style="width: 140px;">
+                                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Loại phiếu</label>
+                                        <select name="type" class="form-select form-select-sm rounded-pill px-3" style="width: 130px;">
                                             <option value="" ${empty type ? 'selected' : ''}>Tất cả loại</option>
                                             <option value="INCOME" ${type == 'INCOME' ? 'selected' : ''}>Phiếu thu (PT)</option>
                                             <option value="EXPENSE" ${type == 'EXPENSE' ? 'selected' : ''}>Phiếu chi (PC)</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Phương thức</label>
+                                        <select name="paymentMethod" class="form-select form-select-sm rounded-pill px-3" style="width: 130px;">
+                                            <option value="" ${empty paymentMethod ? 'selected' : ''}>Mọi quỹ</option>
+                                            <option value="CASH" ${paymentMethod == 'CASH' ? 'selected' : ''}>Tiền mặt</option>
+                                            <option value="BANK_TRANSFER" ${paymentMethod == 'BANK_TRANSFER' ? 'selected' : ''}>Ngân hàng</option>
                                         </select>
                                     </div>
                                 </div>
@@ -231,17 +241,17 @@
                                 <div class="d-flex flex-wrap gap-3 align-items-end">
                                     <div>
                                         <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Từ ngày</label>
-                                        <input type="date" name="fromDate" value="${fromDate}" class="form-control form-control-sm date-filter-control" style="width: 160px;">
+                                        <input type="date" name="fromDate" value="${fromDate}" class="form-control form-control-sm date-filter-control" style="width: 150px;">
                                     </div>
 
                                     <div>
                                         <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Đến ngày</label>
-                                        <input type="date" name="toDate" value="${toDate}" class="form-control form-control-sm date-filter-control" style="width: 160px;">
+                                        <input type="date" name="toDate" value="${toDate}" class="form-control form-control-sm date-filter-control" style="width: 150px;">
                                     </div>
 
                                     <div class="d-flex gap-2">
                                         <button type="submit" class="btn btn-sm btn-winered rounded-pill px-4">Lọc</button>
-                                        <c:if test="${not empty fromDate or not empty toDate or not empty keyword or not empty paymentMethod or not empty type}">
+                                        <c:if test="${not empty fromDate or not empty toDate or not empty keyword or not empty paymentMethod or not empty type or not empty orderType}">
                                             <a href="${pageContext.request.contextPath}/cashbook" class="btn btn-sm btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 31px; height: 31px;" title="Đặt lại bộ lọc">
                                                 <span class="material-icons" style="font-size: 1rem;">refresh</span>
                                             </a>
@@ -256,7 +266,8 @@
                                 <table class="table table-hover align-middle mb-0" id="transactionTable">
                                     <thead class="table-light">
                                         <tr>
-                                            <th style="padding-left: 20px;">Mã phiếu</th>
+                                            <th style="padding-left: 20px;">Mã phiếu / Đơn hàng</th>
+                                            <th>Loại đơn</th>
                                             <th>Thời gian / Người tạo</th>
                                             <th>Nội dung</th>
                                             <th class="text-end" style="padding-right: 20px;">Giá trị (VNĐ)</th>
@@ -269,12 +280,28 @@
                                                     <tr>
                                                         <td style="padding-left: 20px;">
                                                             <div class="fw-bold">${item.name}</div>
-                                                            <span class="badge badge-${item.paymentType} rounded-pill px-2" style="font-size: 0.75rem;">
+                                                            <c:if test="${not empty item.orderCode}">
+                                                                <small class="text-muted"><span class="material-icons align-middle" style="font-size: 0.8rem;">receipt</span> ${item.orderCode}</small><br/>
+                                                            </c:if>
+                                                            <span class="badge badge-${item.paymentType} rounded-pill px-2 mt-1" style="font-size: 0.75rem;">
                                                                 <c:choose>
                                                                     <c:when test="${item.paymentType == 'INCOME'}">Thu</c:when>
                                                                     <c:otherwise>Chi</c:otherwise>
                                                                 </c:choose>
                                                             </span>
+                                                        </td>
+                                                        <td>
+                                                            <c:choose>
+                                                                <c:when test="${item.orderType == 'SALE'}">
+                                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2">SALE</span>
+                                                                </c:when>
+                                                                <c:when test="${item.orderType == 'PURCHASE'}">
+                                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2">PURCHASE</span>
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2">OTHER</span>
+                                                                </c:otherwise>
+                                                            </c:choose>
                                                         </td>
                                                         <td>
                                                             <div><fmt:formatDate value="${item.paymentDate}" pattern="dd/MM/yyyy HH:mm"/></div>
@@ -303,7 +330,7 @@
                                             </c:when>
                                             <c:otherwise>
                                                 <tr>
-                                                    <td colspan="4" class="text-center py-5 text-muted">
+                                                    <td colspan="5" class="text-center py-5 text-muted">
                                                         <span class="material-icons d-block mb-2" style="font-size: 2.5rem;">history</span>
                                                         Không tìm thấy giao dịch nào.
                                                     </td>
@@ -322,15 +349,15 @@
                                 <nav aria-label="Page navigation">
                                     <ul class="pagination pagination-sm mb-0">
                                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                                            <a class="page-link" href="?page=${currentPage - 1}&keyword=${keyword}&type=${type}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">Trước</a>
+                                            <a class="page-link" href="?page=${currentPage - 1}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">Trước</a>
                                         </li>
                                         <c:forEach var="p" begin="1" end="${totalPage}">
                                             <li class="page-item ${p == currentPage ? 'active' : ''}">
-                                                <a class="page-link ${p == currentPage ? 'bg-winered border-winered' : ''}" href="?page=${p}&keyword=${keyword}&type=${type}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">${p}</a>
+                                                <a class="page-link ${p == currentPage ? 'bg-winered border-winered' : ''}" href="?page=${p}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">${p}</a>
                                             </li>
                                         </c:forEach>
                                         <li class="page-item ${currentPage == totalPage ? 'disabled' : ''}">
-                                            <a class="page-link" href="?page=${currentPage + 1}&keyword=${keyword}&type=${type}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">Sau</a>
+                                            <a class="page-link" href="?page=${currentPage + 1}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">Sau</a>
                                         </li>
                                     </ul>
                                 </nav>
@@ -361,15 +388,6 @@
                 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Chọn đơn hàng <span class="text-danger">*</span></label>
-                        <select name="orderId" class="form-select" required>
-                            <option value="">-- Chọn đơn hàng --</option>
-                            <c:forEach var="o" items="${recentOrders}">
-                                <option value="${o.orderId}">${o.orderCode} - ${o.customerName} - ${o.totalAmount}₫</option>
-                            </c:forEach>
-                        </select>
-                    </div>
-                    <div class="mb-3">
                         <label class="form-label fw-bold">Số tiền (VNĐ) <span class="text-danger">*</span></label>
                         <input type="number" name="amount" class="form-control" placeholder="Nhập số tiền thu" required min="1000">
                     </div>
@@ -382,7 +400,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nội dung thu <span class="text-danger">*</span></label>
-                        <textarea name="description" class="form-control" rows="3" placeholder="Ví dụ: Thu tiền bán hàng, Thu hồi công nợ..." required></textarea>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Ví dụ: Thu tiền bán hàng, Thu hồi công nợ, Thu nhập khác..." required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 p-3">
@@ -406,15 +424,6 @@
                 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Chọn đơn hàng <span class="text-danger">*</span></label>
-                        <select name="orderId" class="form-select" required>
-                            <option value="">-- Chọn đơn hàng --</option>
-                            <c:forEach var="o" items="${recentOrders}">
-                                <option value="${o.orderId}">${o.orderCode} - ${o.customerName} - ${o.totalAmount}₫</option>
-                            </c:forEach>
-                        </select>
-                    </div>
-                    <div class="mb-3">
                         <label class="form-label fw-bold">Số tiền (VNĐ) <span class="text-danger">*</span></label>
                         <input type="number" name="amount" class="form-control" placeholder="Nhập số tiền chi" required min="1000">
                     </div>
@@ -427,7 +436,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nội dung chi <span class="text-danger">*</span></label>
-                        <textarea name="description" class="form-control" rows="3" placeholder="Ví dụ: Thanh toán tiền điện, Nhập hàng, Chi trả lương..." required></textarea>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Ví dụ: Thanh toán tiền điện, Nhập hàng, Chi trả lương, Chi phí vận hành..." required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 p-3">

@@ -16,11 +16,13 @@ public class SalesTransactionReportDAO {
     private static final String SELECT =
         "SELECT p.payment_id, p.transaction_code, p.payment_date, p.PaymentType, " +
         "p.payment_method, p.payment_amount, p.Description, p.payment_status, " +
-        "p.order_id, e.fullName AS employeeName, b.branch_name AS branchName " +
+        "p.order_id, o.order_code AS orderCode, o.order_type AS orderType, " +
+        "e.fullName AS employeeName, b.branch_name AS branchName " +
         "FROM payment p " +
+        "LEFT JOIN [order] o ON p.order_id = o.order_id " +
         "LEFT JOIN Employee e ON p.EmployeeID = e.emp_id " +
         "LEFT JOIN Branch b ON p.BranchID = b.branch_id " +
-        "WHERE 1=1";
+        "WHERE p.payment_status IN ('COMPLETED', 'PAID')";
 
     private static final Set<String> ALLOWED_SORT = Set.of(
         "payment_date", "payment_amount", "PaymentType", "branch_name", "employee_name"
@@ -62,7 +64,8 @@ public class SalesTransactionReportDAO {
 
     public int countTransactions(SalesTransactionFilter f) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM payment p ");
-        sql.append("LEFT JOIN Employee e ON p.EmployeeID = e.emp_id WHERE 1=1 ");
+        sql.append("LEFT JOIN [order] o ON p.order_id = o.order_id ");
+        sql.append("LEFT JOIN Employee e ON p.EmployeeID = e.emp_id WHERE p.payment_status IN ('COMPLETED', 'PAID') ");
         List<Object> params = new ArrayList<>();
         appendFilters(sql, params, f);
         try (Connection conn = DBContext.getConnection();
@@ -86,7 +89,10 @@ public class SalesTransactionReportDAO {
             "COALESCE(SUM(CASE WHEN p.PaymentType = 'INCOME' THEN p.payment_amount ELSE 0 END), 0) AS total_revenue, " +
             "COALESCE(SUM(CASE WHEN p.PaymentType = 'EXPENSE' THEN p.payment_amount ELSE 0 END), 0) AS total_expense, " +
             "COALESCE(AVG(p.payment_amount), 0) AS avg_transaction_value " +
-            "FROM payment p LEFT JOIN Employee e ON p.EmployeeID = e.emp_id WHERE 1=1"
+            "FROM payment p " +
+            "LEFT JOIN [order] o ON p.order_id = o.order_id " +
+            "LEFT JOIN Employee e ON p.EmployeeID = e.emp_id " +
+            "WHERE p.payment_status IN ('COMPLETED', 'PAID')"
         );
         List<Object> params = new ArrayList<>();
         appendFilters(sql, params, f);
@@ -176,6 +182,10 @@ public class SalesTransactionReportDAO {
             sql.append(" AND p.PaymentType = ?");
             params.add(f.getTransactionType());
         }
+        if (f.getOrderType() != null && !f.getOrderType().isBlank()) {
+            sql.append(" AND o.order_type = ?");
+            params.add(f.getOrderType().trim());
+        }
         if (f.getPaymentMethod() != null && !f.getPaymentMethod().isBlank()) {
             sql.append(" AND p.payment_method = ?");
             params.add(f.getPaymentMethod());
@@ -198,8 +208,8 @@ public class SalesTransactionReportDAO {
         }
         if (f.getKeyword() != null && !f.getKeyword().isBlank()) {
             String kw = "%" + f.getKeyword().trim() + "%";
-            sql.append(" AND (p.transaction_code LIKE ? OR p.Description LIKE ? OR e.fullName LIKE ?)");
-            params.add(kw); params.add(kw); params.add(kw);
+            sql.append(" AND (p.transaction_code LIKE ? OR o.order_code LIKE ? OR p.Description LIKE ? OR e.fullName LIKE ?)");
+            params.add(kw); params.add(kw); params.add(kw); params.add(kw);
         }
     }
 
@@ -214,6 +224,12 @@ public class SalesTransactionReportDAO {
         t.setDescription(rs.getString("Description"));
         t.setStatus(rs.getString("payment_status"));
         t.setOrderId(rs.getObject("order_id") != null ? rs.getInt("order_id") : null);
+        try {
+            t.setOrderCode(rs.getString("orderCode"));
+        } catch (SQLException ignored) {}
+        try {
+            t.setOrderType(rs.getString("orderType"));
+        } catch (SQLException ignored) {}
         t.setEmployeeName(rs.getString("employeeName"));
         t.setBranchName(rs.getString("branchName"));
         return t;
