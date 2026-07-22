@@ -96,8 +96,8 @@
                                             <c:when test="${c.status == 'APPROVED'}">
                                                 <span class="badge bg-success" style="border-radius: 6px; font-weight: 600; padding: 6px 12px;">ĐÃ DUYỆT</span>
                                             </c:when>
-                                            <c:when test="${c.status == 'CANCELLED'}">
-                                                <span class="badge bg-danger" style="border-radius: 6px; font-weight: 600; padding: 6px 12px;">ĐÃ HỦY</span>
+                                            <c:when test="${c.status == 'CANCELLED' || c.status == 'REJECTED'}">
+                                                <span class="badge bg-danger" style="border-radius: 6px; font-weight: 600; padding: 6px 12px;">${c.status == 'REJECTED' ? 'TỪ CHỐI' : 'ĐÃ HỦY'}</span>
                                             </c:when>
                                             <c:otherwise>
                                                 <span class="badge bg-secondary">${c.status}</span>
@@ -112,11 +112,13 @@
                                             <button class="btn btn-sm btn-outline-primary" style="border-radius: 6px; padding: 4px 10px; font-size: 13px;" onclick="viewCheckDetails(${c.checkId})">
                                                 Chi tiết
                                             </button>
-                                            <c:if test="${c.status == 'PENDING' && (roleName == 'Owner' || roleName == 'StoreManager')}">
+                                            <c:if test="${c.status == 'PENDING' && (roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'Admin')}">
                                                 <form action="${pageContext.request.contextPath}/inventory" method="POST" class="d-inline">
                                                     <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="approveCheck">
                                                     <input type="hidden" name="checkId" value="${c.checkId}">
+                                                    <input type="hidden" name="tab" value="check">
+                                                    <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
                                                     <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">
                                                     <button type="submit" class="btn btn-sm btn-success" style="border-radius: 6px; padding: 4px 10px; font-size: 13px;" onclick="return confirm('Xác nhận duyệt phiếu kiểm kho ${c.checkCode}?')">
                                                         Duyệt
@@ -126,13 +128,15 @@
                                                     <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                                                     <input type="hidden" name="action" value="cancelCheck">
                                                     <input type="hidden" name="checkId" value="${c.checkId}">
+                                                    <input type="hidden" name="tab" value="check">
+                                                    <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
                                                     <input type="hidden" name="currentWarehouseId" value="${selectedWarehouseId}">
                                                     <button type="submit" class="btn btn-sm btn-danger" style="border-radius: 6px; padding: 4px 10px; font-size: 13px;" onclick="return confirm('Xác nhận hủy phiếu kiểm kho ${c.checkCode}?')">
                                                         Hủy
                                                     </button>
                                                 </form>
                                             </c:if>
-                                            <c:if test="${c.status != 'CANCELLED' && (roleName == 'Owner' || roleName == 'Admin' || roleName == 'StoreManager')}">
+                                            <c:if test="${c.status != 'CANCELLED' && c.status != 'REJECTED' && (roleName == 'Owner' || roleName == 'Admin' || roleName == 'StoreManager')}">
                                                 <a href="${pageContext.request.contextPath}/inventory?tab=editCheck&action=editCheck&checkId=${c.checkId}&warehouseId=${selectedWarehouseId}" class="btn btn-sm btn-outline-warning" style="border-radius: 6px; padding: 4px 10px; font-size: 13px; font-weight: 500; text-decoration: none;">
                                                     Sửa
                                                 </a>

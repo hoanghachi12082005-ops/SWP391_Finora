@@ -21,10 +21,10 @@
             }
         });
     </script>
-    <c:if test="${not empty message}">
+    <c:if test="${not empty message or not empty sessionScope.message}">
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                var msg = '${message}'.trim();
+                var msg = '${not empty message ? message : sessionScope.message}'.trim();
                 if (msg && msg !== 'null') {
                     Toast.fire({
                         icon: 'success',
@@ -34,11 +34,13 @@
             });
         </script>
         <c:remove var="message" scope="session" />
+        <c:remove var="message" scope="request" />
+        <c:remove var="message" />
     </c:if>
-    <c:if test="${not empty successMessage}">
+    <c:if test="${not empty successMessage or not empty sessionScope.successMessage}">
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                var msg = '${successMessage}'.trim();
+                var msg = '${not empty successMessage ? successMessage : sessionScope.successMessage}'.trim();
                 if (msg && msg !== 'null') {
                     Toast.fire({
                         icon: 'success',
@@ -48,11 +50,13 @@
             });
         </script>
         <c:remove var="successMessage" scope="session" />
+        <c:remove var="successMessage" scope="request" />
+        <c:remove var="successMessage" />
     </c:if>
-    <c:if test="${not empty error}">
+    <c:if test="${not empty error or not empty sessionScope.error}">
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                var msg = '${error}'.trim();
+                var msg = '${not empty error ? error : sessionScope.error}'.trim();
                 if (msg && msg !== 'null') {
                     Toast.fire({
                         icon: 'error',
@@ -62,11 +66,13 @@
             });
         </script>
         <c:remove var="error" scope="session" />
+        <c:remove var="error" scope="request" />
+        <c:remove var="error" />
     </c:if>
-    <c:if test="${not empty sessionScope.errorMessage}">
+    <c:if test="${not empty errorMessage or not empty sessionScope.errorMessage}">
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                var msg = '${sessionScope.errorMessage}'.trim();
+                var msg = '${not empty errorMessage ? errorMessage : sessionScope.errorMessage}'.trim();
                 if (msg && msg !== 'null') {
                     Toast.fire({
                         icon: 'error',
@@ -76,11 +82,13 @@
             });
         </script>
         <c:remove var="errorMessage" scope="session" />
+        <c:remove var="errorMessage" scope="request" />
+        <c:remove var="errorMessage" />
     </c:if>
-    <c:if test="${not empty sessionScope.warning}">
+    <c:if test="${not empty warning or not empty sessionScope.warning}">
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                var msg = '${sessionScope.warning}'.trim();
+                var msg = '${not empty warning ? warning : sessionScope.warning}'.trim();
                 if (msg && msg !== 'null') {
                     Toast.fire({
                         icon: 'warning',
@@ -91,11 +99,13 @@
             });
         </script>
         <c:remove var="warning" scope="session" />
+        <c:remove var="warning" scope="request" />
+        <c:remove var="warning" />
     </c:if>
-    <c:if test="${not empty sessionScope.warningMessage}">
+    <c:if test="${not empty warningMessage or not empty sessionScope.warningMessage}">
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                var msg = '${sessionScope.warningMessage}'.trim();
+                var msg = '${not empty warningMessage ? warningMessage : sessionScope.warningMessage}'.trim();
                 if (msg && msg !== 'null') {
                     Toast.fire({
                         icon: 'warning',
@@ -106,6 +116,8 @@
             });
         </script>
         <c:remove var="warningMessage" scope="session" />
+        <c:remove var="warningMessage" scope="request" />
+        <c:remove var="warningMessage" />
     </c:if>
 
     <!-- Custom JS -->

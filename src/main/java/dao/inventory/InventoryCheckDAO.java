@@ -113,7 +113,11 @@ public class InventoryCheckDAO {
             sql.append(" AND ic.check_code LIKE ? ");
         }
         if (statusQuery != null && !statusQuery.trim().isEmpty()) {
-            sql.append(" AND ic.status = ? ");
+            if ("CANCELLED".equalsIgnoreCase(statusQuery.trim())) {
+                sql.append(" AND (ic.status = 'CANCELLED' OR ic.status = 'REJECTED') ");
+            } else {
+                sql.append(" AND ic.status = ? ");
+            }
         }
         if (discrepancyQuery != null && !discrepancyQuery.trim().isEmpty()) {
             if ("has_disc".equals(discrepancyQuery)) {
@@ -133,7 +137,7 @@ public class InventoryCheckDAO {
             if (checkCodeQuery != null && !checkCodeQuery.trim().isEmpty()) {
                 ps.setString(paramIndex++, "%" + checkCodeQuery.trim() + "%");
             }
-            if (statusQuery != null && !statusQuery.trim().isEmpty()) {
+            if (statusQuery != null && !statusQuery.trim().isEmpty() && !"CANCELLED".equalsIgnoreCase(statusQuery.trim())) {
                 ps.setString(paramIndex++, statusQuery.trim());
             }
             

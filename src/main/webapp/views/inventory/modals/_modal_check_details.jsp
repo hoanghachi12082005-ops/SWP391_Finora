@@ -29,8 +29,8 @@
                     <c:when test="${check.status == 'APPROVED'}">
                         <span class="badge bg-success text-white" style="border-radius: 6px; padding: 4px 8px; font-size:12px;">ĐÃ DUYỆT</span>
                     </c:when>
-                    <c:when test="${check.status == 'CANCELLED'}">
-                        <span class="badge bg-danger text-white" style="border-radius: 6px; padding: 4px 8px; font-size:12px;">ĐÃ HỦY</span>
+                    <c:when test="${check.status == 'CANCELLED' || check.status == 'REJECTED'}">
+                        <span class="badge bg-danger text-white" style="border-radius: 6px; padding: 4px 8px; font-size:12px;">${check.status == 'REJECTED' ? 'TỪ CHỐI' : 'ĐÃ HỦY'}</span>
                     </c:when>
                 </c:choose>
             </div>
@@ -48,7 +48,7 @@
             <strong class="text-dark" id="printCheckCreatedByName">${check.createdByName}</strong>
         </div>
         <div class="col-md-6 col-lg-4 mt-2">
-            <span class="text-muted small d-block">Người Phê Duyệt:</span>
+            <span class="text-muted small d-block">Người Phê Duyệt / Hủy:</span>
             <strong class="text-dark" id="printCheckApprovedByName">${not empty check.approvedByName ? check.approvedByName : 'Chưa có'}</strong>
         </div>
         <div class="col-md-12 col-lg-4 mt-2">
@@ -98,11 +98,13 @@
         <span class="material-icons" style="font-size: 18px;">print</span>
         In Phiếu
     </button>
-    <c:if test="${check.status == 'PENDING' && (role == 'Owner' || role == 'StoreManager')}">
+    <c:if test="${check.status == 'PENDING' && (role == 'Owner' || role == 'StoreManager' || role == 'Admin')}">
         <form action="${pageContext.request.contextPath}/inventory" method="POST" class="d-inline">
             <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="action" value="approveCheck">
             <input type="hidden" name="checkId" value="${check.checkId}">
+            <input type="hidden" name="tab" value="check">
+            <input type="hidden" name="warehouseId" value="${check.warehouseId}">
             <input type="hidden" name="currentWarehouseId" value="${check.warehouseId}">
             <button type="submit" class="btn btn-success d-flex align-items-center gap-1" onclick="return confirm('Phê duyệt phiếu kiểm kho này và thực hiện cân bằng tồn kho?')" style="border-radius: 8px;">
                 <span class="material-icons" style="font-size: 18px;">check</span> Duyệt Phiếu
@@ -112,6 +114,8 @@
             <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="action" value="cancelCheck">
             <input type="hidden" name="checkId" value="${check.checkId}">
+            <input type="hidden" name="tab" value="check">
+            <input type="hidden" name="warehouseId" value="${check.warehouseId}">
             <input type="hidden" name="currentWarehouseId" value="${check.warehouseId}">
             <button type="submit" class="btn btn-danger d-flex align-items-center gap-1" onclick="return confirm('Từ chối và hủy bỏ phiếu kiểm kho này?')" style="border-radius: 8px;">
                 <span class="material-icons" style="font-size: 18px;">close</span> Hủy Phiếu

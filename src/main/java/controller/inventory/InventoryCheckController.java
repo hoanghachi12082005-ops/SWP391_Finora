@@ -223,7 +223,7 @@ public class InventoryCheckController extends InventoryBaseController {
                     redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
                     break;
                 }
-                // case "approveCheck" → [MOVED FROM InventoryController] - Original lines 1820-1837
+                // case "approveCheck"
                 case "approveCheck": {
                     int checkId = Integer.parseInt(request.getParameter("checkId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
@@ -238,14 +238,21 @@ public class InventoryCheckController extends InventoryBaseController {
 
                     request.getSession().setAttribute("message", "Đã phê duyệt phiếu kiểm kho và cân bằng tồn kho thành công!");
                     String redirectTab = request.getParameter("tab");
-                    if ("check".equals(redirectTab)) {
-                        redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + request.getParameter("warehouseId"));
-                    } else {
-                        redirect(response, request.getContextPath() + "/inventory?tab=history&subtab=voucher");
+                    if (redirectTab == null || redirectTab.trim().isEmpty()) {
+                        redirectTab = "check";
                     }
+                    String wId = request.getParameter("warehouseId");
+                    if (wId == null || wId.isEmpty() || "null".equalsIgnoreCase(wId)) {
+                        wId = request.getParameter("currentWarehouseId");
+                    }
+                    String redirectUrl = request.getContextPath() + "/inventory?tab=" + redirectTab;
+                    if (wId != null && !wId.isEmpty() && !"null".equalsIgnoreCase(wId)) {
+                        redirectUrl += "&warehouseId=" + wId;
+                    }
+                    redirect(response, redirectUrl);
                     break;
                 }
-                // case "rejectCheck" → [MOVED FROM InventoryController] - Original lines 1839-1857
+                // case "rejectCheck"
                 case "rejectCheck": {
                     int checkId = Integer.parseInt(request.getParameter("checkId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
@@ -260,25 +267,62 @@ public class InventoryCheckController extends InventoryBaseController {
 
                     request.getSession().setAttribute("message", "Đã từ chối phiếu kiểm kho.");
                     String redirectTab = request.getParameter("tab");
-                    if ("check".equals(redirectTab)) {
-                        redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + request.getParameter("warehouseId"));
-                    } else {
-                        redirect(response, request.getContextPath() + "/inventory?tab=history&subtab=voucher");
-                    }
-                    break;
-                }
-                // case "cancelCheck" → [MOVED FROM InventoryController] - Original lines 1858-1870
-                case "cancelCheck": {
-                    int checkId = Integer.parseInt(request.getParameter("checkId"));
-                    dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
-                    checkDAO.updateStatus(checkId, "CANCELLED", null);
-
-                    request.getSession().setAttribute("message", "Đã hủy phiếu kiểm kho thành công.");
-                    String redirectTab = request.getParameter("tab");
-                    if (redirectTab == null || redirectTab.isEmpty()) {
+                    if (redirectTab == null || redirectTab.trim().isEmpty()) {
                         redirectTab = "check";
                     }
-                    redirect(response, request.getContextPath() + "/inventory?tab=" + redirectTab + "&warehouseId=" + request.getParameter("warehouseId"));
+                    String wId = request.getParameter("warehouseId");
+                    if (wId == null || wId.isEmpty() || "null".equalsIgnoreCase(wId)) {
+                        wId = request.getParameter("currentWarehouseId");
+                    }
+                    String redirectUrl = request.getContextPath() + "/inventory?tab=" + redirectTab;
+                    if (wId != null && !wId.isEmpty() && !"null".equalsIgnoreCase(wId)) {
+                        redirectUrl += "&warehouseId=" + wId;
+                    }
+                    redirect(response, redirectUrl);
+                    break;
+                }
+                // case "cancelCheck"
+                case "cancelCheck": {
+                    int checkId = Integer.parseInt(request.getParameter("checkId"));
+                    Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+                    if (currentUser == null) {
+                        redirect(response, request.getContextPath() + "/login");
+                        return;
+                    }
+
+                    dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
+                    model.InventoryCheck check = checkDAO.findById(checkId);
+
+                    if (check != null && "PENDING".equalsIgnoreCase(check.getStatus())) {
+                        String role = currentUser.getRoleName() != null ? currentUser.getRoleName() : "";
+                        boolean isManager = "Owner".equalsIgnoreCase(role) || "StoreManager".equalsIgnoreCase(role) || "Admin".equalsIgnoreCase(role);
+                        boolean isCreator = check.getCreatedBy() == currentUser.getEmployeeId();
+
+                        if (!isManager && !isCreator) {
+                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền hủy phiếu kiểm kho này.");
+                            return;
+                        }
+
+                        Integer approverId = isManager ? currentUser.getEmployeeId() : null;
+                        checkDAO.updateStatus(checkId, "CANCELLED", approverId);
+                        request.getSession().setAttribute("message", "Đã hủy phiếu kiểm kho thành công.");
+                    } else if (check != null) {
+                        request.getSession().setAttribute("error", "Không thể hủy phiếu kiểm kho ở trạng thái: " + check.getStatus());
+                    }
+
+                    String redirectTab = request.getParameter("tab");
+                    if (redirectTab == null || redirectTab.trim().isEmpty()) {
+                        redirectTab = "check";
+                    }
+                    String wId = request.getParameter("warehouseId");
+                    if (wId == null || wId.isEmpty() || "null".equalsIgnoreCase(wId)) {
+                        wId = request.getParameter("currentWarehouseId");
+                    }
+                    String redirectUrl = request.getContextPath() + "/inventory?tab=" + redirectTab;
+                    if (wId != null && !wId.isEmpty() && !"null".equalsIgnoreCase(wId)) {
+                        redirectUrl += "&warehouseId=" + wId;
+                    }
+                    redirect(response, redirectUrl);
                     break;
                 }
                 default:

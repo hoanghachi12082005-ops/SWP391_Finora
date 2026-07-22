@@ -45,29 +45,58 @@ public class InventoryController extends BaseController {
             throws ServletException, IOException {
         
         HttpSession session = request.getSession();
-        
-        // Flash messages
-        String msg = (String) session.getAttribute("message");
-        if (msg != null) {
-            request.setAttribute("message", msg);
-            session.removeAttribute("message");
-        }
-        
-        String errorMsg = (String) session.getAttribute("error");
-        if (errorMsg != null) {
-            request.setAttribute("error", errorMsg);
-            session.removeAttribute("error");
-        }
-        
-        String successMsg = (String) session.getAttribute("successMessage");
-        if (successMsg != null) {
-            request.setAttribute("successMessage", successMsg);
-            session.removeAttribute("successMessage");
-        }
 
         if (session == null || session.getAttribute("currentUser") == null) {
             redirect(response, request.getContextPath() + "/login");
             return;
+        }
+
+        String action = request.getParameter("action");
+        
+        // Delegate API actions and View actions BEFORE flash message extraction
+        if ("searchProductsApi".equals(action)) {
+            new TransferController().doGet(request, response);
+            return;
+        } else if ("searchAllProductsApi".equals(action)) {
+            new TransferController().doGet(request, response);
+            return;
+        } else if ("getProductStockApi".equals(action)) {
+            new StockController().doGet(request, response);
+            return;
+        } else if ("searchImportProductsApi".equals(action)) {
+            new StockController().doGet(request, response);
+            return;
+        } else if ("getImportTemplateDataApi".equals(action)) {
+            new StockController().doGet(request, response);
+            return;
+        } else if ("viewTicket".equals(action)) {
+            new TransferController().doGet(request, response);
+            return;
+        } else if ("viewOrderDetails".equals(action)) {
+            new OrderVoucherController().doGet(request, response);
+            return;
+        } else if ("printTicket".equals(action)) {
+            new TransferController().doGet(request, response);
+            return;
+        } else if ("printOrder".equals(action)) {
+            new OrderVoucherController().doGet(request, response);
+            return;
+        } else if ("searchStockCheckProductsApi".equals(action)) {
+            new InventoryCheckController().doGet(request, response);
+            return;
+        } else if ("viewCheckDetails".equals(action)) {
+            new InventoryCheckController().doGet(request, response);
+            return;
+        }
+
+        // Extract Flash messages from session into request attributes and clear them from session
+        String[] flashKeys = {"message", "error", "errorMessage", "successMessage", "warning", "warningMessage"};
+        for (String key : flashKeys) {
+            String val = (String) session.getAttribute(key);
+            if (val != null) {
+                request.setAttribute(key, val);
+                session.removeAttribute(key);
+            }
         }
 
         Employee currentUser = (Employee) session.getAttribute("currentUser");
@@ -117,9 +146,11 @@ public class InventoryController extends BaseController {
             }
 
             String filterWarehouse = request.getParameter("warehouseId");
-            if (filterWarehouse != null && !filterWarehouse.isEmpty()) {
-                selectedWarehouseId = Integer.parseInt(filterWarehouse);
-                session.setAttribute("selectedWarehouseId", selectedWarehouseId);
+            if (filterWarehouse != null && !filterWarehouse.trim().isEmpty() && !"null".equalsIgnoreCase(filterWarehouse.trim())) {
+                try {
+                    selectedWarehouseId = Integer.parseInt(filterWarehouse.trim());
+                    session.setAttribute("selectedWarehouseId", selectedWarehouseId);
+                } catch (NumberFormatException ignored) {}
             } else {
                 if (role.equals("owner") || "true".equals(clearSelected)) {
                     selectedWarehouseId = null;
@@ -138,43 +169,7 @@ public class InventoryController extends BaseController {
                 }
             }
 
-            String action = request.getParameter("action");
-            
-            // Delegate API actions and View actions
-            if ("searchProductsApi".equals(action)) {
-                new TransferController().doGet(request, response);
-                return;
-            } else if ("searchAllProductsApi".equals(action)) {
-                new TransferController().doGet(request, response);
-                return;
-            } else if ("getProductStockApi".equals(action)) {
-                new StockController().doGet(request, response);
-                return;
-            } else if ("searchImportProductsApi".equals(action)) {
-                new StockController().doGet(request, response);
-                return;
-            } else if ("getImportTemplateDataApi".equals(action)) {
-                new StockController().doGet(request, response);
-                return;
-            } else if ("viewTicket".equals(action)) {
-                new TransferController().doGet(request, response);
-                return;
-            } else if ("viewOrderDetails".equals(action)) {
-                new OrderVoucherController().doGet(request, response);
-                return;
-            } else if ("printTicket".equals(action)) {
-                new TransferController().doGet(request, response);
-                return;
-            } else if ("printOrder".equals(action)) {
-                new OrderVoucherController().doGet(request, response);
-                return;
-            } else if ("searchStockCheckProductsApi".equals(action)) {
-                new InventoryCheckController().doGet(request, response);
-                return;
-            } else if ("viewCheckDetails".equals(action)) {
-                new InventoryCheckController().doGet(request, response);
-                return;
-            }
+            action = request.getParameter("action");
 
             // Calculate KPIs
             dao.inventory.InventoryDAO.DashboardKPI kpi = inventoryDAO.getDashboardKPI(allowedWarehouseIds, selectedWarehouseId);

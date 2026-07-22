@@ -472,28 +472,6 @@ function initCheckCreateTab() {
             });
             return;
         }
-
-        let hasDiscrepancy = false;
-        const discrepancyCells = document.querySelectorAll('.discrepancy-cell');
-        discrepancyCells.forEach(cell => {
-            const text = cell.textContent.trim();
-            if (text !== 'Lỗi') {
-                const val = parseInt(text) || 0;
-                if (val !== 0) {
-                    hasDiscrepancy = true;
-                }
-            }
-        });
-
-        if (!hasDiscrepancy) {
-            e.preventDefault();
-            Swal.fire({
-                icon: 'warning',
-                title: 'Không thể tạo phiếu',
-                text: 'Không thể tạo phiếu kiểm kho khi số lượng thực tế trùng khớp hoàn toàn với hệ thống (không có chênh lệch tồn kho).',
-                confirmButtonColor: '#1e293b'
-            });
-        }
     });
 
     // Populate editing check details if defined in window
