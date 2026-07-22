@@ -375,46 +375,8 @@ END;
 GO
 
 -- ============================================================
--- 9. voucher
+-- 9. voucher -- DA XOA (khong can thiet)
 -- ============================================================
-CREATE OR ALTER TRIGGER trg_voucher_audit ON voucher
-AFTER INSERT, UPDATE, DELETE
-AS
-BEGIN
-    SET NOCOUNT ON;
-    DECLARE @emp_id INT = CAST(SESSION_CONTEXT(N'EmployeeID') AS INT);
-
-    IF EXISTS (SELECT 1 FROM inserted) AND NOT EXISTS (SELECT 1 FROM deleted)
-    BEGIN
-        INSERT INTO audit_log (emp_id, action_name, table_name, record_id, old_data, new_data, created_at)
-        SELECT @emp_id, 'INSERT', 'voucher', i.voucher_id, NULL,
-               (SELECT i.voucher_id, i.voucher_code, i.voucher_name, i.discount_type, i.discount_value, i.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
-               GETDATE() FROM inserted i;
-    END
-
-    IF EXISTS (SELECT 1 FROM deleted) AND NOT EXISTS (SELECT 1 FROM inserted)
-    BEGIN
-        INSERT INTO audit_log (emp_id, action_name, table_name, record_id, old_data, new_data, created_at)
-        SELECT @emp_id, 'DELETE', 'voucher', d.voucher_id,
-               (SELECT d.voucher_id, d.voucher_code, d.voucher_name, d.discount_type, d.discount_value, d.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
-               NULL, GETDATE() FROM deleted d;
-    END
-
-    IF EXISTS (SELECT 1 FROM inserted) AND EXISTS (SELECT 1 FROM deleted)
-    BEGIN
-        INSERT INTO audit_log (emp_id, action_name, table_name, record_id, old_data, new_data, created_at)
-        SELECT @emp_id, 'UPDATE', 'voucher', i.voucher_id,
-               (SELECT d.voucher_code, d.voucher_name, d.discount_type, d.discount_value, d.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
-               (SELECT i.voucher_code, i.voucher_name, i.discount_type, i.discount_value, i.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
-               GETDATE()
-        FROM inserted i INNER JOIN deleted d ON i.voucher_id = d.voucher_id
-        WHERE dbo.fn_has_changes(
-            (SELECT d.voucher_code, d.voucher_name, d.discount_type, d.discount_value, d.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
-            (SELECT i.voucher_code, i.voucher_name, i.discount_type, i.discount_value, i.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
-        ) = 1;
-    END
-END;
-GO
 
 -- ============================================================
 -- 10-14. Cac trigger cho bang nghiep vu (order, payment, inventory,
