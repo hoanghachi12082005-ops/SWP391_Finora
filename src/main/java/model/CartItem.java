@@ -15,6 +15,10 @@ public class CartItem implements java.io.Serializable {
     private int quantity;
     private int stockAvailable; // tồn kho hiện tại — dùng để validate phía client
 
+    // VAT per category
+    private int categoryId;
+    private double categoryVatRate; // hệ số VAT riêng cho category này (vd: 0.08 = 8%)
+
     // ── Constructors ─────────────────────────────────────────
 
     public CartItem() {}
@@ -55,6 +59,12 @@ public class CartItem implements java.io.Serializable {
 
     public int getStockAvailable()                { return stockAvailable; }
     public void setStockAvailable(int v)          { this.stockAvailable = v; }
+
+    public int getCategoryId()                    { return categoryId; }
+    public void setCategoryId(int categoryId)     { this.categoryId = categoryId; }
+
+    public double getCategoryVatRate()            { return categoryVatRate; }
+    public void setCategoryVatRate(double v)      { this.categoryVatRate = v; }
 
     @Override
     public String toString() {
