@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 public class LoyalCustomerOverview {
     private int totalCustomers;
     private BigDecimal totalSpent;
-    private int totalPoints;
     private String topCustomerName;
     private BigDecimal topCustomerSpent;
 
@@ -28,14 +27,6 @@ public class LoyalCustomerOverview {
 
     public void setTotalSpent(BigDecimal totalSpent) {
         this.totalSpent = totalSpent;
-    }
-
-    public int getTotalPoints() {
-        return totalPoints;
-    }
-
-    public void setTotalPoints(int totalPoints) {
-        this.totalPoints = totalPoints;
     }
 
     public String getTopCustomerName() {

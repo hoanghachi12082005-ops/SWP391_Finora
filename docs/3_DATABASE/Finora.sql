@@ -1,4 +1,4 @@
-USE [master]
+﻿USE [master]
 GO
 /****** Object:  Database [DBFinoraV3]    Script Date: 16/07/2026 16:56:27 ******/
 CREATE DATABASE [DBFinoraV3]
@@ -208,7 +208,6 @@ CREATE TABLE [dbo].[customer_point](
 	[cus_point_id] [int] IDENTITY(1,1) NOT NULL,
 	[cus_id] [int] NOT NULL,
 	[current_points] [int] NULL,
-	[lifetime_points] [int] NULL,
 	[updated_at] [datetime] NULL,
 PRIMARY KEY CLUSTERED 
 (
@@ -1484,37 +1483,37 @@ SET IDENTITY_INSERT [dbo].[customer] OFF
 GO
 SET IDENTITY_INSERT [dbo].[customer_point] ON 
 
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (1, 1, 25, 250, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (2, 2, 18, 180, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (3, 3, 32, 320, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (4, 4, 10, 95, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (5, 5, 41, 410, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (6, 6, 7, 67, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (7, 7, 52, 520, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (8, 8, 11, 110, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (9, 9, 78, 780, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (10, 10, 3, 34, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (11, 11, 61, 610, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (12, 12, 23, 230, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (13, 13, 9, 89, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (14, 14, 45, 450, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (15, 15, 15, 150, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (16, 16, 82, 820, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (17, 17, 4, 37, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (18, 18, 29, 290, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (19, 19, 63, 630, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (20, 20, 5, 50, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (21, 21, 34, 340, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (22, 22, 12, 120, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (23, 23, 56, 560, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (24, 24, 8, 78, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (25, 25, 21, 210, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (26, 26, 47, 470, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (27, 27, 15, 150, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (28, 28, 69, 690, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (29, 29, 9, 92, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (30, 30, 28, 280, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
-INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [lifetime_points], [updated_at]) VALUES (31, 31, 3, 3, CAST(N'2026-07-16T09:23:03.350' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (1, 1, 25, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (2, 2, 18, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (3, 3, 32, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (4, 4, 10, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (5, 5, 41, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (6, 6, 7, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (7, 7, 52, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (8, 8, 11, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (9, 9, 78, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (10, 10, 3, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (11, 11, 61, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (12, 12, 23, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (13, 13, 9, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (14, 14, 45, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (15, 15, 15, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (16, 16, 82, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (17, 17, 4, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (18, 18, 29, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (19, 19, 63, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (20, 20, 5, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (21, 21, 34, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (22, 22, 12, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (23, 23, 56, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (24, 24, 8, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (25, 25, 21, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (26, 26, 47, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (27, 27, 15, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (28, 28, 69, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (29, 29, 9, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (30, 30, 28, CAST(N'2026-07-12T20:13:16.627' AS DateTime))
+INSERT [dbo].[customer_point] ([cus_point_id], [cus_id], [current_points], [updated_at]) VALUES (31, 31, 3, CAST(N'2026-07-16T09:23:03.350' AS DateTime))
 SET IDENTITY_INSERT [dbo].[customer_point] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Employee] ON 
@@ -3309,8 +3308,6 @@ ALTER TABLE [dbo].[customer] ADD  DEFAULT (getdate()) FOR [updated_at]
 GO
 ALTER TABLE [dbo].[customer_point] ADD  DEFAULT ((0)) FOR [current_points]
 GO
-ALTER TABLE [dbo].[customer_point] ADD  DEFAULT ((0)) FOR [lifetime_points]
-GO
 ALTER TABLE [dbo].[customer_point] ADD  DEFAULT (getdate()) FOR [updated_at]
 GO
 ALTER TABLE [dbo].[Employee] ADD  DEFAULT ('ACTIVE') FOR [status]
@@ -3700,3 +3697,4 @@ USE [master]
 GO
 ALTER DATABASE [DBFinoraV3] SET  READ_WRITE 
 GO
+

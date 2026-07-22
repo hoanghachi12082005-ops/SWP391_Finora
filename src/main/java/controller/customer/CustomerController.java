@@ -168,14 +168,13 @@ public class CustomerController extends HttpServlet {
         for (int i = 0; i < list.size(); i++) {
             Customer c = list.get(i);
             json.append(String.format(
-                "{\"customerId\":%d,\"fullName\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"totalSpent\":%s,\"loyaltyPoint\":%d,\"lifetimePoints\":%d}",
+                "{\"customerId\":%d,\"fullName\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"totalSpent\":%s,\"loyaltyPoint\":%d}",
                 c.getCustomerId(),
                 escapeJson(c.getFullName()),
                 escapeJson(c.getPhone()),
                 escapeJson(c.getEmail() != null ? c.getEmail() : ""),
                 c.getTotalSpent().toString(),
-                c.getLoyaltyPoint(),
-                c.getLifetimePoints()
+                c.getLoyaltyPoint()
             ));
             if (i < list.size() - 1) {
                 json.append(",");
@@ -194,14 +193,13 @@ public class CustomerController extends HttpServlet {
         for (int i = 0; i < list.size(); i++) {
             Customer c = list.get(i);
             json.append(String.format(
-                "{\"customerId\":%d,\"fullName\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"totalSpent\":%s,\"loyaltyPoint\":%d,\"lifetimePoints\":%d}",
+                "{\"customerId\":%d,\"fullName\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\",\"totalSpent\":%s,\"loyaltyPoint\":%d}",
                 c.getCustomerId(),
                 escapeJson(c.getFullName()),
                 escapeJson(c.getPhone()),
                 escapeJson(c.getEmail()),
                 c.getTotalSpent().toString(),
-                c.getLoyaltyPoint(),
-                c.getLifetimePoints()
+                c.getLoyaltyPoint()
             ));
             if (i < list.size() - 1) {
                 json.append(",");
@@ -313,7 +311,7 @@ public class CustomerController extends HttpServlet {
             if (!isBlank(gender)) existing.setGender(gender);
         }
 
-        boolean ok = customerDAO.update(existing, false, 0, 0);
+        boolean ok = customerDAO.update(existing, false, 0);
         if (ok) {
             if (user != null) activityLogService.log(user.getEmployeeID(), "UPDATE", "Customer", customerId, null, phone);
 
@@ -321,7 +319,7 @@ public class CustomerController extends HttpServlet {
             sendJsonResponse(response, String.format(
                 "{\"status\":\"success\",\"message\":\"Cập nhật khách hàng thành công.\"," +
                 "\"customer\":{\"customerId\":%d,\"fullName\":\"%s\",\"phone\":\"%s\",\"email\":\"%s\"," +
-                "\"address\":\"%s\",\"gender\":\"%s\",\"totalSpent\":%s,\"loyaltyPoint\":%d,\"lifetimePoints\":%d}}",
+                "\"address\":\"%s\",\"gender\":\"%s\",\"totalSpent\":%s,\"loyaltyPoint\":%d}}",
                 updated.getCustomerId(),
                 escapeJson(updated.getFullName()),
                 escapeJson(updated.getPhone()),
@@ -329,8 +327,7 @@ public class CustomerController extends HttpServlet {
                 escapeJson(updated.getAddress() != null ? updated.getAddress() : ""),
                 escapeJson(updated.getGender() != null ? updated.getGender() : ""),
                 updated.getTotalSpent().toString(),
-                updated.getLoyaltyPoint(),
-                updated.getLifetimePoints()
+                updated.getLoyaltyPoint()
             ));
         } else {
             sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Không thể cập nhật khách hàng.\"}");
@@ -507,14 +504,13 @@ public class CustomerController extends HttpServlet {
         boolean success;
         if (isUpdate) {
             if (isAdmin) {
-                String totalSpentStr = trim(request.getParameter("totalSpent"));
-                int currentPoints = parseInt(request.getParameter("loyaltyPoint"), 0);
-                int lifetimePoints = parseInt(request.getParameter("lifetimePoints"), 0);
-                customer.setTotalSpent(parseBigDecimal(totalSpentStr));
-                success = customerDAO.update(customer, true, currentPoints, lifetimePoints);
-            } else {
-                success = customerDAO.update(customer, false, 0, 0);
-            }
+                 String totalSpentStr = trim(request.getParameter("totalSpent"));
+                 int currentPoints = parseInt(request.getParameter("loyaltyPoint"), 0);
+                 customer.setTotalSpent(parseBigDecimal(totalSpentStr));
+                 success = customerDAO.update(customer, true, currentPoints);
+             } else {
+                 success = customerDAO.update(customer, false, 0);
+             }
         } else {
             if (isAdmin) {
                 String totalSpentStr = trim(request.getParameter("totalSpent"));

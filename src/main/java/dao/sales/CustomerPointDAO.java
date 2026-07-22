@@ -127,13 +127,11 @@ public class CustomerPointDAO {
         }
 
         if (cusPointId == -1) {
-            // Chưa có bản ghi → tạo mới
-            String insertSql = "INSERT INTO customer_point (cus_id, current_points, lifetime_points, updated_at) "
-                             + "VALUES (?, ?, ?, GETDATE())";
+            String insertSql = "INSERT INTO customer_point (cus_id, current_points, updated_at) "
+                             + "VALUES (?, ?, GETDATE())";
             try (PreparedStatement ps = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setInt(1, cusId);
                 ps.setInt(2, pointsEarned);
-                ps.setInt(3, pointsEarned);
                 ps.executeUpdate();
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (keys.next()) cusPointId = keys.getInt(1);
@@ -141,14 +139,11 @@ public class CustomerPointDAO {
             }
             beforePoints = 0;
         } else {
-            // Đã có bản ghi → cập nhật
-            String updateSql = "UPDATE customer_point SET current_points = current_points + ?, "
-                             + "lifetime_points = lifetime_points + ?, updated_at = GETDATE() "
+            String updateSql = "UPDATE customer_point SET current_points = current_points + ?, updated_at = GETDATE() "
                              + "WHERE cus_point_id = ?";
             try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                 ps.setInt(1, pointsEarned);
-                ps.setInt(2, pointsEarned);
-                ps.setInt(3, cusPointId);
+                ps.setInt(2, cusPointId);
                 ps.executeUpdate();
             }
         }

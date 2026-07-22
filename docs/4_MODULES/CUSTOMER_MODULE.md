@@ -75,10 +75,8 @@ Bảng theo dõi điểm loyalty của khách hàng:
 
 | Trường | Mô tả |
 |---|---|
-| `customer_id` | Khóa ngoại tham chiếu đến customer |
-| `total_points` | Tổng điểm tích lũy hiện tại |
-| `available_points` | Điểm khả dụng (chưa sử dụng) |
-| `used_points` | Điểm đã sử dụng |
+| `cus_id` | Khóa ngoại tham chiếu đến customer |
+| `current_points` | Số điểm hiện tại khả dụng để mua sắm |
 | `updated_at` | Thời điểm cập nhật cuối |
 
 ### 4.3. Bảng giao dịch điểm: `point_transaction`

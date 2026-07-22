@@ -61,7 +61,7 @@ Nhóm này quản lý thông tin khách hàng và chương trình tích điểm 
 | Tên bảng | Mô tả |
 |----------|-------|
 | `customer` | Lưu trữ thông tin khách hàng, bao gồm thông tin liên hệ và lịch sử mua hàng |
-| `customer_point` | Lưu trữ điểm thưởng hiện tại và điểm tích lũy lifetime của từng khách hàng |
+| `customer_point` | Lưu trữ điểm thưởng hiện tại khả dụng của từng khách hàng |
 
 Hệ thống điểm thưởng được thiết kế theo mô hình một-một với bảng customer, mỗi khách hàng có duy nhất một bản ghi điểm tương ứng trong bảng customer_point.
 

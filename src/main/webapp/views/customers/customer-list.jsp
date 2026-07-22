@@ -368,14 +368,6 @@
                                        min="0"
                                        ${isAdmin ? '' : 'readonly'}/>
                             </div>
-                            <div class="form-group">
-                                <label>Điểm trọn đời</label>
-                                <input type="number"
-                                       name="lifetimePoints"
-                                       value="${formCust.lifetimePoints}"
-                                       min="0"
-                                       ${isAdmin ? '' : 'readonly'}/>
-                            </div>
                         </div>
                     </c:if>
 
@@ -426,7 +418,6 @@
 
                     <div class="form-row">
                         <p><strong>Điểm hiện tại:</strong> ${detailCustomer.loyaltyPoint}</p>
-                        <p><strong>Điểm trọn đời:</strong> ${detailCustomer.lifetimePoints}</p>
                     </div>
 
                     <%-- Point Transaction History --%>

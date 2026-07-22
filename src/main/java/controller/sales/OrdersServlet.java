@@ -284,11 +284,10 @@ public class OrdersServlet extends HttpServlet {
                         }
                     }
                     if (cusPointId != -1) {
-                        String updateSql = "UPDATE customer_point SET current_points = current_points - ?, lifetime_points = lifetime_points - ?, updated_at = GETDATE() WHERE cus_point_id = ?";
+                        String updateSql = "UPDATE customer_point SET current_points = current_points - ?, updated_at = GETDATE() WHERE cus_point_id = ?";
                         try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                             ps.setDouble(1, pointsEarned);
-                            ps.setDouble(2, pointsEarned);
-                            ps.setInt(3, cusPointId);
+                            ps.setInt(2, cusPointId);
                             ps.executeUpdate();
                         }
                         String logSql = "INSERT INTO point_transaction (cus_point_id, order_id, before_points, after_points, description, created_at) VALUES (?, ?, ?, ?, N'Hoàn điểm hoàn trả đơn hàng', GETDATE())";
