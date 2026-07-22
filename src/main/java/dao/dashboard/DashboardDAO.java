@@ -279,6 +279,7 @@ public class DashboardDAO {
             List<BranchRevenue> branches = getBranchRevenues();
             ov.setBranchRevenues(branches);
             if (!branches.isEmpty()) {
+                ov.setTopStoreName(branches.get(0).getBranchName());
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
