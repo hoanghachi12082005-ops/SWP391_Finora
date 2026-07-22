@@ -239,6 +239,7 @@ public class DashboardDAO {
                 + "(SELECT ISNULL(SUM(total_amount),0) FROM [order] WHERE status='COMPLETED' AND order_type='SALE' AND YEAR(created_at)=YEAR(GETDATE())) AS revenue_this_year, "
                 + "(SELECT COUNT(*) FROM [order] WHERE order_type='SALE' AND status='COMPLETED' AND CAST(created_at AS DATE)=CAST(GETDATE() AS DATE)) AS orders_today, "
                 + "(SELECT COUNT(*) FROM [order] WHERE order_type='SALE' AND status='COMPLETED' AND YEAR(created_at)=YEAR(GETDATE()) AND MONTH(created_at)=MONTH(GETDATE())) AS orders_this_month, "
+                + "(SELECT COUNT(*) FROM [order] WHERE order_type='SALE') AS total_orders, "
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
