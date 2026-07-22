@@ -259,6 +259,7 @@ public class DashboardDAO {
                 ov.setRevenueToday(rs.getBigDecimal("revenue_today"));
                 ov.setRevenueYesterday(rs.getBigDecimal("revenue_yesterday"));
                 ov.setRevenueThisMonth(rs.getBigDecimal("revenue_this_month"));
+                ov.setRevenueLastMonth(rs.getBigDecimal("revenue_last_month"));
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
