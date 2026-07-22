@@ -176,6 +176,10 @@ public class OrdersServlet extends HttpServlet {
         json.append("\"subtotal\":").append(order.getSubtotal()).append(",");
         json.append("\"discountAmount\":").append(order.getDiscountAmount()).append(",");
         json.append("\"totalAmount\":").append(order.getTotalAmount()).append(",");
+        // Tính VAT thực tế từ tổng tiền: VAT = totalAmount - (subtotal - discount)
+        double actualVat = order.getTotalAmount() - (order.getSubtotal() - order.getDiscountAmount());
+        if (actualVat < 0) actualVat = 0;
+        json.append("\"vatAmount\":").append(actualVat).append(",");
         json.append("\"vatPercentage\":").append(VatSettingDAO.getVatPercentage()).append(",");
         json.append("\"paymentMethod\":\"").append(escJson(order.getPaymentMethod())).append("\",");
         json.append("\"status\":\"").append(escJson(order.getStatus().name())).append("\",");

@@ -12,7 +12,7 @@ public class OrderTab implements Serializable {
     private Customer selectedCustomer;
     private String note = "";
     private String status = "ACTIVE"; // ACTIVE, HOLD
-    private double vatRate = 0.08; // tỷ lệ VAT mặc định 8%
+    private double vatRate = 0.08; // tỷ lệ VAT mặc định 8% (dùng khi không có category VAT)
     private int redeemPoints;
     private double redeemDiscount;
 
@@ -43,10 +43,17 @@ public class OrderTab implements Serializable {
         return redeemDiscount;
     }
 
+    /**
+     * Tính VAT theo từng sản phẩm dựa trên categoryVatRate của mỗi CartItem.
+     * Nếu CartItem chưa có categoryVatRate, dùng vatRate chung của tab.
+     */
     public double getVatAmount() {
-        double subtotal = getSubtotal();
-        double discount = getDiscountAmount();
-        return (subtotal - discount) * this.vatRate;
+        double totalVat = 0;
+        for (CartItem item : items) {
+            double rate = item.getCategoryVatRate() > 0 ? item.getCategoryVatRate() : this.vatRate;
+            totalVat += item.getLineTotal() * rate;
+        }
+        return totalVat;
     }
 
     public double getTotalAmount() {

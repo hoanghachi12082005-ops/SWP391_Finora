@@ -249,6 +249,10 @@ public class CartServlet extends HttpServlet {
             existing.setQuantity(newQty);
             existing.setStockAvailable(stock);
         } else {
+            // Xác định category và VAT rate cho sản phẩm
+            int categoryId = product.getCategoryId();
+            double catVatRate = VatSettingDAO.getVatRateByCategory(categoryId);
+
             CartItem ci = new CartItem(
                     product.getProductId(),
                     product.getProductName(),
@@ -256,6 +260,8 @@ public class CartServlet extends HttpServlet {
                     product.getSellingPrice() != null ? product.getSellingPrice().doubleValue() : 0.0,
                     qty,
                     stock);
+            ci.setCategoryId(categoryId);
+            ci.setCategoryVatRate(catVatRate);
             tab.getItems().add(ci);
         }
 

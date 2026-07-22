@@ -47,7 +47,6 @@ public class ActivityLogController extends BaseController {
 
         String keyword    = request.getParameter("keyword");
         String tableName  = request.getParameter("tableName");
-        String actionName = request.getParameter("actionName");
         String dateFromRaw = request.getParameter("dateFrom");
         String dateToRaw   = request.getParameter("dateTo");
 
@@ -82,7 +81,7 @@ public class ActivityLogController extends BaseController {
             // Lấy đúng ITEMS_PER_PAGE bản ghi (không +1)
             List<ActivityLog> logs = dao.findByKeyset(
                     beforeId, afterId, ITEMS_PER_PAGE,
-                    keyword, tableName, actionName, dateFrom, dateTo);
+                    keyword, tableName, null, dateFrom, dateTo);
 
             boolean hasNext = false;
             boolean hasPrev = false;
@@ -90,7 +89,7 @@ public class ActivityLogController extends BaseController {
                 // Trường hợp empty: after/before dẫn tới ko có data
                 // Fallback về trang đầu
                 response.sendRedirect(request.getContextPath() + "/activity-log"
-                    + buildFilterQueryString(keyword, tableName, actionName,
+                    + buildFilterQueryString(keyword, tableName,
                         dateFrom != null ? dateFrom.toString() : null,
                         dateTo != null ? dateTo.toString() : null, null, null));
                 return;
@@ -100,16 +99,15 @@ public class ActivityLogController extends BaseController {
             int lastId  = logs.get(logs.size() - 1).getId();
 
             // Dùng 2 query index seek riêng để kiểm tra hasNext và hasPrev
-            hasNext = dao.existsLessThan(lastId, keyword, tableName, actionName, dateFrom, dateTo);
-            hasPrev = dao.existsGreaterThan(firstId, keyword, tableName, actionName, dateFrom, dateTo);
+            hasNext = dao.existsLessThan(lastId, keyword, tableName, null, dateFrom, dateTo);
+            hasPrev = dao.existsGreaterThan(firstId, keyword, tableName, null, dateFrom, dateTo);
 
             // Tổng số — chỉ để hiển thị
             int totalCount = tableName != null
-                    ? dao.countByTableName(keyword, tableName, actionName, dateFrom, dateTo)
-                    : dao.countAll(keyword, tableName, actionName, dateFrom, dateTo);
+                    ? dao.countByTableName(keyword, tableName, null, dateFrom, dateTo)
+                    : dao.countAll(keyword, tableName, null, dateFrom, dateTo);
 
             request.setAttribute("entityOptions", buildEntityOptionsFiltered(dao.findDistinctTables(), allowedTableNames));
-            request.setAttribute("actionOptions", buildActionOptions(dao.findDistinctActions()));
 
             request.setAttribute("logs", logs);
             request.setAttribute("hasNext", hasNext);
@@ -119,7 +117,6 @@ public class ActivityLogController extends BaseController {
             request.setAttribute("totalCount", totalCount);
             request.setAttribute("keyword", keyword != null ? keyword : "");
             request.setAttribute("filterTable", tableName != null ? tableName : "");
-            request.setAttribute("filterAction", actionName != null ? actionName : "");
             request.setAttribute("filterDateFrom", dateFrom != null ? dateFrom.toString() : "");
             request.setAttribute("filterDateTo",   dateTo != null ? dateTo.toString() : "");
 
@@ -155,23 +152,13 @@ public class ActivityLogController extends BaseController {
     }
 
     private LocalDate parseDate(String raw) {
+        
         if (raw == null || raw.isBlank()) return null;
         try {
             return LocalDate.parse(raw.trim(), DateTimeFormatter.ISO_LOCAL_DATE);
         } catch (DateTimeParseException ex) {
             return null;
         }
-    }
-
-    private Map<String, String> buildEntityOptions(List<String> tables) {
-        Map<String, String> options = new LinkedHashMap<>();
-        if (tables == null) return options;
-        for (String t : tables) {
-            ActivityLog tmp = new ActivityLog();
-            tmp.setTableName(t);
-            options.put(t, tmp.getEntityLabel());
-        }
-        return options;
     }
 
     private Map<String, String> buildEntityOptionsFiltered(List<String> tables, List<String> allowed) {
@@ -187,26 +174,14 @@ public class ActivityLogController extends BaseController {
         return options;
     }
 
-    private Map<String, String> buildActionOptions(List<String> actions) {
-        Map<String, String> options = new LinkedHashMap<>();
-        if (actions == null) return options;
-        for (String a : actions) {
-            ActivityLog tmp = new ActivityLog();
-            tmp.setActionName(a);
-            options.put(a, tmp.getActionLabel());
-        }
-        return options;
-    }
-
     /** Build query string giữ lại filter params khi redirect về trang đầu. */
-    private String buildFilterQueryString(String keyword, String tableName, String actionName,
+    private String buildFilterQueryString(String keyword, String tableName,
                                            String dateFrom, String dateTo,
                                            String before, String after) {
         StringBuilder qs = new StringBuilder();
         try {
             if (keyword != null && !keyword.isBlank()) qs.append("&keyword=").append(URLEncoder.encode(keyword, "UTF-8"));
             if (tableName != null && !tableName.isBlank()) qs.append("&tableName=").append(URLEncoder.encode(tableName, "UTF-8"));
-            if (actionName != null && !actionName.isBlank()) qs.append("&actionName=").append(URLEncoder.encode(actionName, "UTF-8"));
             if (dateFrom != null && !dateFrom.isBlank()) qs.append("&dateFrom=").append(URLEncoder.encode(dateFrom, "UTF-8"));
             if (dateTo != null && !dateTo.isBlank()) qs.append("&dateTo=").append(URLEncoder.encode(dateTo, "UTF-8"));
             if (before != null) qs.append("&before=").append(before);

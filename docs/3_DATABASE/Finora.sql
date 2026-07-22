@@ -573,6 +573,7 @@ GO
 CREATE TABLE [dbo].[vat_setting](
 	[setting_id] [int] IDENTITY(1,1) NOT NULL,
 	[vat_percentage] [decimal](5, 2) NOT NULL,
+	[category_id] [int] NULL,
 	[updated_by] [int] NULL,
 	[updated_at] [datetime] NULL,
 PRIMARY KEY CLUSTERED 
@@ -3119,7 +3120,7 @@ SET IDENTITY_INSERT [dbo].[unit] OFF
 GO
 SET IDENTITY_INSERT [dbo].[vat_setting] ON 
 
-INSERT [dbo].[vat_setting] ([setting_id], [vat_percentage], [updated_by], [updated_at]) VALUES (1, CAST(7.00 AS Decimal(5, 2)), 2, CAST(N'2026-07-15T01:28:22.423' AS DateTime))
+INSERT [dbo].[vat_setting] ([setting_id], [vat_percentage], [category_id], [updated_by], [updated_at]) VALUES (1, CAST(7.00 AS Decimal(5, 2)), NULL, 2, CAST(N'2026-07-15T01:28:22.423' AS DateTime))
 SET IDENTITY_INSERT [dbo].[vat_setting] OFF
 GO
 SET IDENTITY_INSERT [dbo].[voucher] ON 
@@ -3623,6 +3624,12 @@ ALTER TABLE [dbo].[stock_transfer_detail] CHECK CONSTRAINT [FK_StockTransferDeta
 GO
 ALTER TABLE [dbo].[vat_setting]  WITH CHECK ADD FOREIGN KEY([updated_by])
 REFERENCES [dbo].[Employee] ([emp_id])
+GO
+ALTER TABLE [dbo].[vat_setting]  WITH CHECK ADD FOREIGN KEY([category_id])
+REFERENCES [dbo].[category] ([category_id])
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_vat_setting_category] ON [dbo].[vat_setting] ([category_id])
+WHERE [category_id] IS NOT NULL
 GO
 ALTER TABLE [dbo].[warehouse]  WITH CHECK ADD  CONSTRAINT [FK_Warehouse_Branch] FOREIGN KEY([branch_id])
 REFERENCES [dbo].[Branch] ([branch_id])

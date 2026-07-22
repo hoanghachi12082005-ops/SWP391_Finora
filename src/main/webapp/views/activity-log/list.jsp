@@ -61,20 +61,6 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label small text-muted mb-1">Thao tác</label>
-                            <select name="actionName" class="form-select">
-                                <option value="">Tất cả thao tác</option>
-<%                              if (actionOptions != null) {
-                                    for (Map.Entry<String,String> e : actionOptions.entrySet()) {
-                                        boolean sel = e.getKey().equals(filterAction);
-%>
-                                    <option value="<%= e.getKey() %>" <%= sel ? "selected" : "" %>><%= e.getValue() %></option>
-<%                                  }
-                                }
-%>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
                             <label class="form-label small text-muted mb-1">Từ ngày</label>
                             <input type="date" name="dateFrom" class="form-control"
                                    value="<%= filterDateFrom != null ? filterDateFrom : "" %>">
