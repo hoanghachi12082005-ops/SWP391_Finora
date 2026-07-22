@@ -251,6 +251,7 @@ public class DashboardDAO {
                 + "(SELECT ISNULL(SUM(i.quantity_in_stock*p.selling_price),0) FROM inventory i JOIN product p ON i.product_id=p.product_id) AS total_stock_value, "
                 + "(SELECT COUNT(*) FROM Branch WHERE status='ACTIVE') AS total_stores, "
                 + "(SELECT COUNT(*) FROM Employee WHERE status='ACTIVE') AS total_employees";
+        try (Connection conn = DBContext.getConnection();
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
