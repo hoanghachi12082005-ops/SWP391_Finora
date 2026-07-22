@@ -248,6 +248,7 @@ public class DashboardDAO {
                 + "(SELECT COUNT(*) FROM product) AS total_products, "
                 + "(SELECT COUNT(*) FROM inventory WHERE quantity_in_stock=0 OR status='OUT_OF_STOCK') AS out_of_stock, "
                 + "(SELECT COUNT(*) FROM inventory WHERE quantity_in_stock>0 AND quantity_in_stock<=10) AS low_stock, "
+                + "(SELECT ISNULL(SUM(i.quantity_in_stock*p.selling_price),0) FROM inventory i JOIN product p ON i.product_id=p.product_id) AS total_stock_value, "
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
