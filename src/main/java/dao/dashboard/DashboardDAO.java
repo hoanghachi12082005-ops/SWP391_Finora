@@ -244,6 +244,7 @@ public class DashboardDAO {
                 + "(SELECT ISNULL(AVG(total_amount),0) FROM [order] WHERE order_type='SALE' AND status='COMPLETED') AS avg_order_value, "
                 + "(SELECT COUNT(*) FROM customer) AS total_customers, "
                 + "(SELECT COUNT(*) FROM customer WHERE YEAR(created_at)=YEAR(GETDATE()) AND MONTH(created_at)=MONTH(GETDATE())) AS new_customers, "
+                + "(SELECT COUNT(*) FROM customer WHERE status='ACTIVE') AS active_customers, "
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
