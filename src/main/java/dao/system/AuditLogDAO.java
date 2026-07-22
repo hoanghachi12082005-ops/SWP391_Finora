@@ -1,4 +1,3 @@
-
 public class AuditLogDAO {
     
     public boolean insert(AuditLog log) {
