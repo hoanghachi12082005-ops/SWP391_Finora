@@ -1,4 +1,3 @@
-            VALUES (?, ?, ?, ?, ?, ?, GETDATE())
             """;
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
