@@ -273,6 +273,7 @@ public class DashboardDAO {
                 ov.setOutOfStockItems(rs.getInt("out_of_stock"));
                 ov.setLowStockItems(rs.getInt("low_stock"));
                 ov.setTotalStockValue(rs.getBigDecimal("total_stock_value"));
+                ov.setTotalStores(rs.getInt("total_stores"));
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
