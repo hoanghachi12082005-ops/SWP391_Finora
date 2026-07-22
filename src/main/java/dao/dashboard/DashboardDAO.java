@@ -231,43 +231,6 @@ public class DashboardDAO {
 
     /** Gọi tất cả query và trả về model DashboardOverview hoàn chỉnh. */
     public DashboardOverview getOwnerOverview() throws SQLException {
-        DashboardOverview ov = new DashboardOverview();
-
-        ov.setRevenueToday(getRevenueToday());
-        ov.setRevenueYesterday(getRevenueYesterday());
-        ov.setRevenueThisMonth(getRevenueThisMonth());
-        ov.setRevenueLastMonth(getRevenueLastMonth());
-        ov.setRevenueThisYear(getRevenueThisYear());
-
-        ov.setOrdersToday(getOrdersToday());
-        ov.setOrdersThisMonth(getOrdersThisMonth());
-        ov.setTotalOrders(getTotalOrders());
-        ov.setPendingOrders(getPendingOrders());
-        ov.setAverageOrderValue(getAverageOrderValue());
-
-        ov.setTotalCustomers(getTotalCustomers());
-        ov.setNewCustomersThisMonth(getNewCustomersThisMonth());
-        ov.setActiveCustomers(getActiveCustomers());
-
-        ov.setTotalProducts(getTotalProducts());
-        ov.setOutOfStockItems(getOutOfStockItems());
-        ov.setLowStockItems(getLowStockItems());
-        ov.setTotalStockValue(getTotalStockValue());
-
-        ov.setTotalStores(getTotalStores());
-        ov.setTotalEmployees(getTotalEmployees());
-
-        List<BranchRevenue> branches = getBranchRevenues();
-        ov.setBranchRevenues(branches);
-        if (!branches.isEmpty()) {
-            ov.setTopStoreName(branches.get(0).getBranchName());
-            ov.setTopStoreRevenue(branches.get(0).getRevenue());
-        }
-
-        ov.setTopProducts(getTopProducts());
-
-        return ov;
-    }
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
