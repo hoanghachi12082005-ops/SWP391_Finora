@@ -87,6 +87,56 @@
   font-size: 18px !important;
 }
 
+.revenue-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    margin-top: 24px;
+}
+.revenue-card:last-of-type {
+    margin-bottom: 24px;
+}
+.revenue-card-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.revenue-card-info p {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+.revenue-card-info h3 {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 4px;
+    text-align: right;
+}
+.revenue-card-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(16, 185, 129, 0.08);
+    color: var(--success-color);
+    margin-left: 16px;
+    flex-shrink: 0;
+}
+.revenue-card-icon .material-symbols-outlined {
+    font-size: 24px;
+}
+
 /* Branch KPI table compact */
 .kpi-branch-table th {
   padding: 8px 12px !important;

@@ -386,7 +386,7 @@
 
                                 <option value="locked"
                                     ${isEdit && fn:toUpperCase(formUser.status) == 'INACTIVE' ? 'selected' : ''}>
-                                    Đã khóa
+                                    Ngừng hoạt động
                                 </option>
                             </select>
                         </div>
