@@ -276,6 +276,7 @@ public class DashboardDAO {
                 ov.setTotalStores(rs.getInt("total_stores"));
                 ov.setTotalEmployees(rs.getInt("total_employees"));
             }
+            List<BranchRevenue> branches = getBranchRevenues();
 
     // ──────────────────────── FINANCIAL DASHBOARD ────────────────────────
     public static class FinancialData {
