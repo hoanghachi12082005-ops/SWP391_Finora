@@ -121,6 +121,7 @@ public class ActivityLog {
         if (a.contains("LOGIN"))                          return "Đăng nhập";
         if (a.contains("LOGOUT"))                         return "Đăng xuất";
         if (a.contains("CANCEL"))                         return "Hủy";
+        if (a.contains("TỪ_CHỐI_TRUY_CẬP"))              return "Từ chối truy cập";
         if (a.contains("APPROVE") || a.contains("CONFIRM")) return "Duyệt";
         if (a.contains("PAY") || a.contains("PAYMENT"))   return "Thanh toán";
         if (a.contains("INSERT") || a.contains("CREATE") || a.contains("ADD")) return "Tạo mới";
@@ -148,7 +149,7 @@ public class ActivityLog {
     public String getIconColor() {
         if (actionName == null) return "blue";
         String a = actionName.toUpperCase();
-        if (a.contains("DELETE") || a.contains("REMOVE") || a.contains("CANCEL")) return "red";
+        if (a.contains("DELETE") || a.contains("REMOVE") || a.contains("CANCEL") || a.contains("TỪ_CHỐI_TRUY_CẬP")) return "red";
         if (a.contains("INSERT") || a.contains("CREATE") || a.contains("ADD"))    return "green";
         if (a.contains("UPDATE") || a.contains("EDIT"))                           return "orange";
         if (a.contains("PAY") || a.contains("PAYMENT") || a.contains("APPROVE")) return "green";
@@ -161,6 +162,7 @@ public class ActivityLog {
         String a = actionName.toUpperCase();
         if (a.contains("DELETE") || a.contains("REMOVE")) return "delete";
         if (a.contains("CANCEL"))                         return "cancel";
+        if (a.contains("TỪ_CHỐI_TRUY_CẬP"))              return "block";
         if (a.contains("INSERT") || a.contains("CREATE") || a.contains("ADD")) return "add_circle";
         if (a.contains("UPDATE") || a.contains("EDIT"))   return "edit";
         if (a.contains("LOGIN"))                          return "login";
