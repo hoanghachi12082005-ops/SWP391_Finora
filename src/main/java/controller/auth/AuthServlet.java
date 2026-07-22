@@ -1,6 +1,7 @@
 package controller.auth;
 
 import dao.employee.EmployeeDAO;
+import dao.system.ActivityLogDAO;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -135,6 +136,12 @@ public class AuthServlet extends HttpServlet {
 
             session.setAttribute("currentUser", employee);
             session.setAttribute("employee", employee);
+
+            // Ghi audit log đăng nhập
+            try {
+                new ActivityLogDAO().insertLog(employee.getEmployeeId(), "LOGIN", "auth", null,
+                        null, "Đăng nhập hệ thống");
+            } catch (Exception ignored) {}
 
             // Generate CSRF token
             byte[] csrfBytes = new byte[32];
