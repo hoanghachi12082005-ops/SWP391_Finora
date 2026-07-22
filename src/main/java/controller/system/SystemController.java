@@ -37,6 +37,10 @@ public class SystemController extends BaseController {
                 LoyaltyPointSetting pointSetting = pointSettingDao.getSetting();
                 request.setAttribute("pointSetting", pointSetting);
 
+                // Load VAT mặc định
+                VatSetting vatSetting = vatDao.getSetting();
+                request.setAttribute("vatSetting", vatSetting);
+
                 // Load tất cả VAT settings (cho từng category + default)
                 List<VatSetting> vatSettings = vatDao.getAllSettings();
                 request.setAttribute("vatSettings", vatSettings);
