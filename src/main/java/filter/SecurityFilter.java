@@ -116,7 +116,7 @@ public class SecurityFilter implements Filter {
             // Ghi audit log cho truy cập bất hợp pháp
             String message = "Truy cập trái phép: " + path + " (role=" + role + ")";
             try {
-                activityLogDAO.insertLog(employee.getEmployeeId(), "ACCESS_DENIED", "auth", null, null, message);
+                activityLogDAO.insertLog(employee.getEmployeeId(), "TỪ_CHỐI_TRUY_CẬP", "auth", null, null, message);
             } catch (Exception ignored) {}
             resp.sendError(403, "Bạn không có quyền truy cập chức năng này.");
             return;
