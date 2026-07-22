@@ -29,24 +29,31 @@ public class CustomerLoyaltyReportDAO {
             "LEFT JOIN customer_point cp ON c.cus_id = cp.cus_id " +
             "LEFT JOIN [Order] o ON c.cus_id = o.customer_id AND o.status = 'COMPLETED' " +
             "WHERE c.status = 'ACTIVE' " +
-            "AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?) " +
-            "GROUP BY c.cus_id, c.full_name, c.phone, c.email, c.total_spent, cp.current_points";
+            "AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?) ";
+
+    private static final String BRANCH_FILTER =
+            "AND (? IS NULL OR EXISTS (SELECT 1 FROM [order] br WHERE br.customer_id = c.cus_id AND br.branch_id = ?)) ";
 
     public List<LoyalCustomerSummary> getCustomerLoyaltyReport(String keyword,
                                                                int page,
-                                                               int pageSize) {
+                                                               int pageSize,
+                                                               Integer branchId) {
         List<LoyalCustomerSummary> list = new ArrayList<>();
         String sql = CUSTOMER_SELECT + CUSTOMER_FROM +
-                " ORDER BY c.total_spent DESC, c.full_name ASC " +
+                BRANCH_FILTER +
+                "GROUP BY c.cus_id, c.full_name, c.phone, c.email, c.total_spent, cp.current_points " +
+                "ORDER BY c.total_spent DESC, c.full_name ASC " +
                 "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         try (Connection connection = DBContext.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
-            bindSearch(ps, 1, keyword);
+            int idx = 1;
+            idx = bindSearch(ps, idx, keyword);
+            idx = bindBranchId(ps, idx, branchId);
 
             int offset = (page - 1) * pageSize;
-            ps.setInt(5, offset);
-            ps.setInt(6, pageSize);
+            ps.setInt(idx++, offset);
+            ps.setInt(idx, pageSize);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -59,17 +66,20 @@ public class CustomerLoyaltyReportDAO {
         return list;
     }
 
-    public int countCustomerLoyaltyReport(String keyword) {
+    public int countCustomerLoyaltyReport(String keyword, Integer branchId) {
         String sql = "SELECT COUNT(*) AS Total FROM ( " +
                 "    SELECT c.cus_id " +
                 "    FROM customer c " +
                 "    WHERE c.status = 'ACTIVE' " +
                 "    AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?) " +
+                "    AND (? IS NULL OR EXISTS (SELECT 1 FROM [order] br WHERE br.customer_id = c.cus_id AND br.branch_id = ?)) " +
                 ") AS FilteredCustomers";
 
         try (Connection connection = DBContext.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
-            bindSearch(ps, 1, keyword);
+            int idx = 1;
+            idx = bindSearch(ps, idx, keyword);
+            bindBranchId(ps, idx, branchId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -82,20 +92,23 @@ public class CustomerLoyaltyReportDAO {
         return 0;
     }
 
-    public LoyalCustomerOverview getReportOverview(String keyword) {
+    public LoyalCustomerOverview getReportOverview(String keyword, Integer branchId) {
         LoyalCustomerOverview overview = new LoyalCustomerOverview();
-        
+
         // Count and spent
         String sql = "SELECT " +
                 "    COUNT(c.cus_id) AS TotalCustomers, " +
                 "    SUM(c.total_spent) AS TotalSpent " +
                 "FROM customer c " +
                 "WHERE c.status = 'ACTIVE' " +
-                "AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?)";
+                "AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?) " +
+                "AND (? IS NULL OR EXISTS (SELECT 1 FROM [order] br WHERE br.customer_id = c.cus_id AND br.branch_id = ?))";
 
         try (Connection connection = DBContext.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
-            bindSearch(ps, 1, keyword);
+            int idx = 1;
+            idx = bindSearch(ps, idx, keyword);
+            bindBranchId(ps, idx, branchId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -113,11 +126,14 @@ public class CustomerLoyaltyReportDAO {
                 "FROM customer c " +
                 "WHERE c.status = 'ACTIVE' " +
                 "AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?) " +
+                "AND (? IS NULL OR EXISTS (SELECT 1 FROM [order] br WHERE br.customer_id = c.cus_id AND br.branch_id = ?)) " +
                 "ORDER BY c.total_spent DESC";
 
         try (Connection connection = DBContext.getConnection();
              PreparedStatement ps = connection.prepareStatement(topSql)) {
-            bindSearch(ps, 1, keyword);
+            int idx = 1;
+            idx = bindSearch(ps, idx, keyword);
+            bindBranchId(ps, idx, branchId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -132,7 +148,7 @@ public class CustomerLoyaltyReportDAO {
         return overview;
     }
 
-    private void bindSearch(PreparedStatement ps, int startIndex, String keyword) throws SQLException {
+    private int bindSearch(PreparedStatement ps, int startIndex, String keyword) throws SQLException {
         if (keyword == null || keyword.isEmpty()) {
             ps.setNull(startIndex, Types.VARCHAR);
             ps.setNull(startIndex + 1, Types.VARCHAR);
@@ -145,6 +161,18 @@ public class CustomerLoyaltyReportDAO {
             ps.setString(startIndex + 2, match);
             ps.setString(startIndex + 3, match);
         }
+        return startIndex + 4;
+    }
+
+    private int bindBranchId(PreparedStatement ps, int startIndex, Integer branchId) throws SQLException {
+        if (branchId == null || branchId <= 0) {
+            ps.setNull(startIndex, Types.INTEGER);
+            ps.setNull(startIndex + 1, Types.INTEGER);
+        } else {
+            ps.setInt(startIndex, branchId);
+            ps.setInt(startIndex + 1, branchId);
+        }
+        return startIndex + 2;
     }
 
     private LoyalCustomerSummary mapSummary(ResultSet rs) throws SQLException {

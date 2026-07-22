@@ -184,22 +184,24 @@ public class ReportController extends BaseController {
 
     private void loadCustomerLoyaltyReport(HttpServletRequest request) {
         String keyword = trim(request.getParameter("keyword"));
+        applyBranchFilterForManager(request);
+        Integer branchId = resolveCustomerLoyaltyBranch(request);
 
         int page = parseInt(request.getParameter("page"), 1);
         int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
 
-        int totalCustomers = customerLoyaltyReportDAO.countCustomerLoyaltyReport(keyword);
+        int totalCustomers = customerLoyaltyReportDAO.countCustomerLoyaltyReport(keyword, branchId);
         PageResult pr = PaginationHelper.compute(totalCustomers, page, sizeValue);
         pr.setAttributes(request);
 
         request.setAttribute(
                 "customerReports",
                 customerLoyaltyReportDAO.getCustomerLoyaltyReport(
-                        keyword, pr.getCurrentPage(), pr.getPageSize())
+                        keyword, pr.getCurrentPage(), pr.getPageSize(), branchId)
         );
         request.setAttribute(
                 "reportOverview",
-                customerLoyaltyReportDAO.getReportOverview(keyword)
+                customerLoyaltyReportDAO.getReportOverview(keyword, branchId)
         );
 
         request.setAttribute("pageTitle", "Báo cáo khách hàng thân thiết");
@@ -264,9 +266,11 @@ public class ReportController extends BaseController {
             throws IOException {
         try {
             String keyword = trim(request.getParameter("keyword"));
+            applyBranchFilterForManager(request);
+            Integer branchId = resolveCustomerLoyaltyBranch(request);
 
-            var allData = customerLoyaltyReportDAO.getCustomerLoyaltyReport(keyword, 1, 1000000);
-            var overview = customerLoyaltyReportDAO.getReportOverview(keyword);
+            var allData = customerLoyaltyReportDAO.getCustomerLoyaltyReport(keyword, 1, 1000000, branchId);
+            var overview = customerLoyaltyReportDAO.getReportOverview(keyword, branchId);
 
             String generatedBy = "Unknown";
             HttpSession session = request.getSession(false);
@@ -314,6 +318,32 @@ public class ReportController extends BaseController {
         }
 
         return true;
+    }
+
+    /**
+     * Resolve branch filter for Customer Loyalty report.
+     * Store Managers are always locked to their own branch (URL param bypass blocked).
+     * Owners use optional URL param or null (all branches).
+     */
+    private Integer resolveCustomerLoyaltyBranch(HttpServletRequest request) {
+        // 1. Store Manager: forced to own branch (security: ignore URL override)
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            Employee currentUser = (Employee) session.getAttribute("currentUser");
+            if (currentUser != null) {
+                String role = currentUser.getRoleName();
+                if ("StoreManager".equalsIgnoreCase(role) || "Store Manager".equalsIgnoreCase(role)) {
+                    return currentUser.getBranchID();
+                }
+            }
+        }
+        // 2. Non-manager: use URL param or applyBranchFilterForManager fallback
+        String branchIdStr = trim(request.getParameter("branchId"));
+        if (isBlank(branchIdStr) && request.getAttribute("managerBranchId") != null) {
+            return (Integer) request.getAttribute("managerBranchId");
+        }
+        Integer branchId = parseInt(branchIdStr, -1);
+        return (branchId <= 0) ? null : branchId;
     }
 
     private void applyBranchFilterForManager(HttpServletRequest request) {
@@ -440,15 +470,17 @@ public class ReportController extends BaseController {
 
     private void loadCustomerLoyaltyPreview(HttpServletRequest request) {
         String keyword = trim(request.getParameter("keyword"));
+        applyBranchFilterForManager(request);
+        Integer branchId = resolveCustomerLoyaltyBranch(request);
 
         request.setAttribute(
                 "allReports",
                 customerLoyaltyReportDAO.getCustomerLoyaltyReport(
-                        keyword, 1, 1000000)
+                        keyword, 1, 1000000, branchId)
         );
         request.setAttribute(
                 "reportOverview",
-                customerLoyaltyReportDAO.getReportOverview(keyword)
+                customerLoyaltyReportDAO.getReportOverview(keyword, branchId)
         );
         request.setAttribute("pageTitle", "Xem trước báo cáo khách hàng thân thiết");
     }
@@ -457,9 +489,11 @@ public class ReportController extends BaseController {
             throws IOException {
         try {
             String keyword = trim(request.getParameter("keyword"));
+            applyBranchFilterForManager(request);
+            Integer branchId = resolveCustomerLoyaltyBranch(request);
 
-            var allData = customerLoyaltyReportDAO.getCustomerLoyaltyReport(keyword, 1, 1000000);
-            var overview = customerLoyaltyReportDAO.getReportOverview(keyword);
+            var allData = customerLoyaltyReportDAO.getCustomerLoyaltyReport(keyword, 1, 1000000, branchId);
+            var overview = customerLoyaltyReportDAO.getReportOverview(keyword, branchId);
 
             String generatedBy = "Unknown";
             HttpSession session = request.getSession(false);
