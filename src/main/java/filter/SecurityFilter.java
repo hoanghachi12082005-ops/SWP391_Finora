@@ -113,6 +113,11 @@ public class SecurityFilter implements Filter {
         System.out.println("[SecurityFilter] Path: " + path + ", Role: " + role + ", Allowed: " + allowedRoles);
 
         if (allowedRoles != null && !allowedRoles.contains(role)) {
+            // Ghi audit log cho truy cập bất hợp pháp
+            String message = "Truy cập trái phép: " + path + " (role=" + role + ")";
+            try {
+                activityLogDAO.insertLog(employee.getEmployeeId(), "ACCESS_DENIED", "auth", null, null, message);
+            } catch (Exception ignored) {}
             resp.sendError(403, "Bạn không có quyền truy cập chức năng này.");
             return;
         }
