@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.Employee;
 import util.database.DBContext;
+import dao.system.ActivityLogDAO;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
