@@ -97,8 +97,7 @@ public class CheckoutServlet extends HttpServlet {
 
         double totalDiscount = redeemDiscount;
         double totalBeforeTax = subtotal - totalDiscount;
-        double vatRate = tab.getVatRate();
-        double vat = totalBeforeTax * vatRate;
+        double vat = tab.getVatAmount(); // VAT tính theo từng ngành hàng
         double totalAmount = totalBeforeTax + vat;
 
         // ══════════════════════════════════════════════════════════
