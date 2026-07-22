@@ -269,9 +269,19 @@ function formatDataTable(raw) {
     if (current.trim()) pairs.push(current);
 
     var html = '<table class="table table-sm table-borderless mb-0" style="font-size:13px;">';
+    var hasData = false;
     pairs.forEach(function(p) {
         var eqIdx = p.indexOf('=');
-        if (eqIdx < 0) return;
+        if (eqIdx < 0) {
+            // Plain text (không có key=value): hiển thị toàn bộ dòng
+            var t = p.trim();
+            if (t) {
+                html += '<tr><td colspan="2" style="vertical-align:top;">' + t + '</td></tr>';
+                hasData = true;
+            }
+            return;
+        }
+        hasData = true;
         var key = p.substring(0, eqIdx).trim();
         var val = p.substring(eqIdx + 1).trim();
         if ((val.startsWith("'") && val.endsWith("'")) || (val.startsWith('"') && val.endsWith('"'))) {
@@ -281,6 +291,8 @@ function formatDataTable(raw) {
               + key + '</td><td style="vertical-align:top;">' + val + '</td></tr>';
     });
     html += '</table>';
+    // Fallback: nếu không render được gì, hiển thị raw text
+    if (!hasData && raw && raw !== '(trống)') html = '<div class="p-2">' + raw + '</div>';
     return html;
 }
 
