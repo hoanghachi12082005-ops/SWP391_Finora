@@ -5,7 +5,6 @@ import dao.inventory.InventoryDAO;
 import dao.sales.CustomerPointDAO;
 import dao.sales.OrderDAO;
 import dao.sales.OrderDetailDAO;
-import dao.sales.VoucherDAO;
 import jakarta.servlet.http.HttpServletRequest;
 import model.Order;
 import model.OrderDetail;
@@ -29,8 +28,6 @@ public class VNPayService {
     private final PaymentDAO paymentDAO = new PaymentDAO();
     private final OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
     private final InventoryDAO inventoryDAO = new InventoryDAO();
-    private final VoucherDAO voucherDAO = new VoucherDAO();
-
     // ==================== TẠO LINK THANH TOÁN ====================
 
     /** Tạo URL thanh toán VNPay để redirect trình duyệt. */
@@ -146,10 +143,6 @@ public class VNPayService {
                     inventoryDAO.increaseStock(conn, warehouseId, d.getProductId(), d.getQuantity());
                 }
 
-                // Hoàn voucher (nếu có)
-                if (order.getVoucherId() != null && order.getVoucherId() > 0) {
-                    voucherDAO.decrementUsedQuantity(conn, order.getVoucherId());
-                }
             }
 
             return true;

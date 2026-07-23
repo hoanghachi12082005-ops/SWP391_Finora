@@ -4,7 +4,7 @@
 
 Module Order (Quản lý Đơn hàng) là một trong những module cốt lõi của hệ thống FinoraRetail, chịu trách nhiệm quản lý toàn bộ quy trình xử lý đơn hàng từ khi khách hàng đặt hàng cho đến khi hoàn thành giao dịch. Module này bao gồm việc tạo đơn hàng, theo dõi trạng thái, xử lý thanh toán, quản lý chi tiết sản phẩm trong đơn, và xử lý hủy đơn hàng.
 
-Trong hệ thống bán lẻ, Order Module đóng vai trò trung tâm vì nó liên quan trực tiếp đến hầu hết các module khác: Customer Module (thông tin khách hàng, điểm tích lũy), Product Module (sản phẩm trong đơn), Inventory Module (cập nhật tồn kho), Payment Module (xử lý thanh toán), và Voucher Module (mã giảm giá). Quy trình đơn hàng là cầu nối chính giữa các hoạt động kinh doanh và quản lý nội bộ.
+Trong hệ thống bán lẻ, Order Module đóng vai trò trung tâm vì nó liên quan trực tiếp đến hầu hết các module khác: Customer Module (thông tin khách hàng, điểm tích lũy), Product Module (sản phẩm trong đơn), Inventory Module (cập nhật tồn kho), Payment Module (xử lý thanh toán). Quy trình đơn hàng là cầu nối chính giữa các hoạt động kinh doanh và quản lý nội bộ.
 
 ---
 
@@ -129,7 +129,7 @@ Tên bảng sử dụng dấu ngoặc vuông để tránh xung đột với từ
 |---|---|---|
 | `payment` | order_id | Thông tin thanh toán chi tiết |
 | `point_transaction` | order_id | Giao dịch tích/đổi điểm |
-| `voucher` | order_id | Voucher đã áp dụng |
+
 
 ---
 
@@ -163,7 +163,7 @@ Tạo mới (Created)
 
 1. Khách hàng chọn sản phẩm và thêm vào giỏ hàng
 2. Nhập thông tin giao hàng (nếu chưa có)
-3. Áp dụng mã giảm giá/voucher (nếu có)
+3. Áp dụng mã giảm giá (nếu có)
 4. Chọn phương thức thanh toán
 5. Xác nhận và tạo đơn hàng
 6. Hệ thống tạo bản ghi order và order_detail
@@ -204,7 +204,7 @@ Tạo mới (Created)
 - Tạo đơn hàng mới từ POS interface
 - Hỗ trợ khách hàng có tài khoản hoặc khách vãng lai
 - Thêm/bớt sản phẩm trong đơn
-- Áp dụng voucher/mã giảm giá
+- Áp dụng mã giảm giá
 - Sử dụng điểm tích lũy để thanh toán
 - Chọn phương thức thanh toán
 
@@ -257,7 +257,7 @@ Tạo mới (Created)
 - **Product Module**: Sản phẩm trong đơn, giá, tồn kho
 - **Inventory Module**: Cập nhật số lượng tồn kho
 - **Payment Module**: Xử lý thanh toán, ghi nhận giao dịch
-- **Voucher Module**: Mã giảm giá áp dụng cho đơn
+
 
 ---
 

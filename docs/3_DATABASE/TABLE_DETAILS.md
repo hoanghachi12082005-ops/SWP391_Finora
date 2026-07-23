@@ -243,47 +243,7 @@ Nhóm này bao gồm các bảng lưu trữ thông tin về khách hàng, nhà c
 
 ---
 
-### 2.3. Bảng `voucher`
-
-**Mục đích:** Lưu trữ thông tin về các voucher (mã giảm giá, phiếu khuyến mãi) trong hệ thống. Voucher có thể được áp dụng cho đơn hàng để giảm giá theo tỷ lệ phần trăm hoặc số tiền cố định.
-
-**Cấu trúc:**
-
-| Tên cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
-|---------|--------------|-----------|-------|
-| `voucher_id` | INT | PK, IDENTITY(1,1), NOT NULL | Khóa chính tự động tăng, định danh duy nhất cho mỗi voucher |
-| `voucher_code` | NVARCHAR(50) | UNIQUE, NOT NULL | Mã voucher duy nhất mà khách hàng nhập khi sử dụng |
-| `voucher_name` | NVARCHAR(150) | | Tên/mô tả ngắn gọn của voucher (ví dụ: Giảm 10% Tết 2026) |
-| `discount_type` | NVARCHAR(20) | CHECK | Loại giảm giá: 'PERCENT' (theo %) hoặc 'FIXED' (số tiền cố định) |
-| `discount_value` | DECIMAL(18,2) | | Giá trị giảm giá: % hoặc số tiền VND tùy thuộc vào discount_type |
-| `used_quantity` | INT | DEFAULT 0 | Số lượt voucher đã được sử dụng |
-| `start_date` | DATE | | Ngày bắt đầu hiệu lực của voucher |
-| `end_date` | DATE | | Ngày kết thúc hiệu lực của voucher |
-| `status` | NVARCHAR(20) | DEFAULT 'active' | Trạng thái voucher: 'active', 'inactive', 'expired' |
-| `created_at` | DATETIME | DEFAULT GETDATE() | Thời điểm bản ghi được tạo |
-
-**Khóa chính:** `voucher_id`
-
-**Khóa ngoại:** Không có
-
-**Ràng buộc CHECK trên `discount_type`:**
-```
-discount_type IN ('PERCENT', 'FIXED')
-```
-
-**Chỉ mục:**
-- Khóa chính tự động tạo chỉ mục clustered trên `voucher_id`
-- Chỉ mục unique trên `voucher_code`
-
-**Ghi chú:**
-- `voucher_code` phải duy nhất để mỗi mã chỉ đại diện cho một voucher duy nhất
-- Voucher có thể được thiết kế để giới hạn số lần sử dụng hoặc số lượt sử dụng tối đa
-- Hệ thống cần kiểm tra `start_date` và `end_date` khi xác thực voucher
-- Voucher được áp dụng cho đơn hàng thông qua khóa ngoại trong bảng `[order]`
-
----
-
-### 2.4. Bảng `supplier`
+### 2.3. Bảng `supplier`
 
 **Mục đích:** Lưu trữ thông tin về các nhà cung cấp (nhà phân phối, nhà sản xuất) trong hệ thống quản lý chuỗi cung ứng. Thông tin này phục vụ cho việc quản lý nhập hàng và theo dõi nguồn gốc sản phẩm.
 
@@ -331,10 +291,9 @@ Nhóm này bao gồm các bảng phục vụ cho hoạt động thương mại: 
 | `branch_id` | INT | FK -> branch(branch_id) | Chi nhánh nơi đơn hàng được tạo/xử lý |
 | `supplier_id` | INT | FK -> supplier(supplier_id) | Nhà cung cấp (cho đơn PURCHASE) |
 | `emp_id` | INT | FK -> employee(emp_id) | Nhân viên tạo/xử lý đơn hàng |
-| `voucher_id` | INT | FK -> voucher(voucher_id) | Voucher được áp dụng cho đơn hàng (nếu có) |
 | `warehouse_id` | INT | FK -> warehouse(warehouse_id) | Kho hàng liên quan đến đơn hàng |
 | `subtotal` | DECIMAL(18,2) | DEFAULT 0 | Tổng tiền hàng trước khi áp dụng giảm giá |
-| `discount_amount` | DECIMAL(18,2) | DEFAULT 0 | Số tiền được giảm (từ voucher hoặc khuyến mãi khác) |
+| `discount_amount` | DECIMAL(18,2) | DEFAULT 0 | Số tiền được giảm (từ khuyến mãi) |
 | `total_amount` | DECIMAL(18,2) | DEFAULT 0 | Tổng tiền khách hàng phải trả (subtotal - discount_amount) |
 | `payment_method` | NVARCHAR(50) | | Phương thức thanh toán: CASH, CARD, TRANSFER, VNPAY, MOMO |
 | `status` | NVARCHAR(30) | DEFAULT 'PENDING' | Trạng thái đơn hàng: PENDING, CONFIRMED, SHIPPING, COMPLETED, CANCELLED |
@@ -350,13 +309,12 @@ Nhóm này bao gồm các bảng phục vụ cho hoạt động thương mại: 
 | `branch_id` | `branch(branch_id)` | SET NULL | NO ACTION |
 | `supplier_id` | `supplier(supplier_id)` | SET NULL | NO ACTION |
 | `emp_id` | `employee(emp_id)` | SET NULL | NO ACTION |
-| `voucher_id` | `voucher(voucher_id)` | SET NULL | NO ACTION |
 | `warehouse_id` | `warehouse(warehouse_id)` | SET NULL | NO ACTION |
 
 **Chỉ mục:**
 - Khóa chính tự động tạo chỉ mục clustered trên `order_id`
 - Chỉ mục unique trên `order_code`
-- Khóa ngoại trên `customer_id`, `branch_id`, `emp_id`, `voucher_id`, `warehouse_id` tự động tạo chỉ mục non-clustered
+- Khóa ngoại trên `customer_id`, `branch_id`, `emp_id`, `warehouse_id` tự động tạo chỉ mục non-clustered
 
 **Ghi chú:**
 - Tên bảng sử dụng dấu ngoặc vuông `[order]` vì `ORDER` là từ khóa trong SQL

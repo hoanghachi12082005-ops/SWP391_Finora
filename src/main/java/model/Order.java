@@ -25,7 +25,6 @@ public class Order {
     private int branchId;           // FK -> Branch.branchId
     private Integer supplierId;     // FK -> Supplier.supplierId (Có thể null nếu bán hàng)
     private int empId;              // FK -> Employee.empId
-    private Integer voucherId;      // FK -> Voucher.voucherId (Có thể null)
     private int warehouseId;        // FK -> Warehouse.warehouseId
     private double subtotal;
     private double discountAmount;
@@ -49,7 +48,7 @@ public class Order {
     public Order() {}
 
     public Order(int orderId, String orderCode, String orderType, Integer customerId, int branchId,
-                 Integer supplierId, int empId, Integer voucherId, int warehouseId,
+                 Integer supplierId, int empId, int warehouseId,
                  double subtotal, double discountAmount, double totalAmount,
                  String paymentMethod, OrderStatus status, String createdAt) {
         this.orderId = orderId;
@@ -59,7 +58,6 @@ public class Order {
         this.branchId = branchId;
         this.supplierId = supplierId;
         this.empId = empId;
-        this.voucherId = voucherId;
         this.warehouseId = warehouseId;
         this.subtotal = subtotal;
         this.discountAmount = discountAmount;
@@ -125,14 +123,6 @@ public class Order {
 
     public void setEmpId(int empId) {
         this.empId = empId;
-    }
-
-    public Integer getVoucherId() {
-        return voucherId;
-    }
-
-    public void setVoucherId(Integer voucherId) {
-        this.voucherId = voucherId;
     }
 
     public int getWarehouseId() {
