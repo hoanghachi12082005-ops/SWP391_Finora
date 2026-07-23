@@ -441,7 +441,7 @@ public class OrderDAO {
         return o;
     }
 
-    public int countSaleOrders(String keyword, int branchId,
+    public int countSaleOrders(String keyword, int branchId, int empId,
                                String status, String paymentMethod, String fromDate, String toDate) {
         StringBuilder sql = new StringBuilder("""
             SELECT COUNT(*) 
@@ -454,6 +454,7 @@ public class OrderDAO {
         
         boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
         boolean hasBranch = branchId > 0;
+        boolean hasEmp = empId > 0;
         boolean hasStatus = status != null && !status.trim().isEmpty();
         boolean hasPayment = paymentMethod != null && !paymentMethod.trim().isEmpty();
         boolean hasFrom = fromDate != null && !fromDate.trim().isEmpty();
@@ -464,6 +465,9 @@ public class OrderDAO {
         }
         if (hasBranch) {
             sql.append(" AND o.branch_id = ?");
+        }
+        if (hasEmp) {
+            sql.append(" AND o.emp_id = ?");
         }
         if (hasStatus) {
             sql.append(" AND o.status = ?");
@@ -489,6 +493,9 @@ public class OrderDAO {
             if (hasBranch) {
                 ps.setInt(paramIndex++, branchId);
             }
+            if (hasEmp) {
+                ps.setInt(paramIndex++, empId);
+            }
             if (hasStatus) {
                 ps.setString(paramIndex++, status.trim());
             }
@@ -512,7 +519,7 @@ public class OrderDAO {
         return 0;
     }
 
-    public List<Order> getAllSaleOrdersPaginated(String keyword, int branchId, int offset, int pageSize,
+    public List<Order> getAllSaleOrdersPaginated(String keyword, int branchId, int empId, int offset, int pageSize,
                                                   String status, String paymentMethod, String fromDate, String toDate) {
         List<Order> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
@@ -529,6 +536,7 @@ public class OrderDAO {
         
         boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
         boolean hasBranch = branchId > 0;
+        boolean hasEmp = empId > 0;
         boolean hasStatus = status != null && !status.trim().isEmpty();
         boolean hasPayment = paymentMethod != null && !paymentMethod.trim().isEmpty();
         boolean hasFrom = fromDate != null && !fromDate.trim().isEmpty();
@@ -539,6 +547,9 @@ public class OrderDAO {
         }
         if (hasBranch) {
             sql.append(" AND o.branch_id = ?");
+        }
+        if (hasEmp) {
+            sql.append(" AND o.emp_id = ?");
         }
         if (hasStatus) {
             sql.append(" AND o.status = ?");
@@ -564,6 +575,9 @@ public class OrderDAO {
             }
             if (hasBranch) {
                 ps.setInt(paramIndex++, branchId);
+            }
+            if (hasEmp) {
+                ps.setInt(paramIndex++, empId);
             }
             if (hasStatus) {
                 ps.setString(paramIndex++, status.trim());
