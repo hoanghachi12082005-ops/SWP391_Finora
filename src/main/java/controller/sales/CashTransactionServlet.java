@@ -63,6 +63,17 @@ public class CashTransactionServlet extends HttpServlet {
             return;
         }
 
+        // Prevent withdraw exceeding current cash balance
+        if ("WITHDRAW".equals(type)) {
+            BigDecimal expectedCash = shiftDao.getExpectedCash(activeShift.getShiftId());
+            if (amount.compareTo(expectedCash) > 0) {
+                String msg = "Số tiền rút vượt quá số dư hiện có trong két ("
+                    + expectedCash.setScale(0, java.math.RoundingMode.HALF_UP) + "đ).";
+                out.write("{\"status\":\"error\",\"message\":\"" + msg + "\"}");
+                return;
+            }
+        }
+
         String note = req.getParameter("note");
         if (note != null) {
             note = note.trim();

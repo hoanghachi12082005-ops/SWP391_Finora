@@ -314,20 +314,38 @@ public class ShiftDAO {
         return summary;
     }
 
-    public List<Shift> getShiftHistory(int branchId, int limit) {
+    public int countShiftHistory(int branchId) {
+        String sql = "SELECT COUNT(*) FROM shift WHERE branch_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public List<Shift> getShiftHistoryPaginated(int branchId, int offset, int pageSize) {
         List<Shift> list = new ArrayList<>();
         String sql = """
-            SELECT TOP (?) s.*, e.fullName AS employeeName, b.branch_name AS branchName
+            SELECT s.*, e.fullName AS employeeName, b.branch_name AS branchName
             FROM shift s
             JOIN Employee e ON s.emp_id = e.emp_id
             JOIN Branch b ON s.branch_id = b.branch_id
             WHERE s.branch_id = ?
             ORDER BY s.shift_id DESC
+            OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
             """;
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, limit);
-            ps.setInt(2, branchId);
+            ps.setInt(1, branchId);
+            ps.setInt(2, offset);
+            ps.setInt(3, pageSize);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Shift s = mapRow(rs);

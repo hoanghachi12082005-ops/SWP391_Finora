@@ -335,6 +335,90 @@
                                         </c:forEach>
                                     </tbody>
                                 </table>
+
+                                    <!-- Pagination Section -->
+                                    <div class="flex justify-between items-center mt-6 px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant/30">
+                                        <!-- Page Size Select and Record Info -->
+                                        <form method="get" action="${pageContext.request.contextPath}/shift" id="paginationForm" class="flex items-center gap-3">
+                                            <span class="text-caption text-outline">Hiển thị:</span>
+                                            <select name="sizeValue" onchange="this.form.submit()" 
+                                                class="text-caption bg-white rounded-lg border border-outline-variant/60 px-2 py-1 pr-7 outline-none cursor-pointer focus:border-primary">
+                                                <option value="10" ${sizeValue == 10 ? 'selected' : ''}>10 dòng</option>
+                                                <option value="20" ${sizeValue == 20 ? 'selected' : ''}>20 dòng</option>
+                                                <option value="50" ${sizeValue == 50 ? 'selected' : ''}>50 dòng</option>
+                                                <option value="100" ${sizeValue == 100 ? 'selected' : ''}>Tất cả</option>
+                                            </select>
+                                            <span class="text-caption text-outline">
+                                                Hiển thị <strong class="text-on-surface">${startRecord}</strong> - <strong class="text-on-surface">${endRecord}</strong> trong số <strong class="text-on-surface">${totalRecords}</strong> ca
+                                            </span>
+                                        </form>
+
+                                        <!-- Page Numbers -->
+                                        <c:if test="${totalPages > 1}">
+                                            <div class="flex items-center gap-1.5">
+                                                <!-- Previous Page -->
+                                                <c:if test="${currentPage > 1}">
+                                                    <a href="${pageContext.request.contextPath}/shift?page=${currentPage - 1}&sizeValue=${sizeValue}"
+                                                       class="w-8 h-8 rounded-lg border border-outline-variant/60 flex items-center justify-center text-caption hover:bg-surface-container-high hover:text-primary transition-colors bg-white text-on-surface-variant font-medium">
+                                                        &lt;
+                                                    </a>
+                                                </c:if>
+
+                                                <!-- Page Numbers Logic -->
+                                                <c:choose>
+                                                    <c:when test="${totalPages <= 5}">
+                                                        <c:forEach begin="1" end="${totalPages}" var="i">
+                                                            <a href="${pageContext.request.contextPath}/shift?page=${i}&sizeValue=${sizeValue}"
+                                                               class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${i == currentPage ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                                ${i}
+                                                            </a>
+                                                        </c:forEach>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <!-- First Page -->
+                                                        <a href="${pageContext.request.contextPath}/shift?page=1&sizeValue=${sizeValue}"
+                                                           class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${currentPage == 1 ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                            1
+                                                        </a>
+
+                                                        <!-- Dots Left -->
+                                                        <c:if test="${currentPage > 3}">
+                                                            <span class="text-caption text-outline px-1">...</span>
+                                                        </c:if>
+
+                                                        <!-- Mid Pages -->
+                                                        <c:forEach begin="${currentPage - 1 < 2 ? 2 : currentPage - 1}"
+                                                                   end="${currentPage + 1 > totalPages - 1 ? totalPages - 1 : currentPage + 1}"
+                                                                   var="i">
+                                                            <a href="${pageContext.request.contextPath}/shift?page=${i}&sizeValue=${sizeValue}"
+                                                               class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${i == currentPage ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                                ${i}
+                                                            </a>
+                                                        </c:forEach>
+
+                                                        <!-- Dots Right -->
+                                                        <c:if test="${currentPage < totalPages - 2}">
+                                                            <span class="text-caption text-outline px-1">...</span>
+                                                        </c:if>
+
+                                                        <!-- Last Page -->
+                                                        <a href="${pageContext.request.contextPath}/shift?page=${totalPages}&sizeValue=${sizeValue}"
+                                                           class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${currentPage == totalPages ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                            ${totalPages}
+                                                        </a>
+                                                    </c:otherwise>
+                                                </c:choose>
+
+                                                <!-- Next Page -->
+                                                <c:if test="${currentPage < totalPages}">
+                                                    <a href="${pageContext.request.contextPath}/shift?page=${currentPage + 1}&sizeValue=${sizeValue}"
+                                                       class="w-8 h-8 rounded-lg border border-outline-variant/60 flex items-center justify-center text-caption hover:bg-surface-container-high hover:text-primary transition-colors bg-white text-on-surface-variant font-medium">
+                                                        &gt;
+                                                    </a>
+                                                </c:if>
+                                            </div>
+                                        </c:if>
+                                    </div>
                             </div>
                         </c:otherwise>
                     </c:choose>
@@ -368,6 +452,12 @@
                                 <span class="material-symbols-outlined text-[18px]">add_circle</span>
                                 <span>Nạp thêm tiền</span>
                             </button>
+                        </div>
+                    </div>
+                    <div id="availableCashRow" class="bg-tertiary-fixed/20 p-3 rounded-xl border border-tertiary/20">
+                        <div class="text-xs text-outline">Số dư khả dụng trong két:</div>
+                        <div id="availableCashDisplay" class="text-lg font-bold text-tertiary mt-0.5">
+                            <fmt:formatNumber value="${shiftSummary.expectedCash}" pattern="#,##0" />đ
                         </div>
                     </div>
 
@@ -458,6 +548,8 @@
         document.getElementById('cashTxModal').classList.remove('hidden');
         document.getElementById('txAmount').value = "";
         document.getElementById('txNote').value = "";
+        document.getElementById('availableCashDisplay').innerText =
+            document.getElementById('expectedCashText')?.innerText || "0đ";
         selectTxType('WITHDRAW');
     }
 
@@ -469,13 +561,16 @@
         currentTxType = type;
         let tabW = document.getElementById('tabWithdraw');
         let tabD = document.getElementById('tabDeposit');
+        let availableRow = document.getElementById('availableCashRow');
         
         if (type === 'WITHDRAW') {
             tabW.className = "h-10 rounded-lg border-2 border-primary bg-on-primary-container text-primary font-bold text-sm flex items-center justify-center gap-1.5";
             tabD.className = "h-10 rounded-lg border border-outline-variant hover:bg-surface-container-high text-on-surface font-semibold text-sm flex items-center justify-center gap-1.5";
+            if (availableRow) availableRow.classList.remove('hidden');
         } else {
             tabD.className = "h-10 rounded-lg border-2 border-primary bg-on-primary-container text-primary font-bold text-sm flex items-center justify-center gap-1.5";
             tabW.className = "h-10 rounded-lg border border-outline-variant hover:bg-surface-container-high text-on-surface font-semibold text-sm flex items-center justify-center gap-1.5";
+            if (availableRow) availableRow.classList.add('hidden');
         }
     }
 
@@ -492,6 +587,16 @@
         if (!amt || parseInt(amt) <= 0) {
             showErrorToast("Vui lòng nhập số tiền hợp lệ lớn hơn 0.");
             return;
+        }
+
+        // Client-side balance check for WITHDRAW
+        if (currentTxType === 'WITHDRAW') {
+            let availableEl = document.getElementById('expectedCashText');
+            let available = parseInt(availableEl ? availableEl.innerText.replace(/\D/g, "") : "0");
+            if (parseInt(amt) > available) {
+                showErrorToast("Số tiền rút (" + formatVND(amt) + ") vượt quá số dư trong két (" + formatVND(available) + ").");
+                return;
+            }
         }
 
         let note = document.getElementById('txNote').value.trim();
