@@ -163,7 +163,7 @@ Hệ thống phân loại khách hàng theo các cấp bậc dựa trên tổng 
 
 - **Order Module**: Khách hàng được liên kết với đơn hàng; lịch sử mua hàng ảnh hưởng đến xếp hạng
 - **Payment Module**: Thanh toán liên quan đến tích điểm và đổi điểm
-- **Voucher Module**: Điểm có thể đổi sang voucher
+
 
 ---
 

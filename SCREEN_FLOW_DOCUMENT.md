@@ -425,7 +425,7 @@ LOGIN (/login)
      │    │    │    ├── Select Existing (AJAX search)
      │    │    │    └── Add New Customer (Modal)
      │    │    ├── Edit Customer (Modal)
-     │    │    ├── Voucher Select
+     
      │    │    ├── Hold Order
      │    │    ├── Print Preview
      │    │    ├── Cancel Order
@@ -910,7 +910,7 @@ Dashboard --> Logout : Via sidebar
 | Cart Switch Tab | `/cart` | POST | Click tab |
 | Cart Hold | `/cart` | POST | Click "LƯU TẠM" |
 | Cart Clear | `/cart` | POST | Click "HUỶ ĐƠN" |
-| Apply Voucher | `/cart` | POST | Select voucher |
+
 | Cash Transaction | `/shift/cash` | POST | Submit deposit/withdraw |
 | Order Detail | `/orders/detail?id=` | GET | Click order row |
 | Product Search | `/product/search` | GET | Type in search (POS) |

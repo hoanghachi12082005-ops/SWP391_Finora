@@ -804,7 +804,7 @@ public List<Category> getCategoryTree() {
 
 ### 4.3. Luồng Tạo Đơn Hàng
 
-**Mô tả:** Nhân viên tạo đơn hàng bán hàng cho khách hàng, bao gồm nhiều sản phẩm và áp dụng voucher.
+**Mô tả:** Nhân viên tạo đơn hàng bán hàng cho khách hàng, bao gồm nhiều sản phẩm.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
@@ -887,7 +887,7 @@ public List<Category> getCategoryTree() {
 | 4 | `stock_transaction` | INSERT | warehouse_id, product_id, 'ORDER', order_id, 'OUT', quantity |
 | 5 | `customer_point` | UPDATE | current_points += earned |
 | 6 | `point_transaction` | INSERT | cus_point_id, order_id, before_points, after_points, description |
-| 7 | `voucher` | UPDATE (nếu có voucher) | used_quantity += 1 |
+
 
 ---
 
