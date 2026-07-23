@@ -74,6 +74,12 @@ public class CashTransactionServlet extends HttpServlet {
             }
         }
 
+        // Idempotency check: prevent duplicate within 5 seconds
+        if (cashTxDao.hasRecentDuplicate(activeShift.getShiftId(), type, amount, 5)) {
+            out.write("{\"status\":\"error\",\"message\":\"Giao dịch trùng lặp, vui lòng chờ và thử lại.\"}");
+            return;
+        }
+
         String note = req.getParameter("note");
         if (note != null) {
             note = note.trim();

@@ -474,7 +474,7 @@
 
                 <div class="flex justify-end gap-3 border-t border-outline-variant/60 pt-4">
                     <button onclick="closeCashTxModal()" class="h-11 px-5 border border-outline-variant rounded-xl font-semibold text-sm hover:bg-surface-container-high transition-colors">Hủy bỏ</button>
-                    <button onclick="submitCashTx()" class="h-11 px-6 bg-primary text-on-primary rounded-xl font-bold text-sm hover:bg-secondary transition-colors shadow-md">Xác nhận</button>
+                    <button id="submitCashTxBtn" onclick="submitCashTx()" class="h-11 px-6 bg-primary text-on-primary rounded-xl font-bold text-sm hover:bg-secondary transition-colors shadow-md">Xác nhận</button>
                 </div>
             </div>
         </div>
@@ -555,6 +555,14 @@
 
     function closeCashTxModal() {
         document.getElementById('cashTxModal').classList.add('hidden');
+        resetSubmitBtn();
+    }
+
+    function resetSubmitBtn() {
+        const btn = document.getElementById('submitCashTxBtn');
+        btn.disabled = false;
+        btn.innerHTML = 'Xác nhận';
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
 
     function selectTxType(type) {
@@ -582,10 +590,17 @@
     }
 
     function submitCashTx() {
+        const btn = document.getElementById('submitCashTxBtn');
+        if (btn.disabled) return;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined inline-block animate-spin text-[18px]">refresh</span> Đang xử lý...';
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+
         let amtRaw = document.getElementById('txAmount').value;
         let amt = amtRaw.replace(/\D/g, "");
         if (!amt || parseInt(amt) <= 0) {
             showErrorToast("Vui lòng nhập số tiền hợp lệ lớn hơn 0.");
+            resetSubmitBtn();
             return;
         }
 
@@ -595,6 +610,7 @@
             let available = parseInt(availableEl ? availableEl.innerText.replace(/\D/g, "") : "0");
             if (parseInt(amt) > available) {
                 showErrorToast("Số tiền rút (" + formatVND(amt) + ") vượt quá số dư trong két (" + formatVND(available) + ").");
+                resetSubmitBtn();
                 return;
             }
         }
@@ -638,11 +654,13 @@
                 closeCashTxModal();
             } else {
                 showErrorToast(data.message);
+                resetSubmitBtn();
             }
         })
         .catch(err => {
             console.error(err);
             showErrorToast("Lỗi thực hiện giao dịch.");
+            resetSubmitBtn();
         });
     }
 
