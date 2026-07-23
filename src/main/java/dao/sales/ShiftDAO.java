@@ -3,6 +3,7 @@ package dao.sales;
 import model.Shift;
 import util.database.DBContext;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,18 +60,23 @@ public class ShiftDAO {
         return 0;
     }
 
-    public boolean closeShift(int shiftId, BigDecimal closingCash) {
+    public boolean closeShift(int shiftId, BigDecimal closingCash, String closingNote) {
         BigDecimal expectedCash = getExpectedCash(shiftId);
         String sql = """
             UPDATE shift
-            SET status = 'CLOSED', closed_at = GETDATE(), closing_cash = ?, expected_cash = ?
+            SET status = 'CLOSED', closed_at = GETDATE(), closing_cash = ?, expected_cash = ?, closing_note = ?
             WHERE shift_id = ?
             """;
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setBigDecimal(1, closingCash);
             ps.setBigDecimal(2, expectedCash);
-            ps.setInt(3, shiftId);
+            if (closingNote != null && !closingNote.trim().isEmpty()) {
+                ps.setString(3, closingNote.trim());
+            } else {
+                ps.setNull(3, java.sql.Types.NVARCHAR);
+            }
+            ps.setInt(4, shiftId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -162,7 +168,8 @@ public class ShiftDAO {
         }
 
         // expected_cash = opening_cash + cashSales - totalWithdraw + totalDeposit
-        return openingCash.add(cashSales).subtract(totalWithdraw).add(totalDeposit);
+        return openingCash.add(cashSales).subtract(totalWithdraw).add(totalDeposit)
+            .setScale(0, RoundingMode.HALF_UP);
     }
 
     public Map<String, Object> getShiftSummary(int shiftId) {
@@ -174,6 +181,7 @@ public class ShiftDAO {
         int branchId = 0;
         String status = "CLOSED";
         BigDecimal closingCash = BigDecimal.ZERO;
+        String closingNote = null;
 
         String shiftSql = """
             SELECT s.*, e.fullName AS employeeName, b.branch_name AS branchName
@@ -194,6 +202,7 @@ public class ShiftDAO {
                     empId = rs.getInt("emp_id");
                     branchId = rs.getInt("branch_id");
                     status = rs.getString("status");
+                    closingNote = rs.getString("closing_note");
                     summary.put("employeeName", rs.getString("employeeName"));
                     summary.put("branchName", rs.getString("branchName"));
                 } else {
@@ -209,6 +218,7 @@ public class ShiftDAO {
         summary.put("status", status);
         summary.put("openingCash", openingCash);
         summary.put("closingCash", closingCash);
+        summary.put("closingNote", closingNote);
         summary.put("openedAt", openedAt != null ? new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(openedAt) : "");
         summary.put("closedAt", closedAt != null ? new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(closedAt) : "");
 
@@ -297,7 +307,8 @@ public class ShiftDAO {
         summary.put("totalWithdraw", totalWithdraw);
 
         // Expected Cash
-        BigDecimal expectedCash = openingCash.add(cashSales).subtract(totalWithdraw).add(totalDeposit);
+        BigDecimal expectedCash = openingCash.add(cashSales).subtract(totalWithdraw).add(totalDeposit)
+            .setScale(0, RoundingMode.HALF_UP);
         summary.put("expectedCash", expectedCash);
 
         return summary;
@@ -340,6 +351,7 @@ public class ShiftDAO {
         s.setClosingCash(rs.getBigDecimal("closing_cash"));
         s.setExpectedCash(rs.getBigDecimal("expected_cash"));
         s.setStatus(rs.getString("status"));
+        s.setClosingNote(rs.getString("closing_note"));
         
         Timestamp opened = rs.getTimestamp("opened_at");
         if (opened != null) {

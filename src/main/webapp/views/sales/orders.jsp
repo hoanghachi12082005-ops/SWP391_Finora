@@ -425,6 +425,7 @@
                             var to = document.getElementById('filterDateTo');
                             var today = getTodayStr();
                             to.setAttribute('max', today);
+                            from.setAttribute('max', today);
                             if (from.value) {
                                 to.setAttribute('min', from.value);
                             } else {
@@ -443,11 +444,18 @@
                                 alert('Ngày kết thúc không được lớn hơn ngày hiện tại.');
                                 return false;
                             }
+                            if (from.value && from.value > today) {
+                                alert('Ngày bắt đầu không được lớn hơn ngày hiện tại.');
+                                return false;
+                            }
                             return true;
                         }
                         document.addEventListener('DOMContentLoaded', function() {
+                            var from = document.getElementById('filterDateFrom');
                             var to = document.getElementById('filterDateTo');
-                            if (to) to.setAttribute('max', getTodayStr());
+                            var today = getTodayStr();
+                            if (from) from.setAttribute('max', today);
+                            if (to) to.setAttribute('max', today);
                         });
 
                         function showOrderDetails(orderId) {

@@ -102,14 +102,40 @@ public class ShiftServlet extends HttpServlet {
         BigDecimal closingCash = BigDecimal.ZERO;
         if (closingCashStr != null && !closingCashStr.isBlank()) {
             try {
-                closingCash = new BigDecimal(closingCashStr.replaceAll("[^\\d.]", ""));
+                closingCash = new BigDecimal(closingCashStr.replaceAll("[^\\d]", ""));
             } catch (Exception ignored) {}
         }
 
         Shift activeShift = shiftDao.getOpenShiftByEmp(emp.getEmpId());
-        if (activeShift != null) {
-            shiftDao.closeShift(activeShift.getShiftId(), closingCash);
+        if (activeShift == null) {
+            resp.sendRedirect(req.getContextPath() + "/shift?error=no_active_shift");
+            return;
         }
-        resp.sendRedirect(req.getContextPath() + "/shift");
+
+        // Validate: không để trống hoặc = 0
+        if (closingCash.compareTo(BigDecimal.ZERO) <= 0) {
+            resp.sendRedirect(req.getContextPath() + "/shift?error=empty_closing_cash");
+            return;
+        }
+
+        BigDecimal expectedCash = shiftDao.getExpectedCash(activeShift.getShiftId());
+        boolean hasDiscrepancy = closingCash.compareTo(expectedCash) != 0;
+        String closingNote = req.getParameter("closingNote");
+
+        // Nếu lệch và chưa có lý do → yêu cầu nhập lý do
+        if (hasDiscrepancy && (closingNote == null || closingNote.trim().isEmpty())) {
+            resp.sendRedirect(req.getContextPath() + "/shift?error=need_reason"
+                + "&expected=" + expectedCash.toPlainString()
+                + "&closing=" + closingCash.toPlainString());
+            return;
+        }
+
+        boolean closed = shiftDao.closeShift(activeShift.getShiftId(), closingCash, closingNote);
+        if (!closed) {
+            resp.sendRedirect(req.getContextPath() + "/shift?error=close_failed");
+            return;
+        }
+
+        resp.sendRedirect(req.getContextPath() + "/shift?success=closed");
     }
 }

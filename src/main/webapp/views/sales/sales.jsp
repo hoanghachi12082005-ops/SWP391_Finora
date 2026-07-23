@@ -773,7 +773,7 @@ searchInput.addEventListener('keydown', function(e) {
 
 async function searchProducts(query) {
     try {
-        const res = await fetch(CTX+'/product/search?keyword='+encodeURIComponent(query));
+        const res = await fetch(CTX + '/sales?action=searchProduct&keyword=' + encodeURIComponent(query));
         const list = await res.json();
         if (!list.length) { searchDropdown.classList.add('hidden'); return; }
         searchDropdown.innerHTML = '';

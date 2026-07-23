@@ -12,6 +12,7 @@ public class Shift {
     private String status; // 'OPEN' or 'CLOSED'
     private String openedAt;
     private String closedAt;
+    private String closingNote;
 
     // Transient fields
     private String employeeName;
@@ -20,7 +21,7 @@ public class Shift {
     public Shift() {}
 
     public Shift(int shiftId, int empId, int branchId, BigDecimal openingCash, BigDecimal closingCash,
-                 BigDecimal expectedCash, String status, String openedAt, String closedAt) {
+                 BigDecimal expectedCash, String status, String openedAt, String closedAt, String closingNote) {
         this.shiftId = shiftId;
         this.empId = empId;
         this.branchId = branchId;
@@ -30,6 +31,7 @@ public class Shift {
         this.status = status;
         this.openedAt = openedAt;
         this.closedAt = closedAt;
+        this.closingNote = closingNote;
     }
 
     public int getShiftId() {
@@ -102,6 +104,14 @@ public class Shift {
 
     public void setClosedAt(String closedAt) {
         this.closedAt = closedAt;
+    }
+
+    public String getClosingNote() {
+        return closingNote;
+    }
+
+    public void setClosingNote(String closingNote) {
+        this.closingNote = closingNote;
     }
 
     public String getEmployeeName() {
