@@ -16,7 +16,7 @@ Dự án FinoraRetail được tổ chức theo cấu trúc Maven WAR chuẩn ch
 FinoraRetail/
 ├── pom.xml                              # Cấu hình Maven build
 ├── database/
-│   └── DBFinoraV2.sql                  # Schema SQL Server với 21 bảng
+│   └── DBFinoraV3.sql                  # Schema SQL Server với 21 bảng
 ├── docs/                                # Tài liệu dự án
 ├── category/                            # Module ngoài (chờ tích hợp)
 ├── src/
@@ -35,7 +35,7 @@ FinoraRetail/
 | Tệp | Mô tả |
 |------|--------|
 | `pom.xml` | Cấu hình Maven build, khai báo dependency, plugin compile, đầu ra WAR tại `target/StoreManagementNetBeans.war` |
-| `database/DBFinoraV2.sql` | Script schema SQL Server chứa 21 bảng dữ liệu cho toàn bộ hệ thống |
+| `database/DBFinoraV3.sql` | Script schema SQL Server chứa 21 bảng dữ liệu cho toàn bộ hệ thống |
 | `docs/` | Thư mục tài liệu dự án, bao gồm kiến trúc, quy tắc, kế hoạch, và trạng thái triển khai |
 | `category/` | Module category độc lập với package khác (pending integration) — cần tích hợp vào cấu trúc chính |
 | `src/` | Thư mục gốc chứa toàn bộ mã nguồn ứng dụng |
@@ -363,7 +363,7 @@ util/
 
 #### 3.6.1. Class DBContext
 
-Cung cấp phương thức `getConnection()` trả về `java.sql.Connection` đến SQL Server database `DBFinoraV2`. Sử dụng JDBC driver với cấu hình từ `context.xml`.
+Cung cấp phương thức `getConnection()` trả về `java.sql.Connection` đến SQL Server database `DBFinoraV3`. Sử dụng JDBC driver với cấu hình từ `context.xml`.
 
 #### 3.6.2. Class AuthUtil
 
@@ -545,7 +545,7 @@ Thư mục `target/` chứa toàn bộ artifact được Maven tạo ra trong qu
 
 ## 6. Cấu Trúc Database Schema
 
-Database `DBFinoraV2` trên SQL Server chứa 21 bảng theo kiến trúc:
+Database `DBFinoraV3` trên SQL Server chứa 21 bảng theo kiến trúc:
 
 | STT | Bảng | Mô tả |
 |-----|------|--------|
@@ -571,7 +571,7 @@ Database `DBFinoraV2` trên SQL Server chứa 21 bảng theo kiến trúc:
 | 20 | StockTransactions | Giao dịch tồn kho |
 | 21 | InventoryItems | Tồn kho theo cửa hàng |
 
-Schema được quản lý tập trung trong `database/DBFinoraV2.sql` và thuộc **Protected Area** — không được sửa đổi trực tiếp mà phải thông qua review.
+Schema được quản lý tập trung trong `database/DBFinoraV3.sql` và thuộc **Protected Area** — không được sửa đổi trực tiếp mà phải thông qua review.
 
 ---
 
@@ -610,7 +610,7 @@ Schema được quản lý tập trung trong `database/DBFinoraV2.sql` và thu�
          ▼
 ┌──────────────────┐
 │  SQL Server      │
-│  DBFinoraV2      │
+│  DBFinoraV3      │
 │  (21 tables)     │
 └──────────────────┘
 ```
@@ -626,7 +626,7 @@ Schema được quản lý tập trung trong `database/DBFinoraV2.sql` và thu�
 | Domain Models | 19 | Hoàn chỉnh (bao gồm BaseModel, Category) |
 | Service Classes | 19 | Tất cả skeleton |
 | JSP Views | 65+ | Đang phát triển |
-| Database Tables | 21 | Hoàn chỉnh trong DBFinoraV2.sql |
+| Database Tables | 21 | Hoàn chỉnh trong DBFinoraV3.sql |
 | Protected Route Patterns | 21 | Được AuthFilter bảo vệ |
 | Utility Classes | 10 | 3 hoàn chỉnh, 7 skeleton |
 

@@ -1,7 +1,7 @@
 # Chi Tiết Các Bảng Cơ Sở Dữ Liệu
 
 **Dự án:** FinoraRetail (SWP391_Finora)  
-**Cơ sở dữ liệu:** DBFinoraV2 trên SQL Server  
+**Cơ sở dữ liệu:** DBFinoraV3 trên SQL Server  
 **Số lượng bảng:** 21 bảng  
 **Phiên bản tài liệu:** 1.0  
 **Ngày cập nhật:** 21/06/2026
@@ -769,7 +769,7 @@ Nhóm này bao gồm bảng phục vụ cho việc ghi nhận và kiểm toán h
 
 ## Tổng Kết
 
-Cơ sở dữ liệu DBFinoraV2 bao gồm 21 bảng được tổ chức thành 5 nhóm chức năng:
+Cơ sở dữ liệu DBFinoraV3 bao gồm 21 bảng được tổ chức thành 5 nhóm chức năng:
 
 | Nhóm | Số bảng | Các bảng |
 |------|---------|----------|

@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
 
-/** Entity mapped to DBFinoraV2 Product table with joins. */
+/** Entity mapped to DBFinoraV3 Product table with joins. */
 public class Product {
     private int productID;
     private String name;

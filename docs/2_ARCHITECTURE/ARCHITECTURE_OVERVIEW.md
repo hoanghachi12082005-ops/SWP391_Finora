@@ -2,7 +2,7 @@
 
 ## 1. Giới Thiệu
 
-FinoraRetail là hệ thống quản lý bán lẻ được xây dựng trên nền tảng Java Enterprise với kiến trúc MVC (Model-View-Controller) theo phong cách lập trình hướng đối tượng. Dự án sử dụng Apache Tomcat 10.1 làm servlet container, Jakarta Servlet/JSP API phiên bản 6.0, Java 17, và Microsoft SQL Server 2022 làm hệ quản trị cơ sở dữ liệu với tên cơ sở dữ liệu DBFinoraV2. Hệ thống được đóng gói dưới dạng WAR (Web Archive) và triển khai trên máy chủ Tomcat thông qua Maven build system.
+FinoraRetail là hệ thống quản lý bán lẻ được xây dựng trên nền tảng Java Enterprise với kiến trúc MVC (Model-View-Controller) theo phong cách lập trình hướng đối tượng. Dự án sử dụng Apache Tomcat 10.1 làm servlet container, Jakarta Servlet/JSP API phiên bản 6.0, Java 17, và Microsoft SQL Server 2022 làm hệ quản trị cơ sở dữ liệu với tên cơ sở dữ liệu DBFinoraV3. Hệ thống được đóng gói dưới dạng WAR (Web Archive) và triển khai trên máy chủ Tomcat thông qua Maven build system.
 
 Dự án được thiết kế theo mô hình phân lớp (layered architecture) với các tầng rõ ràng: Controller xử lý điều hướng và nhận yêu cầu từ phía người dùng, Service chứa logic nghiệp vụ, DAO (Data Access Object) đảm nhiệm việc truy cập cơ sở dữ liệu, và Model đại diện cho các thực thể trong hệ thống. Kiến trúc này đảm bảo tính tách biệt trách nhiệm (separation of concerns), giúp hệ thống dễ bảo trì, mở rộng và kiểm thử.
 
@@ -62,7 +62,7 @@ Bước thứ bảy, JSP render giao diện người dùng. JSP đọc các attr
 
 Để minh họa rõ hơn vòng đời request, chúng ta theo dõi một yêu cầu hiển thị danh sách sản phẩm. Đầu tiên, user điều hướng đến URL http://localhost:8080/FinoraRetail/products/list. Trình duyệt gửi GET request đến Tomcat. AuthFilter kiểm tra session thấy có currentUser, cho phép request đi tiếp. ProductController nhận request, xác định action là hiển thị danh sách, và gọi ProductDAO.findAll().
 
-ProductDAO mở kết nối đến SQL Server DBFinoraV2, thực thi SQL query "SELECT * FROM Products" sử dụng PreparedStatement, duyệt qua ResultSet và tạo danh sách Product object, sau đó đóng kết nối. ProductDAO trả về List<Product> cho ProductController. ProductController đặt danh sách này vào request attribute: `request.setAttribute("products", productList)`. Controller sau đó forward đến JSP: `forward(request, response, "products/list")`.
+ProductDAO mở kết nối đến SQL Server DBFinoraV3, thực thi SQL query "SELECT * FROM Products" sử dụng PreparedStatement, duyệt qua ResultSet và tạo danh sách Product object, sau đó đóng kết nối. ProductDAO trả về List<Product> cho ProductController. ProductController đặt danh sách này vào request attribute: `request.setAttribute("products", productList)`. Controller sau đó forward đến JSP: `forward(request, response, "products/list")`.
 
 JSP products/list.jsp nhận request, đọc attribute `${products}` và render HTML table hiển thị danh sách sản phẩm. Trong quá trình render, JSP include header.jsp và sidebar.jsp từ common/ để tạo layout hoàn chỉnh. Kết quả HTML được gửi về trình duyệt và hiển thị cho user.
 
@@ -94,9 +94,9 @@ Nguyên tắc quan trọng nhất của tầng DAO là không được phép imp
 
 ### 4.4. Tầng Database
 
-Cơ sở dữ liệu DBFinoraV2 trong SQL Server chứa 21 bảng biểu diễn các thực thể trong hệ thống quản lý bán lẻ. Schema được thiết kế để hỗ trợ nghiệp vụ multi-store (nhiều cửa hàng), với các bảng core như Users, Roles, Stores, và các bảng nghiệp vụ như Products, Categories, Customers, Suppliers, Orders, OrderDetails, Payments, Invoices, Expenses, Income, InventoryItems, StockTransactions, PurchaseOrders, PurchaseDetails, ActivityLogs, Notifications, và BusinessConfigurations.
+Cơ sở dữ liệu DBFinoraV3 trong SQL Server chứa 21 bảng biểu diễn các thực thể trong hệ thống quản lý bán lẻ. Schema được thiết kế để hỗ trợ nghiệp vụ multi-store (nhiều cửa hàng), với các bảng core như Users, Roles, Stores, và các bảng nghiệp vụ như Products, Categories, Customers, Suppliers, Orders, OrderDetails, Payments, Invoices, Expenses, Income, InventoryItems, StockTransactions, PurchaseOrders, PurchaseDetails, ActivityLogs, Notifications, và BusinessConfigurations.
 
-Kết nối đến database được quản lý thông qua lớp DBContext trong package `util.database`. DBContext sử dụng JDBC Driver của SQL Server (mssql-jdbc) với connection string kết nối đến server localhost:1433 và database DBFinoraV2. Các thông số kết nối được cấu hình trong DBContext với username "sa" và password "12345". Cấu hình này phù hợp cho môi trường phát triển, nhưng trong production cần sử dụng external configuration hoặc environment variables để tránh hardcode credentials.
+Kết nối đến database được quản lý thông qua lớp DBContext trong package `util.database`. DBContext sử dụng JDBC Driver của SQL Server (mssql-jdbc) với connection string kết nối đến server localhost:1433 và database DBFinoraV3. Các thông số kết nối được cấu hình trong DBContext với username "sa" và password "12345". Cấu hình này phù hợp cho môi trường phát triển, nhưng trong production cần sử dụng external configuration hoặc environment variables để tránh hardcode credentials.
 
 ## 5. Cấu Trúc Package
 
@@ -112,7 +112,7 @@ Chứa các Servlet điều khiển xử lý HTTP requests (30+ servlets chia th
 
 ### 5.3. Package DAO (`dao/`)
 
-Chứa các Data Access Objects truy xuất dữ liệu SQL Server (`DBFinoraV2`). Tất cả các DAO kế thừa từ `util.database.DBContext` và triển khai interface `dao.common.ICrudDAO`. Phân chia theo domain: `branch`, `customer`, `dashboard`, `employee`, `finance`, `inventory`, `product`, `purchase`, `report`, `sales`, `supplier`, `system`, `user`.
+Chứa các Data Access Objects truy xuất dữ liệu SQL Server (`DBFinoraV3`). Tất cả các DAO kế thừa từ `util.database.DBContext` và triển khai interface `dao.common.ICrudDAO`. Phân chia theo domain: `branch`, `customer`, `dashboard`, `employee`, `finance`, `inventory`, `product`, `purchase`, `report`, `sales`, `supplier`, `system`, `user`.
 
 ### 5.4. Package Model (`model/`)
 

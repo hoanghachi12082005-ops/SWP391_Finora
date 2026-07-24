@@ -178,7 +178,7 @@ FinoraRetail/
 |---|---|
 | **Nhà phát triển** | Microsoft Corporation |
 | **Phiên bản** | SQL Server (phiên bản server không giới hạn trong tài liệu này) |
-| **Database name** | `DBFinoraV2` |
+| **Database name** | `DBFinoraV3` |
 | **Số lượng bảng** | 21 tables |
 | **JDBC Driver** | `com.microsoft.sqlserver:mssql-jdbc:12.6.1.jre11` |
 
@@ -198,7 +198,7 @@ FinoraRetail/
 
 ### 6.3. Database Schema
 
-Cơ sở dữ liệu `DBFinoraV2` chứa 21 bảng, được thiết kế theo mô hình quan hệ chuẩn hóa (3NF trở lên) để đảm bảo tính toàn vẹn dữ liệu. Các script SQL schema được quản lý trong thư mục `sql/` của repository. Mỗi bảng tương ứng với một thực thể nghiệp vụ chính hoặc bảng liên kết (junction table) phục vụ quan hệ nhiều-nhiều.
+Cơ sở dữ liệu `DBFinoraV3` chứa 21 bảng, được thiết kế theo mô hình quan hệ chuẩn hóa (3NF trở lên) để đảm bảo tính toàn vẹn dữ liệu. Các script SQL schema được quản lý trong thư mục `sql/` của repository. Mỗi bảng tương ứng với một thực thể nghiệp vụ chính hoặc bảng liên kết (junction table) phục vụ quan hệ nhiều-nhiều.
 
 ---
 
@@ -370,7 +370,7 @@ Tất cả các class Java trong dự án nằm dưới package root `com.storem
 | **Tag Library** | Jakarta Standard Tag Library | 3.0.1 |
 | **Server** | Apache Tomcat | 10.1 |
 | **Build Tool** | Apache Maven | 3.x |
-| **Database** | Microsoft SQL Server | (DBFinoraV2) |
+| **Database** | Microsoft SQL Server | (DBFinoraV3) |
 | **JDBC Driver** | mssql-jdbc | 12.6.1.jre11 |
 | **CSS Framework** | Bootstrap | 5.x |
 | **Icons** | Material Icons (Google) | Regular |

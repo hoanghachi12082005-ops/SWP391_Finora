@@ -81,7 +81,7 @@ docs/
 | **Java version** | JDK 17 |
 | **Servlet API** | Jakarta Servlet 6.0 |
 | **Server** | Apache Tomcat 10.1+ |
-| **Co so du lieu** | SQL Server — Database: `DBFinoraV2` |
+| **Co so du lieu** | SQL Server — Database: `DBFinoraV3` |
 | **JDBC Driver** | mssql-jdbc 12.6.1.jre11 |
 | **Build tool** | Maven 3.x |
 | **WAR output** | `target/StoreManagementNetBeans.war` |
@@ -100,7 +100,7 @@ docs/
 | Service classes | 15+ Service classes |
 | Controller classes | 30+ Servlets/Controllers |
 | Filter & Security | SecurityFilter (RBAC ROLE_MAP, CSRF, Audit Log) |
-| Bang CSDL | Schema SQL Server `DBFinoraV2` / `Finora.sql` |
+| Bang CSDL | Schema SQL Server `DBFinoraV3` / `Finora.sql` |
 | Master Agent Contract | `AGENTS.md` (root directory) |
 | Thư viện tích hợp | OpenPDF, Apache POI 5.2.5, jBCrypt, VNPay, Jakarta Mail |
 

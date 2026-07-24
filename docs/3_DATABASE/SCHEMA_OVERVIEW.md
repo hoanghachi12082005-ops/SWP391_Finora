@@ -1,8 +1,8 @@
-# Tổng Quan Lược Đồ Cơ Sở Dữ Liệu DBFinoraV2
+# Tổng Quan Lược Đồ Cơ Sở Dữ Liệu DBFinoraV3
 
 ## 1. Giới Thiệu
 
-Cơ sở dữ liệu **DBFinoraV2** là hệ thống lưu trữ dữ liệu chính của dự án **FinoraRetail** (tên viết tắt: Finora), một ứng dụng quản lý bán lẻ được phát triển trên nền tảng Java Web với Apache Tomcat 10.1, sử dụng Jakarta Servlet/JSP API. Hệ thống được thiết kế để hỗ trợ hoạt động kinh doanh bán lẻ đa chi nhánh, bao gồm quản lý nhân viên, khách hàng, sản phẩm, kho hàng, đơn hàng, thanh toán và các nghiệp vụ liên quan đến điểm thưởng khách hàng.
+Cơ sở dữ liệu **DBFinoraV3** là hệ thống lưu trữ dữ liệu chính của dự án **FinoraRetail** (tên viết tắt: Finora), một ứng dụng quản lý bán lẻ được phát triển trên nền tảng Java Web với Apache Tomcat 10.1, sử dụng Jakarta Servlet/JSP API. Hệ thống được thiết kế để hỗ trợ hoạt động kinh doanh bán lẻ đa chi nhánh, bao gồm quản lý nhân viên, khách hàng, sản phẩm, kho hàng, đơn hàng, thanh toán và các nghiệp vụ liên quan đến điểm thưởng khách hàng.
 
 Cơ sở dữ liệu được triển khai trên **Microsoft SQL Server**, tận dụng các tính năng như IDENTITY cho auto-increment, CHECK constraint cho ràng buộc nghiệp vụ, và NVARCHAR cho hỗ trợ đầy đủ ký tự tiếng Việt. Toàn bộ 21 bảng trong hệ thống được tổ chức theo 5 nhóm chức năng chính, phản ánh các lĩnh vực nghiệp vụ khác nhau của một doanh nghiệp bán lẻ.
 
@@ -10,7 +10,7 @@ Cơ sở dữ liệu được triển khai trên **Microsoft SQL Server**, tận
 
 | Thuộc tính | Giá trị |
 |------------|---------|
-| Tên cơ sở dữ liệu | DBFinoraV2 |
+| Tên cơ sở dữ liệu | DBFinoraV3 |
 | Hệ quản trị CSDL | Microsoft SQL Server |
 | Ngôn ngữ lập trình | Java (JDK 17) |
 | Nền tảng runtime | Apache Tomcat 10.1 |
@@ -40,7 +40,7 @@ Các trường thời gian sử dụng kiểu **DATETIME** cho các trường h�
 
 ## 4. Tổ Chức Bảng Theo Nhóm Chức Năng
 
-Cơ sở dữ liệu DBFinoraV2 bao gồm 21 bảng, được phân thành 5 nhóm chức năng chính. Việc phân nhóm này phản ánh các lĩnh vực nghiệp vụ riêng biệt trong hệ thống quản lý bán lẻ và giúp việc bảo trì, tra cứu trở nên dễ dàng hơn.
+Cơ sở dữ liệu DBFinoraV3 bao gồm 21 bảng, được phân thành 5 nhóm chức năng chính. Việc phân nhóm này phản ánh các lĩnh vực nghiệp vụ riêng biệt trong hệ thống quản lý bán lẻ và giúp việc bảo trì, tra cứu trở nên dễ dàng hơn.
 
 ### 4.1. Nhóm 1: Identity & Access (3 bảng)
 
@@ -110,7 +110,7 @@ Bảng audit_log đóng vai trò quan trọng trong việc đảm bảo tính mi
 
 ## 5. Tổng Quan Quan Hệ Giữa Các Bảng
 
-Cơ sở dữ liệu DBFinoraV2 được thiết kế với nhiều loại quan hệ khác nhau, phản ánh các ràng buộc nghiệp vụ thực tế của hệ thống bán lẻ.
+Cơ sở dữ liệu DBFinoraV3 được thiết kế với nhiều loại quan hệ khác nhau, phản ánh các ràng buộc nghiệp vụ thực tế của hệ thống bán lẻ.
 
 ### 5.1. Quan Hệ Một-Nhiều (One-to-Many)
 
@@ -160,7 +160,7 @@ Dưới đây là sơ đồ mô tả mối quan hệ logic giữa các nhóm ch�
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                            DBFinoraV2 - Database Schema                         │
+│                            DBFinoraV3 - Database Schema                         │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
 │  ┌─────────────────────┐           ┌─────────────────────┐                       │
@@ -239,7 +239,7 @@ Chiến lược này đơn giản hóa việc tham chiếu giữa các bảng v�
 
 ## 10. Mối Quan Hệ Với Tầng Ứng Dụng
 
-Cơ sở dữ liệu DBFinoraV2 là thành phần trung tâm trong kiến trúc MVC của ứng dụng FinoraRetail:
+Cơ sở dữ liệu DBFinoraV3 là thành phần trung tâm trong kiến trúc MVC của ứng dụng FinoraRetail:
 
 - **Controller (Servlet)**: Nhận yêu cầu HTTP, xử lý validation và điều phối luồng dữ liệu
 - **DAO (Data Access Object)**: Thực hiện các thao tác CRUD với cơ sở dữ liệu thông qua JDBC

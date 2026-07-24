@@ -1,7 +1,7 @@
 # Luồng Dữ Liệu Trong Hệ Thống
 
 **Dự án:** FinoraRetail (SWP391_Finora)  
-**Cơ sở dữ liệu:** DBFinoraV2 trên SQL Server  
+**Cơ sở dữ liệu:** DBFinoraV3 trên SQL Server  
 **Kiến trúc:** Layered MVC với Servlet Controller, DAO, JSP View  
 **Phiên bản tài liệu:** 1.0  
 **Ngày cập nhật:** 21/06/2026
@@ -55,7 +55,7 @@ Hệ thống FinoraRetail sử dụng kiến trúc phân lớp MVC (Model-View-C
                                            ▼
                               ┌────────────────────────────┐
                               │      DATABASE              │
-                              │   SQL Server DBFinoraV2    │
+                              │   SQL Server DBFinoraV3    │
                               │   - 21 Tables              │
                               │   - Foreign Keys           │
                               │   - Constraints            │

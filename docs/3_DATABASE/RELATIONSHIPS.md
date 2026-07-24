@@ -1,7 +1,7 @@
 # Quan Hệ Giữa Các Bảng Cơ Sở Dữ Liệu
 
 **Dự án:** FinoraRetail (SWP391_Finora)  
-**Cơ sở dữ liệu:** DBFinoraV2 trên SQL Server  
+**Cơ sở dữ liệu:** DBFinoraV3 trên SQL Server  
 **Phiên bản tài liệu:** 1.0  
 **Ngày cập nhật:** 21/06/2026
 
@@ -21,7 +21,7 @@
 
 ## 1. Tổ Quan Entity Relationship
 
-Cơ sở dữ liệu DBFinoraV2 bao gồm 21 bảng với các loại quan hệ:
+Cơ sở dữ liệu DBFinoraV3 bao gồm 21 bảng với các loại quan hệ:
 
 | Loại quan hệ | Số lượng | Mô tả |
 |--------------|----------|--------|
@@ -739,7 +739,7 @@ Mỗi bản ghi tồn kho được xác định bởi cặp (warehouse, product)
 
 ## Tổng Kết
 
-Cơ sở dữ liệu DBFinoraV2 có 21 bảng với 30 khóa ngoại, được tổ chức theo 5 nhóm chức năng. Các đặc điểm nổi bật:
+Cơ sở dữ liệu DBFinoraV3 có 21 bảng với 30 khóa ngoại, được tổ chức theo 5 nhóm chức năng. Các đặc điểm nổi bật:
 
 1. **Một bảng trung gian** (`employee_role`) thực hiện quan hệ nhiều-nhiều
 2. **Một bảng tự tham chiếu** (`category`) với cấu trúc cây phân cấp

@@ -5,7 +5,7 @@ import java.sql.*;
 public class TestDB {
     public static void main(String[] args) throws Exception {
         Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        String url = "jdbc:sqlserver://localhost:1433;databaseName=DBFinoraV2;encrypt=true;trustServerCertificate=true;";
+        String url = "jdbc:sqlserver://localhost:1433;databaseName=DBFinoraV3;encrypt=true;trustServerCertificate=true;";
         Connection conn = DriverManager.getConnection(url, "sa", "123");
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM inventory_ticket");

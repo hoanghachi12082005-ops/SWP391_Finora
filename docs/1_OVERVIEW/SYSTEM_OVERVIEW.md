@@ -32,7 +32,7 @@ Mục tiêu chính của hệ thống FinoraRetail là cung cấp một giải p
 | **JSP API** | Jakarta Server Pages 3.0 |
 | **JSTL** | Jakarta Standard Tag Library 3.0 |
 | **Server ứng dụng** | Apache Tomcat 10.1 |
-| **Hệ quản trị CSDL** | Microsoft SQL Server — Database: `DBFinoraV2` |
+| **Hệ quản trị CSDL** | Microsoft SQL Server — Database: `DBFinoraV3` |
 | **JDBC Driver** | mssql-jdbc 12.6.1.jre11 |
 | **Công cụ build** | Apache Maven 3.x |
 | **Hệ điều hành đích** | Windows Server / Windows 10+ |
@@ -86,7 +86,7 @@ Hệ thống FinoraRetail tuân theo mô hình kiến trúc phân lớp (Layered
                      │ JDBC / SQL
 ┌────────────────────▼────────────────────────┐
 │         Database: SQL Server               │
-│         DBFinoraV2 (21 tables)              │
+│         DBFinoraV3 (21 tables)              │
 └─────────────────────────────────────────────┘
 ```
 
@@ -171,11 +171,11 @@ AuthFilter kiểm tra session của người dùng để xác định vai trò v
 
 ### 6.1. Thông tin kết nối
 
-Hệ thống sử dụng Microsoft SQL Server làm hệ quản trị cơ sở dữ liệu, với database có tên là `DBFinoraV2`. Kết nối được thiết lập thông qua JDBC driver `mssql-jdbc 12.6.1.jre11`. Thông tin kết nối (URL, username, password) được cấu hình trong file `context.xml` tại thư mục `META-INF` và được quản lý như một vùng bảo vệ của hệ thống.
+Hệ thống sử dụng Microsoft SQL Server làm hệ quản trị cơ sở dữ liệu, với database có tên là `DBFinoraV3`. Kết nối được thiết lập thông qua JDBC driver `mssql-jdbc 12.6.1.jre11`. Thông tin kết nối (URL, username, password) được cấu hình trong file `context.xml` tại thư mục `META-INF` và được quản lý như một vùng bảo vệ của hệ thống.
 
 ### 6.2. Lược đồ cơ sở dữ liệu
 
-Cơ sở dữ liệu `DBFinoraV2` bao gồm 21 bảng, được thiết kế để lưu trữ toàn bộ dữ liệu nghiệp vụ của hệ thống. Các bảng được phân loại theo chức năng nghiệp vụ tương ứng với các module của hệ thống. Schema và các script SQL được quản lý trong thư mục `sql/` của repository.
+Cơ sở dữ liệu `DBFinoraV3` bao gồm 21 bảng, được thiết kế để lưu trữ toàn bộ dữ liệu nghiệp vụ của hệ thống. Các bảng được phân loại theo chức năng nghiệp vụ tương ứng với các module của hệ thống. Schema và các script SQL được quản lý trong thư mục `sql/` của repository.
 
 ### 6.3. Vùng bảo vệ
 
