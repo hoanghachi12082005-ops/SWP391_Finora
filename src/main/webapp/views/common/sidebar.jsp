@@ -50,8 +50,8 @@
 <!-- ════════════ MENU BÁN HÀNG (POS) ════════════ -->
                                 <div class="sidebar-menu-title">CHỨC NĂNG CHÍNH</div>
 
-                                <!-- Nút quay lại trang quản trị (Chỉ dành cho Owner, StoreManager - Admin không vào POS) -->
-                                <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
+                                <!-- Nút quay lại trang quản trị (Dành cho Admin, Owner, StoreManager) -->
+                                <c:if test="${roleName == 'Owner' || roleName == 'Admin' || roleName == 'StoreManager'}">
                                     <a href="${pageContext.request.contextPath}/dashboard"
                                         class="sidebar-menu-item"
                                         style="background-color: rgba(175, 16, 26, 0.05); color: var(--primary-color); font-weight: 600;">
@@ -79,46 +79,46 @@
                                     <span class="material-icons">schedule</span><span>Ca làm việc</span>
                                 </a>
 
-                                <!-- Sổ Quỹ (Owner, StoreManager) -->
-                                <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
+                                <!-- Sổ Quỹ (Admin, Owner, StoreManager) -->
+                                <c:if test="${roleName == 'Owner' || roleName == 'Admin' || roleName == 'StoreManager'}">
                                     <a href="${pageContext.request.contextPath}/cashbook"
                                         class="sidebar-menu-item ${originalUri.contains('/cashbook') ? 'active' : ''}">
                                         <span class="material-icons">account_balance_wallet</span><span>Sổ Quỹ</span>
                                     </a>
                                 </c:if>
 
-                                <!-- Danh sách sản phẩm (chỉ Owner/StoreManager) -->
-                                <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
+                                <!-- Danh sách sản phẩm (Admin/Owner/StoreManager) -->
+                                <c:if test="${roleName == 'Owner' || roleName == 'Admin' || roleName == 'StoreManager'}">
                                 <a href="${pageContext.request.contextPath}/products"
 class="sidebar-menu-item ${originalUri.contains('/products') ? 'active' : ''}">
                                     <span class="material-icons">shopping_bag</span><span>Danh sách sản phẩm</span>
                                 </a>
                                 </c:if>
 
-                                <!-- Khách hàng (chỉ Owner/StoreManager) -->
-                                <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
+                                <!-- Khách hàng (Admin/Owner/StoreManager) -->
+                                <c:if test="${roleName == 'Owner' || roleName == 'Admin' || roleName == 'StoreManager'}">
                                 <a href="${pageContext.request.contextPath}/customers"
                                     class="sidebar-menu-item ${originalUri.contains('/customers') ? 'active' : ''}">
                                     <span class="material-icons">people</span><span>Khách hàng</span>
                                 </a>
                                 </c:if>
 
-                                <!-- Chi nhánh (Owner) -->
-                                <c:if test="${roleName == 'Owner'}">
+                                <!-- Chi nhánh (Admin/Owner) -->
+                                <c:if test="${roleName == 'Owner' || roleName == 'Admin'}">
                                     <a href="#" onclick="showComingSoon(event)" class="sidebar-menu-item">
                                         <span class="material-icons">store</span><span>Chi nhánh</span>
                                     </a>
                                 </c:if>
 
-                                <!-- Nhân viên (Owner, StoreManager) -->
-                                <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
+                                <!-- Nhân viên (Admin, Owner, StoreManager) -->
+                                <c:if test="${roleName == 'Owner' || roleName == 'Admin' || roleName == 'StoreManager'}">
                                     <a href="#" onclick="showComingSoon(event)" class="sidebar-menu-item">
                                         <span class="material-icons">badge</span><span>Nhân viên</span>
                                     </a>
                                 </c:if>
 
-                                <!-- Báo cáo doanh thu (Owner, StoreManager) -->
-                                <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
+                                <!-- Báo cáo doanh thu (Admin, Owner, StoreManager) -->
+                                <c:if test="${roleName == 'Owner' || roleName == 'Admin' || roleName == 'StoreManager'}">
                                     <a href="${pageContext.request.contextPath}/revenue"
                                         class="sidebar-menu-item ${originalUri.contains('/revenue') ? 'active' : ''}">
                                         <span class="material-icons">trending_up</span><span>Báo cáo doanh thu</span>
@@ -140,8 +140,8 @@ class="sidebar-menu-item ${originalUri.contains('/products') ? 'active' : ''}">
                                     </a>
                                 </c:if>
 
-                                <!-- Dropdown Bán hàng (Owner, StoreManager) -->
-                                <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
+                                <!-- Dropdown Bán hàng (Admin, Owner, StoreManager) -->
+                                <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
                                     <c:set var="isSalesPage"
                                         value="${originalUri.contains('/sales.jsp') || (!originalUri.contains('/views/') && originalUri.contains('/sales'))}" />
                                     <c:set var="isOrdersPage"
@@ -177,8 +177,8 @@ class="sidebar-menu-item ${originalUri.contains('/products') ? 'active' : ''}">
                                     </div>
                                 </c:if>
 
-                                <!-- Customer Management (Owner, StoreManager) -->
-                                <c:if test="${roleName == 'Owner' || roleName == 'StoreManager'}">
+                                <!-- Customer Management (Admin, Owner, StoreManager) -->
+                                <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
                                     <a href="${pageContext.request.contextPath}/customers"
                                         class="sidebar-menu-item ${originalUri.contains('/customers') ? 'active' : ''}">
                                         <span class="material-icons">people</span>
@@ -333,19 +333,12 @@ class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab ==
                                     </a>
                                 </c:if>
 
-                                <!-- User / Role Manager -->
-                                <c:if test="${roleName == 'Admin'}">
+                                <!-- User / Role Manager (Admin, Owner) -->
+                                <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
                                     <a href="${pageContext.request.contextPath}/admin/user"
-                                        class="sidebar-menu-item ${originalUri.contains('/admin/user') ? 'active' : ''}">
+                                        class="sidebar-menu-item ${originalUri.contains('/admin/user') || originalUri.contains('/owner/emp') ? 'active' : ''}">
                                         <span class="material-icons">manage_accounts</span>
-                                        <span>Quản lý Nhân viên </span>
-                                    </a>
-                                </c:if>
-                                <c:if test="${roleName == 'Owner'}">
-                                    <a href="${pageContext.request.contextPath}/owner/emp"
-                                        class="sidebar-menu-item ${originalUri.contains('/owner/emp') ? 'active' : ''}">
-                                        <span class="material-icons">badge</span>
-                                        <span>Nhân viên</span>
+                                        <span>Quản lý Nhân viên</span>
                                     </a>
                                 </c:if>
                                 <c:if test="${roleName == 'StoreManager'}">
@@ -404,7 +397,7 @@ class="sidebar-menu-item ${originalUri.contains('/manager/emp') ? 'active' : ''}
                                 <!-- Configuration -->
                                 <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
                                     <div class="sidebar-menu-title" style="margin-top: 16px;">Hệ thống</div>
-                                    <c:if test="${roleName == 'Owner'}">
+                                    <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
                                         <a href="${pageContext.request.contextPath}/activity-log"
                                             class="sidebar-menu-item ${originalUri.contains('/activity-log') ? 'active' : ''}">
                                             <span class="material-icons">history</span>

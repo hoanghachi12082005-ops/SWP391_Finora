@@ -70,7 +70,7 @@ public class OrderReportController extends BaseController {
         request.setAttribute("kpi", kpi);
 
         Employee u = (Employee) request.getSession().getAttribute("currentUser");
-        boolean isOwner = u != null && "Owner".equalsIgnoreCase(u.getRoleName());
+        boolean isOwner = u != null && ("Owner".equalsIgnoreCase(u.getRoleName()) || "Admin".equalsIgnoreCase(u.getRoleName()));
 
         if (f.getEmpId() != null) {
             EmployeeKpi empKpi = orderReportDAO.calculateEmployeeKpi(f);
@@ -182,7 +182,7 @@ public class OrderReportController extends BaseController {
         List<Order> orders = orderReportDAO.searchOrders(f, 1, Integer.MAX_VALUE);
 
         Employee u = (Employee) request.getSession().getAttribute("currentUser");
-        boolean isOwner = u != null && "Owner".equalsIgnoreCase(u.getRoleName());
+        boolean isOwner = u != null && ("Owner".equalsIgnoreCase(u.getRoleName()) || "Admin".equalsIgnoreCase(u.getRoleName()));
 
         try (Workbook wb = new XSSFWorkbook()) {
             Sheet sheet = wb.createSheet("Order Report");
@@ -282,7 +282,7 @@ public class OrderReportController extends BaseController {
 
         Employee u = (Employee) request.getSession().getAttribute("currentUser");
         String generatedBy = u != null ? u.getFullName() : "Unknown";
-        boolean isOwner = u != null && "Owner".equalsIgnoreCase(u.getRoleName());
+        boolean isOwner = u != null && ("Owner".equalsIgnoreCase(u.getRoleName()) || "Admin".equalsIgnoreCase(u.getRoleName()));
 
         EmployeeKpi empKpi = null;
         if (f.getEmpId() != null) {
@@ -399,7 +399,7 @@ public class OrderReportController extends BaseController {
         Employee u = (Employee) session.getAttribute("currentUser");
         if (u == null) { response.sendError(401); return false; }
         String role = u.getRoleName();
-        if (role == null || (!role.equalsIgnoreCase("Owner") && !role.equalsIgnoreCase("StoreManager"))) {
+        if (role == null || (!role.equalsIgnoreCase("Owner") && !role.equalsIgnoreCase("Admin") && !role.equalsIgnoreCase("StoreManager"))) {
             response.sendError(403, "Bạn không có quyền truy cập chức năng này.");
             return false;
         }

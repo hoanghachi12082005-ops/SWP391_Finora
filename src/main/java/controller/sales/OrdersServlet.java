@@ -65,11 +65,18 @@ public class OrdersServlet extends HttpServlet {
         String dateTo = req.getParameter("dateTo");
         if (dateTo != null) dateTo = dateTo.trim();
 
-        // Lấy tất cả đơn hàng thuộc chi nhánh của nhân viên (hoặc tất cả chi nhánh nếu cần, 
-        // nhưng để lọc theo branch của emp đang làm việc là chuẩn nghiệp vụ).
-        // Cho admin hoặc manager, họ xem toàn bộ nếu branchId = 0.
-        // Ở đây ta lọc theo branchId của nhân viên đang đăng nhập.
+        String roleName = emp.getRoleName() != null ? emp.getRoleName().trim().toLowerCase() : "";
         int branchId = emp.getBranchId();
+        if ("admin".equals(roleName) || "owner".equals(roleName)) {
+            String branchParam = req.getParameter("branchId");
+            if (branchParam != null && !branchParam.isBlank()) {
+                try {
+                    branchId = Integer.parseInt(branchParam.trim());
+                } catch (NumberFormatException ignored) {}
+            } else {
+                branchId = 0;
+            }
+        }
 
         int page = 1;
         String pageStr = req.getParameter("page");

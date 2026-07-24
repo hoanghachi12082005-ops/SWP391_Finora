@@ -382,10 +382,11 @@ public class AdminUserServlet extends HttpServlet {
                 return false;
             }
 
-            if (!"Admin".equalsIgnoreCase(currentUser.getRoleName())) {
+            String roleName = currentUser.getRoleName();
+            if (!"Admin".equalsIgnoreCase(roleName) && !"Owner".equalsIgnoreCase(roleName)) {
                 response.sendError(
                         HttpServletResponse.SC_FORBIDDEN,
-                        "Access denied. Admin only."
+                        "Access denied. Admin or Owner only."
                 );
                 return false;
             }

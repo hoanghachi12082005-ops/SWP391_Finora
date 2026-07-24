@@ -85,11 +85,11 @@ public class OrderVoucherController extends InventoryBaseController {
 
         try {
             switch (action) {
-                // Duyệt phiếu nhập/xuất hàng (Chỉ dành cho Owner hoặc StoreManager)
+                // Duyệt phiếu nhập/xuất hàng (Chỉ dành cho Owner, Admin hoặc StoreManager)
                 case "approveOrder": {
                     int orderId = Integer.parseInt(request.getParameter("orderId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
-                    if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
+                    if (currentUser == null || (!"Owner".equalsIgnoreCase(currentUser.getRoleName()) && !"Admin".equalsIgnoreCase(currentUser.getRoleName()) && !"StoreManager".equalsIgnoreCase(currentUser.getRoleName()))) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
                     }
@@ -104,7 +104,7 @@ public class OrderVoucherController extends InventoryBaseController {
                 case "rejectOrder": {
                     int orderId = Integer.parseInt(request.getParameter("orderId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
-                    if (currentUser == null || (!"Owner".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
+                    if (currentUser == null || (!"Owner".equalsIgnoreCase(currentUser.getRoleName()) && !"Admin".equalsIgnoreCase(currentUser.getRoleName()) && !"StoreManager".equalsIgnoreCase(currentUser.getRoleName()))) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
                     }
@@ -118,7 +118,7 @@ public class OrderVoucherController extends InventoryBaseController {
                 case "cancelOrder": {
                     int orderId = Integer.parseInt(request.getParameter("orderId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
-                    if (currentUser == null || (!"WarehouseStaff".equals(currentUser.getRoleName()) && !"Owner".equals(currentUser.getRoleName()) && !"StoreManager".equals(currentUser.getRoleName()))) {
+                    if (currentUser == null || (!"WarehouseStaff".equalsIgnoreCase(currentUser.getRoleName()) && !"Owner".equalsIgnoreCase(currentUser.getRoleName()) && !"Admin".equalsIgnoreCase(currentUser.getRoleName()) && !"StoreManager".equalsIgnoreCase(currentUser.getRoleName()))) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return;
                     }

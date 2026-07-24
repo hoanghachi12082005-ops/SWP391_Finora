@@ -309,7 +309,7 @@ public class ReportController extends BaseController {
         }
 
         String role = currentUser.getRoleName();
-        boolean isOwner = "Owner".equalsIgnoreCase(role);
+        boolean isOwner = "Owner".equalsIgnoreCase(role) || "Admin".equalsIgnoreCase(role);
         boolean isManager = "StoreManager".equalsIgnoreCase(role) || "Store Manager".equalsIgnoreCase(role);
 
         if (!isOwner && !isManager) {

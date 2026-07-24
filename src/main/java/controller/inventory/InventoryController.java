@@ -102,7 +102,7 @@ public class InventoryController extends BaseController {
         Employee currentUser = (Employee) session.getAttribute("currentUser");
         String role = currentUser.getRoleName() != null ? currentUser.getRoleName().toLowerCase() : "";
 
-        if (!role.equals("owner") && !role.equals("warehousestaff") && !role.equals("storemanager")) {
+        if (!role.equals("owner") && !role.equals("admin") && !role.equals("warehousestaff") && !role.equals("storemanager")) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập chức năng này.");
             return;
         }
@@ -115,8 +115,8 @@ public class InventoryController extends BaseController {
             List<Warehouse> myWarehouses = warehouseDAO.findByBranch(branchId);
 
             List<Warehouse> allowedWarehouses;
-            // Global access for Owner
-            if (role.equals("owner")) {
+            // Global access for Owner & Admin
+            if (role.equals("owner") || role.equals("admin")) {
                 allowedWarehouses = warehouseDAO.findAll();
                 if (allowedWarehouses.isEmpty()) {
                     forward(request, response, "inventory/setup_warehouse");
@@ -152,7 +152,7 @@ public class InventoryController extends BaseController {
                     session.setAttribute("selectedWarehouseId", selectedWarehouseId);
                 } catch (NumberFormatException ignored) {}
             } else {
-                if (role.equals("owner") || "true".equals(clearSelected)) {
+                if (role.equals("owner") || role.equals("admin") || "true".equals(clearSelected)) {
                     selectedWarehouseId = null;
                     session.removeAttribute("selectedWarehouseId");
                 } else {

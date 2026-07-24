@@ -198,7 +198,7 @@ public class SalesTransactionReportController extends BaseController {
         Employee u = (Employee) session.getAttribute("currentUser");
         if (u == null) { response.sendError(401); return false; }
         String role = u.getRoleName();
-        if (role == null || (!role.equalsIgnoreCase("Owner") && !role.equalsIgnoreCase("StoreManager"))) {
+        if (role == null || (!role.equalsIgnoreCase("Owner") && !role.equalsIgnoreCase("Admin") && !role.equalsIgnoreCase("StoreManager"))) {
             response.sendError(403, "Bạn không có quyền truy cập chức năng này.");
             return false;
         }

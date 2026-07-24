@@ -41,17 +41,12 @@ public class IncomeExpenseController extends BaseController {
         Employee user = (Employee) request.getSession().getAttribute("currentUser");
         String roleLower = (user != null && user.getRoleName() != null) ? user.getRoleName().trim().toLowerCase() : "";
 
-        if ("admin".equals(roleLower)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Admin không có quyền truy cập Sổ Quỹ.");
-            return;
-        }
-
         Integer targetBranchId = null;
         if ("storemanager".equals(roleLower) || "st manager".equals(roleLower) || roleLower.contains("manager")) {
             // Store Manager strictly accesses their assigned branch ONLY - backend enforced
             targetBranchId = (user != null) ? user.getBranchID() : null;
-        } else if ("owner".equals(roleLower)) {
-            // Owner can filter by branchId parameter if provided, or view all if empty/null
+        } else if ("owner".equals(roleLower) || "admin".equals(roleLower)) {
+            // Owner/Admin can filter by branchId parameter if provided, or view all if empty/null
             String branchParam = request.getParameter("branchId");
             if (branchParam != null && !branchParam.isBlank()) {
                 try {
@@ -188,10 +183,6 @@ public class IncomeExpenseController extends BaseController {
         }
 
         String roleLower = (user.getRoleName() != null) ? user.getRoleName().trim().toLowerCase() : "";
-        if ("admin".equals(roleLower)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Admin không có quyền tạo phiếu thu chi.");
-            return;
-        }
 
         if ("/cashbook/create-receipt".equals(path) || "/cashbook/create-payment".equals(path)) {
             try {

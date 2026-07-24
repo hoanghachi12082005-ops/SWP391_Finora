@@ -88,7 +88,7 @@ public class CustomerController extends HttpServlet {
         // Permissions for UI
         Employee user = getLoggedInUser(request);
         String role = user != null ? user.getRoleName() : "";
-        boolean isOwner = "Owner".equalsIgnoreCase(role);
+        boolean isOwner = "Owner".equalsIgnoreCase(role) || "Admin".equalsIgnoreCase(role);
         boolean isStoreManager = "StoreManager".equalsIgnoreCase(role);
 
         request.setAttribute("canCreate", isOwner || isStoreManager);
@@ -652,18 +652,8 @@ public class CustomerController extends HttpServlet {
             }
         }
 
-        // Admin: redeem/sync POST only, no customer UI access
-        if ("admin".equals(roleLower)) {
-            if (isPost && ("sync-loyalty".equals(action) || "redeem-points".equals(action))) {
-                return true;
-            } else {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
-                return false;
-            }
-        }
-
-        // Owner/StoreManager: full access
-        if ("Owner".equalsIgnoreCase(roleName) || "StoreManager".equalsIgnoreCase(roleName)) {
+        // Owner/Admin/StoreManager: full access
+        if ("Owner".equalsIgnoreCase(roleName) || "Admin".equalsIgnoreCase(roleName) || "StoreManager".equalsIgnoreCase(roleName)) {
             return true;
         }
 

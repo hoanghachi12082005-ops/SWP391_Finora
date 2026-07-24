@@ -42,18 +42,20 @@ FinoraRetail/
 
 ---
 
-## 3. Thư Mục Nguồn Java: `src/main/java/com/storemanagement/`
+## 3. Thư Mục Nguồn Java: `src/main/java/`
 
-Tất cả các class Java được đặt dưới package gốc `com.storemanagement`. Kiến trúc phân lớp rõ ràng với các package theo chức năng.
+Tất cả các class Java được đặt trực tiếp dưới các package chức năng trong `src/main/java/` (không có tiền tố `com.storemanagement`). Kiến trúc phân lớp rõ ràng theo mô hình MVC + DAO + Service.
 
 ```
-src/main/java/com/storemanagement/
-├── controller/         # 17 servlet classes
-├── dao/                # 17 DAO classes
-├── model/              # 19 domain models
-├── service/            # 19 service classes
-├── filter/             # AuthFilter
-└── util/               # 10 utility classes
+src/main/java/
+├── constant/           # AppConstants.java
+├── controller/         # Servlets xử lý HTTP requests (30+ servlets chia theo domain)
+├── dao/                # Truy xuất dữ liệu SQL Server (Kế thừa DBContext)
+├── dto/                # Data Transfer Objects
+├── filter/             # SecurityFilter.java (RBAC, CSRF, Security Headers)
+├── model/              # 51 POJO domain entities
+├── service/            # Business logic layer (8 domain subpackages)
+└── util/               # Subpackages tiện ích (database, security, email, finance, inventory, v.v.)
 ```
 
 ---
@@ -317,20 +319,25 @@ service/
 
 ---
 
-### 3.5. Package `filter/` — Bộ Lọc Xác Thực
+### 3.5. Package `filter/` — Bộ Lọc Bảo Mật & Phân Quyền
 
 ```
 filter/
-└── AuthFilter.java                    # Bảo vệ 21 route patterns
+└── SecurityFilter.java                # Central Security Filter (urlPatterns = "/*")
 ```
 
-#### 3.5.1. Class AuthFilter
+#### 3.5.1. Class SecurityFilter
 
-Filter servlet bảo vệ các URL cần xác thực:
+Filter central chịu trách nhiệm bảo vệ toàn bộ ứng dụng:
 
-- **Pattern được bảo vệ:** 21 route patterns bao gồm `/dashboard`, `/categories`, `/customers`, `/products`, `/suppliers`, `/stores`, `/orders`, `/inventory`, `/payments`, `/invoices`, `/expenses`, `/income`, `/purchase-orders`, `/reports`, `/users`, `/roles`, `/profile`, `/activity-log`, `/notifications`, `/configuration`
-- **Logic kiểm tra:** Nếu session không chứa attribute `currentUser`, chuyển hướng đến `/login`
-- **URL được loại trừ:** `/login`, `/register`, `/assets/**`, `/views/auth/**`
+- **Phân quyền Role Matrix (`ROLE_MAP`):**
+  - `/system/*` ➔ `admin`, `owner`
+  - `/management/*` ➔ `admin`, `owner`, `storemanager`, `warehousestaff`
+  - `/pos/*` ➔ `admin`, `owner`, `storemanager`, `salesstaff`
+  - `/owner/*` ➔ `owner`, `storemanager`, `salesstaff`, `warehousestaff`
+- **Đường dẫn công khai (`PUBLIC_PATHS`):** `/login`, `/logout`, `/forgot-password`, `/register`, `/role-selection`, `/assets/*`, `/css/*`, `/js/*`, `/static/*`, `/vnpay/ipn`, `/vnpay/return`, `/order/status`
+- **Xác thực CSRF & Audit Logging:** Kiểm tra CSRF token đối với mọi request `POST`, ghi nhật ký truy cập vi phạm qua `ActivityLogDAO`.
+- **Security Headers:** Thiết lập `Cache-Control`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`.
 
 ---
 

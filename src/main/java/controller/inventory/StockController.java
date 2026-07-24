@@ -276,7 +276,7 @@ public class StockController extends InventoryBaseController {
                     String[] importPrices = request.getParameterValues("importPrice[]");
                     
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
-                    boolean isOwner = "Owner".equals(currentUser.getRoleName()) || "StoreManager".equals(currentUser.getRoleName());
+                    boolean isOwner = "Owner".equalsIgnoreCase(currentUser.getRoleName()) || "Admin".equalsIgnoreCase(currentUser.getRoleName()) || "StoreManager".equalsIgnoreCase(currentUser.getRoleName());
                     
                     // Kiểm tra dung lượng yêu cầu gửi lên (Request Payload) phải dưới 5MB
                     if (request.getContentLengthLong() > 5 * 1024 * 1024) {

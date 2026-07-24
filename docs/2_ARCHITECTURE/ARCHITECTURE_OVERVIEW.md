@@ -100,45 +100,35 @@ Kết nối đến database được quản lý thông qua lớp DBContext trong
 
 ## 5. Cấu Trúc Package
 
-### 5.1. Package Gốc com.storemanagement
+## 5. Cấu Trúc Package
 
-Toàn bộ source code Java của ứng dụng nằm trong package gốc `com.storemanagement`, tuân theo convention đặt tên theo domain-driven design. Package gốc được cấu hình trong pom.xml với groupId tương ứng. Source root được định nghĩa tại `src/main/java`, và mọi file .java phải bắt đầu bằng `package com.storemanagement;` hoặc subpackage của nó.
+### 5.1. Thư Mục Nguồn `src/main/java`
 
-Cấu trúc subpackage trực tiếp dưới com.storemanagement bao gồm: controller/ chứa các servlet điều khiển, dao/ chứa các data access object, model/ chứa các domain entity, service/ chứa các service class nghiệp vụ, filter/ chứa các servlet filter, và util/ chứa các utility class hỗ trợ. Mỗi subpackage có thể chứa thêm các sub-subpackage theo domain, ví dụ: controller.auth, controller.product, dao.user, dao.product, service.finance, v.v.
+Toàn bộ mã nguồn Java được tổ chức dưới dạng các package gốc trực tiếp (`controller`, `dao`, `model`, `service`, `filter`, `util`, `dto`, `constant`). Dự án không sử dụng tiền tố `com.storemanagement`.
 
-### 5.2. Package Controller
+### 5.2. Package Controller (`controller/`)
 
-Package `com.storemanagement.controller` chứa 17 servlet class xử lý HTTP request. Ngoài các servlet cụ thể theo domain, package này còn chứa `com.storemanagement.controller.common.BaseController` - lớp cơ sở cho tất cả servlet, cung cấp các phương thức helper cho việc forward và redirect. Các servlet domain được đặt trong subpackage: controller.auth (AuthController, ProfileController), controller.dashboard (DashboardController), controller.user (UserController), controller.product (ProductController, CategoryController), controller.customer (CustomerController), controller.supplier (SupplierController), controller.store (StoreController), controller.sales (OrderController), controller.inventory (InventoryController), controller.finance (PaymentInvoiceController, IncomeExpenseController), controller.purchase (PurchaseOrderController), controller.report (ReportController), controller.website (StaticPageController).
+Chứa các Servlet điều khiển xử lý HTTP requests (30+ servlets chia theo domain: `auth`, `branch`, `common`, `customer`, `dashboard`, `finance`, `inventory`, `pos`, `product`, `purchase`, `report`, `sales`, `supplier`, `system`, `user`, `vnpay`, `warehouse`, `website`). Kế thừa từ `controller.common.BaseController` hoặc `HttpServlet`.
 
-Tất cả servlet sử dụng annotation `@WebServlet` để khai báo URL pattern, không cấu hình trong web.xml. Mỗi servlet override `doGet()` và `doPost()` để xử lý GET và POST request tương ứng. BaseController cung cấp hai protected methods: `forward(HttpServletRequest, HttpServletResponse, String view)` để chuyển tiếp đến JSP trong /views/, và `redirect(HttpServletRequest, HttpServletResponse, String path)` để redirect về URL mới.
+### 5.3. Package DAO (`dao/`)
 
-### 5.3. Package DAO
+Chứa các Data Access Objects truy xuất dữ liệu SQL Server (`DBFinoraV2`). Tất cả các DAO kế thừa từ `util.database.DBContext` và triển khai interface `dao.common.ICrudDAO`. Phân chia theo domain: `branch`, `customer`, `dashboard`, `employee`, `finance`, `inventory`, `product`, `purchase`, `report`, `sales`, `supplier`, `system`, `user`.
 
-Package `com.storemanagement.dao` chứa 17 DAO class cùng với các class infrastructure. Class quan trọng nhất là `com.storemanagement.dao.common.BaseDAO<T>` - abstract class chứa logic kết nối database và skeleton implementation cho CRUD operations. Interface `com.storemanagement.dao.common.ICrudDAO<T>` định nghĩa contract cho các DAO với 5 methods: findAll(), findById(), insert(), update(), delete().
+### 5.4. Package Model (`model/`)
 
-Các DAO domain được tổ chức trong subpackage: dao.user (UserDAO, RoleDAO), dao.product (ProductDAO, CategoryDAO), dao.customer (CustomerDAO), dao.supplier (SupplierDAO), dao.store (StoreDAO), dao.sales (OrderDAO), dao.purchase (PurchaseOrderDAO), dao.finance (PaymentDAO, InvoiceDAO, ExpenseDAO, IncomeDAO), dao.inventory (InventoryItemDAO, StockTransactionDAO), dao.system (ActivityLogDAO, BusinessConfigurationDAO). Mỗi DAO extends BaseDAO và implement các method cụ thể cho domain của nó.
+Chứa 51 POJO domain model entities đại diện cho dữ liệu trong DB và các báo cáo tổng quan (`ActivityLog`, `AuditLog`, `Branch`, `Category`, `Customer`, `Employee`, `Inventory`, `Invoice`, `Order`, `Payment`, `Product`, `PurchaseOrder`, `SalesTransaction`, `Shift`, `StockTransfer`, `Supplier`, `Warehouse`, v.v.).
 
-### 5.4. Package Model
+### 5.5. Package Service (`service/`)
 
-Package `com.storemanagement.model` chứa 19 domain entity class. Các model được thiết kế theo JavaBean convention với private fields, public getters/setters, và constructor mặc định. Một số model có quan hệ composition: Order có List<OrderDetail>, PurchaseOrder có List<PurchaseDetail>. Model không chứa logic nghiệp vụ phức tạp, chỉ đóng vai trò data carrier giữa các tầng.
+Chứa tầng xử lý logic nghiệp vụ trung gian bridging giữa Controller và DAO. Phân chia theo các domain: `customer`, `employee`, `finance`, `inventory`, `purchase`, `supplier`, `system`, `vnpay`.
 
-Danh sách đầy đủ các model: User, Role, Product, Category, Customer, Supplier, Store, Order, OrderDetail, Payment, Invoice, Expense, Income, InventoryItem, StockTransaction, PurchaseOrder, PurchaseDetail, ActivityLog, Notification. Ngoài ra还有BaseModel có thể là abstract class cung cấp các field chung như id, createdAt, updatedAt cho các model khác kế thừa.
+### 5.6. Package Filter (`filter/`)
 
-### 5.5. Package Service
+Chứa `SecurityFilter.java` (`@WebFilter(urlPatterns = "/*")`). Quản lý tập trung authentication, phân quyền RBAC (`ROLE_MAP`), kiểm tra CSRF token cho POST requests, thiết lập Security Headers, và kích hoạt audit logging qua `ActivityLogDAO`.
 
-Package `com.storemanagement.service` chứa 19 service class hiện đang ở dạng skeleton. Các service được tổ chức theo domain với cùng cấu trúc như DAO và Controller: service.user, service.product, service.customer, service.supplier, service.store, service.sales, service.purchase, service.finance, service.inventory, service.system. Package này cũng chứa service.common với GenericService và các service ở root level.
+### 5.7. Package Util (`util/`)
 
-Service layer sẽ là nơi triển khai business logic khi dự án phát triển. Ví dụ, OrderService sẽ chứa logic tạo đơn hàng với validation (kiểm tra tồn kho, kiểm tra giá), transaction management (đảm bảo consistency khi cập nhật nhiều bảng), và coordination giữa OrderDAO và InventoryItemDAO.
-
-### 5.6. Package Filter
-
-Package `com.storemanagement.filter` chứa AuthFilter - servlet filter duy nhất trong hệ thống. AuthFilter được ánh xạ đến 21 URL patterns và kiểm tra xem user đã đăng nhập hay chưa trước khi cho phép truy cập các tài nguyên bảo mật. Filter sử dụng `@WebFilter` annotation với urlPatterns array chứa các đường dẫn cần bảo vệ.
-
-Filter chain trong Jakarta Servlet API hoạt động theo nguyên tắc: request đi qua các filter theo thứ tự, mỗi filter có thể xử lý request hoặc chuyển tiếp cho filter tiếp theo. AuthFilter kiểm tra HttpSession cho attribute "currentUser". Nếu không tìm thấy, filter redirect đến /login. Nếu tìm thấy, filter gọi `chain.doFilter(request, response)` để cho phép request tiếp tục đến servlet.
-
-### 5.7. Package Util
-
-Package `com.storemanagement.util` chứa 10 utility class hỗ trợ các chức năng chung. Các utility được nhóm theo domain: util.database (DBContext), util.auth (AuthUtil), util.user (UserStatusUtil), util.product (ProductCodeUtil), util.inventory (InventoryUtil), util.finance (MoneyUtil), util.validation (ValidationUtil), util.report (ExportUtil), util.website (SeoUtil), util.system (LogUtil). Package này được thiết kế cho cross-cutting concerns và code reuse giữa các module.
+Chứa các lớp tiện ích toàn hệ thống: `util.database.DBContext` (kết nối DB & Migration Listener), `util.security.PasswordUtil` (BCrypt), `util.email.EmailUtil`, `util.finance.MoneyUtil`, `util.inventory` (POI Excel import/export), `util.report` (OpenPDF export), `util.vnpay` (VNPay Config), `util.pagination` (PageUtil).
 
 Nguyên tắc khi thêm utility class: chỉ tạo utility khi có ít nhất hai call site thực sự cần sử dụng nó. Utility không nên chứa business logic mà chỉ nên chứa helper methods cho các thao tác chung như format, validation, conversion. Utility nên là stateless và thread-safe nếu có thể.
 

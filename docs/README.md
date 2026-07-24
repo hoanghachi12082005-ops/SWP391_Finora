@@ -1,9 +1,10 @@
-# Tai lieu Du an FinoraRetail
+# Tài Liệu Dự Án FinoraRetail (SWP391_Finora)
 
-> **Ten du an:** SWP391_Finora / FinoraRetail
-> **Muc dich:** Nguon tai lieu tham khao chinh thuc va duy nhat cho toan bo du an
-> **Ngon ngu:** Tieng Viet (Viet Nam Academic Writing)
-> **Phien ban:** 1.0
+> **Tên dự án:** SWP391_Finora / FinoraRetail  
+> **Trang chủ dự án:** [README.md chính tại Root](file:///d:/Thangdev/SWP/SWP391_Finora-thang/README.md)  
+> **Quy tắc & Hợp đồng AI Agent:** [AGENTS.md tại Root](file:///d:/Thangdev/SWP/SWP391_Finora-thang/AGENTS.md)  
+> **Mục đích:** Nguồn tài liệu tham khảo chính thức cho toàn bộ hệ thống  
+> **Phiên bản:** 2.0 (Cập nhật khớp với `src/` hiện tại)  
 
 ---
 
@@ -79,13 +80,13 @@ docs/
 | **Loai ung dung** | Maven Java WAR Web Application |
 | **Java version** | JDK 17 |
 | **Servlet API** | Jakarta Servlet 6.0 |
-| **Server** | Apache Tomcat 10.1 |
+| **Server** | Apache Tomcat 10.1+ |
 | **Co so du lieu** | SQL Server — Database: `DBFinoraV2` |
 | **JDBC Driver** | mssql-jdbc 12.6.1.jre11 |
 | **Build tool** | Maven 3.x |
 | **WAR output** | `target/StoreManagementNetBeans.war` |
 | **Context path** | `/FinoraRetail` |
-| **Package root** | `com.storemanagement` |
+| **Package root** | Direct root packages (`controller`, `dao`, `model`, `service`, `filter`, `util`, `dto`, `constant`) |
 
 ---
 
@@ -93,15 +94,15 @@ docs/
 
 | Thanh phan | So luong |
 |---|---|
-| JSP Views (`views/`) | 65+ |
-| Model classes | 19 |
-| DAO classes | 17 (skeleton) |
-| Service classes | 19 (skeleton) |
-| Controller classes | 18 (AuthController hoat dong) |
-| Bang CSDL | 21 |
-| Route duoc bao ve (AuthFilter) | 21 patterns |
-| Bootstrap CSS Framework | Phien ban 5 |
-| Material Icons | Google Fonts |
+| JSP Views (`views/`) | 65+ views (phân chia theo domain) |
+| Model classes | 51 POJO domain models |
+| DAO classes | 25+ DAOs (phân theo domain, kế thừa DBContext) |
+| Service classes | 15+ Service classes |
+| Controller classes | 30+ Servlets/Controllers |
+| Filter & Security | SecurityFilter (RBAC ROLE_MAP, CSRF, Audit Log) |
+| Bang CSDL | Schema SQL Server `DBFinoraV2` / `Finora.sql` |
+| Master Agent Contract | `AGENTS.md` (root directory) |
+| Thư viện tích hợp | OpenPDF, Apache POI 5.2.5, jBCrypt, VNPay, Jakarta Mail |
 
 ---
 

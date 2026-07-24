@@ -31,13 +31,13 @@ public class SecurityFilter implements Filter {
         ROLE_MAP.put("/system/",         Set.of("admin", "owner"));
         ROLE_MAP.put("/management/",     Set.of("admin", "owner", "storemanager", "warehousestaff"));
         ROLE_MAP.put("/pos/",            Set.of("admin", "owner", "storemanager", "salesstaff"));
-        ROLE_MAP.put("/owner/",          Set.of("owner", "storemanager", "salesstaff", "warehousestaff"));
+        ROLE_MAP.put("/owner/",          Set.of("admin", "owner", "storemanager", "salesstaff", "warehousestaff"));
         ROLE_MAP.put("/admin/",          Set.of("admin", "owner"));
         ROLE_MAP.put("/manager/",        Set.of("admin", "owner", "storemanager"));
         ROLE_MAP.put("/branch",          Set.of("admin", "owner", "storemanager"));
         ROLE_MAP.put("/supplier",        Set.of("admin", "owner", "storemanager", "warehousestaff"));
         ROLE_MAP.put("/purchase/",       Set.of("admin", "owner", "storemanager", "warehousestaff"));
-        ROLE_MAP.put("/cashbook",        Set.of("owner", "storemanager"));
+        ROLE_MAP.put("/cashbook",        Set.of("admin", "owner", "storemanager"));
         ROLE_MAP.put("/finance/",        Set.of("admin", "owner"));
         ROLE_MAP.put("/payments",        Set.of("admin", "owner"));
         ROLE_MAP.put("/invoices",        Set.of("admin", "owner"));
@@ -47,8 +47,8 @@ public class SecurityFilter implements Filter {
         ROLE_MAP.put("/reports/finance-detail", Set.of("admin", "owner", "storemanager"));
         ROLE_MAP.put("/report/",         Set.of("admin", "owner", "storemanager"));
         ROLE_MAP.put("/reports/",        Set.of("admin", "owner", "storemanager"));
-        ROLE_MAP.put("/inventory/",      Set.of("owner", "storemanager", "warehousestaff"));
-        ROLE_MAP.put("/warehouse/",      Set.of("owner", "storemanager", "warehousestaff"));
+        ROLE_MAP.put("/inventory/",      Set.of("admin", "owner", "storemanager", "warehousestaff"));
+        ROLE_MAP.put("/warehouse/",      Set.of("admin", "owner", "storemanager", "warehousestaff"));
         ROLE_MAP.put("/product/",        Set.of("admin", "owner", "storemanager", "warehousestaff"));
         ROLE_MAP.put("/products",        Set.of("admin", "owner", "storemanager", "warehousestaff"));
         ROLE_MAP.put("/category/",       Set.of("admin", "owner", "storemanager"));

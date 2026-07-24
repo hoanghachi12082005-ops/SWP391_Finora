@@ -25,10 +25,10 @@ Tùy theo phạm vi thay đổi, agent phải đọc các file sau theo thứ t�
 
 **2. Mã nguồn liên quan:**
 
-- Các servlet/controller liên quan trong `src/java/controller`.
-- Các DAO class liên quan trong `src/java/dao`.
-- Các model/entity liên quan trong `src/java/model`.
-- Các JSP view liên quan trong `web/WEB-INF/views`.
+- Các servlet/controller liên quan trong `src/main/java/controller`.
+- Các DAO class liên quan trong `src/main/java/dao`.
+- Các model/entity liên quan trong `src/main/java/model`.
+- Các JSP view liên quan trong `src/main/webapp/views`.
 
 **3. Cơ sở dữ liệu:**
 

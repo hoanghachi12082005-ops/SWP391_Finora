@@ -211,7 +211,7 @@ public class AuthFilter implements Filter {
 
 ```java
 // ❌ KHÔNG HỢP LỆ
-package com.storemanagement.dao.product;
+package dao.product;
 
 import jakarta.servlet.ServletException;       // Cấm
 import jakarta.servlet.http.HttpServletRequest; // Cấm
@@ -268,8 +268,8 @@ public class CategoryDAO extends BaseDAO {
 **Quy tắc:** JSP không được khởi tạo bất kỳ instance nào của DAO class.
 
 ```jsp
-<%-- ❌ KHÔNG HỢP LỆ --%>
-<jsp:useBean id="categoryDAO" class="com.storemanagement.dao.product.CategoryDAO"/>
+<%-- ❌ KHÔNG HỢP LỆ: JSP khởi tạo DAO trực tiếp --%>
+<%-- <jsp:useBean id="categoryDAO" class="dao.product.CategoryDAO"/> --%>
 
 <%-- ❌ KHÔNG HỢP LỆ --%>
 <%
@@ -285,8 +285,8 @@ public class CategoryDAO extends BaseDAO {
 **Quy tắc:** Các class trong package `model` không được phụ thuộc vào bất kỳ class nào trong package `dao`.
 
 ```java
-// ❌ KHÔNG HỢP LỆ
-package com.storemanagement.model;
+// ❌ KHÔNG HỢP LỆ: Model chứa Servlet/JSP dependency
+package model;
 
 public class Category {
     private CategoryDAO dao;  // Cấm - model không được biết về DAO
@@ -721,10 +721,10 @@ public Category findById(int id) {
 ### 6.6. Ví Dụ DAO Hoàn Chỉnh
 
 ```java
-package com.storemanagement.dao.product;
+package dao.product;
 
-import com.storemanagement.dao.common.BaseDAO;
-import com.storemanagement.model.Category;
+import util.database.DBContext;
+import model.Category;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
