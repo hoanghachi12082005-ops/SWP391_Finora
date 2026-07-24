@@ -7,6 +7,7 @@ public class LoyalCustomerOverview {
     private BigDecimal totalSpent;
     private String topCustomerName;
     private BigDecimal topCustomerSpent;
+    private int totalPoints;
 
     public LoyalCustomerOverview() {
         this.totalSpent = BigDecimal.ZERO;
@@ -43,5 +44,13 @@ public class LoyalCustomerOverview {
 
     public void setTopCustomerSpent(BigDecimal topCustomerSpent) {
         this.topCustomerSpent = topCustomerSpent;
+    }
+
+    public int getTotalPoints() {
+        return totalPoints;
+    }
+
+    public void setTotalPoints(int totalPoints) {
+        this.totalPoints = totalPoints;
     }
 }

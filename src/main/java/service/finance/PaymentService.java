@@ -229,6 +229,18 @@ public class PaymentService {
             throw new Exception("Số tiền phiếu phải lớn hơn 0.");
         }
 
+        if (!isReceipt) {
+            double balance = 0;
+            if ("CASH".equals(payment.getMethod())) {
+                balance = getTotalCashBalance(branchId);
+            } else if ("BANK_TRANSFER".equals(payment.getMethod())) {
+                balance = getTotalBankBalance(branchId);
+            }
+            if (payment.getAmount() > balance) {
+                throw new Exception("Số dư quỹ tiền mặt không đủ để thực hiện chi khoản này.");
+            }
+        }
+
         try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
             try {

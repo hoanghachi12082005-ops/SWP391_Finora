@@ -232,7 +232,12 @@ public class IncomeExpenseController extends BaseController {
                 request.getSession().setAttribute("message", "Lỗi: Số tiền nhập vào không hợp lệ.");
                 request.getSession().setAttribute("messageType", "danger");
             } catch (Exception e) {
-                request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
+                String errMsg = e.getMessage();
+                if ("Số dư quỹ tiền mặt không đủ để thực hiện chi khoản này.".equals(errMsg)) {
+                    request.getSession().setAttribute("message", errMsg);
+                } else {
+                    request.getSession().setAttribute("message", "Lỗi: " + errMsg);
+                }
                 request.getSession().setAttribute("messageType", "danger");
             }
         }

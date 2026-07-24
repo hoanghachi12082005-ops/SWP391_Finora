@@ -420,7 +420,7 @@
                 <h5 class="modal-title fw-bold" id="paymentModalLabel">Lập Phiếu Chi</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="${pageContext.request.contextPath}/cashbook/create-payment" method="post">
+            <form action="${pageContext.request.contextPath}/cashbook/create-payment" method="post" id="createPaymentForm">
                 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <div class="modal-body p-4">
                     <div class="mb-3">
@@ -520,6 +520,42 @@
                 }
             }
         });
+
+        // Validation for payment voucher form balance
+        const paymentForm = document.getElementById("createPaymentForm");
+        if (paymentForm) {
+            paymentForm.addEventListener("submit", function(event) {
+                const amountInput = paymentForm.querySelector('input[name="amount"]');
+                const methodSelect = paymentForm.querySelector('select[name="method"]');
+                const amount = parseFloat(amountInput.value);
+                const method = methodSelect.value;
+                
+                let balance = 0;
+                if (method === "CASH") {
+                    balance = parseFloat("${totalCash}");
+                } else if (method === "BANK_TRANSFER") {
+                    balance = parseFloat("${totalBank}");
+                }
+                
+                if (amount > balance) {
+                    event.preventDefault();
+                    let errorDiv = document.getElementById("paymentErrorMsg");
+                    if (!errorDiv) {
+                        errorDiv = document.createElement("div");
+                        errorDiv.id = "paymentErrorMsg";
+                        errorDiv.className = "alert alert-danger mt-3";
+                        errorDiv.style.color = "#842029";
+                        errorDiv.style.backgroundColor = "#f8d7da";
+                        errorDiv.style.borderColor = "#f5c2c7";
+                        errorDiv.role = "alert";
+                        
+                        const modalBody = paymentForm.querySelector(".modal-body");
+                        modalBody.appendChild(errorDiv);
+                    }
+                    errorDiv.innerText = "Số dư quỹ tiền mặt không đủ để thực hiện chi khoản này.";
+                }
+            });
+        }
     });
 
     // 2. Export Client-side CSV

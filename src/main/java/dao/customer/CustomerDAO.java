@@ -30,7 +30,7 @@ public class CustomerDAO {
     private static final String CUSTOMER_SELECT =
             "SELECT c.cus_id, c.full_name, c.gender, c.bod, c.address, " +
             "c.email, c.phone, c.total_spent, c.created_at, c.updated_at, " +
-            "c.status, cp.current_points " +
+            "c.status, cp.current_points, cp.lifetime_points " +
             "FROM customer c " +
             "LEFT JOIN customer_point cp ON cp.cus_id = c.cus_id ";
 
@@ -399,12 +399,13 @@ public class CustomerDAO {
     }
 
     // =====================================================
-    // UPDATE (Allows editing point records for Admin)
-    // =====================================================
-
     public boolean update(Customer customer, boolean updatePoints, int currentPoints) {
+        return update(customer, updatePoints, currentPoints, customer.getLifetimePoints());
+    }
+
+    public boolean update(Customer customer, boolean updatePoints, int currentPoints, int lifetimePoints) {
         String sql = "UPDATE customer SET full_name = ?, gender = ?, bod = ?, address = ?, email = ?, phone = ?, total_spent = ?, updated_at = GETDATE() WHERE cus_id = ?";
-        String sqlPoint = "UPDATE customer_point SET current_points = ?, updated_at = GETDATE() WHERE cus_id = ?";
+        String sqlPoint = "UPDATE customer_point SET current_points = ?, lifetime_points = ?, updated_at = GETDATE() WHERE cus_id = ?";
 
         try (Connection connection = DBContext.getConnection()) {
             connection.setAutoCommit(false);
@@ -424,7 +425,8 @@ public class CustomerDAO {
                 if (updatePoints) {
                     try (PreparedStatement psPoint = connection.prepareStatement(sqlPoint)) {
                         psPoint.setInt(1, currentPoints);
-                        psPoint.setInt(2, customer.getCustomerId());
+                        psPoint.setInt(2, lifetimePoints);
+                        psPoint.setInt(3, customer.getCustomerId());
                         psPoint.executeUpdate();
                     }
                 }
@@ -857,6 +859,7 @@ public class CustomerDAO {
         customer.setCreatedAt(rs.getObject("created_at", java.time.LocalDateTime.class));
         customer.setUpdatedAt(rs.getObject("updated_at", java.time.LocalDateTime.class));
         customer.setLoyaltyPoint(rs.getInt("current_points"));
+        customer.setLifetimePoints(rs.getInt("lifetime_points"));
 
         return customer;
     }
