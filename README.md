@@ -21,7 +21,6 @@
 
 ## 📖 Giới Thiệu Dự Án
 
-> [!NOTE]
 > **FinoraRetail** (`SWP391_Finora`) là hệ thống phần mềm quản trị doanh nghiệp bán lẻ & chuỗi cửa hàng (ERP / POS / WMS) đa chi nhánh. Ứng dụng xử lý khép kín toàn bộ nghiệp vụ từ bán hàng tại quầy POS, thanh toán QR VNPay, quản lý kho bãi & điều chuyển hàng hóa, đến báo cáo doanh thu tài chính và nhật ký hoạt động audit log.
 
 Ứng dụng được xây dựng theo kiến trúc phân lớp chuẩn mực **MVC + DAO + Service Layer**, chạy trên môi trường **Java 17** và **Jakarta Servlet 6.0 (Tomcat 10.1+)**, kết nối cơ sở dữ liệu **Microsoft SQL Server (`DBFinoraV3`)**.
@@ -30,25 +29,44 @@
 
 ## ✨ Tính Năng Nổi Bật
 
-### 🏬 1. Quản Lý Đa Chi Nhánh & Kho Bãi (WMS)
-* **Điều chuyển tồn kho (Stock Transfer):** Quản lý toàn bộ luồng đề xuất, phê duyệt và xác nhận phiếu chuyển hàng giữa các kho chi nhánh.
-* **Kiểm kê định kỳ (Stocktaking):** Cân bằng kho, tự động tính toán đối soát chênh lệch giữa số lượng kiểm kê thực tế và số lượng trên sổ sách.
-* **Phân quyền kho (Receipt Isolation):** Đảm bảo nhân viên kho chỉ truy cập và thao tác trên dữ liệu phiếu nhập/xuất kho thuộc chi nhánh được phân công.
-
-### 💳 2. Bán Hàng POS & Thanh Toán Điện Tử VNPay
-* **Màn hình POS tối ưu:** Tìm kiếm sản phẩm siêu tốc, quản lý giỏ hàng realtime, áp dụng mã voucher giảm giá.
-* **Cổng thanh toán VNPay:** Tích hợp mã QR VNPay, checksum bảo mật HMAC-SHA512, tự động xử lý các luồng IPN callback và Return URL.
-* **In hóa đơn & Điểm thưởng:** Tự động tính thuế VAT, cộng điểm thưởng tích lũy cho khách hàng thân thiết (`LoyaltyPointSetting`).
-
-### 📊 3. Báo Cáo Doanh Thu & Thống Kê Tài Chính
-* **Thống kê kinh doanh đa chiều:** Biểu đồ KPI doanh thu, chi phí, lợi nhuận theo từng ca làm việc (Shift) và từng chi nhánh.
-* **Xuất báo cáo đa định dạng:** Xuất dữ liệu báo cáo Excel chuẩn với **Apache POI 5.2.5** và tệp PDF chuyên nghiệp với **OpenPDF 1.3.39**.
-* **Nhật ký thu chi:** Quản lý chi tiết phiếu thu, phiếu chi, hóa đơn thanh toán và các giao dịch tiền mặt.
-
-### 🛡 4. Phân Quyền Vận Hành & Audit Logging
-* **Ma trận phân quyền (RBAC):** Phân định 5 nhóm vai trò chi tiết: `owner`, `admin`, `storemanager`, `warehousestaff`, `salesstaff`.
-* **Bảo mật đa lớp:** Mã hóa mật khẩu BCrypt, chống tấn công CSRF token, tự động gắn Security Headers chống XSS & Framing.
-* **Nhật ký hoạt động (Activity Log):** Ghi vết tự động mọi thao tác hệ thống và cảnh báo truy cập trái phép qua `sp_set_session_context`.
+<table width="100%">
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🏬 Quản Lý Đa Chi Nhánh & Kho Bãi</h3>
+      <ul>
+        <li><b>Điều chuyển tồn kho (Stock Transfer):</b> Luồng đề xuất, phê duyệt và xác nhận nhập kho giữa các chi nhánh.</li>
+        <li><b>Kiểm kê định kỳ (Stocktaking):</b> Cân bằng kho, đối soát chênh lệch giữa số lượng thực tế và hệ thống.</li>
+        <li><b>Phân quyền kho (Receipt Isolation):</b> Cách ly dữ liệu phiếu nhập/xuất kho theo đúng chi nhánh được phân công.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>💳 Bán Hàng POS & Thanh Toán VNPay</h3>
+      <ul>
+        <li><b>Màn hình POS tối ưu:</b> Tìm kiếm sản phẩm siêu tốc, quản lý giỏ hàng realtime, áp dụng voucher giảm giá.</li>
+        <li><b>Cổng thanh toán VNPay:</b> Tích hợp mã QR VNPay, checksum HMAC-SHA512, tự động xử lý IPN & Return callback.</li>
+        <li><b>In hóa đơn & Đơn hàng:</b> Tự động tính thuế VAT, điểm thưởng tích lũy cho khách hàng thân thiết.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>📊 Báo Cáo Tài Chính & Doanh Thu</h3>
+      <ul>
+        <li><b>Thống kê kinh doanh:</b> Biểu đồ KPI doanh thu, chi phí, lợi nhuận theo ca làm việc (Shift) và chi nhánh.</li>
+        <li><b>Xuất báo cáo đa định dạng:</b> Xuất dữ liệu Excel chuẩn với <b>Apache POI 5.2.5</b> và tệp PDF với <b>OpenPDF 1.3.39</b>.</li>
+        <li><b>Sổ nhật ký thu chi:</b> Quản lý chi tiết phiếu thu, phiếu chi, hóa đơn thanh toán.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>🛡 Phân Quyền Vận Hành & Audit Log</h3>
+      <ul>
+        <li><b>Ma trận phân quyền (RBAC):</b> 5 nhóm vai trò chi tiết: <code>owner</code>, <code>admin</code>, <code>storemanager</code>, <code>warehousestaff</code>, <code>salesstaff</code>.</li>
+        <li><b>Bảo mật toàn diện:</b> Mã hóa mật khẩu BCrypt, chống tấn công CSRF, cấu hình Security Headers chống XSS/Framing.</li>
+        <li><b>Nhật ký hoạt động (Activity Log):</b> Ghi vết tự động mọi thao tác hệ thống và cảnh báo truy cập trái phép qua <code>sp_set_session_context</code>.</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -205,39 +223,28 @@ Sau khi quá trình build hoàn tất (`BUILD SUCCESS`), tệp WAR đã đóng g
 
 ### 4. Triển Khai Lên Web Server (Apache Tomcat 10.1+)
 
-<details>
-<summary><b>🔹 Cách 1: Sử dụng NetBeans IDE (Khuyên dùng)</b></summary>
-
+#### 🔹 Cách 1: Sử dụng NetBeans IDE (Khuyên dùng)
 1. Mở NetBeans IDE 17+.
 2. Chọn `File` ➔ `Open Project` ➔ Chọn thư mục dự án `SWP391_Finora-thang`.
 3. Vào tab `Services` ➔ `Servers` ➔ Thêm **Apache Tomcat 10.1+**.
 4. Nhấn phím `F6` (hoặc click phải dự án ➔ `Run`). NetBeans sẽ tự động build và deploy lên Tomcat với context path `/StoreManagementNetBeans` hoặc `/FinoraRetail`.
-</details>
 
-<details>
-<summary><b>🔹 Cách 2: Sử dụng IntelliJ IDEA Ultimate</b></summary>
-
+#### 🔹 Cách 2: Sử dụng IntelliJ IDEA Ultimate
 1. Mở dự án trong IntelliJ IDEA.
 2. Click `Run` ➔ `Edit Configurations...` ➔ Click `+` ➔ Chọn `Tomcat Server` ➔ `Local`.
 3. Trong tab `Server`: Chọn Tomcat 10.1 Server.
 4. Trong tab `Deployment`: Click `+` ➔ Chọn `Artifact...` ➔ Chọn `StoreManagementNetBeans:war exploded`.
 5. Đặt `Application context` thành `/FinoraRetail`.
 6. Nhấn `Run` (Shift + F10).
-</details>
 
-<details>
-<summary><b>🔹 Cách 3: Sử dụng VS Code + SmartTomcat Extension</b></summary>
-
+#### 🔹 Cách 3: Sử dụng VS Code + SmartTomcat Extension
 1. Cài đặt Extension **SmartTomcat** trong VS Code.
 2. Click biểu tượng SmartTomcat bên thanh sidebar ➔ Select Tomcat Directory (Tomcat 10.1).
 3. Set `Set Config Directory`: `src/main/webapp`.
 4. Set `Context Path`: `/FinoraRetail`.
 5. Click `Run`.
-</details>
 
-<details>
-<summary><b>🔹 Cách 4: Triển Khai Thủ Công Lên Tomcat Độc Lập (Manual Deploy)</b></summary>
-
+#### 🔹 Cách 4: Triển Khai Thủ Công Lên Tomcat Độc Lập (Manual Deploy)
 1. Copy file `target/StoreManagementNetBeans.war` vào thư mục `webapps/` của Tomcat:
    ```powershell
    Copy-Item target/StoreManagementNetBeans.war -Destination "C:\Tomcat 10.1\webapps\FinoraRetail.war"
@@ -247,7 +254,6 @@ Sau khi quá trình build hoàn tất (`BUILD SUCCESS`), tệp WAR đã đóng g
    C:\Tomcat 10.1\bin\startup.bat
    ```
 3. Tomcat sẽ tự giải nén file WAR và chạy ứng dụng.
-</details>
 
 ---
 
