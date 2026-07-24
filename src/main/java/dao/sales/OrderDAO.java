@@ -357,9 +357,9 @@ public class OrderDAO {
         String sql = """
             INSERT INTO [order] 
             (order_code, order_type, customer_id, branch_id, supplier_id, emp_id, 
-             voucher_id, warehouse_id, subtotal, discount_amount, total_amount, 
+             warehouse_id, subtotal, discount_amount, total_amount, 
              payment_method, status, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
             """;
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, order.getOrderCode());
@@ -376,17 +376,12 @@ public class OrderDAO {
                 ps.setNull(5, java.sql.Types.INTEGER);
             }
             ps.setInt(6, order.getEmpId());
-            if (order.getVoucherId() != null && order.getVoucherId() > 0) {
-                ps.setInt(7, order.getVoucherId());
-            } else {
-                ps.setNull(7, java.sql.Types.INTEGER);
-            }
-            ps.setInt(8, order.getWarehouseId());
-            ps.setDouble(9, order.getSubtotal());
-            ps.setDouble(10, order.getDiscountAmount());
-            ps.setDouble(11, order.getTotalAmount());
-            ps.setString(12, order.getPaymentMethod());
-            ps.setString(13, order.getStatus() != null ? order.getStatus().name() : "PENDING");
+            ps.setInt(7, order.getWarehouseId());
+            ps.setDouble(8, order.getSubtotal());
+            ps.setDouble(9, order.getDiscountAmount());
+            ps.setDouble(10, order.getTotalAmount());
+            ps.setString(11, order.getPaymentMethod());
+            ps.setString(12, order.getStatus() != null ? order.getStatus().name() : "PENDING");
 
             int affected = ps.executeUpdate();
             if (affected == 0) {
@@ -415,9 +410,6 @@ public class OrderDAO {
         
         o.setEmpId(rs.getInt("emp_id"));
         
-        int voucherId = rs.getInt("voucher_id");
-        o.setVoucherId(rs.wasNull() ? null : voucherId);
-        
         o.setWarehouseId(rs.getInt("warehouse_id"));
         o.setSubtotal(rs.getDouble("subtotal"));
         o.setDiscountAmount(rs.getDouble("discount_amount"));
@@ -441,7 +433,7 @@ public class OrderDAO {
         return o;
     }
 
-    public int countSaleOrders(String keyword, int branchId,
+    public int countSaleOrders(String keyword, int branchId, int empId,
                                String status, String paymentMethod, String fromDate, String toDate) {
         StringBuilder sql = new StringBuilder("""
             SELECT COUNT(*) 
@@ -454,6 +446,7 @@ public class OrderDAO {
         
         boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
         boolean hasBranch = branchId > 0;
+        boolean hasEmp = empId > 0;
         boolean hasStatus = status != null && !status.trim().isEmpty();
         boolean hasPayment = paymentMethod != null && !paymentMethod.trim().isEmpty();
         boolean hasFrom = fromDate != null && !fromDate.trim().isEmpty();
@@ -464,6 +457,9 @@ public class OrderDAO {
         }
         if (hasBranch) {
             sql.append(" AND o.branch_id = ?");
+        }
+        if (hasEmp) {
+            sql.append(" AND o.emp_id = ?");
         }
         if (hasStatus) {
             sql.append(" AND o.status = ?");
@@ -489,6 +485,9 @@ public class OrderDAO {
             if (hasBranch) {
                 ps.setInt(paramIndex++, branchId);
             }
+            if (hasEmp) {
+                ps.setInt(paramIndex++, empId);
+            }
             if (hasStatus) {
                 ps.setString(paramIndex++, status.trim());
             }
@@ -512,7 +511,7 @@ public class OrderDAO {
         return 0;
     }
 
-    public List<Order> getAllSaleOrdersPaginated(String keyword, int branchId, int offset, int pageSize,
+    public List<Order> getAllSaleOrdersPaginated(String keyword, int branchId, int empId, int offset, int pageSize,
                                                   String status, String paymentMethod, String fromDate, String toDate) {
         List<Order> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
@@ -529,6 +528,7 @@ public class OrderDAO {
         
         boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
         boolean hasBranch = branchId > 0;
+        boolean hasEmp = empId > 0;
         boolean hasStatus = status != null && !status.trim().isEmpty();
         boolean hasPayment = paymentMethod != null && !paymentMethod.trim().isEmpty();
         boolean hasFrom = fromDate != null && !fromDate.trim().isEmpty();
@@ -539,6 +539,9 @@ public class OrderDAO {
         }
         if (hasBranch) {
             sql.append(" AND o.branch_id = ?");
+        }
+        if (hasEmp) {
+            sql.append(" AND o.emp_id = ?");
         }
         if (hasStatus) {
             sql.append(" AND o.status = ?");
@@ -564,6 +567,9 @@ public class OrderDAO {
             }
             if (hasBranch) {
                 ps.setInt(paramIndex++, branchId);
+            }
+            if (hasEmp) {
+                ps.setInt(paramIndex++, empId);
             }
             if (hasStatus) {
                 ps.setString(paramIndex++, status.trim());

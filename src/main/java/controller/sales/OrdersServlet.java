@@ -65,8 +65,9 @@ public class OrdersServlet extends HttpServlet {
         String dateTo = req.getParameter("dateTo");
         if (dateTo != null) dateTo = dateTo.trim();
 
-        String roleName = emp.getRoleName() != null ? emp.getRoleName().trim().toLowerCase() : "";
+        // Lấy tất cả đơn hàng thuộc chi nhánh của nhân viên
         int branchId = emp.getBranchId();
+        String roleName = emp.getRoleName() != null ? emp.getRoleName().trim().toLowerCase() : "";
         if ("admin".equals(roleName) || "owner".equals(roleName)) {
             String branchParam = req.getParameter("branchId");
             if (branchParam != null && !branchParam.isBlank()) {
@@ -77,6 +78,10 @@ public class OrdersServlet extends HttpServlet {
                 branchId = 0;
             }
         }
+
+        // Xác định quyền xem: SalesStaff chỉ thấy đơn của mình; Owner/StoreManager/Admin thấy tất cả
+        boolean isSalesStaff = !roleName.equals("owner") && !roleName.equals("storemanager") && !roleName.equals("admin");
+        int filterEmpId = isSalesStaff ? emp.getEmpId() : 0;
 
         int page = 1;
         String pageStr = req.getParameter("page");
@@ -100,7 +105,7 @@ public class OrdersServlet extends HttpServlet {
             }
         }
 
-        int totalOrders = orderDao.countSaleOrders(keyword, branchId, status, paymentMethod, dateFrom, dateTo);
+        int totalOrders = orderDao.countSaleOrders(keyword, branchId, filterEmpId, status, paymentMethod, dateFrom, dateTo);
 
         int pageSize = sizeValue;
         if (sizeValue == 100) {
@@ -112,7 +117,7 @@ public class OrdersServlet extends HttpServlet {
         if (page > totalPages) page = totalPages;
 
         int offset = (page - 1) * pageSize;
-        List<Order> orders = orderDao.getAllSaleOrdersPaginated(keyword, branchId, offset, pageSize,
+        List<Order> orders = orderDao.getAllSaleOrdersPaginated(keyword, branchId, filterEmpId, offset, pageSize,
                                                                   status, paymentMethod, dateFrom, dateTo);
 
         int startRecord = totalOrders == 0 ? 0 : offset + 1;

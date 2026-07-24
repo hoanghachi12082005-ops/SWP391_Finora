@@ -6,7 +6,7 @@
     <artifactId>StoreManagementNetBeans</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
-    <name>FinoraRetail</name>
+    <name>Finora</name>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>

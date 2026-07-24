@@ -27,6 +27,27 @@ public class CashTransactionDAO {
         }
     }
 
+    public boolean hasRecentDuplicate(int shiftId, String type, BigDecimal amount, int withinSeconds) {
+        String sql = """
+            SELECT COUNT(*) FROM cash_transaction
+            WHERE shift_id = ? AND type = ? AND amount = ?
+            AND created_at > DATEADD(SECOND, -?, GETDATE())
+            """;
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, shiftId);
+            ps.setString(2, type);
+            ps.setBigDecimal(3, amount);
+            ps.setInt(4, withinSeconds);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public List<CashTransaction> getByShiftId(int shiftId) {
         List<CashTransaction> list = new ArrayList<>();
         String sql = """

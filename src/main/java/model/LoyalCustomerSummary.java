@@ -10,6 +10,7 @@ public class LoyalCustomerSummary {
     private BigDecimal totalSpent;
     private int totalOrders;
     private int currentPoints;
+    private int lifetimePoints;
 
     public LoyalCustomerSummary() {
         this.totalSpent = BigDecimal.ZERO;
@@ -69,6 +70,14 @@ public class LoyalCustomerSummary {
 
     public void setCurrentPoints(int currentPoints) {
         this.currentPoints = currentPoints;
+    }
+
+    public int getLifetimePoints() {
+        return lifetimePoints;
+    }
+
+    public void setLifetimePoints(int lifetimePoints) {
+        this.lifetimePoints = lifetimePoints;
     }
 
 }

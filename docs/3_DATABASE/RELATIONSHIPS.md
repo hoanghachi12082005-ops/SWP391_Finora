@@ -59,7 +59,7 @@ Cơ sở dữ liệu DBFinoraV2 bao gồm 21 bảng với các loại quan hệ:
 ├─────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                         │
 │    ┌───────────┐      ┌──────────────────┐     ┌────────────┐                           │
-│    │ customer  │──────│ customer_point   │     │   voucher  │                           │
+│    │ customer  │──────│ customer_point   │                                              │
 │    └───────────┘      └──────────────────┘     └────────────┘                           │
 │         │                                          │                                     │
 │         │                                          │                                     │
@@ -87,7 +87,7 @@ Cơ sở dữ liệu DBFinoraV2 bao gồm 21 bảng với các loại quan hệ:
 │    │    FK: branch_id ─────────────► branch                                          │   │
 │    │    FK: supplier_id ───────────► supplier                                        │   │
 │    │    FK: emp_id ────────────────► employee                                        │   │
-│    │    FK: voucher_id ────────────► voucher                                         │   │
+
 │    │    FK: warehouse_id ──────────► warehouse                                       │   │
 │    │                                                                                 │   │
 │    └─────────────────────────────────────────────────────────────────────────────────┘   │
@@ -154,21 +154,20 @@ Mỗi bảng trong cơ sở dữ liệu có một khóa chính duy nhất:
 | 4 | `employee_role` | `emp_role_id` | INT | Có |
 | 5 | `customer` | `cus_id` | INT | Có |
 | 6 | `customer_point` | `cus_point_id` | INT | Có |
-| 7 | `voucher` | `voucher_id` | INT | Có |
-| 8 | `supplier` | `supplier_id` | INT | Có |
-| 9 | `warehouse` | `warehouse_id` | INT | Có |
-| 10 | `unit` | `unit_id` | INT | Có |
-| 11 | `category` | `category_id` | INT | Có |
-| 12 | `product` | `product_id` | INT | Có |
-| 13 | `inventory` | `inventory_id` | INT | Có |
-| 14 | `[order]` | `order_id` | INT | Có |
-| 15 | `order_detail` | `order_detail_id` | INT | Có |
-| 16 | `payment` | `payment_id` | INT | Có |
-| 17 | `point_transaction` | `point_transaction_id` | INT | Có |
-| 18 | `stock_transfer` | `stock_transfer_id` | INT | Có |
-| 19 | `stock_transfer_detail` | `stock_transfer_detail_id` | INT | Có |
-| 20 | `stock_transaction` | `stock_transaction_id` | INT | Có |
-| 21 | `audit_log` | `audit_log_id` | INT | Có |
+| 7 | `supplier` | `supplier_id` | INT | Có |
+| 8 | `warehouse` | `warehouse_id` | INT | Có |
+| 9 | `unit` | `unit_id` | INT | Có |
+| 10 | `category` | `category_id` | INT | Có |
+| 11 | `product` | `product_id` | INT | Có |
+| 12 | `inventory` | `inventory_id` | INT | Có |
+| 13 | `[order]` | `order_id` | INT | Có |
+| 14 | `order_detail` | `order_detail_id` | INT | Có |
+| 15 | `payment` | `payment_id` | INT | Có |
+| 16 | `point_transaction` | `point_transaction_id` | INT | Có |
+| 17 | `stock_transfer` | `stock_transfer_id` | INT | Có |
+| 18 | `stock_transfer_detail` | `stock_transfer_detail_id` | INT | Có |
+| 19 | `stock_transaction` | `stock_transaction_id` | INT | Có |
+| 20 | `audit_log` | `audit_log_id` | INT | Có |
 
 ---
 
@@ -186,8 +185,7 @@ Tất cả 21 khóa ngoại trong cơ sở dữ liệu:
 | 6 | `[order]` | `branch_id` | `branch` | Đơn hàng tại chi nhánh |
 | 7 | `[order]` | `supplier_id` | `supplier` | Đơn nhập hàng từ nhà cung cấp |
 | 8 | `[order]` | `emp_id` | `employee` | Nhân viên xử lý đơn hàng |
-| 9 | `[order]` | `voucher_id` | `voucher` | Voucher áp dụng cho đơn hàng |
-| 10 | `[order]` | `warehouse_id` | `warehouse` | Kho xử lý đơn hàng |
+| 9 | `[order]` | `warehouse_id` | `warehouse` | Kho xử lý đơn hàng |
 | 11 | `order_detail` | `order_id` | `[order]` | Chi tiết thuộc đơn hàng |
 | 12 | `order_detail` | `product_id` | `product` | Sản phẩm trong đơn hàng |
 | 13 | `payment` | `order_id` | `[order]` | Thanh toán cho đơn hàng |
@@ -326,7 +324,7 @@ product.product_id ──────► order_detail.product_id
 
 #### 5.3.3. [order] với nhiều bảng
 
-Bảng `[order]` là bảng trung tâm của hệ thống thương mại, có 6 khóa ngoại:
+Bảng `[order]` là bảng trung tâm của hệ thống thương mại, có 5 khóa ngoại:
 
 | Khóa ngoại | Bảng tham chiếu | Loại liên kết | Mô tả |
 |-----------|----------------|---------------|-------|
@@ -334,7 +332,6 @@ Bảng `[order]` là bảng trung tâm của hệ thống thương mại, có 6 
 | `branch_id` | `branch` | NULL-able | Chi nhánh nơi đơn được tạo |
 | `supplier_id` | `supplier` | NULL-able | Nhà cung cấp (cho đơn PURCHASE) |
 | `emp_id` | `employee` | NULL-able | Nhân viên xử lý đơn hàng |
-| `voucher_id` | `voucher` | NULL-able | Voucher được áp dụng |
 | `warehouse_id` | `warehouse` | NULL-able | Kho xử lý đơn hàng |
 
 ```
@@ -343,12 +340,12 @@ customer ◄────── (N) [order] ──────► (1) branch
           │                              │
           ▼                              ▼
 supplier ◄┘                    ┌─────────────────┐
-                                │                 │
-                                │    [ order ]     │
-                                │                 │
-                                │  (6 khóa ngoại) │
-                                │                 │
-                                └────────┬────────┘
+                               │                 │
+                               │    [ order ]     │
+                               │                 │
+                               │  (5 khóa ngoại) │
+                               │                 │
+                               └────────┬────────┘
                                          │
         ┌────────────────────────────────┼────────────────────────────────┐
         │                                │                                │
@@ -594,7 +591,7 @@ Ma trận cardinality thể hiện số lượng tối thiểu và tối đa c�
 | `branch` | có | `warehouse` | 0 | N | 1 | 1 | 1:N |
 | `supplier` | cung cấp cho | `[order]` | 0 | N | 0 | 1 | 1:N |
 | `employee` | xử lý | `[order]` | 0 | N | 0 | 1 | 1:N |
-| `voucher` | được áp dụng cho | `[order]` | 0 | N | 0 | 1 | 1:N |
+
 | `warehouse` | phục vụ | `[order]` | 0 | N | 0 | 1 | 1:N |
 | `[order]` | chứa | `order_detail` | 1 | 1 | 1 | N | 1:N |
 | `[order]` | nhận | `payment` | 0 | N | 1 | 1 | 1:N |
@@ -695,9 +692,9 @@ Bảng `[order]` là bảng trung tâm nhất trong hệ thống thương mại,
                            │
                            │ supplier_id
                            ▼
-┌─────────┐  customer_id ┌─────────────┐  voucher_id  ┌──────────┐
-│customer ├─────────────►│             │◄─────────────┤ voucher  │
-└─────────┘              │             │              └──────────┘
+┌─────────┐  customer_id ┌─────────────┐
+│customer ├─────────────►│             │
+└─────────┘              │             │
                          │   [order]  │
 ┌─────────┐  emp_id      │             │              ┌──────────┐
 │employee ├─────────────►│             │◄─────────────┤ warehouse│

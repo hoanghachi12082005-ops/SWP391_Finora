@@ -72,7 +72,6 @@ Hệ thống điểm thưởng được thiết kế theo mô hình một-một 
 | Tên bảng | Mô tả |
 |----------|-------|
 | `supplier` | Lưu trữ thông tin nhà cung cấp sản phẩm |
-| `voucher` | Lưu trữ thông tin mã giảm giá và khuyến mãi |
 | `category` | Lưu trữ danh mục sản phẩm với cấu trúc phân cấp cha-con |
 | `product` | Lưu trữ thông tin sản phẩm |
 | `unit` | Lưu trữ đơn vị tính của sản phẩm (cái, kg, lít,...) |
@@ -151,8 +150,7 @@ Cơ sở dữ liệu sử dụng CHECK constraint để thực thi một số qu
 
 - **branch.status**: Chỉ chấp nhận giá trị 'active' hoặc 'locked', đảm bảo trạng thái chi nhánh luôn nằm trong danh sách hợp lệ.
 - **employee.status**: Chỉ chấp nhận 'ACTIVE', 'INACTIVE', hoặc 'ON_LEAVE', phản ánh ba trạng thái làm việc của nhân viên.
-- **voucher.discount_type**: Chỉ chấp nhận 'PERCENT' (giảm theo phần trăm) hoặc 'FIXED' (giảm số tiền cố định).
-- **voucher.status**: Mặc định là 'active', có thể mở rộng cho các trạng thái như 'expired' hoặc 'disabled'.
+
 
 SQL Server mặc định sử dụng hành vi NO ACTION cho các khóa ngoại, nghĩa là không thể xóa hoặc cập nhật bản ghi cha nếu có bản ghi con tham chiếu đến nó. Điều này đảm bảo tính toàn vẹn tham chiếu của dữ liệu.
 
@@ -176,11 +174,11 @@ Dưới đây là sơ đồ mô tả mối quan hệ logic giữa các nhóm ch�
 │  ┌──────────┴──────────────────────────────────────────────────────────────────┐ │
 │  │                              Commerce                                        │ │
 │  ├──────────────────────────────────────────────────────────────────────────────┤ │
-│  │ supplier          voucher              category                              │ │
-│  │      │                 │                   │ ◄──┐ (self-ref)                  │ │
-│  │      │                 │                   │     │ parent_category_id         │ │
-│  │      └────────┬────────┘                   │                             │ │
-│  │               │                              │──── product                  │ │
+│  │ supplier          category                                                      │ │
+│  │      │                                        │ ◄──┐ (self-ref)                  │ │
+│  │      │                                        │     │ parent_category_id         │ │
+│  │      └────────┬───────────────────────────────┘                             │ │
+│  │               │                                 │──── product                  │ │
 │  │               │                              │      │── unit                  │ │
 │  │               │                              │      │                        │ │
 │  │               ▼                              │      ▼                        │ │
@@ -260,18 +258,17 @@ Mỗi DAO class chịu trách nhiệm quản lý một hoặc nhiều bảng li�
 | 4 | customer | Business Partners | cus_id | 0 |
 | 5 | customer_point | Business Partners | cus_point_id | 1 |
 | 6 | supplier | Commerce | supplier_id | 0 |
-| 7 | voucher | Commerce | voucher_id | 0 |
-| 8 | category | Commerce | category_id | 1 (tự tham chiếu) |
-| 9 | product | Commerce | product_id | 2 |
-| 10 | unit | Commerce | unit_id | 0 |
-| 11 | [order] | Commerce | order_id | 7 |
-| 12 | order_detail | Commerce | order_detail_id | 2 |
-| 13 | payment | Commerce | payment_id | 1 |
-| 14 | point_transaction | Commerce | point_transaction_id | 2 |
-| 15 | branch | Warehouse & Stock | branch_id | 0 |
-| 16 | warehouse | Warehouse & Stock | warehouse_id | 1 |
-| 17 | inventory | Warehouse & Stock | inventory_id | 2 |
-| 18 | stock_transfer | Warehouse & Stock | stock_transfer_id | 3 |
-| 19 | stock_transfer_detail | Warehouse & Stock | stock_transfer_detail_id | 2 |
-| 20 | stock_transaction | Warehouse & Stock | stock_transaction_id | 3 |
-| 21 | audit_log | System | audit_log_id | 1 |
+| 7 | category | Commerce | category_id | 1 (tự tham chiếu) |
+| 8 | product | Commerce | product_id | 2 |
+| 9 | unit | Commerce | unit_id | 0 |
+| 10 | [order] | Commerce | order_id | 6 |
+| 11 | order_detail | Commerce | order_detail_id | 2 |
+| 12 | payment | Commerce | payment_id | 1 |
+| 13 | point_transaction | Commerce | point_transaction_id | 2 |
+| 14 | branch | Warehouse & Stock | branch_id | 0 |
+| 15 | warehouse | Warehouse & Stock | warehouse_id | 1 |
+| 16 | inventory | Warehouse & Stock | inventory_id | 2 |
+| 17 | stock_transfer | Warehouse & Stock | stock_transfer_id | 3 |
+| 18 | stock_transfer_detail | Warehouse & Stock | stock_transfer_detail_id | 2 |
+| 19 | stock_transaction | Warehouse & Stock | stock_transaction_id | 3 |
+| 20 | audit_log | System | audit_log_id | 1 |

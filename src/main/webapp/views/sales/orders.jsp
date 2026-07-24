@@ -2,6 +2,7 @@
     <%@ taglib prefix="c" uri="jakarta.tags.core" %>
         <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
             <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+                <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : sessionScope.employee.roleName}" />
                 <!DOCTYPE html>
                 <html lang="vi">
 
@@ -125,7 +126,9 @@
                                                     <th class="py-4 px-6">Mã đơn hàng</th>
                                                     <th class="py-4 px-6">Thời gian</th>
                                                     <th class="py-4 px-6">Khách hàng</th>
+                                                    <c:if test="${roleName != 'SalesStaff'}">
                                                     <th class="py-4 px-6">Thu ngân</th>
+                                                    </c:if>
                                                     <th class="py-4 px-6 text-right">Tổng tiền</th>
                                                     <th class="py-4 px-6 text-center">Trạng thái</th>
                                                     <th class="py-4 px-6 text-center">Thao tác</th>
@@ -141,8 +144,10 @@
                                                         </td>
                                                         <td class="py-4 px-6 font-medium">${not empty o.customerName ?
                                                             o.customerName : 'Khách vãng lai'}</td>
+                                                        <c:if test="${roleName != 'SalesStaff'}">
                                                         <td class="py-4 px-6 text-on-surface-variant">${o.employeeName}
                                                         </td>
+                                                        </c:if>
                                                         <td class="py-4 px-6 text-right font-semibold">
                                                             <fmt:formatNumber value="${o.totalAmount}"
                                                                 pattern="#,##0" /> đ
@@ -174,9 +179,9 @@
                                                         </td>
                                                     </tr>
                                                 </c:forEach>
-                                                <c:if test="${empty orders}">
+                                                    <c:if test="${empty orders}">
                                                     <tr>
-                                                        <td colspan="7"
+                                                        <td colspan="${roleName == 'SalesStaff' ? 6 : 7}"
                                                             class="py-12 text-center text-on-surface-variant">Không tìm
                                                             thấy đơn hàng nào.</td>
                                                     </tr>
@@ -425,6 +430,7 @@
                             var to = document.getElementById('filterDateTo');
                             var today = getTodayStr();
                             to.setAttribute('max', today);
+                            from.setAttribute('max', today);
                             if (from.value) {
                                 to.setAttribute('min', from.value);
                             } else {
@@ -443,11 +449,18 @@
                                 alert('Ngày kết thúc không được lớn hơn ngày hiện tại.');
                                 return false;
                             }
+                            if (from.value && from.value > today) {
+                                alert('Ngày bắt đầu không được lớn hơn ngày hiện tại.');
+                                return false;
+                            }
                             return true;
                         }
                         document.addEventListener('DOMContentLoaded', function() {
+                            var from = document.getElementById('filterDateFrom');
                             var to = document.getElementById('filterDateTo');
-                            if (to) to.setAttribute('max', getTodayStr());
+                            var today = getTodayStr();
+                            if (from) from.setAttribute('max', today);
+                            if (to) to.setAttribute('max', today);
                         });
 
                         function showOrderDetails(orderId) {

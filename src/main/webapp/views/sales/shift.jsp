@@ -4,415 +4,520 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finora — Quản lý ca làm</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="${pageContext.request.contextPath}/assets/css/base.css" rel="stylesheet">
-    <script>
-    tailwind.config={darkMode:"class",theme:{extend:{colors:{"secondary":"#b51a1b","primary-fixed-dim":"#ffb3ac","tertiary-fixed-dim":"#88d982","on-tertiary-container":"#d8ffd0","tertiary":"#11651d","background":"#f8f9fa","tertiary-fixed":"#a3f69c","inverse-on-surface":"#f0f1f2","error-container":"#ffdad6","surface-dim":"#d9dadb","on-background":"#191c1d","on-surface":"#191c1d","primary-fixed":"#ffdad6","on-secondary-container":"#fffbff","surface-container-lowest":"#ffffff","surface-container-highest":"#e1e3e4","surface-variant":"#e1e3e4","surface-container-high":"#e7e8e9","on-secondary":"#ffffff","inverse-surface":"#2e3132","on-tertiary":"#ffffff","on-secondary-fixed-variant":"#93000b","surface-tint":"#ba1a20","surface":"#f8f9fa","error":"#ba1a1a","on-error-container":"#93000a","primary-container":"#d32f2f","surface-container-low":"#f3f4f5","on-surface-variant":"#5b403d","on-primary-fixed-variant":"#930010","on-primary-container":"#fff2f0","surface-container":"#edeeef","surface-bright":"#f8f9fa","on-error":"#ffffff","on-tertiary-fixed":"#002204","tertiary-container":"#307f34","inverse-primary":"#ffb3ac","on-tertiary-fixed-variant":"#005312","on-primary-fixed":"#410003","outline":"#8f6f6c","secondary-fixed-dim":"#ffb4ab","outline-variant":"#e4beba","on-primary":"#ffffff","secondary-fixed":"#ffdad6","secondary-container":"#d93630","on-secondary-fixed":"#410002","primary":"#af101a"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"stack-lg":"24px","container-padding":"32px","stack-sm":"8px","gutter":"24px","section-gap":"48px","unit":"8px","stack-md":"16px"},fontFamily:{"body-md":["Inter"],"label-md":["Inter"],"caption":["Inter"],"headline-md":["Inter"],"headline-lg":["Inter"],"button-text":["Inter"],"title-lg":["Inter"],"display-lg":["Inter"],"body-lg":["Inter"]},fontSize:{"body-md":["16px",{lineHeight:"24px",fontWeight:"500"}],"label-md":["14px",{lineHeight:"20px",fontWeight:"600"}],"caption":["12px",{lineHeight:"16px",fontWeight:"400"}],"headline-md":["24px",{lineHeight:"32px",fontWeight:"700"}],"headline-lg":["32px",{lineHeight:"40px",letterSpacing:"-0.01em",fontWeight:"700"}],"button-text":["16px",{lineHeight:"24px",fontWeight:"600"}],"title-lg":["20px",{lineHeight:"28px",fontWeight:"600"}],"display-lg":["48px",{lineHeight:"56px",letterSpacing:"-0.02em",fontWeight:"700"}],"body-lg":["18px",{lineHeight:"26px",fontWeight:"500"}]}}}};
-    </script>
-    <link href="${pageContext.request.contextPath}/assets/css/sales.css?v=2" rel="stylesheet">
-</head>
-<body class="bg-background text-on-surface overflow-hidden h-screen">
-<div class="flex h-screen w-screen pl-[var(--sidebar-width,260px)] pr-6">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Finora — Quản lý ca làm</title>
+        <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link href="${pageContext.request.contextPath}/assets/css/base.css" rel="stylesheet">
+        <script>
+            tailwind.config = {darkMode:"class", theme:{extend:{colors:{"secondary":"#b51a1b", "primary-fixed-dim":"#ffb3ac", "tertiary-fixed-dim":"#88d982", "on-tertiary-container":"#d8ffd0", "tertiary":"#11651d", "background":"#f8f9fa", "tertiary-fixed":"#a3f69c", "inverse-on-surface":"#f0f1f2", "error-container":"#ffdad6", "surface-dim":"#d9dadb", "on-background":"#191c1d", "on-surface":"#191c1d", "primary-fixed":"#ffdad6", "on-secondary-container":"#fffbff", "surface-container-lowest":"#ffffff", "surface-container-highest":"#e1e3e4", "surface-variant":"#e1e3e4", "surface-container-high":"#e7e8e9", "on-secondary":"#ffffff", "inverse-surface":"#2e3132", "on-tertiary":"#ffffff", "on-secondary-fixed-variant":"#93000b", "surface-tint":"#ba1a20", "surface":"#f8f9fa", "error":"#ba1a1a", "on-error-container":"#93000a", "primary-container":"#d32f2f", "surface-container-low":"#f3f4f5", "on-surface-variant":"#5b403d", "on-primary-fixed-variant":"#930010", "on-primary-container":"#fff2f0", "surface-container":"#edeeef", "surface-bright":"#f8f9fa", "on-error":"#ffffff", "on-tertiary-fixed":"#002204", "tertiary-container":"#307f34", "inverse-primary":"#ffb3ac", "on-tertiary-fixed-variant":"#005312", "on-primary-fixed":"#410003", "outline":"#8f6f6c", "secondary-fixed-dim":"#ffb4ab", "outline-variant":"#e4beba", "on-primary":"#ffffff", "secondary-fixed":"#ffdad6", "secondary-container":"#d93630", "on-secondary-fixed":"#410002", "primary":"#af101a"}, borderRadius:{DEFAULT:"0.25rem", lg:"0.5rem", xl:"0.75rem", full:"9999px"}, spacing:{"stack-lg":"24px", "container-padding":"32px", "stack-sm":"8px", "gutter":"24px", "section-gap":"48px", "unit":"8px", "stack-md":"16px"}, fontFamily:{"body-md":["Inter"], "label-md":["Inter"], "caption":["Inter"], "headline-md":["Inter"], "headline-lg":["Inter"], "button-text":["Inter"], "title-lg":["Inter"], "display-lg":["Inter"], "body-lg":["Inter"]}, fontSize:{"body-md":["16px", {lineHeight:"24px", fontWeight:"500"}], "label-md":["14px", {lineHeight:"20px", fontWeight:"600"}], "caption":["12px", {lineHeight:"16px", fontWeight:"400"}], "headline-md":["24px", {lineHeight:"32px", fontWeight:"700"}], "headline-lg":["32px", {lineHeight:"40px", letterSpacing:"-0.01em", fontWeight:"700"}], "button-text":["16px", {lineHeight:"24px", fontWeight:"600"}], "title-lg":["20px", {lineHeight:"28px", fontWeight:"600"}], "display-lg":["48px", {lineHeight:"56px", letterSpacing:"-0.02em", fontWeight:"700"}], "body-lg":["18px", {lineHeight:"26px", fontWeight:"500"}]}}}};
+        </script>
+        <link href="${pageContext.request.contextPath}/assets/css/sales.css?v=2" rel="stylesheet">
+    </head>
+    <body class="bg-background text-on-surface overflow-hidden h-screen">
 
-    <!-- Include POS Sidebar -->
-    <jsp:include page="/views/common/sidebar.jsp" />
+<!-- Error Toast -->
+<div id="errorToast" class="hidden fixed top-6 right-6 z-[70] bg-error-container text-on-error-container px-6 py-4 rounded-xl shadow-xl flex items-center gap-3 animate-fadeIn">
+    <span class="material-symbols-outlined text-[24px]">error</span>
+    <div>
+        <div id="errorToastTitle" class="font-bold">Giao dịch thất bại!</div>
+        <div id="errorToastMessage" class="text-caption"></div>
+    </div>
+</div>
 
-    <!-- Main Workspace -->
-    <div class="flex-1 flex flex-col min-w-0 h-screen relative">
+        <div class="flex h-screen w-screen pl-[var(--sidebar-width,260px)] pr-6">
 
-        <!-- Header (72px) -->
-        <header class="h-[72px] bg-surface border-b border-outline-variant flex items-center px-6 gap-4 shrink-0 z-10">
-            <div class="flex items-center gap-6">
-                <h1 class="text-title-lg font-bold text-primary">Quản lý Ca làm</h1>
-                <div class="flex h-11 items-end gap-1">
-                    <button class="px-4 pb-2 border-b-2 border-primary text-primary font-bold text-sm">Ca hiện tại</button>
-                    <button class="px-4 pb-2 text-on-surface-variant hover:bg-surface-container-low text-sm rounded-t-lg transition-colors" onclick="scrollToHistory()">Lịch sử ca</button>
-                </div>
-            </div>
+            <!-- Include POS Sidebar -->
+            <jsp:include page="/views/common/sidebar.jsp" />
 
-            <jsp:include page="/common/header.jsp" />
-        </header>
+            <!-- Main Workspace -->
+            <div class="flex-1 flex flex-col min-w-0 h-screen relative">
 
-        <!-- Sub-Header Actions -->
-        <div class="h-14 bg-surface border-b border-outline-variant px-6 flex items-center justify-between shrink-0">
-            <span class="text-sm text-outline font-semibold">
-                <c:choose>
-                    <c:when test="${not empty activeShift}">
-                        Ca làm việc đang hoạt động của <b>${sessionScope.employee.fullName}</b>
-                    </c:when>
-                    <c:otherwise>Không có ca làm việc nào đang mở.</c:otherwise>
-                </c:choose>
-            </span>
-            <div class="flex items-center gap-3">
-                <c:choose>
-                    <c:when test="${not empty activeShift}">
-                        <button class="h-9 px-4 border border-secondary text-secondary rounded-lg hover:bg-error-container/20 transition-colors font-semibold text-xs flex items-center gap-1.5">
-                            <span class="material-symbols-outlined text-[16px]">print</span>
-                            <span>In báo cáo ca</span>
-                        </button>
-                        <button onclick="openCloseShiftModal()" class="h-9 px-4 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors font-semibold text-xs flex items-center gap-1.5 shadow-sm">
-                            <span class="material-symbols-outlined text-[16px]">lock_open</span>
-                            <span>Kết thúc ca</span>
-                        </button>
-                    </c:when>
-                    <c:otherwise>
-                        <button onclick="openOpenShiftModal()" class="h-9 px-4 bg-primary text-white rounded-lg hover:bg-primary/95 transition-colors font-semibold text-xs flex items-center gap-1.5 shadow-sm">
-                            <span class="material-symbols-outlined text-[16px]">add_circle</span>
-                            <span>Mở ca mới</span>
-                        </button>
-                    </c:otherwise>
-                </c:choose>
-            </div>
-        </div>
+                <!-- Header (72px) -->
+                <header class="h-[72px] bg-surface border-b border-outline-variant flex items-center px-6 gap-4 shrink-0 z-10">
+                    <div class="flex items-center gap-6">
+                        <h1 class="text-title-lg font-bold text-primary">Quản lý Ca làm</h1>
+                        <div class="flex h-11 items-end gap-1">
+                            <button class="px-4 pb-2 border-b-2 border-primary text-primary font-bold text-sm">Ca hiện tại</button>
+                            <button class="px-4 pb-2 text-on-surface-variant hover:bg-surface-container-low text-sm rounded-t-lg transition-colors" onclick="scrollToHistory()">Lịch sử ca</button>
+                        </div>
+                    </div>
 
-        <!-- Scrollable Dashboard / Form Content -->
-        <div class="flex-1 overflow-y-auto p-6 scrollbar-thin space-y-6">
+                    <jsp:include page="/common/header.jsp" />
+                </header>
 
-            
-            <c:if test="${param.error == 'need_open_shift'}">
-                <div class="bg-error-container text-on-error-container px-6 py-4 rounded-xl shadow-sm border border-red-200 flex items-center gap-3 animate-fadeIn">
-                    <span class="material-symbols-outlined text-[24px]">warning</span>
-                    <div>
-                        <div class="font-bold text-sm">Chưa mở ca làm việc!</div>
-                        <div class="text-xs opacity-90 mt-0.5">Bạn bắt buộc phải mở ca làm việc mới có thể sử dụng và truy cập chức năng máy POS.</div>
+                <!-- Sub-Header Actions -->
+                <div class="h-14 bg-surface border-b border-outline-variant px-6 flex items-center justify-between shrink-0">
+                    <span class="text-sm text-outline font-semibold">
+                        <c:choose>
+                            <c:when test="${not empty activeShift}">
+                                Ca làm việc đang hoạt động của <b>${sessionScope.employee.fullName}</b>
+                            </c:when>
+                            <c:otherwise>Không có ca làm việc nào đang mở.</c:otherwise>
+                        </c:choose>
+                    </span>
+                    <div class="flex items-center gap-3">
+                        <c:choose>
+                            <c:when test="${not empty activeShift}">
+
+                                <button onclick="openCloseShiftModal()" class="h-9 px-4 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors font-semibold text-xs flex items-center gap-1.5 shadow-sm">
+                                    <span class="material-symbols-outlined text-[16px]">lock_open</span>
+                                    <span>Kết thúc ca</span>
+                                </button>
+                            </c:when>
+                            <c:otherwise>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
                 </div>
-            </c:if>
-            
 
-            <c:choose>
-                <c:when test="${not empty activeShift}">
-                    <!-- ============================================== -->
-                    <!-- ACTIVE SHIFT BENTO GRID                        -->
-                    <!-- ============================================== -->
-                    <div class="grid grid-cols-12 gap-6">
+                <!-- Scrollable Dashboard / Form Content -->
+                <div class="flex-1 overflow-y-auto p-6 scrollbar-thin space-y-6">
 
-                        <!-- Left Panel (col-span-4): Cashier Profile / Meta -->
-                        <div class="col-span-4 bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm flex flex-col justify-between min-h-[340px]">
-                            <div class="flex flex-col items-center text-center">
-                                <!-- Pulsing Avatar Container -->
-                                <div class="relative">
-                                    <div class="w-20 h-20 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-3xl shadow-md border-2 border-primary">
-                                        ${fn:substring(sessionScope.employee.fullName, 0, 1)}
-                                    </div>
-                                    <span class="absolute bottom-1.5 right-1.5 w-4 h-4 bg-tertiary border-2 border-white rounded-full flex items-center justify-center">
-                                        <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                                    </span>
-                                </div>
 
-                                <div class="mt-4 leading-tight">
-                                    <h3 class="text-lg font-bold text-on-surface">${sessionScope.employee.fullName}</h3>
-                                    <span class="text-caption text-outline uppercase font-semibold mt-1 block">Nhân viên Thu ngân</span>
-                                </div>
-
-                                <div class="w-full border-t border-outline-variant/50 my-5 pt-4 space-y-3 text-sm text-left">
-                                    <div class="flex justify-between">
-                                        <span class="text-on-surface-variant">Chi nhánh</span>
-                                        <span class="font-bold text-on-surface">${shiftSummary.branchName}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-on-surface-variant">Mã máy thu ngân</span>
-                                        <span class="font-semibold text-on-surface">MAY-01</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-on-surface-variant">Giờ bắt đầu ca</span>
-                                        <span class="font-semibold text-on-surface">${activeShift.openedAt}</span>
-                                    </div>
-                                </div>
+                    <c:if test="${param.error == 'need_open_shift'}">
+                        <div class="bg-error-container text-on-error-container px-6 py-4 rounded-xl shadow-sm border border-red-200 flex items-center gap-3 animate-fadeIn">
+                            <span class="material-symbols-outlined text-[24px]">warning</span>
+                            <div>
+                                <div class="font-bold text-sm">Chưa mở ca làm việc!</div>
+                                <div class="text-xs opacity-90 mt-0.5">Bạn bắt buộc phải mở ca làm việc mới có thể sử dụng và truy cập chức năng máy POS.</div>
                             </div>
-
-                            <button onclick="openCashTxModal()" class="w-full h-11 border-2 border-dashed border-outline hover:border-primary text-on-surface hover:text-primary rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2">
-                                <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
-                                <span>Rút/Nạp tiền ngăn kéo</span>
-                            </button>
                         </div>
+                    </c:if>
 
-                        <!-- Right Panel (col-span-8): Cash Flow & Totals -->
-                        <div class="col-span-8 space-y-6">
 
-                            <!-- Two KPI Summary cards -->
-                            <div class="grid grid-cols-2 gap-6">
-                                <div class="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant shadow-sm">
-                                    <span class="text-xs font-bold text-outline uppercase tracking-wider">Tiền mặt đầu ca</span>
-                                    <div class="text-2xl font-bold text-primary mt-2">
-                                        <fmt:formatNumber value="${shiftSummary.openingCash}" pattern="#,##0" />đ
-                                    </div>
-                                    <!-- Progress bar design -->
-                                    <div class="w-full bg-surface-container-high h-2.5 rounded-full mt-4 overflow-hidden">
-                                        <div class="bg-primary h-full rounded-full" style="width: 35%"></div>
-                                    </div>
-                                </div>
+                    <c:choose>
+                        <c:when test="${not empty activeShift}">
+                            <!-- ============================================== -->
+                            <!-- ACTIVE SHIFT BENTO GRID                        -->
+                            <!-- ============================================== -->
+                            <div class="grid grid-cols-12 gap-6">
 
-                                <div class="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant shadow-sm">
-                                    <span class="text-xs font-bold text-outline uppercase tracking-wider">Doanh thu tiền mặt</span>
-                                    <div class="text-2xl font-bold text-tertiary mt-2">
-                                        +<fmt:formatNumber value="${shiftSummary.cashSales}" pattern="#,##0" />đ
-                                    </div>
-                                    <!-- Progress bar design -->
-                                    <div class="w-full bg-surface-container-high h-2.5 rounded-full mt-4 overflow-hidden">
-                                        <div class="bg-tertiary h-full rounded-full" style="width: 60%"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Cash Ledger Table Card -->
-                            <div class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm flex flex-col justify-between">
-                                <div class="border-b border-outline-variant/60 pb-3 mb-4">
-                                    <h3 class="text-label-md font-bold text-on-surface uppercase">Chi tiết dòng tiền mặt</h3>
-                                </div>
-                                <div class="space-y-3.5 text-sm">
-                                    <div class="flex justify-between font-medium text-on-surface-variant">
-                                        <span>Tiền mặt đầu ca (+)</span>
-                                        <span><fmt:formatNumber value="${shiftSummary.openingCash}" pattern="#,##0" />đ</span>
-                                    </div>
-                                    <div class="flex justify-between font-medium text-tertiary">
-                                        <span>Doanh thu bán hàng tiền mặt (+)</span>
-                                        <span>+<fmt:formatNumber value="${shiftSummary.cashSales}" pattern="#,##0" />đ</span>
-                                    </div>
-
-                                    <!-- Transactions list -->
-                                    <div id="ajaxTxList" class="space-y-3">
-                                        <c:forEach items="${transactions}" var="tx">
-                                            <div class="flex justify-between font-medium ${tx.type == 'DEPOSIT' ? 'text-tertiary' : 'text-error'}">
-                                                <span>
-                                                    ${tx.type == 'DEPOSIT' ? 'Nạp tiền lẻ (+)' : 'Rút tiền mặt (-)'}
-                                                    <c:if test="${not empty tx.note}">
-                                                        <span class="text-xs text-outline font-normal">(${tx.note})</span>
-                                                    </c:if>
-                                                </span>
-                                                <span>
-                                                    ${tx.type == 'DEPOSIT' ? '+' : '-'}<fmt:formatNumber value="${tx.amount}" pattern="#,##0" />đ
-                                                </span>
+                                <!-- Left Panel (col-span-4): Cashier Profile / Meta -->
+                                <div class="col-span-4 bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm flex flex-col justify-between min-h-[340px]">
+                                    <div class="flex flex-col items-center text-center">
+                                        <!-- Pulsing Avatar Container -->
+                                        <div class="relative">
+                                            <div class="w-20 h-20 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-3xl shadow-md border-2 border-primary">
+                                                ${fn:substring(sessionScope.employee.fullName, 0, 1)}
                                             </div>
+                                            <span class="absolute bottom-1.5 right-1.5 w-4 h-4 bg-tertiary border-2 border-white rounded-full flex items-center justify-center">
+                                                <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                                            </span>
+                                        </div>
+
+                                        <div class="mt-4 leading-tight">
+                                            <h3 class="text-lg font-bold text-on-surface">${sessionScope.employee.fullName}</h3>
+                                            <span class="text-caption text-outline uppercase font-semibold mt-1 block">Nhân viên Thu ngân</span>
+                                        </div>
+
+                                        <div class="w-full border-t border-outline-variant/50 my-5 pt-4 space-y-3 text-sm text-left">
+                                            <div class="flex justify-between">
+                                                <span class="text-on-surface-variant">Chi nhánh</span>
+                                                <span class="font-bold text-on-surface">${shiftSummary.branchName}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-on-surface-variant">Mã máy thu ngân</span>
+                                                <span class="font-semibold text-on-surface">MAY-01</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-on-surface-variant">Giờ bắt đầu ca</span>
+                                                <span class="font-semibold text-on-surface">${activeShift.openedAt}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button onclick="openCashTxModal()" class="w-full h-11 border-2 border-dashed border-outline hover:border-primary text-on-surface hover:text-primary rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2">
+                                        <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+                                        <span>Rút/Nạp tiền ngăn kéo</span>
+                                    </button>
+                                </div>
+
+                                <!-- Right Panel (col-span-8): Cash Flow & Totals -->
+                                <div class="col-span-8 space-y-6">
+
+                                    <!-- Two KPI Summary cards -->
+                                    <div class="grid grid-cols-2 gap-6">
+                                        <div class="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant shadow-sm">
+                                            <span class="text-xs font-bold text-outline uppercase tracking-wider">Tiền mặt đầu ca</span>
+                                            <div class="text-2xl font-bold text-primary mt-2">
+                                                <fmt:formatNumber value="${shiftSummary.openingCash}" pattern="#,##0" />đ
+                                            </div>
+                                            <!-- Progress bar design -->
+                                            <div class="w-full bg-surface-container-high h-2.5 rounded-full mt-4 overflow-hidden">
+                                                <div class="bg-primary h-full rounded-full" style="width: 35%"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant shadow-sm">
+                                            <span class="text-xs font-bold text-outline uppercase tracking-wider">Doanh thu tiền mặt</span>
+                                            <div class="text-2xl font-bold text-tertiary mt-2">
+                                                +<fmt:formatNumber value="${shiftSummary.cashSales}" pattern="#,##0" />đ
+                                            </div>
+                                            <!-- Progress bar design -->
+                                            <div class="w-full bg-surface-container-high h-2.5 rounded-full mt-4 overflow-hidden">
+                                                <div class="bg-tertiary h-full rounded-full" style="width: 60%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Cash Ledger Table Card -->
+                                    <div class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm flex flex-col justify-between">
+                                        <div class="border-b border-outline-variant/60 pb-3 mb-4">
+                                            <h3 class="text-label-md font-bold text-on-surface uppercase">Chi tiết dòng tiền mặt</h3>
+                                        </div>
+                                        <div class="space-y-3.5 text-sm">
+                                            <div class="flex justify-between font-medium text-on-surface-variant">
+                                                <span>Tiền mặt đầu ca (+)</span>
+                                                <span><fmt:formatNumber value="${shiftSummary.openingCash}" pattern="#,##0" />đ</span>
+                                            </div>
+                                            <div class="flex justify-between font-medium text-tertiary">
+                                                <span>Doanh thu bán hàng tiền mặt (+)</span>
+                                                <span>+<fmt:formatNumber value="${shiftSummary.cashSales}" pattern="#,##0" />đ</span>
+                                            </div>
+
+                                            <!-- Transactions list -->
+                                            <div id="ajaxTxList" class="space-y-3">
+                                                <c:forEach items="${transactions}" var="tx">
+                                                    <div class="flex justify-between font-medium ${tx.type == 'DEPOSIT' ? 'text-tertiary' : 'text-error'}">
+                                                        <span>
+                                                            ${tx.type == 'DEPOSIT' ? 'Nạp tiền lẻ (+)' : 'Rút tiền mặt (-)'}
+                                                            <c:if test="${not empty tx.note}">
+                                                                <span class="text-xs text-outline font-normal">(${tx.note})</span>
+                                                            </c:if>
+                                                        </span>
+                                                        <span>
+                                                            ${tx.type == 'DEPOSIT' ? '+' : '-'}<fmt:formatNumber value="${tx.amount}" pattern="#,##0" />đ
+                                                        </span>
+                                                    </div>
+                                                </c:forEach>
+                                            </div>
+
+                                            <hr class="border-outline-variant/60">
+
+                                            <!-- Expected Cash display -->
+                                            <div class="flex justify-between font-bold text-base bg-primary-container/20 p-4 rounded-xl text-primary">
+                                                <span>Dự kiến trong két (Tiền mặt lý thuyết)</span>
+                                                <span id="expectedCashText"><fmt:formatNumber value="${shiftSummary.expectedCash}" pattern="#,##0" />đ</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- Bottom row KPI breakdown (Full Width, grid-cols-3) -->
+                            <div class="grid grid-cols-3 gap-6">
+
+                                <!-- Support / Discrepancy Alert Card -->
+                                <div class="p-6 rounded-2xl border shadow-sm flex flex-col justify-between h-[130px] bg-surface-container-lowest border-outline-variant" id="cardSupportAlert">
+                                    <div>
+                                        <h4 class="text-xs font-bold text-outline uppercase tracking-wider">Cần hỗ trợ?</h4>
+                                        <p class="text-xs text-outline mt-1.5">
+                                            Liên hệ Quản lý chi nhánh qua số nội bộ <b>#101</b> để xử lý chênh lệch quỹ hoặc gửi yêu cầu nạp tiền khẩn cấp.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Card/Bank Transfer sales -->
+                                <div class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm flex flex-col justify-between h-[130px]">
+                                    <h4 class="text-xs font-bold text-outline uppercase tracking-wider">Thẻ / Chuyển khoản</h4>
+                                    <div>
+                                        <div class="text-[28px] font-bold text-primary">
+                                            <fmt:formatNumber value="${shiftSummary.bankSales}" pattern="#,##0" />đ
+                                        </div>
+                                        <span class="text-[10px] text-outline font-semibold">Tự động đối soát ngân hàng liên kết</span>
+                                    </div>
+                                </div>
+
+                                <!-- Total Shift Revenue -->
+                                <div class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm flex flex-col justify-between h-[130px]">
+                                    <h4 class="text-xs font-bold text-outline uppercase tracking-wider">Tổng doanh thu ca</h4>
+                                    <div>
+                                        <div class="text-[28px] font-bold text-primary">
+                                            <fmt:formatNumber value="${shiftSummary.totalRevenue}" pattern="#,##0" />đ
+                                        </div>
+                                        <span class="text-[10px] text-outline font-semibold">Bao gồm toàn bộ phương thức thanh toán</span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </c:when>
+
+                        <c:otherwise>
+                            <!-- ============================================== -->
+                            <!-- CLOSED STATE: OPEN SHIFT PORTAL / HISTORY      -->
+                            <!-- ============================================== -->
+                            <div class="max-w-xl mx-auto bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant shadow-lg text-center space-y-6">
+<!--                                <div class="w-16 h-16 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center mx-auto text-3xl">
+                                    <span class="material-symbols-outlined text-[32px]">lock</span>
+                                </div>
+                                <div class="leading-tight">
+                                    <h2 class="text-xl font-bold text-on-surface">Mở ca làm việc mới</h2>
+                                    <p class="text-xs text-outline mt-1.5">Vui lòng kiểm đếm tiền mặt thực tế trong két và nhập số dư đầu ca.</p>
+                                </div>
+-->
+
+                                <form action="${pageContext.request.contextPath}/shift" method="POST" class="space-y-4 text-left">
+                                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                                    <input type="hidden" name="action" value="open">
+                                    <div>
+                                        <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase">Số tiền mặt đầu ca (đ):</label>
+                                        <input type="text" name="openingCash" value="1,000,000" onkeyup="formatInputCurrency(this)" class="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-low font-bold text-primary focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none text-lg" autocomplete="off" required>
+                                    </div>
+                                    <button type="submit" class="w-full h-12 bg-primary text-on-primary rounded-xl font-bold hover:bg-secondary transition-colors shadow-md flex items-center justify-center gap-2">
+                                        <span class="material-symbols-outlined text-[20px]">play_circle</span>
+                                        <span>Xác nhận Mở ca làm việc</span>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Shift History List Section -->
+                            <div id="shiftHistorySection" class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm mt-10 overflow-x-auto">
+                                <div class="border-b border-outline-variant/60 pb-3 mb-4">
+                                    <h3 class="text-label-md font-bold text-on-surface uppercase">Lịch sử ca làm việc chi nhánh</h3>
+                                </div>
+                                <table class="w-full text-left text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-surface-container border-b border-outline-variant text-on-surface-variant font-semibold">
+                                            <th class="py-3 px-4">Mã ca</th>
+                                            <th class="py-3 px-4">Nhân viên</th>
+                                            <th class="py-3 px-4">Bắt đầu</th>
+                                            <th class="py-3 px-4">Kết thúc</th>
+                                            <th class="py-3 px-4 text-right">Tiền đầu ca</th>
+                                            <th class="py-3 px-4 text-right">Tiền cuối ca</th>
+                                            <th class="py-3 px-4 text-right">Tiền dự kiến</th>
+                                            <th class="py-3 px-4">Ghi chú</th>
+                                            <th class="py-3 px-4 text-center">Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-outline-variant">
+                                        <c:forEach items="${shiftHistory}" var="s">
+                                            <tr class="hover:bg-surface-container-low/30">
+                                                <td class="py-3 px-4 font-bold text-primary">#CA-${s.shiftId}</td>
+                                                <td class="py-3 px-4 font-semibold text-on-surface">${s.employeeName}</td>
+                                                <td class="py-3 px-4 text-on-surface-variant">${s.openedAt}</td>
+                                                <td class="py-3 px-4 text-on-surface-variant">${not empty s.closedAt ? s.closedAt : '---'}</td>
+                                                <td class="py-3 px-4 text-right font-medium">
+                                                    <fmt:formatNumber value="${s.openingCash}" pattern="#,##0" />đ
+                                                </td>
+                                                <td class="py-3 px-4 text-right font-bold text-tertiary">
+                                                    <c:choose>
+                                                        <c:when test="${s.status == 'CLOSED' && not empty s.closingCash}">
+                                                            <fmt:formatNumber value="${s.closingCash}" pattern="#,##0" />đ
+                                                        </c:when>
+                                                        <c:otherwise>---</c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td class="py-3 px-4 text-right font-medium text-on-surface-variant">
+                                                    <c:if test="${not empty s.expectedCash}">
+                                                        <fmt:formatNumber value="${s.expectedCash}" pattern="#,##0" />đ
+                                                    </c:if>
+                                                </td>
+                                                <td class="py-3 px-4 text-on-surface-variant max-w-[160px] truncate" title="${not empty s.closingNote ? s.closingNote : ''}">
+                                                    ${not empty s.closingNote ? s.closingNote : '---'}
+                                                </td>
+                                                <td class="py-3 px-4 text-center">
+                                                    <c:choose>
+                                                        <c:when test="${s.status == 'OPEN'}">
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full font-bold bg-tertiary-fixed text-on-tertiary-fixed text-[10px]">OPEN</span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full font-bold bg-surface-container-highest text-on-surface text-[10px]">CLOSED</span>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                            </tr>
                                         </c:forEach>
+                                    </tbody>
+                                </table>
+
+                                    <!-- Pagination Section -->
+                                    <div class="flex justify-between items-center mt-6 px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant/30">
+                                        <!-- Page Size Select and Record Info -->
+                                        <form method="get" action="${pageContext.request.contextPath}/shift" id="paginationForm" class="flex items-center gap-3">
+                                            <span class="text-caption text-outline">Hiển thị:</span>
+                                            <select name="sizeValue" onchange="this.form.submit()" 
+                                                class="text-caption bg-white rounded-lg border border-outline-variant/60 px-2 py-1 pr-7 outline-none cursor-pointer focus:border-primary">
+                                                <option value="10" ${sizeValue == 10 ? 'selected' : ''}>10 dòng</option>
+                                                <option value="20" ${sizeValue == 20 ? 'selected' : ''}>20 dòng</option>
+                                                <option value="50" ${sizeValue == 50 ? 'selected' : ''}>50 dòng</option>
+                                                <option value="100" ${sizeValue == 100 ? 'selected' : ''}>Tất cả</option>
+                                            </select>
+                                            <span class="text-caption text-outline">
+                                                Hiển thị <strong class="text-on-surface">${startRecord}</strong> - <strong class="text-on-surface">${endRecord}</strong> trong số <strong class="text-on-surface">${totalRecords}</strong> ca
+                                            </span>
+                                        </form>
+
+                                        <!-- Page Numbers -->
+                                        <c:if test="${totalPages > 1}">
+                                            <div class="flex items-center gap-1.5">
+                                                <!-- Previous Page -->
+                                                <c:if test="${currentPage > 1}">
+                                                    <a href="${pageContext.request.contextPath}/shift?page=${currentPage - 1}&sizeValue=${sizeValue}"
+                                                       class="w-8 h-8 rounded-lg border border-outline-variant/60 flex items-center justify-center text-caption hover:bg-surface-container-high hover:text-primary transition-colors bg-white text-on-surface-variant font-medium">
+                                                        &lt;
+                                                    </a>
+                                                </c:if>
+
+                                                <!-- Page Numbers Logic -->
+                                                <c:choose>
+                                                    <c:when test="${totalPages <= 5}">
+                                                        <c:forEach begin="1" end="${totalPages}" var="i">
+                                                            <a href="${pageContext.request.contextPath}/shift?page=${i}&sizeValue=${sizeValue}"
+                                                               class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${i == currentPage ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                                ${i}
+                                                            </a>
+                                                        </c:forEach>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <!-- First Page -->
+                                                        <a href="${pageContext.request.contextPath}/shift?page=1&sizeValue=${sizeValue}"
+                                                           class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${currentPage == 1 ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                            1
+                                                        </a>
+
+                                                        <!-- Dots Left -->
+                                                        <c:if test="${currentPage > 3}">
+                                                            <span class="text-caption text-outline px-1">...</span>
+                                                        </c:if>
+
+                                                        <!-- Mid Pages -->
+                                                        <c:forEach begin="${currentPage - 1 < 2 ? 2 : currentPage - 1}"
+                                                                   end="${currentPage + 1 > totalPages - 1 ? totalPages - 1 : currentPage + 1}"
+                                                                   var="i">
+                                                            <a href="${pageContext.request.contextPath}/shift?page=${i}&sizeValue=${sizeValue}"
+                                                               class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${i == currentPage ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                                ${i}
+                                                            </a>
+                                                        </c:forEach>
+
+                                                        <!-- Dots Right -->
+                                                        <c:if test="${currentPage < totalPages - 2}">
+                                                            <span class="text-caption text-outline px-1">...</span>
+                                                        </c:if>
+
+                                                        <!-- Last Page -->
+                                                        <a href="${pageContext.request.contextPath}/shift?page=${totalPages}&sizeValue=${sizeValue}"
+                                                           class="w-8 h-8 rounded-lg border flex items-center justify-center text-caption transition-colors ${currentPage == totalPages ? 'bg-primary border-primary text-white font-bold' : 'border-outline-variant/60 bg-white hover:bg-surface-container-high hover:text-primary text-on-surface-variant font-medium'}">
+                                                            ${totalPages}
+                                                        </a>
+                                                    </c:otherwise>
+                                                </c:choose>
+
+                                                <!-- Next Page -->
+                                                <c:if test="${currentPage < totalPages}">
+                                                    <a href="${pageContext.request.contextPath}/shift?page=${currentPage + 1}&sizeValue=${sizeValue}"
+                                                       class="w-8 h-8 rounded-lg border border-outline-variant/60 flex items-center justify-center text-caption hover:bg-surface-container-high hover:text-primary transition-colors bg-white text-on-surface-variant font-medium">
+                                                        &gt;
+                                                    </a>
+                                                </c:if>
+                                            </div>
+                                        </c:if>
                                     </div>
-
-                                    <hr class="border-outline-variant/60">
-                                    
-                                    <!-- Expected Cash display -->
-                                    <div class="flex justify-between font-bold text-base bg-primary-container/20 p-4 rounded-xl text-primary">
-                                        <span>Dự kiến trong két (Tiền mặt lý thuyết)</span>
-                                        <span id="expectedCashText"><fmt:formatNumber value="${shiftSummary.expectedCash}" pattern="#,##0" />đ</span>
-                                    </div>
-                                </div>
                             </div>
-                        </div>
+                        </c:otherwise>
+                    </c:choose>
 
-                    </div>
+                </div>
 
-                    <!-- Bottom row KPI breakdown (Full Width, grid-cols-3) -->
-                    <div class="grid grid-cols-3 gap-6">
-                        
-                        <!-- Support / Discrepancy Alert Card -->
-                        <div class="p-6 rounded-2xl border shadow-sm flex flex-col justify-between h-[130px] bg-surface-container-lowest border-outline-variant" id="cardSupportAlert">
-                            <div>
-                                <h4 class="text-xs font-bold text-outline uppercase tracking-wider">Cần hỗ trợ?</h4>
-                                <p class="text-xs text-outline mt-1.5">
-                                    Liên hệ Quản lý chi nhánh qua số nội bộ <b>#101</b> để xử lý chênh lệch quỹ hoặc gửi yêu cầu nạp tiền khẩn cấp.
-                                </p>
-                            </div>
-                        </div>
+            </div>
+        </div>
 
-                        <!-- Card/Bank Transfer sales -->
-                        <div class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm flex flex-col justify-between h-[130px]">
-                            <h4 class="text-xs font-bold text-outline uppercase tracking-wider">Thẻ / Chuyển khoản</h4>
-                            <div>
-                                <div class="text-[28px] font-bold text-primary">
-                                    <fmt:formatNumber value="${shiftSummary.bankSales}" pattern="#,##0" />đ
-                                </div>
-                                <span class="text-[10px] text-outline font-semibold">Tự động đối soát ngân hàng liên kết</span>
-                            </div>
-                        </div>
+        <!-- ============================================== -->
+        <!-- MODAL: DEPOSIT / WITHDRAW                      -->
+        <!-- ============================================== -->
+        <div id="cashTxModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-blur">
+            <div class="bg-surface-container-lowest w-full max-w-md p-6 rounded-2xl border border-outline-variant shadow-2xl space-y-4">
+                <div class="flex justify-between items-center border-b border-outline-variant/60 pb-3">
+                    <h3 class="text-label-md font-bold text-on-surface uppercase">Rút/Nạp tiền mặt ngăn kéo</h3>
+                    <button onclick="closeCashTxModal()" class="w-8 h-8 rounded-full hover:bg-surface-container-high flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[20px]">close</span>
+                    </button>
+                </div>
 
-                        <!-- Total Shift Revenue -->
-                        <div class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm flex flex-col justify-between h-[130px]">
-                            <h4 class="text-xs font-bold text-outline uppercase tracking-wider">Tổng doanh thu ca</h4>
-                            <div>
-                                <div class="text-[28px] font-bold text-primary">
-                                    <fmt:formatNumber value="${shiftSummary.totalRevenue}" pattern="#,##0" />đ
-                                </div>
-                                <span class="text-[10px] text-outline font-semibold">Bao gồm toàn bộ phương thức thanh toán</span>
-                            </div>
-                        </div>
-
-                    </div>
-                </c:when>
-
-                <c:otherwise>
-                    <!-- ============================================== -->
-                    <!-- CLOSED STATE: OPEN SHIFT PORTAL / HISTORY      -->
-                    <!-- ============================================== -->
-                    <div class="max-w-xl mx-auto bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant shadow-lg text-center space-y-6">
-                        <div class="w-16 h-16 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center mx-auto text-3xl">
-                            <span class="material-symbols-outlined text-[32px]">lock</span>
-                        </div>
-                        <div class="leading-tight">
-                            <h2 class="text-xl font-bold text-on-surface">Mở ca làm việc mới</h2>
-                            <p class="text-xs text-outline mt-1.5">Vui lòng kiểm đếm tiền mặt thực tế trong két và nhập số dư đầu ca.</p>
-                        </div>
-
-                        <form action="${pageContext.request.contextPath}/shift" method="POST" class="space-y-4 text-left">
-                            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-                            <input type="hidden" name="action" value="open">
-                            <div>
-                                <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase">Số tiền mặt đầu ca (đ):</label>
-                                <input type="text" name="openingCash" value="1,000,000" onkeyup="formatInputCurrency(this)" class="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-low font-bold text-primary focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none text-lg" autocomplete="off" required>
-                            </div>
-                            <button type="submit" class="w-full h-12 bg-primary text-on-primary rounded-xl font-bold hover:bg-secondary transition-colors shadow-md flex items-center justify-center gap-2">
-                                <span class="material-symbols-outlined text-[20px]">play_circle</span>
-                                <span>Xác nhận Mở ca làm việc</span>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase">Loại giao dịch:</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="button" id="tabWithdraw" onclick="selectTxType('WITHDRAW')" class="h-10 rounded-lg border-2 border-primary bg-on-primary-container text-primary font-bold text-sm flex items-center justify-center gap-1.5">
+                                <span class="material-symbols-outlined text-[18px]">remove_circle</span>
+                                <span>Rút tiền</span>
                             </button>
-                        </form>
-                    </div>
-
-                    <!-- Shift History List Section -->
-                    <div id="shiftHistorySection" class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant shadow-sm mt-10 overflow-x-auto">
-                        <div class="border-b border-outline-variant/60 pb-3 mb-4">
-                            <h3 class="text-label-md font-bold text-on-surface uppercase">Lịch sử ca làm việc chi nhánh</h3>
+                            <button type="button" id="tabDeposit" onclick="selectTxType('DEPOSIT')" class="h-10 rounded-lg border border-outline-variant hover:bg-surface-container-high text-on-surface font-semibold text-sm flex items-center justify-center gap-1.5">
+                                <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                                <span>Nạp thêm tiền</span>
+                            </button>
                         </div>
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead>
-                                <tr class="bg-surface-container border-b border-outline-variant text-on-surface-variant font-semibold">
-                                    <th class="py-3 px-4">Mã ca</th>
-                                    <th class="py-3 px-4">Nhân viên</th>
-                                    <th class="py-3 px-4">Bắt đầu</th>
-                                    <th class="py-3 px-4">Kết thúc</th>
-                                    <th class="py-3 px-4 text-right">Tiền đầu ca</th>
-                                    <th class="py-3 px-4 text-right">Tiền cuối ca</th>
-                                    <th class="py-3 px-4 text-right">Tiền dự kiến</th>
-                                    <th class="py-3 px-4 text-center">Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-outline-variant">
-                                <c:forEach items="${shiftHistory}" var="s">
-                                    <tr class="hover:bg-surface-container-low/30">
-                                        <td class="py-3 px-4 font-bold text-primary">#CA-${s.shiftId}</td>
-                                        <td class="py-3 px-4 font-semibold text-on-surface">${s.employeeName}</td>
-                                        <td class="py-3 px-4 text-on-surface-variant">${s.openedAt}</td>
-                                        <td class="py-3 px-4 text-on-surface-variant">${not empty s.closedAt ? s.closedAt : '---'}</td>
-                                        <td class="py-3 px-4 text-right font-medium">
-                                            <fmt:formatNumber value="${s.openingCash}" pattern="#,##0" />đ
-                                        </td>
-                                        <td class="py-3 px-4 text-right font-bold text-tertiary">
-                                            <c:choose>
-                                                <c:when test="${not empty s.closingCash}">
-                                                    <fmt:formatNumber value="${s.closingCash}" pattern="#,##0" />đ
-                                                </c:when>
-                                                <c:otherwise>---</c:otherwise>
-                                            </c:choose>
-                                        </td>
-                                        <td class="py-3 px-4 text-right font-medium text-on-surface-variant">
-                                            <fmt:formatNumber value="${s.expectedCash}" pattern="#,##0" />đ
-                                        </td>
-                                        <td class="py-3 px-4 text-center">
-                                            <c:choose>
-                                                <c:when test="${s.status == 'OPEN'}">
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full font-bold bg-tertiary-fixed text-on-tertiary-fixed text-[10px]">OPEN</span>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full font-bold bg-surface-container-highest text-on-surface text-[10px]">CLOSED</span>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </td>
-                                    </tr>
-                                </c:forEach>
-                            </tbody>
-                        </table>
                     </div>
-                </c:otherwise>
-            </c:choose>
+                    <div id="availableCashRow" class="bg-tertiary-fixed/20 p-3 rounded-xl border border-tertiary/20">
+                        <div class="text-xs text-outline">Số dư khả dụng trong két:</div>
+                        <div id="availableCashDisplay" class="text-lg font-bold text-tertiary mt-0.5">
+                            <fmt:formatNumber value="${shiftSummary.expectedCash}" pattern="#,##0" />đ
+                        </div>
+                    </div>
 
-        </div>
+                    <div>
+                        <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase">Số tiền (đ):</label>
+                        <input type="text" id="txAmount" placeholder="Nhập số tiền..." onkeyup="formatInputCurrency(this)" class="w-full h-11 px-4 rounded-xl border border-outline-variant bg-surface-container-low font-bold text-primary outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-base" autocomplete="off">
+                    </div>
 
-    </div>
-</div>
+                    <div>
+                        <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase">Ghi chú / Lý do:</label>
+                        <textarea id="txNote" rows="2" placeholder="Ví dụ: Nộp tiền doanh thu về két chính / Bổ sung tiền lẻ đầu ca..." class="w-full p-3 rounded-xl border border-outline-variant bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none"></textarea>
+                    </div>
+                </div>
 
-<!-- ============================================== -->
-<!-- MODAL: DEPOSIT / WITHDRAW                      -->
-<!-- ============================================== -->
-<div id="cashTxModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-blur">
-    <div class="bg-surface-container-lowest w-full max-w-md p-6 rounded-2xl border border-outline-variant shadow-2xl space-y-4">
-        <div class="flex justify-between items-center border-b border-outline-variant/60 pb-3">
-            <h3 class="text-label-md font-bold text-on-surface uppercase">Rút/Nạp tiền mặt ngăn kéo</h3>
-            <button onclick="closeCashTxModal()" class="w-8 h-8 rounded-full hover:bg-surface-container-high flex items-center justify-center">
-                <span class="material-symbols-outlined text-[20px]">close</span>
-            </button>
-        </div>
-
-        <div class="space-y-4">
-            <div>
-                <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase">Loại giao dịch:</label>
-                <div class="grid grid-cols-2 gap-3">
-                    <button type="button" id="tabWithdraw" onclick="selectTxType('WITHDRAW')" class="h-10 rounded-lg border-2 border-primary bg-on-primary-container text-primary font-bold text-sm flex items-center justify-center gap-1.5">
-                        <span class="material-symbols-outlined text-[18px]">remove_circle</span>
-                        <span>Rút tiền</span>
-                    </button>
-                    <button type="button" id="tabDeposit" onclick="selectTxType('DEPOSIT')" class="h-10 rounded-lg border border-outline-variant hover:bg-surface-container-high text-on-surface font-semibold text-sm flex items-center justify-center gap-1.5">
-                        <span class="material-symbols-outlined text-[18px]">add_circle</span>
-                        <span>Nạp thêm tiền</span>
-                    </button>
+                <div class="flex justify-end gap-3 border-t border-outline-variant/60 pt-4">
+                    <button onclick="closeCashTxModal()" class="h-11 px-5 border border-outline-variant rounded-xl font-semibold text-sm hover:bg-surface-container-high transition-colors">Hủy bỏ</button>
+                    <button id="submitCashTxBtn" onclick="submitCashTx()" class="h-11 px-6 bg-primary text-on-primary rounded-xl font-bold text-sm hover:bg-secondary transition-colors shadow-md">Xác nhận</button>
                 </div>
             </div>
-
-            <div>
-                <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase">Số tiền (đ):</label>
-                <input type="text" id="txAmount" placeholder="Nhập số tiền..." onkeyup="formatInputCurrency(this)" class="w-full h-11 px-4 rounded-xl border border-outline-variant bg-surface-container-low font-bold text-primary outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-base" autocomplete="off">
-            </div>
-
-            <div>
-                <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase">Ghi chú / Lý do:</label>
-                <textarea id="txNote" rows="2" placeholder="Ví dụ: Nộp tiền doanh thu về két chính / Bổ sung tiền lẻ đầu ca..." class="w-full p-3 rounded-xl border border-outline-variant bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none"></textarea>
-            </div>
         </div>
 
-        <div class="flex justify-end gap-3 border-t border-outline-variant/60 pt-4">
-            <button onclick="closeCashTxModal()" class="h-11 px-5 border border-outline-variant rounded-xl font-semibold text-sm hover:bg-surface-container-high transition-colors">Hủy bỏ</button>
-            <button onclick="submitCashTx()" class="h-11 px-6 bg-primary text-on-primary rounded-xl font-bold text-sm hover:bg-secondary transition-colors shadow-md">Xác nhận</button>
-        </div>
-    </div>
-</div>
-
-<!-- ============================================== -->
-<!-- MODAL: CLOSE SHIFT                             -->
-<!-- ============================================== -->
-<div id="closeShiftModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-blur">
-    <div class="bg-surface-container-lowest w-full max-w-md p-6 rounded-2xl border border-outline-variant shadow-2xl space-y-4">
-        <div class="flex justify-between items-center border-b border-outline-variant/60 pb-3">
-            <h3 class="text-label-md font-bold text-on-surface uppercase">Kiểm đếm kết thúc ca làm</h3>
-            <button onclick="closeCloseShiftModal()" class="w-8 h-8 rounded-full hover:bg-surface-container-high flex items-center justify-center">
-                <span class="material-symbols-outlined text-[20px]">close</span>
-            </button>
-        </div>
-
-        <form action="${pageContext.request.contextPath}/shift" method="POST" class="space-y-4">
-            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-            <input type="hidden" name="action" value="close">
-            <div class="bg-primary-container/10 p-4 rounded-xl border border-primary/20 leading-snug">
-                <div class="text-xs text-outline">Số dư tiền mặt lý thuyết trong ngăn kéo:</div>
-                <div class="text-xl font-bold text-primary mt-1">
-                    <fmt:formatNumber value="${shiftSummary.expectedCash}" pattern="#,##0" />đ
+        <!-- ============================================== -->
+        <!-- MODAL: CLOSE SHIFT                             -->
+        <!-- ============================================== -->
+        <div id="closeShiftModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-blur">
+            <div class="bg-surface-container-lowest w-full max-w-md p-6 rounded-2xl border border-outline-variant shadow-2xl space-y-4">
+                <div class="flex justify-between items-center border-b border-outline-variant/60 pb-3">
+                    <h3 class="text-label-md font-bold text-on-surface uppercase">Kiểm đếm kết thúc ca làm</h3>
+                    <button onclick="closeCloseShiftModal()" class="w-8 h-8 rounded-full hover:bg-surface-container-high flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[20px]">close</span>
+                    </button>
                 </div>
-            </div>
 
-            <div>
-                <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase">Số tiền mặt kiểm đếm thực tế (đ):</label>
-                <input type="text" name="closingCash" id="closingCashInput" onkeyup="formatInputCurrency(this)" class="w-full h-11 px-4 rounded-xl border border-outline-variant bg-surface-container-low font-bold text-primary outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-base" autocomplete="off" required>
-            </div>
+                <form action="${pageContext.request.contextPath}/shift" method="POST" class="space-y-4">
+                    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+                    <input type="hidden" name="action" value="close">
+                    <div class="bg-primary-container/10 p-4 rounded-xl border border-primary/20 leading-snug">
+                        <div class="text-xs text-outline">Số dư tiền mặt lý thuyết trong ngăn kéo:</div>
+                        <div id="closeShiftExpected" class="text-xl font-bold text-primary mt-1" data-expected="<fmt:formatNumber value='${shiftSummary.expectedCash}' pattern='#,##0' />đ">
+                            <fmt:formatNumber value="${shiftSummary.expectedCash}" pattern="#,##0" />đ
+                        </div>
+                    </div>
 
-            <div class="flex justify-end gap-3 border-t border-outline-variant/60 pt-4">
-                <button type="button" onclick="closeCloseShiftModal()" class="h-11 px-5 border border-outline-variant rounded-xl font-semibold text-sm hover:bg-surface-container-high transition-colors">Hủy bỏ</button>
-                <button type="submit" class="h-11 px-6 bg-secondary text-white rounded-xl font-bold text-sm hover:bg-secondary/90 transition-colors shadow-md">Xác nhận Kết thúc ca</button>
+                    <div>
+                        <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase">Số tiền mặt kiểm đếm thực tế (đ):</label>
+                        <input type="text" name="closingCash" id="closingCashInput" onkeyup="formatInputCurrency(this); checkClosingDiscrepancy();" class="w-full h-11 px-4 rounded-xl border border-outline-variant bg-surface-container-low font-bold text-primary outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-base" autocomplete="off" required>
+                    </div>
+
+                    <div id="closingNoteGroup" class="hidden">
+                        <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase">Lý do chênh lệch:</label>
+                        <textarea name="closingNote" id="closingNoteInput" rows="3" placeholder="Nhập lý do chênh lệch tiền mặt (bắt buộc nếu số tiền thực tế khác với dự kiến)..." class="w-full p-3 rounded-xl border border-outline-variant bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none"></textarea>
+                    </div>
+
+                    <div class="flex justify-end gap-3 border-t border-outline-variant/60 pt-4">
+                        <button type="button" onclick="closeCloseShiftModal()" class="h-11 px-5 border border-outline-variant rounded-xl font-semibold text-sm hover:bg-surface-container-high transition-colors">Hủy bỏ</button>
+                        <button type="submit" class="h-11 px-6 bg-secondary text-white rounded-xl font-bold text-sm hover:bg-secondary/90 transition-colors shadow-md">Xác nhận Kết thúc ca</button>
+                    </div>
+                </form>
             </div>
-        </form>
-    </div>
-</div>
+        </div>
 
 <script>
     const CSRF_TOKEN = '${sessionScope.csrfToken}';
@@ -443,33 +548,71 @@
         document.getElementById('cashTxModal').classList.remove('hidden');
         document.getElementById('txAmount').value = "";
         document.getElementById('txNote').value = "";
+        document.getElementById('availableCashDisplay').innerText =
+            document.getElementById('expectedCashText')?.innerText || "0đ";
         selectTxType('WITHDRAW');
     }
 
     function closeCashTxModal() {
         document.getElementById('cashTxModal').classList.add('hidden');
+        resetSubmitBtn();
+    }
+
+    function resetSubmitBtn() {
+        const btn = document.getElementById('submitCashTxBtn');
+        btn.disabled = false;
+        btn.innerHTML = 'Xác nhận';
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
 
     function selectTxType(type) {
         currentTxType = type;
         let tabW = document.getElementById('tabWithdraw');
         let tabD = document.getElementById('tabDeposit');
+        let availableRow = document.getElementById('availableCashRow');
         
         if (type === 'WITHDRAW') {
             tabW.className = "h-10 rounded-lg border-2 border-primary bg-on-primary-container text-primary font-bold text-sm flex items-center justify-center gap-1.5";
             tabD.className = "h-10 rounded-lg border border-outline-variant hover:bg-surface-container-high text-on-surface font-semibold text-sm flex items-center justify-center gap-1.5";
+            if (availableRow) availableRow.classList.remove('hidden');
         } else {
             tabD.className = "h-10 rounded-lg border-2 border-primary bg-on-primary-container text-primary font-bold text-sm flex items-center justify-center gap-1.5";
             tabW.className = "h-10 rounded-lg border border-outline-variant hover:bg-surface-container-high text-on-surface font-semibold text-sm flex items-center justify-center gap-1.5";
+            if (availableRow) availableRow.classList.add('hidden');
         }
     }
 
+    function showErrorToast(message) {
+        const t = document.getElementById('errorToast');
+        document.getElementById('errorToastMessage').textContent = message;
+        t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 4000);
+    }
+
     function submitCashTx() {
+        const btn = document.getElementById('submitCashTxBtn');
+        if (btn.disabled) return;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined inline-block animate-spin text-[18px]">refresh</span> Đang xử lý...';
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+
         let amtRaw = document.getElementById('txAmount').value;
         let amt = amtRaw.replace(/\D/g, "");
         if (!amt || parseInt(amt) <= 0) {
-            alert("Vui lòng nhập số tiền hợp lệ lớn hơn 0.");
+            showErrorToast("Vui lòng nhập số tiền hợp lệ lớn hơn 0.");
+            resetSubmitBtn();
             return;
+        }
+
+        // Client-side balance check for WITHDRAW
+        if (currentTxType === 'WITHDRAW') {
+            let availableEl = document.getElementById('expectedCashText');
+            let available = parseInt(availableEl ? availableEl.innerText.replace(/\D/g, "") : "0");
+            if (parseInt(amt) > available) {
+                showErrorToast("Số tiền rút (" + formatVND(amt) + ") vượt quá số dư trong két (" + formatVND(available) + ").");
+                resetSubmitBtn();
+                return;
+            }
         }
 
         let note = document.getElementById('txNote').value.trim();
@@ -510,27 +653,81 @@
 
                 closeCashTxModal();
             } else {
-                alert(data.message);
+                showErrorToast(data.message);
+                resetSubmitBtn();
             }
         })
         .catch(err => {
             console.error(err);
-            alert("Lỗi thực hiện giao dịch.");
+            showErrorToast("Lỗi thực hiện giao dịch.");
+            resetSubmitBtn();
         });
     }
 
     // Close Shift modal handlers
-    function openCloseShiftModal() {
-        document.getElementById('closeShiftModal').classList.remove('hidden');
+    function openCloseShiftModal(prefillClosing, prefillExpected) {
+        const modal = document.getElementById('closeShiftModal');
+        modal.classList.remove('hidden');
         document.getElementById('closingCashInput').value = "";
+        document.getElementById('closingNoteInput').value = "";
+        document.getElementById('closingNoteGroup').classList.add('hidden');
+        if (prefillClosing) {
+            document.getElementById('closingCashInput').value = prefillClosing;
+        }
+        // Trigger discrepancy check after setting value
+        setTimeout(checkClosingDiscrepancy, 50);
     }
 
     function closeCloseShiftModal() {
         document.getElementById('closeShiftModal').classList.add('hidden');
     }
 
+    function checkClosingDiscrepancy() {
+        let raw = document.getElementById('closingCashInput').value.replace(/\D/g, "");
+        let closing = parseInt(raw) || 0;
+        let expectedEl = document.getElementById('closeShiftExpected');
+        let expected = expectedEl ? parseInt(expectedEl.dataset.expected.replace(/\D/g, "")) : 0;
+        let noteGroup = document.getElementById('closingNoteGroup');
+        if (closing > 0 && closing !== expected) {
+            noteGroup.classList.remove('hidden');
+        } else {
+            noteGroup.classList.add('hidden');
+            document.getElementById('closingNoteInput').value = "";
+        }
+    }
+
     // Handle discrepancy alerts if shift was closed and discrepancy exists (> 500,000đ)
     window.addEventListener('DOMContentLoaded', () => {
+        // Handle error/success params
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        const success = urlParams.get('success');
+        
+        if (error === 'need_reason') {
+            const expected = urlParams.get('expected');
+            const closing = urlParams.get('closing');
+            if (closing) {
+                const formatted = new Intl.NumberFormat('vi-VN').format(parseInt(closing));
+                openCloseShiftModal(formatted, expected);
+            }
+        } else if (error === 'empty_closing_cash') {
+            showErrorToast("Vui lòng nhập số tiền mặt kiểm đếm thực tế hợp lệ (lớn hơn 0).");
+        } else if (error === 'close_failed') {
+            showErrorToast("Không thể kết thúc ca làm việc. Vui lòng thử lại.");
+        } else if (error === 'no_active_shift') {
+            showErrorToast("Không có ca làm việc nào đang mở để kết thúc.");
+        } else if (error === 'need_open_shift') {
+            // already handled above with banner
+        }
+        
+        if (success === 'closed') {
+            const t = document.getElementById('errorToast');
+            document.getElementById('errorToastTitle').textContent = 'Thành công!';
+            document.getElementById('errorToastMessage').textContent = 'Ca làm việc đã được kết thúc thành công.';
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 4000);
+        }
+        
         // Only run if shift info is available
         <c:if test="${not empty activeShift}">
             let expectedCash = ${shiftSummary.expectedCash};
@@ -558,6 +755,6 @@
         </c:if>
     });
 </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
 </html>

@@ -99,12 +99,24 @@ public class DatabaseMigrationListener implements ServletContextListener {
                         opened_at       DATETIME      DEFAULT GETDATE(),
                         closed_at       DATETIME      NULL,
                         CONSTRAINT FK_Shift_Employee FOREIGN KEY (emp_id) REFERENCES Employee(emp_id),
-                        CONSTRAINT FK_Shift_Branch FOREIGN KEY (branch_id) REFERENCES Branch(branch_id)
+                        CONSTRAINT FK_Shift_Branch FOREIGN KEY (branch_id) REFERENCES Branch(branch_id),
+                        closing_note    NVARCHAR(500) NULL
                     );
                     """;
                 try (Statement stmt = conn.createStatement()) {
                     stmt.execute(sqlCreateShift);
                     System.out.println("Table 'shift' created successfully.");
+                }
+            } else {
+                // Add closing_note column if not exists (for existing databases)
+                try (ResultSet cols = metaData.getColumns(null, null, "shift", "closing_note")) {
+                    if (!cols.next()) {
+                        String sqlAlter = "ALTER TABLE shift ADD closing_note NVARCHAR(500) NULL";
+                        try (Statement stmt = conn.createStatement()) {
+                            stmt.execute(sqlAlter);
+                            System.out.println("Column 'closing_note' added to shift table.");
+                        }
+                    }
                 }
             }
 
