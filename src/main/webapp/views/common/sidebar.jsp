@@ -316,7 +316,7 @@ class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab ==
 
                                 <!-- Suppliers / Partners -->
                                 <c:if
-                                    test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+                                    test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'WarehouseStaff'}">
                                     <a href="${pageContext.request.contextPath}/suppliers"
                                         class="sidebar-menu-item ${pageContext.request.requestURI.contains('/suppliers') ? 'active' : ''}">
                                         <span class="material-icons">handshake</span>

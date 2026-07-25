@@ -336,39 +336,22 @@ public class InventoryDAO {
         }
         java.util.Map<Integer, dto.inventory.ImportProductDTO> map = new java.util.LinkedHashMap<>();
         StringBuilder sql = new StringBuilder(
-            "WITH LatestPurchase AS ( " +
-            "    SELECT o.supplier_id, od.product_id, od.import_price, " +
-            "           ROW_NUMBER() OVER (PARTITION BY o.supplier_id, od.product_id ORDER BY o.created_at DESC) as rn " +
-            "    FROM [order] o " +
-            "    JOIN order_detail od ON o.order_id = od.order_id " +
-            "    WHERE o.order_type = 'PURCHASE' AND o.status = 'COMPLETED' " +
-            "), " +
-            "ProductHasHistory AS ( " +
-            "    SELECT DISTINCT product_id " +
-            "    FROM LatestPurchase " +
-            ") " +
             "SELECT p.product_id as ProductID, p.product_name as ProductName, " +
             "COALESCE(i.quantity_in_stock, 0) as MyStock, " +
-            "s.supplier_id AS SupplierID, s.supplier_name as SupplierName, lp.import_price as ImportPrice " +
-            "FROM product p "
+            "s.supplier_id AS SupplierID, s.supplier_name as SupplierName, sp.import_price as ImportPrice " +
+            "FROM product p " +
+            "LEFT JOIN supplier_product sp ON p.product_id = sp.product_id " +
+            "LEFT JOIN supplier s ON sp.supplier_id = s.supplier_id AND s.status = 'ACTIVE' "
         );
 
         if (cleanedKeyword == null) {
             sql.append("JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? ");
-            sql.append("CROSS JOIN supplier s ");
-            sql.append("LEFT JOIN LatestPurchase lp ON p.product_id = lp.product_id AND s.supplier_id = lp.supplier_id AND lp.rn = 1 ");
-            sql.append("LEFT JOIN ProductHasHistory phh ON p.product_id = phh.product_id ");
-            sql.append("WHERE s.status = 'ACTIVE' ");
-            sql.append("AND ( (phh.product_id IS NOT NULL AND lp.import_price IS NOT NULL) OR (phh.product_id IS NULL) ) ");
+            sql.append("WHERE p.status = 'ACTIVE' ");
         } else {
             sql.append("LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? ");
             sql.append("LEFT JOIN category c ON p.category_id = c.category_id ");
-            sql.append("CROSS JOIN supplier s ");
-            sql.append("LEFT JOIN LatestPurchase lp ON p.product_id = lp.product_id AND s.supplier_id = lp.supplier_id AND lp.rn = 1 ");
-            sql.append("LEFT JOIN ProductHasHistory phh ON p.product_id = phh.product_id ");
-            sql.append("WHERE s.status = 'ACTIVE' ");
+            sql.append("WHERE p.status = 'ACTIVE' ");
             sql.append("AND (p.product_name LIKE ? OR c.category_name LIKE ?) ");
-            sql.append("AND ( (phh.product_id IS NOT NULL AND lp.import_price IS NOT NULL) OR (phh.product_id IS NULL) ) ");
         }
 
         sql.append("ORDER BY p.product_name ASC");
@@ -396,13 +379,10 @@ public class InventoryDAO {
                     }
                     
                     int supplierId = rs.getInt("SupplierID");
-                    if (!rs.wasNull()) {
+                    if (!rs.wasNull() && supplierId > 0) {
                         String supplierName = rs.getString("SupplierName");
                         java.math.BigDecimal importPrice = rs.getBigDecimal("ImportPrice");
-                        // Chỉ thêm nhà cung cấp nếu có lịch sử giá nhập thực tế
-                        if (importPrice != null && importPrice.doubleValue() > 0) {
-                            dto.getSuppliers().add(new dto.inventory.ImportProductDTO.SupplierInfo(supplierId, supplierName, importPrice));
-                        }
+                        dto.getSuppliers().add(new dto.inventory.ImportProductDTO.SupplierInfo(supplierId, supplierName, importPrice));
                     }
                 }
             }
@@ -659,23 +639,16 @@ public class InventoryDAO {
         if (productName == null || productName.trim().isEmpty()) return null;
 
         String sql =
-            "WITH LatestPurchase AS ( " +
-            "    SELECT o.supplier_id, od.product_id, od.import_price, " +
-            "           ROW_NUMBER() OVER (PARTITION BY o.supplier_id, od.product_id ORDER BY o.created_at DESC) as rn " +
-            "    FROM [order] o " +
-            "    JOIN order_detail od ON o.order_id = od.order_id " +
-            "    WHERE o.order_type = 'PURCHASE' AND o.status = 'COMPLETED' " +
-            ") " +
             "SELECT p.product_id AS ProductID, p.product_name AS ProductName, " +
             "COALESCE(i.quantity_in_stock, 0) AS MyStock, " +
             "s.supplier_id AS SupplierID, s.supplier_name AS SupplierName, " +
-            "COALESCE(lp.import_price, 0) AS ImportPrice " +
+            "COALESCE(sp.import_price, 0) AS ImportPrice " +
             "FROM product p " +
             "LEFT JOIN inventory i ON p.product_id = i.product_id AND i.warehouse_id = ? " +
-            "CROSS JOIN supplier s " +
-            "LEFT JOIN LatestPurchase lp ON p.product_id = lp.product_id AND s.supplier_id = lp.supplier_id AND lp.rn = 1 " +
-            "WHERE p.product_name = ? AND s.status = 'ACTIVE' " +
-            "ORDER BY CASE WHEN lp.import_price IS NOT NULL AND lp.import_price > 0 THEN 0 ELSE 1 END, s.supplier_name ASC";
+            "LEFT JOIN supplier_product sp ON p.product_id = sp.product_id " +
+            "LEFT JOIN supplier s ON sp.supplier_id = s.supplier_id AND s.status = 'ACTIVE' " +
+            "WHERE p.product_name = ? AND p.status = 'ACTIVE' " +
+            "ORDER BY s.supplier_name ASC";
 
         dto.inventory.ImportProductDTO dto = null;
 
@@ -725,33 +698,55 @@ public class InventoryDAO {
      * Returns a flat list of [productName, supplierId, supplierName] tuples.
      */
     public List<String[]> getAllProductsWithSuppliers() throws SQLException {
-        List<String> products = new java.util.ArrayList<>();
-        String sqlProducts = "SELECT product_name FROM product ORDER BY product_id ASC";
-        try (java.sql.Connection conn = util.database.DBContext.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(sqlProducts);
-             java.sql.ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                products.add(rs.getString("product_name"));
-            }
-        }
-        if (products.isEmpty()) {
-            products.add("Sản phẩm mẫu");
-        }
-
         List<String[]> rows = new java.util.ArrayList<>();
-        String sqlSuppliers = "SELECT supplier_id, supplier_name FROM supplier WHERE status = 'ACTIVE' ORDER BY supplier_id ASC";
+        String sql = 
+            "SELECT p.product_name, s.supplier_id, s.supplier_name " +
+            "FROM product p " +
+            "JOIN supplier_product sp ON p.product_id = sp.product_id " +
+            "JOIN supplier s ON sp.supplier_id = s.supplier_id " +
+            "WHERE s.status = 'ACTIVE' AND p.status = 'ACTIVE' " +
+            "ORDER BY p.product_id ASC, s.supplier_id ASC";
+
         try (java.sql.Connection conn = util.database.DBContext.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(sqlSuppliers);
+             java.sql.PreparedStatement stmt = conn.prepareStatement(sql);
              java.sql.ResultSet rs = stmt.executeQuery()) {
-            int i = 0;
             while (rs.next()) {
-                String prodName = products.get(i % products.size());
                 rows.add(new String[]{
-                    prodName,
+                    rs.getString("product_name"),
                     String.valueOf(rs.getInt("supplier_id")),
                     rs.getString("supplier_name")
                 });
-                i++;
+            }
+        }
+
+        if (rows.isEmpty()) {
+            List<String> products = new java.util.ArrayList<>();
+            String sqlProducts = "SELECT product_name FROM product WHERE status = 'ACTIVE' ORDER BY product_id ASC";
+            try (java.sql.Connection conn = util.database.DBContext.getConnection();
+                 java.sql.PreparedStatement stmt = conn.prepareStatement(sqlProducts);
+                 java.sql.ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    products.add(rs.getString("product_name"));
+                }
+            }
+            if (products.isEmpty()) {
+                products.add("Sản phẩm mẫu");
+            }
+
+            String sqlSuppliers = "SELECT supplier_id, supplier_name FROM supplier WHERE status = 'ACTIVE' ORDER BY supplier_id ASC";
+            try (java.sql.Connection conn = util.database.DBContext.getConnection();
+                 java.sql.PreparedStatement stmt = conn.prepareStatement(sqlSuppliers);
+                 java.sql.ResultSet rs = stmt.executeQuery()) {
+                int i = 0;
+                while (rs.next()) {
+                    String prodName = products.get(i % products.size());
+                    rows.add(new String[]{
+                        prodName,
+                        String.valueOf(rs.getInt("supplier_id")),
+                        rs.getString("supplier_name")
+                    });
+                    i++;
+                }
             }
         }
         return rows;

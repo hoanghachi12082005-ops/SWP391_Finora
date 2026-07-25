@@ -1,4 +1,4 @@
-﻿USE [master]
+USE [master]
 GO
 /****** Object:  Database [DBFinoraV3]    Script Date: 16/07/2026 16:56:27 ******/
 CREATE DATABASE [DBFinoraV3]
@@ -547,6 +547,28 @@ PRIMARY KEY CLUSTERED
 	[supplier_id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[supplier_product]    Script Date: 25/07/2026 16:47:00 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[supplier_product](
+	[supplier_id] [int] NOT NULL,
+	[product_id] [int] NOT NULL,
+	[import_price] [decimal](18, 2) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[supplier_id] ASC,
+	[product_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[supplier_product] WITH CHECK ADD CONSTRAINT [FK_supplier_product_supplier] FOREIGN KEY([supplier_id])
+REFERENCES [dbo].[supplier] ([supplier_id])
+GO
+ALTER TABLE [dbo].[supplier_product] WITH CHECK ADD CONSTRAINT [FK_supplier_product_product] FOREIGN KEY([product_id])
+REFERENCES [dbo].[product] ([product_id])
 GO
 /****** Object:  Table [dbo].[unit]    Script Date: 16/07/2026 16:56:29 ******/
 SET ANSI_NULLS ON

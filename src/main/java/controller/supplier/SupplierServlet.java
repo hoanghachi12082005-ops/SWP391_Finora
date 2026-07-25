@@ -180,6 +180,15 @@ public class SupplierServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        model.Employee currentUser = (model.Employee) request.getSession().getAttribute("currentUser");
+        String roleName = (currentUser != null && currentUser.getRoleName() != null) ? currentUser.getRoleName().trim() : "";
+        if ("WarehouseStaff".equalsIgnoreCase(roleName)) {
+            request.getSession().setAttribute("message", "Nhân viên kho không có quyền chỉnh sửa hoặc xóa sản phẩm liên kết!");
+            request.getSession().setAttribute("messageType", "danger");
+            response.sendRedirect(request.getContextPath() + "/suppliers");
+            return;
+        }
+
         String action = request.getParameter("action");
 
         if ("save-products".equals(action)) {

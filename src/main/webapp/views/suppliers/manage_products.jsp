@@ -3,6 +3,9 @@
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 
+<c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : 'Nhân viên'}" />
+<c:set var="canEdit" value="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}" />
+
 <jsp:include page="../common/header.jsp">
     <jsp:param name="title" value="Liên kết sản phẩm nhà cung cấp"/>
 </jsp:include>
@@ -17,7 +20,10 @@
                 <div>
                     <h2 class="fw-bold text-dark">Sản Phẩm Cung Cấp</h2>
                     <small class="text-muted">
-                        Quản lý danh mục sản phẩm và giá nhập đàm phán của nhà cung cấp: <strong>${supplier.name}</strong>
+                        <c:choose>
+                            <c:when test="${canEdit}">Quản lý danh mục sản phẩm và giá nhập đàm phán của nhà cung cấp: <strong>${supplier.name}</strong></c:when>
+                            <c:otherwise>Danh sách sản phẩm liên kết với nhà cung cấp: <strong>${supplier.name}</strong></c:otherwise>
+                        </c:choose>
                     </small>
                 </div>
                 <div>
@@ -30,25 +36,27 @@
             <div class="card shadow-sm border-0" style="border-radius: 12px;">
                 <div class="card-body p-4">
                     
-                    <!-- Section: Add Product Form (Local UI) -->
-                    <div class="row g-2 mb-4 align-items-end p-3 bg-light rounded-3 border border-light-subtle">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted mb-1">Thêm sản phẩm mới</label>
-                            <select id="addProductSelect" class="form-select form-select-sm" style="border-radius: 8px; height: 38px;">
-                                <option value="">-- Chọn sản phẩm --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold text-muted mb-1">Giá nhập</label>
-                            <div class="input-group input-group-sm">
-                                <input type="number" id="addProductPrice" class="form-control text-end fw-bold" value="0" min="0" step="1" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; height: 38px;">
-                                <span class="input-group-text small text-muted" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px;">đ</span>
+                    <c:if test="${canEdit}">
+                        <!-- Section: Add Product Form (Local UI) -->
+                        <div class="row g-2 mb-4 align-items-end p-3 bg-light rounded-3 border border-light-subtle">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted mb-1">Thêm sản phẩm mới</label>
+                                <select id="addProductSelect" class="form-select form-select-sm" style="border-radius: 8px; height: 38px;">
+                                    <option value="">-- Chọn sản phẩm --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted mb-1">Giá nhập</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" id="addProductPrice" class="form-control text-end fw-bold" value="0" min="0" step="1" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; height: 38px;">
+                                    <span class="input-group-text small text-muted" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px;">đ</span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger w-100 fw-semibold text-white" id="btnAddLocalProduct" style="border-radius: 8px; height: 38px;">Thêm</button>
                             </div>
                         </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-danger w-100 fw-semibold text-white" id="btnAddLocalProduct" style="border-radius: 8px; height: 38px;">Thêm</button>
-                        </div>
-                    </div>
+                    </c:if>
 
                     <!-- Section: Main Form Submission -->
                     <form action="suppliers" method="post" id="supplierProductsForm">
@@ -63,7 +71,9 @@
                                         <th width="120" class="text-center">Mã SP</th>
                                         <th>Tên sản phẩm</th>
                                         <th width="220" class="text-end">Giá Nhập Đàm Phán</th>
-                                        <th width="100" class="text-center">Thao tác</th>
+                                        <c:if test="${canEdit}">
+                                            <th width="100" class="text-center">Thao tác</th>
+                                        </c:if>
                                     </tr>
                                 </thead>
                                 <tbody id="productsTableBody" style="font-size: 14px;">
@@ -73,8 +83,15 @@
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
-                            <a href="suppliers" class="btn btn-outline-secondary px-4" style="border-radius: 8px;">Hủy</a>
-                            <button type="submit" class="btn btn-danger px-4" style="border-radius: 8px;">Lưu liên kết sản phẩm</button>
+                            <a href="suppliers" class="btn btn-outline-secondary px-4" style="border-radius: 8px;">
+                                <c:choose>
+                                    <c:when test="${canEdit}">Hủy</c:when>
+                                    <c:otherwise>Quay lại</c:otherwise>
+                                </c:choose>
+                            </a>
+                            <c:if test="${canEdit}">
+                                <button type="submit" class="btn btn-danger px-4" style="border-radius: 8px;">Lưu liên kết sản phẩm</button>
+                            </c:if>
                         </div>
                     </form>
                 </div>
@@ -84,6 +101,8 @@
 </div>
 
 <script>
+    const canEdit = ${canEdit};
+
     // Raw lists rendered from Server side
     const allProducts = [
         <c:forEach var="p" items="${allProducts}" varStatus="status">
@@ -119,6 +138,8 @@
 
         // Initial render
         renderAll();
+
+        if (!canEdit) return;
 
         // Setup dropdown default change helper
         const select = document.getElementById('addProductSelect');
@@ -177,13 +198,16 @@
     });
 
     function removeLinkedProduct(productId) {
+        if (!canEdit) return;
         currentLinked = currentLinked.filter(item => item.productId !== productId);
         renderAll();
     }
 
     function renderAll() {
         renderTable();
-        renderDropdown();
+        if (canEdit) {
+            renderDropdown();
+        }
     }
 
     function renderTable() {
@@ -191,7 +215,9 @@
         tbody.innerHTML = '';
         
         if (currentLinked.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Chưa có sản phẩm nào được liên kết. Chọn sản phẩm phía trên để thêm.</td></tr>';
+            const colspan = canEdit ? 4 : 3;
+            const emptyMsg = canEdit ? 'Chưa có sản phẩm nào được liên kết. Chọn sản phẩm phía trên để thêm.' : 'Chưa có sản phẩm nào được liên kết với nhà cung cấp này.';
+            tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-muted">${emptyMsg}</td></tr>`;
             return;
         }
 
@@ -200,30 +226,44 @@
 
         currentLinked.forEach(item => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="text-center fw-semibold">
-                    SP\${item.productId}
-                    <input type="hidden" name="productIds" value="\${item.productId}">
-                </td>
-                <td class="text-start">\${item.productName}</td>
-                <td class="text-end">
-                    <div class="input-group input-group-sm ms-auto" style="width: 160px;">
-                        <input type="number" name="price_\${item.productId}" class="form-control text-end fw-bold" value="\${item.importPrice}" min="0" step="1" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px;" required>
-                        <span class="input-group-text text-muted small" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px;">đ</span>
-                    </div>
-                </td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-circle p-1" title="Xóa sản phẩm" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;" onclick="removeLinkedProduct(\${item.productId})">
-                        <span class="material-icons" style="font-size: 18px;">delete</span>
-                    </button>
-                </td>
-            `;
+            if (canEdit) {
+                tr.innerHTML = `
+                    <td class="text-center fw-semibold">
+                        SP\${item.productId}
+                        <input type="hidden" name="productIds" value="\${item.productId}">
+                    </td>
+                    <td class="text-start">\${item.productName}</td>
+                    <td class="text-end">
+                        <div class="input-group input-group-sm ms-auto" style="width: 160px;">
+                            <input type="number" name="price_\${item.productId}" class="form-control text-end fw-bold" value="\${item.importPrice}" min="0" step="1" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px;" required>
+                            <span class="input-group-text text-muted small" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px;">đ</span>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-circle p-1" title="Xóa sản phẩm" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;" onclick="removeLinkedProduct(\${item.productId})">
+                            <span class="material-icons" style="font-size: 18px;">delete</span>
+                        </button>
+                    </td>
+                `;
+            } else {
+                const formattedPrice = item.importPrice ? Number(item.importPrice).toLocaleString('vi-VN') + ' đ' : '0 đ';
+                tr.innerHTML = `
+                    <td class="text-center fw-semibold">
+                        SP\${item.productId}
+                    </td>
+                    <td class="text-start">\${item.productName}</td>
+                    <td class="text-end fw-bold text-dark">
+                        \${formattedPrice}
+                    </td>
+                `;
+            }
             tbody.appendChild(tr);
         });
     }
 
     function renderDropdown() {
         const select = document.getElementById('addProductSelect');
+        if (!select) return;
         select.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
         
         // Find all active products that are NOT currently linked
