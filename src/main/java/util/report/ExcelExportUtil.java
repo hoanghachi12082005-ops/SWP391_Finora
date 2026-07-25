@@ -52,10 +52,11 @@ public final class ExcelExportUtil {
     }
 
     public static byte[] generateCustomerLoyaltyReport(
-            String generatedBy, List<LoyalCustomerSummary> rows, LoyalCustomerOverview overview, String keyword) {
+            String generatedBy, List<LoyalCustomerSummary> rows, LoyalCustomerOverview overview,
+            String keyword, String branchName, LocalDate dateFrom, LocalDate dateTo) {
         try (Workbook wb = new XSSFWorkbook()) {
             Sheet sheet = wb.createSheet("Customer Loyalty Report");
-            setupReport(wb, sheet, "Customer Loyalty Report", generatedBy, keyword, null, null, null);
+            setupReport(wb, sheet, "Customer Loyalty Report", generatedBy, keyword, branchName, dateFrom, dateTo);
             String[] headers = {"Customer", "Phone", "Email", "Total Orders", "Current Points", "Total Spent"};
             int[] widths = {30, 18, 30, 15, 15, 20};
             int rowNum = fillHeader(wb, sheet, headers, widths, 4);

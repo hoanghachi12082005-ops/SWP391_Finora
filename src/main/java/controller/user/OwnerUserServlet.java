@@ -19,6 +19,7 @@ import dao.user.UserManagementDao;
 import dao.user.ProfileDao;
 import jakarta.servlet.http.HttpSession;
 import model.Employee;
+import util.auth.AuthUtil;
 import util.email.EmailUtil;
 import util.pagination.PaginationHelper;
 import util.pagination.PaginationHelper.PageResult;
@@ -352,39 +353,12 @@ import service.system.ActivityLogService;
         }
 
         private Employee getCurrentUser(HttpServletRequest request) {
-            HttpSession session = request.getSession(false);
-            return session == null ? null : (Employee) session.getAttribute("currentUser");
+            return AuthUtil.getCurrentUser(request);
         }
 
         private boolean isOwner(HttpServletRequest request, HttpServletResponse response)
         throws IOException {
-
-            HttpSession session = request.getSession(false);
-
-            if (session == null) {
-                response.sendRedirect(request.getContextPath() + "/login");
-                return false;
-            }
-
-            Employee currentUser =
-                    (Employee) session.getAttribute("currentUser");
-
-            if (currentUser == null) {
-                response.sendRedirect(request.getContextPath() + "/login");
-                return false;
-            }
-
-            // FIX: Admin cũng có quyền xem danh sách nhân viên của Owner
-            String roleName = currentUser.getRoleName();
-            if (!"Owner".equalsIgnoreCase(roleName) && !"Admin".equalsIgnoreCase(roleName)) {
-                response.sendError(
-                        HttpServletResponse.SC_FORBIDDEN,
-                        "Access denied. Owner or Admin only."
-                );
-                return false;
-            }
-
-            return true;
+            return AuthUtil.requireAdminOrOwner(request, response);
         }
 
         private int[] parseRoleIds(String[] values) {

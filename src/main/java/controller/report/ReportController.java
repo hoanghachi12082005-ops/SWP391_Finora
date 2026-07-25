@@ -187,22 +187,45 @@ public class ReportController extends BaseController {
         applyBranchFilterForManager(request);
         Integer branchId = resolveCustomerLoyaltyBranch(request);
 
+        String datePreset = trim(request.getParameter("datePreset"));
+        LocalDate dateFrom = null;
+        LocalDate dateTo = null;
+        if (datePreset != null && !datePreset.isEmpty()) {
+            LocalDate[] range = resolveDatePreset(datePreset);
+            dateFrom = range[0];
+            dateTo = range[1];
+        } else {
+            dateFrom = parseDate(request.getParameter("dateFrom"));
+            dateTo = parseDate(request.getParameter("dateTo"));
+        }
+
         int page = parseInt(request.getParameter("page"), 1);
         int sizeValue = parseInt(request.getParameter("sizeValue"), 30);
 
-        int totalCustomers = customerLoyaltyReportDAO.countCustomerLoyaltyReport(keyword, branchId);
+        int totalCustomers = customerLoyaltyReportDAO.countCustomerLoyaltyReport(keyword, branchId, dateFrom, dateTo);
         PageResult pr = PaginationHelper.compute(totalCustomers, page, sizeValue);
         pr.setAttributes(request);
 
         request.setAttribute(
                 "customerReports",
                 customerLoyaltyReportDAO.getCustomerLoyaltyReport(
-                        keyword, pr.getCurrentPage(), pr.getPageSize(), branchId)
+                        keyword, pr.getCurrentPage(), pr.getPageSize(), branchId, dateFrom, dateTo)
         );
         request.setAttribute(
                 "reportOverview",
-                customerLoyaltyReportDAO.getReportOverview(keyword, branchId)
+                customerLoyaltyReportDAO.getReportOverview(keyword, branchId, dateFrom, dateTo)
         );
+
+        Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+        String role = currentUser.getRoleName();
+        boolean isOwner = "Owner".equalsIgnoreCase(role) || "Admin".equalsIgnoreCase(role);
+
+        request.setAttribute("showBranch", isOwner);
+        request.setAttribute("branches", userManagementDao.getAllBranches());
+        request.setAttribute("branchFilter", branchId);
+        request.setAttribute("datePreset", datePreset);
+        request.setAttribute("dateFrom", dateFrom);
+        request.setAttribute("dateTo", dateTo);
 
         request.setAttribute("pageTitle", "Báo cáo khách hàng thân thiết");
         request.setAttribute(
@@ -269,8 +292,20 @@ public class ReportController extends BaseController {
             applyBranchFilterForManager(request);
             Integer branchId = resolveCustomerLoyaltyBranch(request);
 
-            var allData = customerLoyaltyReportDAO.getCustomerLoyaltyReport(keyword, 1, 1000000, branchId);
-            var overview = customerLoyaltyReportDAO.getReportOverview(keyword, branchId);
+            String datePreset = trim(request.getParameter("datePreset"));
+            LocalDate dateFrom = null;
+            LocalDate dateTo = null;
+            if (datePreset != null && !datePreset.isEmpty()) {
+                LocalDate[] range = resolveDatePreset(datePreset);
+                dateFrom = range[0];
+                dateTo = range[1];
+            } else {
+                dateFrom = parseDate(request.getParameter("dateFrom"));
+                dateTo = parseDate(request.getParameter("dateTo"));
+            }
+
+            var allData = customerLoyaltyReportDAO.getCustomerLoyaltyReport(keyword, 1, 1000000, branchId, dateFrom, dateTo);
+            var overview = customerLoyaltyReportDAO.getReportOverview(keyword, branchId, dateFrom, dateTo);
 
             String generatedBy = "Unknown";
             HttpSession session = request.getSession(false);
@@ -279,8 +314,20 @@ public class ReportController extends BaseController {
                 if (currentUser != null) generatedBy = currentUser.getFullName();
             }
 
+            String branchName = null;
+            if (branchId != null && branchId > 0) {
+                var branches = userManagementDao.getAllBranches();
+                if (branches != null) {
+                    branchName = branches.stream()
+                            .filter(b -> b.getBranchID() == branchId)
+                            .findFirst()
+                            .map(b -> b.getName())
+                            .orElse(null);
+                }
+            }
+
             byte[] excelBytes = ExcelExportUtil.generateCustomerLoyaltyReport(
-                    generatedBy, allData, overview, keyword);
+                    generatedBy, allData, overview, keyword, branchName, dateFrom, dateTo);
 
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             response.setHeader("Content-Disposition", "attachment; filename=\"" +
@@ -473,15 +520,39 @@ public class ReportController extends BaseController {
         applyBranchFilterForManager(request);
         Integer branchId = resolveCustomerLoyaltyBranch(request);
 
+        String datePreset = trim(request.getParameter("datePreset"));
+        LocalDate dateFrom = null;
+        LocalDate dateTo = null;
+        if (datePreset != null && !datePreset.isEmpty()) {
+            LocalDate[] range = resolveDatePreset(datePreset);
+            dateFrom = range[0];
+            dateTo = range[1];
+        } else {
+            dateFrom = parseDate(request.getParameter("dateFrom"));
+            dateTo = parseDate(request.getParameter("dateTo"));
+        }
+
         request.setAttribute(
                 "allReports",
                 customerLoyaltyReportDAO.getCustomerLoyaltyReport(
-                        keyword, 1, 1000000, branchId)
+                        keyword, 1, 1000000, branchId, dateFrom, dateTo)
         );
         request.setAttribute(
                 "reportOverview",
-                customerLoyaltyReportDAO.getReportOverview(keyword, branchId)
+                customerLoyaltyReportDAO.getReportOverview(keyword, branchId, dateFrom, dateTo)
         );
+
+        Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
+        String role = currentUser.getRoleName();
+        boolean isOwner = "Owner".equalsIgnoreCase(role) || "Admin".equalsIgnoreCase(role);
+
+        request.setAttribute("showBranch", isOwner);
+        request.setAttribute("branches", userManagementDao.getAllBranches());
+        request.setAttribute("branchFilter", branchId);
+        request.setAttribute("datePreset", datePreset);
+        request.setAttribute("dateFrom", dateFrom);
+        request.setAttribute("dateTo", dateTo);
+
         request.setAttribute("pageTitle", "Xem trước báo cáo khách hàng thân thiết");
     }
 
@@ -492,8 +563,20 @@ public class ReportController extends BaseController {
             applyBranchFilterForManager(request);
             Integer branchId = resolveCustomerLoyaltyBranch(request);
 
-            var allData = customerLoyaltyReportDAO.getCustomerLoyaltyReport(keyword, 1, 1000000, branchId);
-            var overview = customerLoyaltyReportDAO.getReportOverview(keyword, branchId);
+            String datePreset = trim(request.getParameter("datePreset"));
+            LocalDate dateFrom = null;
+            LocalDate dateTo = null;
+            if (datePreset != null && !datePreset.isEmpty()) {
+                LocalDate[] range = resolveDatePreset(datePreset);
+                dateFrom = range[0];
+                dateTo = range[1];
+            } else {
+                dateFrom = parseDate(request.getParameter("dateFrom"));
+                dateTo = parseDate(request.getParameter("dateTo"));
+            }
+
+            var allData = customerLoyaltyReportDAO.getCustomerLoyaltyReport(keyword, 1, 1000000, branchId, dateFrom, dateTo);
+            var overview = customerLoyaltyReportDAO.getReportOverview(keyword, branchId, dateFrom, dateTo);
 
             String generatedBy = "Unknown";
             HttpSession session = request.getSession(false);
@@ -504,8 +587,20 @@ public class ReportController extends BaseController {
                 }
             }
 
+            String branchName = null;
+            if (branchId != null && branchId > 0) {
+                var branches = userManagementDao.getAllBranches();
+                if (branches != null) {
+                    branchName = branches.stream()
+                            .filter(b -> b.getBranchID() == branchId)
+                            .findFirst()
+                            .map(b -> b.getName())
+                            .orElse(null);
+                }
+            }
+
             byte[] pdfBytes = PdfReportUtil.generateCustomerLoyaltyReport(
-                    "Finora Retail", generatedBy, allData, overview, keyword);
+                    "Finora Retail", generatedBy, allData, overview, keyword, branchName, dateFrom, dateTo, datePreset);
 
             response.setContentType("application/pdf");
             response.setHeader("Content-Disposition", "inline; filename=\"CustomerLoyaltyReport.pdf\"");
@@ -516,6 +611,21 @@ public class ReportController extends BaseController {
             e.printStackTrace();
             response.sendError(500, e.getMessage());
         }
+    }
+
+    private LocalDate[] resolveDatePreset(String preset) {
+        LocalDate today = LocalDate.now();
+        return switch (preset) {
+            case "today" -> new LocalDate[]{today, today};
+            case "yesterday" -> new LocalDate[]{today.minusDays(1), today.minusDays(1)};
+            case "7days" -> new LocalDate[]{today.minusDays(7), today};
+            case "30days" -> new LocalDate[]{today.minusDays(30), today};
+            case "this_month" -> new LocalDate[]{today.withDayOfMonth(1), today};
+            case "last_month" -> new LocalDate[]{today.minusMonths(1).withDayOfMonth(1), today.withDayOfMonth(1).minusDays(1)};
+            case "this_year" -> new LocalDate[]{today.withDayOfYear(1), today};
+            case "1year" -> new LocalDate[]{today.minusYears(1), today};
+            default -> new LocalDate[]{null, null};
+        };
     }
 
 }

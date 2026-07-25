@@ -738,63 +738,13 @@ public class UserManagementDao extends DBContext {
     // StoreManager view employees in assigned branch
     // =====================================================
 
-    public List<Employee> getEmployeesByBranch(int managerBranchId,
-                                               String keyword,
-                                               String roleFilter,
-                                               String statusFilter) {
-        List<Employee> list = new ArrayList<Employee>();
-
-        String sql =
-                USER_SELECT +
-                "WHERE e.branch_id = ? " +
-                "AND (r.role_name IS NULL OR r.role_name NOT IN ('Admin', 'Owner')) " +
-                "AND ( " +
-                "    ? IS NULL " +
-                "    OR e.fullName LIKE ? " +
-                "    OR e.email LIKE ? " +
-                "    OR e.phone LIKE ? " +
-                ") " +
-                "AND (? IS NULL OR e.role_id = ?) " +
-                "AND (? IS NULL OR e.status = ?) " +
-                "ORDER BY e.emp_id DESC";
-
-        try (Connection connection = DBContext.getConnection(); 
-            PreparedStatement ps = connection.prepareStatement(sql);) {
-            String searchValue = normalizeLike(keyword);
-            Integer roleId = parseInteger(roleFilter);
-            String statusValue = normalize(statusFilter);
-
-            ps.setInt(1, managerBranchId);
-
-            ps.setString(2, searchValue);
-            ps.setString(3, searchValue);
-            ps.setString(4, searchValue);
-            ps.setString(5, searchValue);
-
-            setNullableInt(ps, 6, roleId);
-            setNullableInt(ps, 7, roleId);
-
-            ps.setString(8, statusValue);
-            ps.setString(9, statusValue);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapEmployee(rs));
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return list;
-    }
 
     public Employee getEmployeeByIdInBranch(int employeeId, int managerBranchId) {
         String sql =
                 USER_SELECT +
                 "WHERE e.emp_id = ? " +
                 "AND e.branch_id = ? " +
-                "AND NOT EXISTS (SELECT 1 FROM Role rr WHERE rr.role_id = Employee.role_id AND rr.role_name IN ('Admin', 'Owner'))";
+                "AND NOT EXISTS (SELECT 1 FROM Role rr WHERE rr.role_id = e.role_id AND rr.role_name IN ('Admin', 'Owner'))";
 
         try (Connection connection = DBContext.getConnection(); 
             PreparedStatement ps = connection.prepareStatement(sql)) {

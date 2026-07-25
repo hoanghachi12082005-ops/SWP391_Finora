@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import model.LoyalCustomerOverview;
@@ -14,42 +15,48 @@ import util.database.DBContext;
 
 public class CustomerLoyaltyReportDAO {
 
-    private static final String CUSTOMER_SELECT =
-            "SELECT " +
-            "    c.cus_id, " +
-            "    c.full_name, " +
-            "    c.phone, " +
-            "    c.email, " +
-            "    c.total_spent, " +
-            "    COUNT(o.order_id) AS TotalOrders, " +
-            "    COALESCE(cp.current_points, 0) AS CurrentPoints ";
-
-    private static final String CUSTOMER_FROM =
-            "FROM customer c " +
-            "LEFT JOIN customer_point cp ON c.cus_id = cp.cus_id " +
-            "LEFT JOIN [Order] o ON c.cus_id = o.customer_id AND o.status = 'COMPLETED' " +
-            "WHERE c.status = 'ACTIVE' " +
-            "AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?) ";
-
-    private static final String BRANCH_FILTER =
-            "AND (? IS NULL OR EXISTS (SELECT 1 FROM [order] br WHERE br.customer_id = c.cus_id AND br.branch_id = ?)) ";
-
     public List<LoyalCustomerSummary> getCustomerLoyaltyReport(String keyword,
                                                                int page,
                                                                int pageSize,
-                                                               Integer branchId) {
+                                                               Integer branchId,
+                                                               LocalDate dateFrom,
+                                                               LocalDate dateTo) {
         List<LoyalCustomerSummary> list = new ArrayList<>();
-        String sql = CUSTOMER_SELECT + CUSTOMER_FROM +
-                BRANCH_FILTER +
-                "GROUP BY c.cus_id, c.full_name, c.phone, c.email, c.total_spent, cp.current_points " +
-                "ORDER BY c.total_spent DESC, c.full_name ASC " +
-                "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT ")
+           .append("    c.cus_id, ")
+           .append("    c.full_name, ")
+           .append("    c.phone, ")
+           .append("    c.email, ")
+           .append("    COALESCE(SUM(o.total_amount), 0) AS total_spent, ")
+           .append("    COUNT(o.order_id) AS TotalOrders, ")
+           .append("    COALESCE(cp.current_points, 0) AS CurrentPoints ")
+           .append("FROM customer c ")
+           .append("LEFT JOIN customer_point cp ON c.cus_id = cp.cus_id ")
+           .append("LEFT JOIN [Order] o ON c.cus_id = o.customer_id AND o.status = 'COMPLETED' ")
+           .append("    AND (? IS NULL OR o.branch_id = ?) ")
+           .append("    AND (? IS NULL OR o.created_at >= ?) ")
+           .append("    AND (? IS NULL OR o.created_at <= ?) ")
+           .append("WHERE c.status = 'ACTIVE' ")
+           .append("AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?) ")
+           .append("GROUP BY c.cus_id, c.full_name, c.phone, c.email, cp.current_points ");
+
+        boolean hasFilters = (branchId != null && branchId > 0) || dateFrom != null || dateTo != null;
+        if (hasFilters) {
+            sql.append("HAVING COUNT(o.order_id) > 0 ");
+        }
+
+        sql.append("ORDER BY total_spent DESC, c.full_name ASC ")
+           .append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
         try (Connection connection = DBContext.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)) {
+             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
             int idx = 1;
-            idx = bindSearch(ps, idx, keyword);
             idx = bindBranchId(ps, idx, branchId);
+            idx = bindDate(ps, idx, dateFrom);
+            idx = bindDate(ps, idx, dateTo);
+            idx = bindSearch(ps, idx, keyword);
 
             int offset = (page - 1) * pageSize;
             ps.setInt(idx++, offset);
@@ -66,20 +73,32 @@ public class CustomerLoyaltyReportDAO {
         return list;
     }
 
-    public int countCustomerLoyaltyReport(String keyword, Integer branchId) {
-        String sql = "SELECT COUNT(*) AS Total FROM ( " +
-                "    SELECT c.cus_id " +
-                "    FROM customer c " +
-                "    WHERE c.status = 'ACTIVE' " +
-                "    AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?) " +
-                "    AND (? IS NULL OR EXISTS (SELECT 1 FROM [order] br WHERE br.customer_id = c.cus_id AND br.branch_id = ?)) " +
-                ") AS FilteredCustomers";
+    public int countCustomerLoyaltyReport(String keyword, Integer branchId, LocalDate dateFrom, LocalDate dateTo) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT COUNT(*) AS Total FROM ( ")
+           .append("    SELECT c.cus_id ")
+           .append("    FROM customer c ")
+           .append("    LEFT JOIN [Order] o ON c.cus_id = o.customer_id AND o.status = 'COMPLETED' ")
+           .append("        AND (? IS NULL OR o.branch_id = ?) ")
+           .append("        AND (? IS NULL OR o.created_at >= ?) ")
+           .append("        AND (? IS NULL OR o.created_at <= ?) ")
+           .append("    WHERE c.status = 'ACTIVE' ")
+           .append("    AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?) ")
+           .append("    GROUP BY c.cus_id ");
+
+        boolean hasFilters = (branchId != null && branchId > 0) || dateFrom != null || dateTo != null;
+        if (hasFilters) {
+            sql.append("HAVING COUNT(o.order_id) > 0 ");
+        }
+        sql.append(") AS FilteredCustomers");
 
         try (Connection connection = DBContext.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)) {
+             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
             int idx = 1;
-            idx = bindSearch(ps, idx, keyword);
-            bindBranchId(ps, idx, branchId);
+            idx = bindBranchId(ps, idx, branchId);
+            idx = bindDate(ps, idx, dateFrom);
+            idx = bindDate(ps, idx, dateTo);
+            bindSearch(ps, idx, keyword);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -92,29 +111,42 @@ public class CustomerLoyaltyReportDAO {
         return 0;
     }
 
-    public LoyalCustomerOverview getReportOverview(String keyword, Integer branchId) {
+    public LoyalCustomerOverview getReportOverview(String keyword, Integer branchId, LocalDate dateFrom, LocalDate dateTo) {
         LoyalCustomerOverview overview = new LoyalCustomerOverview();
+        boolean hasFilters = (branchId != null && branchId > 0) || dateFrom != null || dateTo != null;
 
         // Count and spent
-        String sql = "SELECT " +
-                "    COUNT(c.cus_id) AS TotalCustomers, " +
-                "    SUM(c.total_spent) AS TotalSpent " +
-                "FROM customer c " +
-                "WHERE c.status = 'ACTIVE' " +
-                "AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?) " +
-                "AND (? IS NULL OR EXISTS (SELECT 1 FROM [order] br WHERE br.customer_id = c.cus_id AND br.branch_id = ?))";
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT ")
+           .append("    COUNT(DISTINCT Filtered.cus_id) AS TotalCustomers, ")
+           .append("    COALESCE(SUM(Filtered.total_spent), 0) AS TotalSpent ")
+           .append("FROM ( ")
+           .append("    SELECT c.cus_id, COALESCE(SUM(o.total_amount), 0) AS total_spent ")
+           .append("    FROM customer c ")
+           .append("    LEFT JOIN [Order] o ON c.cus_id = o.customer_id AND o.status = 'COMPLETED' ")
+           .append("        AND (? IS NULL OR o.branch_id = ?) ")
+           .append("        AND (? IS NULL OR o.created_at >= ?) ")
+           .append("        AND (? IS NULL OR o.created_at <= ?) ")
+           .append("    WHERE c.status = 'ACTIVE' ")
+           .append("    AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?) ")
+           .append("    GROUP BY c.cus_id ");
+        if (hasFilters) {
+            sql.append("HAVING COUNT(o.order_id) > 0 ");
+        }
+        sql.append(") AS Filtered");
 
         try (Connection connection = DBContext.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)) {
+             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
             int idx = 1;
-            idx = bindSearch(ps, idx, keyword);
-            bindBranchId(ps, idx, branchId);
+            idx = bindBranchId(ps, idx, branchId);
+            idx = bindDate(ps, idx, dateFrom);
+            idx = bindDate(ps, idx, dateTo);
+            bindSearch(ps, idx, keyword);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     overview.setTotalCustomers(rs.getInt("TotalCustomers"));
-                    BigDecimal spent = rs.getBigDecimal("TotalSpent");
-                    overview.setTotalSpent(spent == null ? BigDecimal.ZERO : spent);
+                    overview.setTotalSpent(rs.getBigDecimal("TotalSpent"));
                 }
             }
         } catch (SQLException e) {
@@ -122,18 +154,32 @@ public class CustomerLoyaltyReportDAO {
         }
 
         // Top Customer
-        String topSql = "SELECT TOP 1 c.full_name, c.total_spent " +
-                "FROM customer c " +
-                "WHERE c.status = 'ACTIVE' " +
-                "AND (? IS NULL OR c.full_name LIKE ? OR c.phone LIKE ? OR c.email LIKE ?) " +
-                "AND (? IS NULL OR EXISTS (SELECT 1 FROM [order] br WHERE br.customer_id = c.cus_id AND br.branch_id = ?)) " +
-                "ORDER BY c.total_spent DESC";
+        StringBuilder topSql = new StringBuilder();
+        topSql.append("SELECT TOP 1 c.full_name, Filtered.total_spent ")
+              .append("FROM customer c ")
+              .append("JOIN ( ")
+              .append("    SELECT c2.cus_id, COALESCE(SUM(o.total_amount), 0) AS total_spent ")
+              .append("    FROM customer c2 ")
+              .append("    LEFT JOIN [Order] o ON c2.cus_id = o.customer_id AND o.status = 'COMPLETED' ")
+              .append("        AND (? IS NULL OR o.branch_id = ?) ")
+              .append("        AND (? IS NULL OR o.created_at >= ?) ")
+              .append("        AND (? IS NULL OR o.created_at <= ?) ")
+              .append("    WHERE c2.status = 'ACTIVE' ")
+              .append("    AND (? IS NULL OR c2.full_name LIKE ? OR c2.phone LIKE ? OR c2.email LIKE ?) ")
+              .append("    GROUP BY c2.cus_id ");
+        if (hasFilters) {
+            topSql.append("HAVING COUNT(o.order_id) > 0 ");
+        }
+        topSql.append(") AS Filtered ON c.cus_id = Filtered.cus_id ")
+              .append("ORDER BY Filtered.total_spent DESC");
 
         try (Connection connection = DBContext.getConnection();
-             PreparedStatement ps = connection.prepareStatement(topSql)) {
+             PreparedStatement ps = connection.prepareStatement(topSql.toString())) {
             int idx = 1;
-            idx = bindSearch(ps, idx, keyword);
-            bindBranchId(ps, idx, branchId);
+            idx = bindBranchId(ps, idx, branchId);
+            idx = bindDate(ps, idx, dateFrom);
+            idx = bindDate(ps, idx, dateTo);
+            bindSearch(ps, idx, keyword);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -171,6 +217,18 @@ public class CustomerLoyaltyReportDAO {
         } else {
             ps.setInt(startIndex, branchId);
             ps.setInt(startIndex + 1, branchId);
+        }
+        return startIndex + 2;
+    }
+
+    private int bindDate(PreparedStatement ps, int startIndex, LocalDate date) throws SQLException {
+        if (date == null) {
+            ps.setNull(startIndex, Types.DATE);
+            ps.setNull(startIndex + 1, Types.DATE);
+        } else {
+            java.sql.Date sqlDate = java.sql.Date.valueOf(date);
+            ps.setDate(startIndex, sqlDate);
+            ps.setDate(startIndex + 1, sqlDate);
         }
         return startIndex + 2;
     }

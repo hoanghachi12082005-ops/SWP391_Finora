@@ -32,7 +32,7 @@
                     <p>${pageSubtitle}</p>
                 </div>
                 <div class="filter-actions">
-                    <a class="btn-primary" style="font-size:13px;padding:6px 14px;" href="${pageContext.request.contextPath}/reports/customer-loyal-export-excel?keyword=${empty keyword ? '' : keyword}">
+                    <a class="btn-primary" style="font-size:13px;padding:6px 14px;" href="${pageContext.request.contextPath}/reports/customer-loyal-export-excel?keyword=${empty keyword ? '' : keyword}&branchId=${empty branchFilter ? '' : branchFilter}&datePreset=${empty datePreset ? '' : datePreset}&dateFrom=${empty dateFrom ? '' : dateFrom}&dateTo=${empty dateTo ? '' : dateTo}">
                         <span class="material-symbols-outlined" style="font-size:16px;">file_download</span> Xuất Excel
                     </a>
                 </div>
@@ -82,8 +82,51 @@
 
             <form class="filter-card" method="get" action="${baseUrl}">
                 <input type="hidden" name="page" value="1"/>
+                <input type="hidden" name="sizeValue" value="${sizeValue}"/>
 
                 <div class="filter-grid">
+                    <div class="form-group">
+                        <label>Khoảng thời gian</label>
+                        <select name="datePreset" id="datePreset" onchange="toggleDateRange()">
+                            <option value="">Tùy chọn</option>
+                            <option value="today" ${datePreset == 'today' ? 'selected' : ''}>Hôm nay</option>
+                            <option value="yesterday" ${datePreset == 'yesterday' ? 'selected' : ''}>Hôm qua</option>
+                            <option value="7days" ${datePreset == '7days' ? 'selected' : ''}>7 ngày qua</option>
+                            <option value="30days" ${datePreset == '30days' ? 'selected' : ''}>30 ngày qua</option>
+                            <option value="this_month" ${datePreset == 'this_month' ? 'selected' : ''}>Tháng này</option>
+                            <option value="last_month" ${datePreset == 'last_month' ? 'selected' : ''}>Tháng trước</option>
+                            <option value="this_year" ${datePreset == 'this_year' ? 'selected' : ''}>Năm nay</option>
+                            <option value="1year" ${datePreset == '1year' ? 'selected' : ''}>1 năm qua</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Từ ngày</label>
+                        <input type="date" name="dateFrom" id="dateFrom" value="${dateFrom}"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Đến ngày</label>
+                        <input type="date" name="dateTo" id="dateTo" value="${dateTo}"/>
+                    </div>
+
+                    <c:choose>
+                        <c:when test="${not empty managerBranchId}">
+                            <input type="hidden" name="branchId" value="${managerBranchId}"/>
+                        </c:when>
+                        <c:when test="${showBranch && not empty branches}">
+                            <div class="form-group">
+                                <label>Chi nhánh</label>
+                                <select name="branchId">
+                                    <option value="">Tất cả chi nhánh</option>
+                                    <c:forEach var="branch" items="${branches}">
+                                        <option value="${branch.branchID}" ${branchFilter == branch.branchID ? 'selected' : ''}>${branch.name}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                        </c:when>
+                    </c:choose>
+
                     <div class="form-group filter-search">
                         <label>Tìm kiếm khách hàng</label>
                         <input name="keyword"
@@ -92,11 +135,9 @@
                                placeholder="Tên, số điện thoại hoặc email..."/>
                     </div>
 
-                    <input type="hidden" name="sizeValue" value="${sizeValue}"/>
-
-                    <div class="filter-actions">
+                    <div class="filter-actions" style="align-self: flex-end;">
                         <button class="btn-primary" type="submit">Áp dụng</button>
-                        <a class="btn-secondary" href="${pageContext.request.contextPath}/reports/customer-loyal-preview?keyword=${empty keyword ? '' : keyword}">
+                        <a class="btn-secondary" href="${pageContext.request.contextPath}/reports/customer-loyal-preview?keyword=${empty keyword ? '' : keyword}&branchId=${empty branchFilter ? '' : branchFilter}&datePreset=${empty datePreset ? '' : datePreset}&dateFrom=${empty dateFrom ? '' : dateFrom}&dateTo=${empty dateTo ? '' : dateTo}">
                             <span class="material-symbols-outlined">visibility</span> Xem trước
                         </a>
                         <a class="btn-secondary" href="${baseUrl}">Đặt lại</a>
@@ -167,11 +208,26 @@
 
                 <jsp:include page="/views/common/pagination.jsp">
                     <jsp:param name="baseUrl" value="${baseUrl}"/>
-                    <jsp:param name="queryString" value="&keyword=${empty keyword ? '' : keyword}"/>
+                    <jsp:param name="queryString" value="&keyword=${empty keyword ? '' : keyword}&branchId=${empty branchFilter ? '' : branchFilter}&datePreset=${empty datePreset ? '' : datePreset}&dateFrom=${empty dateFrom ? '' : dateFrom}&dateTo=${empty dateTo ? '' : dateTo}"/>
                 </jsp:include>
             </section>
         </main>
     </div>
 </div>
+<script>
+function toggleDateRange() {
+    var preset = document.getElementById('datePreset').value;
+    var dateFrom = document.getElementById('dateFrom');
+    var dateTo = document.getElementById('dateTo');
+    if (preset) {
+        dateFrom.disabled = true;
+        dateTo.disabled = true;
+    } else {
+        dateFrom.disabled = false;
+        dateTo.disabled = false;
+    }
+}
+toggleDateRange();
+</script>
 </body>
 </html>

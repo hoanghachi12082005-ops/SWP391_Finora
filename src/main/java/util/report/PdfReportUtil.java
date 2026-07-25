@@ -279,7 +279,11 @@ public final class PdfReportUtil {
             String generatedBy,
             List<LoyalCustomerSummary> rows,
             LoyalCustomerOverview overview,
-            String keyword) {
+            String keyword,
+            String branchName,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            String datePreset) {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4, PAGE_MARGIN, PAGE_MARGIN, 50, 50);
@@ -311,8 +315,34 @@ public final class PdfReportUtil {
             document.add(new Paragraph(" "));
 
             // Filter info
+            StringBuilder filters = new StringBuilder();
+            if (branchName != null && !branchName.isEmpty()) {
+                filters.append("Chi nhánh: ").append(branchName).append("  |  ");
+            }
+            if (datePreset != null && !datePreset.isEmpty()) {
+                filters.append("Thời gian: ").append(getDatePresetLabel(datePreset));
+                if (dateFrom != null && dateTo != null) {
+                    filters.append(" (").append(dateFrom.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                           .append(" - ").append(dateTo.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))).append(")");
+                }
+                filters.append("  |  ");
+            } else if (dateFrom != null || dateTo != null) {
+                filters.append("Thời gian: ");
+                if (dateFrom != null) filters.append("Từ ").append(dateFrom.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))).append(" ");
+                if (dateTo != null) filters.append("Đến ").append(dateTo.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                filters.append("  |  ");
+            }
             if (keyword != null && !keyword.isEmpty()) {
-                Paragraph filterText = new Paragraph("Tìm kiếm: " + keyword, SMALL_FONT);
+                filters.append("Tìm kiếm: ").append(keyword).append("  |  ");
+            }
+            
+            String filterStr = filters.toString();
+            if (filterStr.endsWith("  |  ")) {
+                filterStr = filterStr.substring(0, filterStr.length() - 5);
+            }
+            
+            if (!filterStr.isEmpty()) {
+                Paragraph filterText = new Paragraph(filterStr, SMALL_FONT);
                 filterText.setSpacingAfter(8);
                 document.add(filterText);
             }
@@ -697,5 +727,20 @@ public final class PdfReportUtil {
         } catch (Exception e) {
             return createdAt;
         }
+    }
+
+    private static String getDatePresetLabel(String preset) {
+        if (preset == null || preset.isEmpty()) return "";
+        return switch (preset) {
+            case "today" -> "Hôm nay";
+            case "yesterday" -> "Hôm qua";
+            case "7days" -> "7 ngày qua";
+            case "30days" -> "30 ngày qua";
+            case "this_month" -> "Tháng này";
+            case "last_month" -> "Tháng trước";
+            case "this_year" -> "Năm nay";
+            case "1year" -> "1 năm qua";
+            default -> preset;
+        };
     }
 }

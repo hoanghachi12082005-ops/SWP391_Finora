@@ -196,10 +196,10 @@
             <button class="btn-print btn-disabled" disabled>In</button>
         </c:when>
         <c:otherwise>
-            <a class="btn-excel" href="${pageContext.request.contextPath}/reports/customer-loyal-export-excel?keyword=${param.keyword}">
+            <a class="btn-excel" href="${pageContext.request.contextPath}/reports/customer-loyal-export-excel?keyword=${param.keyword}&branchId=${param.branchId}&datePreset=${param.datePreset}&dateFrom=${param.dateFrom}&dateTo=${param.dateTo}">
                 <span class="material-symbols-outlined" style="font-size:18px">table_chart</span> Xuất Excel
             </a>
-            <a class="btn-pdf" href="${pageContext.request.contextPath}/reports/customer-loyal-export?keyword=${param.keyword}" target="_blank">
+            <a class="btn-pdf" href="${pageContext.request.contextPath}/reports/customer-loyal-export?keyword=${param.keyword}&branchId=${param.branchId}&datePreset=${param.datePreset}&dateFrom=${param.dateFrom}&dateTo=${param.dateTo}" target="_blank">
                 <span class="material-symbols-outlined" style="font-size:18px">picture_as_pdf</span> Xuất PDF
             </a>
             <button class="btn-print" onclick="window.print()">
@@ -207,7 +207,7 @@
             </button>
         </c:otherwise>
     </c:choose>
-    <a class="btn-close" href="${pageContext.request.contextPath}/reports/customer-loyal?keyword=${param.keyword}">
+    <a class="btn-close" href="${pageContext.request.contextPath}/reports/customer-loyal?keyword=${param.keyword}&branchId=${param.branchId}&datePreset=${param.datePreset}&dateFrom=${param.dateFrom}&dateTo=${param.dateTo}">
         Đóng xem trước
     </a>
 </div>
