@@ -1,16 +1,9 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controller.user;
 
-/**
- *
- * @author PCQN
- */
 import dao.sales.OrderDAO;
 import dao.user.ProfileDao;
 import model.Employee;
+import util.auth.AuthUtil;
 import util.security.PasswordUtil;
 
 import jakarta.servlet.ServletException;
@@ -53,7 +46,6 @@ public class ProfileServlet extends HttpServlet {
 
         loadProfile(request);
 
-        // FIX: Đường dẫn đúng: /views/profile/ (có chữ 's', không phải /view/)
         request.getRequestDispatcher("/views/profile/profile.jsp")
                 .forward(request, response);
     }
@@ -115,7 +107,7 @@ public class ProfileServlet extends HttpServlet {
         String email = trim(request.getParameter("email"));
         String phone = trim(request.getParameter("phone"));
 
-        if (isBlank(fullName) || isBlank(email)) {
+        if (AuthUtil.isBlank(fullName) || AuthUtil.isBlank(email)) {
             setFlash(request, "errorMessage", "Full name and email are required.");
             return;
         }
@@ -148,7 +140,6 @@ public class ProfileServlet extends HttpServlet {
             if (session != null) {
                 session.setAttribute("employeeName", fullName);
 
-                // FIX: Đọc đúng key "currentUser" — nhất quán với AuthServlet
                 Object employeeObj = session.getAttribute("currentUser");
 
                 if (employeeObj instanceof Employee) {
@@ -158,11 +149,10 @@ public class ProfileServlet extends HttpServlet {
                     employee.setEmail(email);
                     employee.setPhone(phone);
 
-                    if (!isBlank(avatarUrl)) {
+                    if (!AuthUtil.isBlank(avatarUrl)) {
                         employee.setAvatarUrl(avatarUrl);
                     }
 
-                    // FIX: Cập nhật lại session với key đúng
                     session.setAttribute("currentUser", employee);
                 }
             }
@@ -269,7 +259,7 @@ public class ProfileServlet extends HttpServlet {
         String newPassword = request.getParameter("newPassword");
         String confirmPassword = request.getParameter("confirmPassword");
 
-        if (isBlank(oldPassword) || isBlank(newPassword) || isBlank(confirmPassword)) {
+        if (AuthUtil.isBlank(oldPassword) || AuthUtil.isBlank(newPassword) || AuthUtil.isBlank(confirmPassword)) {
             setFlash(request, "errorMessage", "Please fill all password fields.");
             return;
         }
@@ -299,33 +289,11 @@ public class ProfileServlet extends HttpServlet {
 
     private boolean isLoggedIn(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-
-        HttpSession session = request.getSession(false);
-
-        // FIX: Đọc đúng key "currentUser" — nhất quán với AuthServlet
-        if (session == null || session.getAttribute("currentUser") == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return false;
-        }
-
-        return true;
+        return AuthUtil.requireLoggedIn(request, response);
     }
 
     private int getLoggedInEmployeeID(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-
-        if (session == null) {
-            return -1;
-        }
-
-        // FIX: Lấy employeeID từ Employee object với key "currentUser"
-        Object employeeObj = session.getAttribute("currentUser");
-
-        if (employeeObj instanceof Employee) {
-            return ((Employee) employeeObj).getEmployeeID();
-        }
-
-        return -1;
+        return AuthUtil.getEmployeeId(request);
     }
 
     private void setFlash(HttpServletRequest request, String key, String message) {
