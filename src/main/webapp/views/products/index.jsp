@@ -15,7 +15,7 @@
     NumberFormat vndFormat   = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 %>
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : 'Nhân viên'}" />
-<c:set var="canManage" value="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager' || roleName == 'WarehouseStaff'}" />
+<c:set var="canManage" value="${roleName == 'Admin' || roleName == 'Owner'}" />
 
 <jsp:include page="../common/header.jsp">
     <jsp:param name="title" value="${canManage ? 'Quản lý Sản phẩm' : 'Danh sách sản phẩm'}"/>

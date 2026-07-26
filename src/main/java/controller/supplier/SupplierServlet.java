@@ -52,34 +52,46 @@ public class SupplierServlet extends HttpServlet {
                 return;
             }
             case "create":
-                request.getRequestDispatcher("/views/suppliers/create.jsp").forward(request, response);
-                break;
             case "edit":
-                int id = Integer.parseInt(request.getParameter("id"));
-                Supplier supplier = service.getById(id);
-                request.setAttribute("supplier", supplier);
-                request.getRequestDispatcher("/views/suppliers/edit.jsp").forward(request, response);
-                break;
-            case "delete":
-                boolean success = service.delete(Integer.parseInt(request.getParameter("id")));
-                if (success) {
-                    request.getSession().setAttribute("message", "Xóa đối tác thành công.");
-                    request.getSession().setAttribute("messageType", "success");
-                } else {
-                    request.getSession().setAttribute("message", "Không thể xóa đối tác này do đang có dữ liệu liên quan (giao dịch, đơn hàng...)!");
+            case "delete": {
+                model.Employee currentUser = (model.Employee) request.getSession().getAttribute("currentUser");
+                String roleName = (currentUser != null && currentUser.getRoleName() != null) ? currentUser.getRoleName().trim() : "";
+                boolean canEdit = "Admin".equalsIgnoreCase(roleName) || "Owner".equalsIgnoreCase(roleName);
+                if (!canEdit) {
+                    request.getSession().setAttribute("message", "Bạn không có quyền thực hiện thao tác này.");
                     request.getSession().setAttribute("messageType", "danger");
+                    response.sendRedirect("suppliers");
+                    return;
                 }
-                String page = request.getParameter("page");
-                String keyword = request.getParameter("keyword");
-                StringBuilder redirect = new StringBuilder("suppliers?");
-                if (page != null && !page.isBlank()) redirect.append("page=").append(page).append("&");
-                if (keyword != null && !keyword.isBlank()) redirect.append("keyword=").append(keyword);
-                
-                if (redirect.charAt(redirect.length() - 1) == '&' || redirect.charAt(redirect.length() - 1) == '?') {
-                    redirect.deleteCharAt(redirect.length() - 1);
+                if ("create".equals(action)) {
+                    request.getRequestDispatcher("/views/suppliers/create.jsp").forward(request, response);
+                } else if ("edit".equals(action)) {
+                    int id = Integer.parseInt(request.getParameter("id"));
+                    Supplier supplier = service.getById(id);
+                    request.setAttribute("supplier", supplier);
+                    request.getRequestDispatcher("/views/suppliers/edit.jsp").forward(request, response);
+                } else if ("delete".equals(action)) {
+                    boolean success = service.delete(Integer.parseInt(request.getParameter("id")));
+                    if (success) {
+                        request.getSession().setAttribute("message", "Xóa đối tác thành công.");
+                        request.getSession().setAttribute("messageType", "success");
+                    } else {
+                        request.getSession().setAttribute("message", "Không thể xóa đối tác này do đang có dữ liệu liên quan (giao dịch, đơn hàng...)!");
+                        request.getSession().setAttribute("messageType", "danger");
+                    }
+                    String page = request.getParameter("page");
+                    String keyword = request.getParameter("keyword");
+                    StringBuilder redirect = new StringBuilder("suppliers?");
+                    if (page != null && !page.isBlank()) redirect.append("page=").append(page).append("&");
+                    if (keyword != null && !keyword.isBlank()) redirect.append("keyword=").append(keyword);
+                    
+                    if (redirect.charAt(redirect.length() - 1) == '&' || redirect.charAt(redirect.length() - 1) == '?') {
+                        redirect.deleteCharAt(redirect.length() - 1);
+                    }
+                    response.sendRedirect(redirect.toString());
                 }
-                response.sendRedirect(redirect.toString());
                 break;
+            }
             case "export": {
                 exportSupplierExcel(request, response);
                 return;
@@ -182,8 +194,9 @@ public class SupplierServlet extends HttpServlet {
 
         model.Employee currentUser = (model.Employee) request.getSession().getAttribute("currentUser");
         String roleName = (currentUser != null && currentUser.getRoleName() != null) ? currentUser.getRoleName().trim() : "";
-        if ("WarehouseStaff".equalsIgnoreCase(roleName)) {
-            request.getSession().setAttribute("message", "Nhân viên kho không có quyền chỉnh sửa hoặc xóa sản phẩm liên kết!");
+        boolean canEdit = "Admin".equalsIgnoreCase(roleName) || "Owner".equalsIgnoreCase(roleName);
+        if (!canEdit) {
+            request.getSession().setAttribute("message", "Bạn không có quyền thực hiện thao tác này.");
             request.getSession().setAttribute("messageType", "danger");
             response.sendRedirect(request.getContextPath() + "/suppliers");
             return;

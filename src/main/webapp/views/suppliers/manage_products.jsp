@@ -4,7 +4,7 @@
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 
 <c:set var="roleName" value="${sessionScope.currentUser.roleName != null ? sessionScope.currentUser.roleName : 'Nhân viên'}" />
-<c:set var="canEdit" value="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}" />
+<c:set var="canEdit" value="${roleName == 'Admin' || roleName == 'Owner'}" />
 
 <jsp:include page="../common/header.jsp">
     <jsp:param name="title" value="Liên kết sản phẩm nhà cung cấp"/>

@@ -37,7 +37,7 @@
                         <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">file_download</span> Xuất file
                     </a>
 
-                    <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+                    <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
                         <button type="button" class="btn btn-danger" onclick="openSupplierModal('create')">+ Thêm nhà cung cấp</button>
                     </c:if>
                 </div>
@@ -165,7 +165,7 @@
                                     </td>
 
                                     <td>
-                                        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+                                        <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
                                             <button type="button" 
                                                     class="btn btn-sm btn-warning btn-edit-supplier" 
                                                     data-id="${s.supplierID}"
@@ -182,7 +182,7 @@
                                             Sản phẩm
                                         </a>
 
-                                        <c:if test="${roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
+                                        <c:if test="${roleName == 'Admin' || roleName == 'Owner'}">
                                             <a href="suppliers?action=delete&id=${s.supplierID}&page=${page}&keyword=${keyword}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa nhà cung cấp này?')"> Xóa</a>
                                         </c:if>
                                     </td>

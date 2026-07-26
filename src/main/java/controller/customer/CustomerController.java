@@ -89,14 +89,12 @@ public class CustomerController extends HttpServlet {
         Employee user = getLoggedInUser(request);
         String role = user != null ? user.getRoleName() : "";
         boolean isOwner = "Owner".equalsIgnoreCase(role) || "Admin".equalsIgnoreCase(role);
-        boolean isStoreManager = "StoreManager".equalsIgnoreCase(role);
 
-        request.setAttribute("canCreate", isOwner || isStoreManager);
-        request.setAttribute("canEdit", isOwner || isStoreManager);
-        request.setAttribute("canDelete", isOwner || isStoreManager);
-        request.setAttribute("canRedeem", isOwner || isStoreManager);
-        // ponytail: isAdmin kept for modal readonly compat; only StoreManager reaches modal
-        request.setAttribute("isAdmin", isStoreManager);
+        request.setAttribute("canCreate", isOwner);
+        request.setAttribute("canEdit", isOwner);
+        request.setAttribute("canDelete", isOwner);
+        request.setAttribute("canRedeem", isOwner);
+        request.setAttribute("isAdmin", isOwner);
 
         request.getRequestDispatcher("/views/customers/customer-list.jsp")
                 .forward(request, response);
@@ -652,8 +650,20 @@ public class CustomerController extends HttpServlet {
             }
         }
 
-        // Owner/Admin/StoreManager: full access
-        if ("Owner".equalsIgnoreCase(roleName) || "Admin".equalsIgnoreCase(roleName) || "StoreManager".equalsIgnoreCase(roleName)) {
+        // Owner/Admin: Full access
+        if ("Owner".equalsIgnoreCase(roleName) || "Admin".equalsIgnoreCase(roleName)) {
+            return true;
+        }
+
+        // StoreManager: Read-only access (list, detail, search-api)
+        if ("StoreManager".equalsIgnoreCase(roleName)) {
+            boolean isWriteAction = isPost || "create".equals(action) || "update".equals(action) || "delete".equals(action)
+                    || "sync-loyalty".equals(action) || "redeem-points".equals(action) || "add".equals(action) || "edit".equals(action);
+            if (isWriteAction) {
+                setFlash(request, "errorMessage", "Bạn không có quyền thực hiện thao tác này.");
+                response.sendRedirect(request.getContextPath() + "/customers");
+                return false;
+            }
             return true;
         }
 

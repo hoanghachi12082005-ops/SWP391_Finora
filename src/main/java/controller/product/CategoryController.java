@@ -26,7 +26,10 @@ public class CategoryController extends BaseController {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        request.getSession().setAttribute("canManageCategory", true); // Ensure access
+        model.Employee currentUser = (model.Employee) request.getSession().getAttribute("currentUser");
+        String roleName = (currentUser != null && currentUser.getRoleName() != null) ? currentUser.getRoleName().trim() : "";
+        boolean canManageCategory = "Admin".equalsIgnoreCase(roleName) || "Owner".equalsIgnoreCase(roleName);
+        request.getSession().setAttribute("canManageCategory", canManageCategory);
 
         String action = request.getParameter("action");
         if (action == null) {
@@ -38,6 +41,12 @@ public class CategoryController extends BaseController {
                 listCategories(request, response);
                 break;
             case "delete":
+                if (!canManageCategory) {
+                    request.getSession().setAttribute("message", "Bạn không có quyền thực hiện thao tác này.");
+                    request.getSession().setAttribute("messageType", "danger");
+                    response.sendRedirect(request.getContextPath() + "/category");
+                    return;
+                }
                 if (request.getParameter("id") != null) {
                     boolean success = categoryDAO.deleteCategory(Integer.parseInt(request.getParameter("id")));
                     if (success) {
@@ -61,6 +70,14 @@ public class CategoryController extends BaseController {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        Boolean canManage = (Boolean) request.getSession().getAttribute("canManageCategory");
+        if (canManage == null || !canManage) {
+            request.getSession().setAttribute("message", "Bạn không có quyền thực hiện thao tác này.");
+            request.getSession().setAttribute("messageType", "danger");
+            response.sendRedirect(request.getContextPath() + "/category");
+            return;
+        }
+
         String action = request.getParameter("action");
 
         switch (action) {

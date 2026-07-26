@@ -92,6 +92,15 @@ public class ProductController extends BaseController {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         HttpSession session = request.getSession();
+        model.Employee currentUser = (model.Employee) session.getAttribute("currentUser");
+        String roleName = (currentUser != null && currentUser.getRoleName() != null) ? currentUser.getRoleName().trim() : "";
+        boolean canManage = "Admin".equalsIgnoreCase(roleName) || "Owner".equalsIgnoreCase(roleName);
+        if (!canManage) {
+            session.setAttribute("message", "Bạn không có quyền thực hiện thao tác này.");
+            session.setAttribute("messageType", "danger");
+            response.sendRedirect(buildRedirectUrl(request));
+            return;
+        }
         try {
             String action = request.getParameter("action");
             if (action == null) action = "";
