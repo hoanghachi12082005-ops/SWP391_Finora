@@ -143,7 +143,7 @@ public class TransferController extends InventoryBaseController {
                     
                     int currentWarehouseId = Integer.parseInt(request.getParameter("currentWarehouseId"));
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
-                    boolean isOwner = "Owner".equalsIgnoreCase(currentUser.getRoleName()) || "Admin".equalsIgnoreCase(currentUser.getRoleName());
+                    boolean isOwner = "Owner".equalsIgnoreCase(currentUser.getRoleName()) || "Admin".equalsIgnoreCase(currentUser.getRoleName()) || "StoreManager".equalsIgnoreCase(currentUser.getRoleName());
                     boolean isStaff = "Staff".equalsIgnoreCase(currentUser.getRoleName());
                     
                     // Backend Validation khi tạo đơn
