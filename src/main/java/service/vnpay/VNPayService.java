@@ -96,6 +96,9 @@ public class VNPayService {
 
             orderDAO.updateStatus(conn, orderId, "COMPLETED");
 
+            // Lấy thông tin order để gán employee + branch cho payment
+            Order order = orderDAO.findByCode(conn, orderCode);
+
             Payment payment = new Payment();
             payment.setOrderId(orderId);
             payment.setAmount(amount / 100.0);
@@ -105,11 +108,14 @@ public class VNPayService {
             payment.setPaymentType("INCOME");
             payment.setDescription("Thanh toán VNPAY đơn hàng " + orderCode
                     + ", GD: " + (transactionNo != null ? transactionNo : "N/A"));
+            if (order != null) {
+                payment.setEmployeeId(order.getEmpId());
+                payment.setBranchId(order.getBranchId());
+            }
 
             paymentDAO.insert(conn, payment);
 
             // Earn loyalty points
-            Order order = orderDAO.findByCode(conn, orderCode);
             if (order != null && order.getCustomerId() != null && order.getCustomerId() > 0) {
                 new CustomerPointDAO().addPoints(conn, order.getCustomerId(), order.getTotalAmount(), orderId);
             }

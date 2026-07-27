@@ -13,9 +13,9 @@ import java.io.InputStream;
  */
 public class DownloadProductImages {
 
-    static final String DB_URL = "jdbc:sqlserver://160.191.242.124:1433;databaseName=DBFinoraV3;encrypt=false;trustServerCertificate=true;";
+    static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=DBFinoraV3;encrypt=false;trustServerCertificate=true;";
     static final String DB_USER = "sa";
-    static final String DB_PASS = "a12345A@";
+    static final String DB_PASS = "1234";
     static final String IMAGE_DIR = "src/main/webapp/assets/images/product/";
     static final String CONTEXT_PATH = "/SWP391_Finora";
     static final String IMAGE_URL_PREFIX = CONTEXT_PATH + "/assets/images/product/";
