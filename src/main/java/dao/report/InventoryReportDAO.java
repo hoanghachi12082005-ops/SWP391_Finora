@@ -134,11 +134,33 @@ public class InventoryReportDAO {
         }
     }
 
+    /** Trích xuất URL ảnh đầu tiên từ JSON array string */
+    private String extractFirstImageUrl(String json) {
+        if (json == null || json.isBlank()) return null;
+        String trimmed = json.trim();
+        // Nếu là JSON array ["url1","url2",...]
+        if (trimmed.startsWith("[")) {
+            // Tìm chuỗi URL đầu tiên giữa các dấu ngoặc kép
+            int firstQuote = trimmed.indexOf('"');
+            int secondQuote = firstQuote >= 0 ? trimmed.indexOf('"', firstQuote + 1) : -1;
+            if (firstQuote >= 0 && secondQuote > firstQuote) {
+                return trimmed.substring(firstQuote + 1, secondQuote);
+            }
+            return null;
+        }
+        // Nếu là URL đơn thuần
+        return trimmed;
+    }
+
     private InventoryReportItem mapItem(ResultSet rs) throws SQLException {
         InventoryReportItem item = new InventoryReportItem();
         item.setProductId(rs.getInt("product_id"));
         item.setProductName(rs.getString("product_name"));
-        item.setImageUrl(rs.getString("ImageUrl"));
+
+        // Parse JSON array image URL và lấy ảnh đầu tiên (giữ nguyên context path)
+        String rawImageUrl = rs.getString("ImageUrl");
+        item.setImageUrl(extractFirstImageUrl(rawImageUrl));
+
         item.setWarehouseName(rs.getString("warehouse_name"));
         item.setBranchName(rs.getString("BranchName"));
         item.setQuantityInStock(rs.getInt("quantity_in_stock"));
