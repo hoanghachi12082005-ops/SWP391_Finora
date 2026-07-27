@@ -167,9 +167,18 @@
                                         <td>${(currentPage - 1) * pageSize + st.index + 1}</td>
                                         <td>
                                             <div class="user-cell">
-                                                <img src="${empty row.imageUrl ? 'https://placehold.co/40x40' : row.imageUrl}" 
-                                                     alt="${row.productName}" 
-                                                     style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid #e2e8f0;"/>
+                                                <c:choose>
+                                                    <c:when test="${not empty row.imageUrl}">
+                                                        <img src="${row.imageUrl}" 
+                                                             alt="${row.productName}" 
+                                                             style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid #e2e8f0;"/>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <div style="width: 40px; height: 40px; border-radius: 4px; background-color: #f1f5f9; display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0;">
+                                                            <span class="material-symbols-outlined" style="font-size: 20px; color: #94a3b8;">inventory_2</span>
+                                                        </div>
+                                                    </c:otherwise>
+                                                </c:choose>
                                                 <div>
                                                     <strong>${row.productName}</strong>
                                                 </div>

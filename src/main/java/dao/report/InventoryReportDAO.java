@@ -138,7 +138,13 @@ public class InventoryReportDAO {
         InventoryReportItem item = new InventoryReportItem();
         item.setProductId(rs.getInt("product_id"));
         item.setProductName(rs.getString("product_name"));
-        item.setImageUrl(rs.getString("ImageUrl"));
+        String rawJson = rs.getString("ImageUrl");
+        java.util.List<String> urls = model.Product.parseJsonArray(rawJson);
+        if (!urls.isEmpty()) {
+            item.setImageUrl(urls.get(0));
+        } else {
+            item.setImageUrl(null);
+        }
         item.setWarehouseName(rs.getString("warehouse_name"));
         item.setBranchName(rs.getString("BranchName"));
         item.setQuantityInStock(rs.getInt("quantity_in_stock"));

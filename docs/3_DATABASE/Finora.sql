@@ -1,13 +1,6 @@
-USE [master]
+
 GO
-/****** Object:  Database [DBFinoraV3]    Script Date: 16/07/2026 16:56:27 ******/
-CREATE DATABASE [DBFinoraV3]
- CONTAINMENT = NONE
- ON  PRIMARY 
-( NAME = N'DBFinoraV3', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL14.SQLEXPRESS\MSSQL\DATA\DBFinoraV3.mdf' , SIZE = 8192KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
- LOG ON 
-( NAME = N'DBFinoraV3_log', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL14.SQLEXPRESS\MSSQL\DATA\DBFinoraV3_log.ldf' , SIZE = 8192KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB )
-GO
+
 ALTER DATABASE [DBFinoraV3] SET COMPATIBILITY_LEVEL = 140
 GO
 IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
@@ -606,6 +599,9 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+CREATE TABLE [dbo].[voucher](
+	[voucher_id] [int] IDENTITY(1,1) NOT NULL,
+	[code] [nvarchar](50) NOT NULL,
 	[discount_type] [nvarchar](20) NULL,
 	[discount_value] [decimal](18, 2) NULL,
 	[used_quantity] [int] NULL,
@@ -615,6 +611,7 @@ GO
 	[created_at] [datetime] NULL,
 PRIMARY KEY CLUSTERED 
 (
+	[voucher_id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
