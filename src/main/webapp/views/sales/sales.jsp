@@ -807,6 +807,9 @@ function openPaymentModal() {
         showAlert('Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán.');
         return;
     }
+    // Re-enable nút xác nhận cho đơn mới (tránh bị disabled từ lần thanh toán trước)
+    const confirmBtn = document.querySelector('#paymentModal .bg-primary');
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed'); }
     const total = cartState.activeTab.totalAmount;
     document.getElementById('modalTotalDisplay').innerHTML = fmt(total).replace('₫','') + ' <span class="text-headline-md text-outline">₫</span>';
     document.getElementById('modalCashInput').value = formatCash(Math.ceil(total));
