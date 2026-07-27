@@ -159,11 +159,17 @@ public class ReportController extends BaseController {
         PageResult pr = PaginationHelper.compute(totalProducts, page, sizeValue);
         pr.setAttributes(request);
 
-        request.setAttribute(
-                "inventoryItems",
-                inventoryReportDAO.getInventoryReport(
-                        keyword, branchId, pr.getCurrentPage(), pr.getPageSize())
-        );
+        List<model.InventoryReportItem> inventoryItems = inventoryReportDAO.getInventoryReport(
+                keyword, branchId, pr.getCurrentPage(), pr.getPageSize());
+        if (inventoryItems != null) {
+            String ctx = request.getContextPath();
+            for (model.InventoryReportItem item : inventoryItems) {
+                if (item.getImageUrl() != null && !item.getImageUrl().isBlank()) {
+                    item.setImageUrl(model.Product.formatDisplayUrl(item.getImageUrl(), ctx));
+                }
+            }
+        }
+        request.setAttribute("inventoryItems", inventoryItems);
         request.setAttribute(
                 "reportOverview",
                 inventoryReportDAO.getReportOverview(keyword, branchId)
