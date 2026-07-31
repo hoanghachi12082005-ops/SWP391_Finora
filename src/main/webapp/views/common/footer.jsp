@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -22,14 +23,13 @@
         });
     </script>
     <c:if test="${not empty message or not empty sessionScope.message}">
+        <div id="swalMessageMsg" style="display:none;"><c:out value="${not empty message ? message : sessionScope.message}"/></div>
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                var msg = '${not empty message ? message : sessionScope.message}'.trim();
+                var el = document.getElementById("swalMessageMsg");
+                var msg = el ? el.textContent.trim() : '';
                 if (msg && msg !== 'null') {
-                    Toast.fire({
-                        icon: 'success',
-                        title: msg
-                    });
+                    Toast.fire({ icon: 'success', title: msg });
                 }
             });
         </script>
@@ -38,14 +38,13 @@
         <c:remove var="message" />
     </c:if>
     <c:if test="${not empty successMessage or not empty sessionScope.successMessage}">
+        <div id="swalSuccessMsg" style="display:none;"><c:out value="${not empty successMessage ? successMessage : sessionScope.successMessage}"/></div>
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                var msg = '${not empty successMessage ? successMessage : sessionScope.successMessage}'.trim();
+                var el = document.getElementById("swalSuccessMsg");
+                var msg = el ? el.textContent.trim() : '';
                 if (msg && msg !== 'null') {
-                    Toast.fire({
-                        icon: 'success',
-                        title: msg
-                    });
+                    Toast.fire({ icon: 'success', title: msg });
                 }
             });
         </script>
@@ -54,14 +53,13 @@
         <c:remove var="successMessage" />
     </c:if>
     <c:if test="${not empty error or not empty sessionScope.error}">
+        <div id="swalErrorMsg" style="display:none;"><c:out value="${not empty error ? error : sessionScope.error}"/></div>
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                var msg = '${not empty error ? error : sessionScope.error}'.trim();
+                var el = document.getElementById("swalErrorMsg");
+                var msg = el ? el.textContent.trim() : '';
                 if (msg && msg !== 'null') {
-                    Toast.fire({
-                        icon: 'error',
-                        title: msg
-                    });
+                    Toast.fire({ icon: 'error', title: msg });
                 }
             });
         </script>
@@ -70,14 +68,13 @@
         <c:remove var="error" />
     </c:if>
     <c:if test="${not empty errorMessage or not empty sessionScope.errorMessage}">
+        <div id="swalErrorMessageMsg" style="display:none;"><c:out value="${not empty errorMessage ? errorMessage : sessionScope.errorMessage}"/></div>
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                var msg = '${not empty errorMessage ? errorMessage : sessionScope.errorMessage}'.trim();
+                var el = document.getElementById("swalErrorMessageMsg");
+                var msg = el ? el.textContent.trim() : '';
                 if (msg && msg !== 'null') {
-                    Toast.fire({
-                        icon: 'error',
-                        title: msg
-                    });
+                    Toast.fire({ icon: 'error', title: msg });
                 }
             });
         </script>
@@ -86,15 +83,13 @@
         <c:remove var="errorMessage" />
     </c:if>
     <c:if test="${not empty warning or not empty sessionScope.warning}">
+        <div id="swalWarningMsg" style="display:none;"><c:out value="${not empty warning ? warning : sessionScope.warning}"/></div>
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                var msg = '${not empty warning ? warning : sessionScope.warning}'.trim();
+                var el = document.getElementById("swalWarningMsg");
+                var msg = el ? el.textContent.trim() : '';
                 if (msg && msg !== 'null') {
-                    Toast.fire({
-                        icon: 'warning',
-                        title: msg,
-                        timer: 5000
-                    });
+                    Toast.fire({ icon: 'warning', title: msg, timer: 5000 });
                 }
             });
         </script>
@@ -103,15 +98,13 @@
         <c:remove var="warning" />
     </c:if>
     <c:if test="${not empty warningMessage or not empty sessionScope.warningMessage}">
+        <div id="swalWarningMessageMsg" style="display:none;"><c:out value="${not empty warningMessage ? warningMessage : sessionScope.warningMessage}"/></div>
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                var msg = '${not empty warningMessage ? warningMessage : sessionScope.warningMessage}'.trim();
+                var el = document.getElementById("swalWarningMessageMsg");
+                var msg = el ? el.textContent.trim() : '';
                 if (msg && msg !== 'null') {
-                    Toast.fire({
-                        icon: 'warning',
-                        title: msg,
-                        timer: 5000
-                    });
+                    Toast.fire({ icon: 'warning', title: msg, timer: 5000 });
                 }
             });
         </script>

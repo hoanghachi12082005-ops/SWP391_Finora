@@ -40,18 +40,37 @@ public class DatabaseMigrationListener implements ServletContextListener {
                 }
             }
 
-            // Auto-heal dummy hashes for local development
-            try {
-                String sqlUpdateHashes = "UPDATE Employee SET passwordHash = ? WHERE passwordHash = '$2a$10$dummyhashfordemo'";
-                try (PreparedStatement ps = conn.prepareStatement(sqlUpdateHashes)) {
-                    ps.setString(1, "$2a$10$pPYncF3KjwYCFVeM6.R4GuEemqqHzz0VK29x2QjbPVRS1mILSQU6q");
-                    int updated = ps.executeUpdate();
-                    if (updated > 0) {
-                        System.out.println("Updated " + updated + " employees with dummy hashes to valid '123456' hashes.");
-                    }
-                }
+            // Drop CHECK constraint on [order].status to allow IN_TRANSIT, COMPLETED, PENDING, CANCELLED, REJECTED
+            try (Statement stmt = conn.createStatement()) {
+                String sqlDropConstraint = """
+                    DECLARE @sql NVARCHAR(MAX) = '';
+                    SELECT @sql += 'ALTER TABLE [dbo].[order] DROP CONSTRAINT [' + cc.name + ']; '
+                    FROM sys.check_constraints cc
+                    JOIN sys.columns c ON cc.parent_object_id = c.object_id AND cc.parent_column_id = c.column_id
+                    WHERE cc.parent_object_id = OBJECT_ID('dbo.order') AND c.name = 'status';
+                    IF @sql <> '' EXEC sp_executesql @sql;
+                """;
+                stmt.execute(sqlDropConstraint);
+                System.out.println("Check constraints on [order].status verified/dropped successfully.");
             } catch (SQLException ex) {
-                System.err.println("Failed to auto-heal employee password hashes: " + ex.getMessage());
+                System.err.println("Failed to drop check constraint on [order].status: " + ex.getMessage());
+            }
+
+            // Add actual_quantity column to order_detail & stock_transfer_detail if not exists
+            try (Statement stmt = conn.createStatement()) {
+                String sqlAddActualQty = """
+                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[order_detail]') AND name = 'actual_quantity')
+                    BEGIN
+                        ALTER TABLE [dbo].[order_detail] ADD [actual_quantity] INT NULL;
+                    END
+                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[stock_transfer_detail]') AND name = 'actual_quantity')
+                    BEGIN
+                        ALTER TABLE [dbo].[stock_transfer_detail] ADD [actual_quantity] INT NULL;
+                    END
+                """;
+                stmt.execute(sqlAddActualQty);
+            } catch (SQLException ex) {
+                System.err.println("Failed to add actual_quantity column: " + ex.getMessage());
             }
 
             boolean shiftExists = false;

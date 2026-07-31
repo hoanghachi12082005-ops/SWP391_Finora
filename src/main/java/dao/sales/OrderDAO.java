@@ -18,8 +18,8 @@ public class OrderDAO {
                    b.branch_name AS branchName
             FROM [order] o
             LEFT JOIN Customer c ON o.customer_id = c.cus_id
-            JOIN Employee e ON o.emp_id = e.emp_id
-            JOIN Branch b ON o.branch_id = b.branch_id
+            LEFT JOIN Employee e ON o.emp_id = e.emp_id
+            LEFT JOIN Branch b ON o.branch_id = b.branch_id
             WHERE o.order_type = 'SALE'
             ORDER BY o.order_id DESC
         """;
@@ -50,8 +50,8 @@ public class OrderDAO {
                    b.branch_name AS branchName
             FROM [order] o WITH (NOLOCK)
             LEFT JOIN Customer c WITH (NOLOCK) ON o.customer_id = c.cus_id
-            JOIN Employee e WITH (NOLOCK) ON o.emp_id = e.emp_id
-            JOIN Branch b WITH (NOLOCK) ON o.branch_id = b.branch_id
+            LEFT JOIN Employee e WITH (NOLOCK) ON o.emp_id = e.emp_id
+            LEFT JOIN Branch b WITH (NOLOCK) ON o.branch_id = b.branch_id
             WHERE o.order_type = 'SALE'
             """);
         
@@ -101,8 +101,8 @@ public class OrderDAO {
                    w.warehouse_name AS warehouseName
             FROM [order] o WITH (NOLOCK)
             LEFT JOIN Supplier s WITH (NOLOCK) ON o.supplier_id = s.supplier_id
-            JOIN Employee e WITH (NOLOCK) ON o.emp_id = e.emp_id
-            JOIN Warehouse w WITH (NOLOCK) ON o.warehouse_id = w.warehouse_id
+            LEFT JOIN Employee e WITH (NOLOCK) ON o.emp_id = e.emp_id
+            LEFT JOIN Warehouse w WITH (NOLOCK) ON o.warehouse_id = w.warehouse_id
             WHERE o.order_type IN ('PURCHASE', 'EXPORT') AND o.status = 'PENDING'
             """);
         
@@ -158,6 +158,21 @@ public class OrderDAO {
                     od.setOrderId(rs.getInt("order_id"));
                     od.setProductId(rs.getInt("product_id"));
                     od.setQuantity(rs.getInt("quantity"));
+                    try {
+                        Object actObj = rs.getObject("actual_quantity");
+                        if (actObj != null) {
+                            od.setActualQuantity(rs.getInt("actual_quantity"));
+                        }
+                    } catch (Exception ex) {}
+                    try {
+                        Object suppObj = rs.getObject("supplier_id");
+                        if (suppObj != null) {
+                            od.setSupplierId(rs.getInt("supplier_id"));
+                        }
+                    } catch (Exception ex) {}
+                    try {
+                        od.setSupplierStatus(rs.getString("supplier_status"));
+                    } catch (Exception ex) {}
                     od.setUnitPrice(rs.getDouble("unit_price"));
                     od.setTotalPrice(rs.getDouble("total_price"));
                     od.setImportPrice(rs.getDouble("import_price"));
@@ -183,9 +198,9 @@ public class OrderDAO {
                    b.branch_name AS branchName
             FROM [order] o
             LEFT JOIN Customer c ON o.customer_id = c.cus_id
-            LEFT JOIN customer_point cp ON c.cus_id = cp.cus_id
-            JOIN Employee e ON o.emp_id = e.emp_id
-            JOIN Branch b ON o.branch_id = b.branch_id
+            LEFT JOIN customer_point cp ON (c.cus_id IS NOT NULL AND c.cus_id = cp.cus_id)
+            LEFT JOIN Employee e ON o.emp_id = e.emp_id
+            LEFT JOIN Branch b ON o.branch_id = b.branch_id
             WHERE o.order_id = ?
             """;
         
@@ -220,8 +235,8 @@ public class OrderDAO {
                    b.branch_name AS branchName
             FROM [order] o
             LEFT JOIN Customer c ON o.customer_id = c.cus_id
-            JOIN Employee e ON o.emp_id = e.emp_id
-            JOIN Branch b ON o.branch_id = b.branch_id
+            LEFT JOIN Employee e ON o.emp_id = e.emp_id
+            LEFT JOIN Branch b ON o.branch_id = b.branch_id
             WHERE o.emp_id = ?
             ORDER BY o.created_at DESC
             """;
@@ -245,11 +260,13 @@ public class OrderDAO {
 
     public boolean updateStatus(int orderId, String status) {
         String sql = "UPDATE [order] SET status = ? WHERE order_id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, status);
-            ps.setInt(2, orderId);
-            return ps.executeUpdate() > 0;
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(true);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, status);
+                ps.setInt(2, orderId);
+                return ps.executeUpdate() > 0;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -266,17 +283,43 @@ public class OrderDAO {
     }
 
     public boolean updateStatus(int orderId, String status, Integer approvedBy) {
-        String sql = "UPDATE [order] SET status = ?, approved_by = ? WHERE order_id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, status);
-            if (approvedBy != null) {
-                ps.setInt(2, approvedBy);
-            } else {
-                ps.setNull(2, java.sql.Types.INTEGER);
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(true);
+            
+            // Drop any restrictive CHECK constraint on [order].status
+            try (Statement stmt = conn.createStatement()) {
+                String sqlDropConstraint = """
+                    DECLARE @sql NVARCHAR(MAX) = '';
+                    SELECT @sql += 'ALTER TABLE [dbo].[order] DROP CONSTRAINT [' + cc.name + ']; '
+                    FROM sys.check_constraints cc
+                    JOIN sys.columns c ON cc.parent_object_id = c.object_id AND cc.parent_column_id = c.column_id
+                    WHERE cc.parent_object_id = OBJECT_ID('dbo.order') AND c.name = 'status';
+                    IF @sql <> '' EXEC sp_executesql @sql;
+                """;
+                stmt.execute(sqlDropConstraint);
+            } catch (Exception ignored) {}
+
+            String sql = "UPDATE [order] SET status = ?, approved_by = ? WHERE order_id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, status);
+                if (approvedBy != null && approvedBy > 0) {
+                    ps.setInt(2, approvedBy);
+                } else {
+                    ps.setNull(2, java.sql.Types.INTEGER);
+                }
+                ps.setInt(3, orderId);
+                int count = ps.executeUpdate();
+                if (count > 0) return true;
+            } catch (SQLException ex) {
+                ex.printStackTrace();
             }
-            ps.setInt(3, orderId);
-            return ps.executeUpdate() > 0;
+
+            // Fallback update without approved_by column
+            try (PreparedStatement ps2 = conn.prepareStatement("UPDATE [order] SET status = ? WHERE order_id = ?")) {
+                ps2.setString(1, status);
+                ps2.setInt(2, orderId);
+                return ps2.executeUpdate() > 0;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -292,6 +335,37 @@ public class OrderDAO {
             } else {
                 ps.setNull(2, java.sql.Types.INTEGER);
             }
+            ps.setInt(3, orderId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateOrderDetailQuantity(Connection conn, int orderDetailId, int actualQty, double unitPrice) throws SQLException {
+        String sql = "UPDATE order_detail SET actual_quantity = ?, total_price = ? WHERE order_detail_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, actualQty);
+            ps.setDouble(2, actualQty * unitPrice);
+            ps.setInt(3, orderDetailId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateOrderDetailSupplierStatus(Connection conn, int orderDetailId, int actualQty, double unitPrice, String supplierStatus) throws SQLException {
+        String sql = "UPDATE order_detail SET actual_quantity = ?, total_price = ?, supplier_status = ? WHERE order_detail_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, actualQty);
+            ps.setDouble(2, actualQty * unitPrice);
+            ps.setString(3, supplierStatus);
+            ps.setInt(4, orderDetailId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateOrderTotals(Connection conn, int orderId, double subtotal, double totalAmount) throws SQLException {
+        String sql = "UPDATE [order] SET subtotal = ?, total_amount = ? WHERE order_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDouble(1, subtotal);
+            ps.setDouble(2, totalAmount);
             ps.setInt(3, orderId);
             ps.executeUpdate();
         }

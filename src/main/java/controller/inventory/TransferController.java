@@ -385,6 +385,12 @@ public class TransferController extends InventoryBaseController {
                 transferCodeQuery,
                 partnerWarehouseQuery
             );
+            List<model.PurchaseOrder> inTransitOrders = new dao.purchase.PurchaseOrderDAO().findAllByWarehouseAndType(
+                0,
+                "PURCHASE",
+                "IN_TRANSIT"
+            );
+            request.setAttribute("inTransitOrders", inTransitOrders);
         } else {
             transfers = transferDAO.findAllGrouped(
                 warehouseId != null ? warehouseId : 0,
@@ -392,6 +398,12 @@ public class TransferController extends InventoryBaseController {
                 transferCodeQuery,
                 partnerWarehouseQuery
             );
+            List<model.PurchaseOrder> purchaseOrders = new dao.purchase.PurchaseOrderDAO().findAllByWarehouseAndType(
+                warehouseId != null ? warehouseId : 0,
+                "PURCHASE",
+                statusQuery
+            );
+            request.setAttribute("purchaseOrders", purchaseOrders);
         }
         request.setAttribute("transfers", transfers);
         request.setAttribute("transferCodeQuery", transferCodeQuery);

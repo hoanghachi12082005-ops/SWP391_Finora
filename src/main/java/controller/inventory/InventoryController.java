@@ -72,7 +72,7 @@ public class InventoryController extends BaseController {
         } else if ("viewTicket".equals(action)) {
             new TransferController().doGet(request, response);
             return;
-        } else if ("viewOrderDetails".equals(action)) {
+        } else if ("viewOrderDetails".equals(action) || "viewReceiveOrderDetails".equals(action)) {
             new OrderVoucherController().doGet(request, response);
             return;
         } else if ("printTicket".equals(action)) {
@@ -312,6 +312,7 @@ public class InventoryController extends BaseController {
             case "approveOrder":
             case "rejectOrder":
             case "cancelOrder":
+            case "confirmReceiveOrder":
                 new OrderVoucherController().doPost(request, response);
                 break;
 

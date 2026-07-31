@@ -8,6 +8,17 @@
   - Hiển thị danh sách sản phẩm, nhà cung cấp, đơn giá, tổng tiền của đơn nhậpkho.
   ==========================================================================
 --%>
+<%!
+    public static Integer getSafeActualQuantity(Object obj) {
+        if (obj == null) return null;
+        try {
+            java.lang.reflect.Method m = obj.getClass().getMethod("getActualQuantity");
+            return (Integer) m.invoke(obj);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+%>
 <div class="modal-header bg-light border-bottom-0 pb-0">
     <h5 class="modal-title fw-bold text-dark d-flex align-items-center" style="font-size: 18px;">
         <span class="material-icons text-primary me-2" style="font-size: 24px;">receipt_long</span>
@@ -36,6 +47,9 @@
                     <c:choose>
                         <c:when test="${order.status == 'PENDING'}">
                             <span class="badge bg-warning text-dark" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">CHỜ DUYỆT</span>
+                        </c:when>
+                        <c:when test="${order.status == 'IN_TRANSIT'}">
+                            <span class="badge bg-info text-dark" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">ĐANG VẬN CHUYỂN (CHỜ NHẬP KHO)</span>
                         </c:when>
                         <c:when test="${order.status == 'COMPLETED'}">
                             <span class="badge bg-success" style="padding: 6px 12px; border-radius: 6px; font-size: 11px;">HOÀN THÀNH</span>
@@ -67,16 +81,40 @@
                 <div class="text-muted small mb-1">Đối Tác</div>
                 <div class="fw-bold text-dark" style="font-size: 14.5px;">
                     <span class="material-icons" style="font-size: 16px; vertical-align: text-bottom; margin-right: 4px; color:#10b981;">business</span>
-                    ${not empty order.customerName ? order.customerName : 'Nhiều Nhà Cung Cấp / Vãng Lai'}
+                    ${not empty order.customerName ? order.customerName : 'Nhà Cung Cấp'}
                 </div>
             </div>
         </div>
     </div>
     
+    <%
+        model.Order currentOrder = (model.Order) request.getAttribute("order");
+        String stStr = (currentOrder != null && currentOrder.getStatus() != null) ? currentOrder.getStatus().name() : "";
+        boolean isCompletedOrder = "COMPLETED".equalsIgnoreCase(stStr);
+        request.setAttribute("isCompletedOrder", isCompletedOrder);
+
+        java.util.List<model.OrderDetail> currentDetails = (java.util.List<model.OrderDetail>) request.getAttribute("orderDetails");
+        int totalOrdered = 0;
+        int totalActual = 0;
+        boolean hasDiscrepancy = false;
+        if (currentDetails != null) {
+            for (model.OrderDetail d : currentDetails) {
+                totalOrdered += d.getQuantity();
+                Integer actVal = isCompletedOrder ? getSafeActualQuantity(d) : null;
+                int act = actVal != null ? actVal : d.getQuantity();
+                totalActual += act;
+                if (actVal != null && actVal != d.getQuantity()) {
+                    hasDiscrepancy = true;
+                }
+            }
+        }
+        int totalDiff = totalActual - totalOrdered;
+    %>
+    
     <!-- Danh sách sản phẩm -->
     <h6 class="fw-bold mb-3 text-dark d-flex align-items-center" style="font-size: 14.5px;">
         <span class="material-icons text-secondary me-1" style="font-size: 18px;">list</span>
-        Chi Tiết Hàng Hóa
+        Chi Tiết Hàng Hóa ${isCompletedOrder ? '& Đối Chiếu Nhập Kho' : ''}
     </h6>
     <div class="table-responsive border rounded-3 mb-4 shadow-sm" style="overflow: hidden;">
         <table class="table table-hover align-middle mb-0" style="font-size: 13.5px;">
@@ -84,13 +122,32 @@
                 <tr>
                     <th class="text-start ps-3 py-3" style="font-weight: 600; color: #475569;">Sản Phẩm</th>
                     <th class="text-start py-3" style="font-weight: 600; color: #475569;">Nhà Cung Cấp</th>
-                    <th class="text-center py-3" style="width: 120px; font-weight: 600; color: #475569;">Đơn Giá</th>
-                    <th class="text-center py-3" style="width: 100px; font-weight: 600; color: #475569;">Số Lượng</th>
-                    <th class="text-end pe-3 py-3" style="width: 140px; font-weight: 600; color: #475569;">Thành Tiền</th>
+                    <th class="text-center py-3" style="width: 110px; font-weight: 600; color: #475569;">Đơn Giá</th>
+                    <c:choose>
+                        <c:when test="${isCompletedOrder}">
+                            <th class="text-center py-3" style="width: 90px; font-weight: 600; color: #475569;">SL Đặt</th>
+                            <th class="text-center py-3" style="width: 110px; font-weight: 600; color: #0284c7;">SL Thực Nhập</th>
+                            <th class="text-center py-3" style="width: 110px; font-weight: 600; color: #475569;">Chênh Lệch</th>
+                        </c:when>
+                        <c:otherwise>
+                            <th class="text-center py-3" style="width: 100px; font-weight: 600; color: #475569;">Số Lượng</th>
+                        </c:otherwise>
+                    </c:choose>
+                    <th class="text-end pe-3 py-3" style="width: 130px; font-weight: 600; color: #475569;">Thành Tiền</th>
                 </tr>
             </thead>
             <tbody>
                 <c:forEach var="d" items="${orderDetails}">
+                    <%
+                        model.OrderDetail curD = (model.OrderDetail) pageContext.getAttribute("d");
+                        Integer curActVal = getSafeActualQuantity(curD);
+                        int curAct = curActVal != null ? curActVal : (curD != null ? curD.getQuantity() : 0);
+                        int curDiff = curAct - (curD != null ? curD.getQuantity() : 0);
+                        pageContext.setAttribute("safeActQty", curAct);
+                        pageContext.setAttribute("safeDiffQty", curDiff);
+                    %>
+                    <c:set var="actQty" value="${safeActQty}" />
+                    <c:set var="diffQty" value="${safeDiffQty}" />
                     <tr>
                         <td class="text-start fw-semibold ps-3 py-3 text-dark">
                             ${d.productName}<br>
@@ -102,7 +159,28 @@
                         <td class="text-center text-muted">
                             <fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="₫"/>
                         </td>
-                        <td class="fw-bold text-center text-primary" style="font-size: 14.5px;">${d.quantity}</td>
+                        <c:choose>
+                            <c:when test="${isCompletedOrder}">
+                                <td class="fw-bold text-center text-secondary" style="font-size: 14px;">${d.quantity}</td>
+                                <td class="fw-bold text-center text-primary" style="font-size: 14.5px;">${actQty}</td>
+                                <td class="text-center">
+                                    <c:choose>
+                                        <c:when test="${diffQty == 0}">
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 11px;">Khớp (0)</span>
+                                        </c:when>
+                                        <c:when test="${diffQty < 0}">
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size: 11px;">Thiếu (${diffQty})</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" style="font-size: 11px;">Thừa (+${diffQty})</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
+                            </c:when>
+                            <c:otherwise>
+                                <td class="fw-bold text-center text-primary" style="font-size: 14.5px;">${d.quantity}</td>
+                            </c:otherwise>
+                        </c:choose>
                         <td class="text-end fw-bold text-dark pe-3">
                             <fmt:formatNumber value="${d.totalPrice}" type="currency" currencySymbol="₫"/>
                         </td>
@@ -110,7 +188,7 @@
                 </c:forEach>
                 <!-- Dòng tổng cộng -->
                 <tr class="table-light fw-bold" style="border-top: 2px solid #e2e8f0;">
-                    <td colspan="4" class="text-end py-3">Tổng cộng:</td>
+                    <td colspan="${isCompletedOrder ? 6 : 4}" class="text-end py-3">Tổng cộng thanh toán:</td>
                     <td class="text-end text-danger pe-3 py-3" style="font-size: 16px;">
                         <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/>
                     </td>

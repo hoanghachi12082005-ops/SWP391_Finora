@@ -122,7 +122,7 @@
                     </c:if>
 
                     <input type="hidden" name="sizeValue" value="${sizeValue}"/>
-
+                    // filter
                     <div class="filter-actions">
                         <button class="btn-primary" type="submit">Áp dụng</button>
                         <a class="btn-secondary" href="${pageContext.request.contextPath}/reports/inventory-preview?keyword=${empty keyword ? '' : keyword}&branchId=${branchFilter == -1 ? '' : branchFilter}">

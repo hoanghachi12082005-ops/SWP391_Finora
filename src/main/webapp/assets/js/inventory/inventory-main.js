@@ -11,8 +11,9 @@ const selectedWarehouseId = window.INVENTORY_CONFIG?.selectedWarehouseId || '';
  * View ticket details (Stock Transfer details) in modal
  */
 function viewTicketDetails(ticketId, showAll) {
+    const modalEl = document.getElementById('ticketDetailsModal');
     const modalContent = document.getElementById('ticketDetailsModalContent');
-    if (!modalContent) return;
+    if (!modalEl || !modalContent) return;
 
     modalContent.innerHTML = `
         <div class="modal-body text-center py-5">
@@ -21,7 +22,7 @@ function viewTicketDetails(ticketId, showAll) {
         </div>
     `;
     
-    const myModal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
+    const myModal = bootstrap.Modal.getOrCreateInstance(modalEl);
     myModal.show();
     
     let url = `${contextPath}/inventory?action=viewTicket&ticketId=${ticketId}`;
@@ -52,8 +53,9 @@ function viewTicketDetails(ticketId, showAll) {
  * View stocktake (check) details in modal
  */
 function viewCheckDetails(checkId) {
+    const modalEl = document.getElementById('ticketDetailsModal');
     const modalContent = document.getElementById('ticketDetailsModalContent');
-    if (!modalContent) return;
+    if (!modalEl || !modalContent) return;
 
     modalContent.innerHTML = `
         <div class="modal-body text-center py-5">
@@ -62,7 +64,7 @@ function viewCheckDetails(checkId) {
         </div>
     `;
     
-    const myModal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
+    const myModal = bootstrap.Modal.getOrCreateInstance(modalEl);
     myModal.show();
     
     const url = `${contextPath}/inventory?action=viewCheckDetails&checkId=${checkId}`;
@@ -87,8 +89,9 @@ function viewCheckDetails(checkId) {
  * View purchase order details in modal
  */
 function viewOrderDetails(orderId) {
+    const modalEl = document.getElementById('ticketDetailsModal');
     const modalContent = document.getElementById('ticketDetailsModalContent');
-    if (!modalContent) return;
+    if (!modalEl || !modalContent) return;
 
     modalContent.innerHTML = `
         <div class="modal-body text-center py-5">
@@ -97,7 +100,7 @@ function viewOrderDetails(orderId) {
         </div>
     `;
     
-    const myModal = new bootstrap.Modal(document.getElementById('ticketDetailsModal'));
+    const myModal = bootstrap.Modal.getOrCreateInstance(modalEl);
     myModal.show();
     
     const url = `${contextPath}/inventory?action=viewOrderDetails&orderId=${orderId}`;
@@ -119,6 +122,62 @@ function viewOrderDetails(orderId) {
 }
 
 /**
+ * Update discrepancy badge in receive order modal realtime
+ */
+window.updateDiffBadge = function(detailId, targetQty) {
+    const input = document.getElementById('actualInput_' + detailId);
+    const badgeCol = document.getElementById('diffBadgeCol_' + detailId);
+    if (!input || !badgeCol) return;
+    
+    const val = parseInt(input.value) || 0;
+    const target = parseInt(targetQty) || 0;
+    const diff = val - target;
+    
+    if (diff === 0) {
+        badgeCol.innerHTML = '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 11px;">Khớp (0)</span>';
+    } else if (diff < 0) {
+        badgeCol.innerHTML = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size: 11px;">Thiếu (' + diff + ')</span>';
+    } else {
+        badgeCol.innerHTML = '<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" style="font-size: 11px;">Thừa (+' + diff + ')</span>';
+    }
+};
+
+/**
+ * Open receive order modal for purchase orders from suppliers
+ */
+function openReceiveOrderModal(orderId) {
+    const modalEl = document.getElementById('ticketDetailsModal');
+    const modalContent = document.getElementById('ticketDetailsModalContent');
+    if (!modalEl || !modalContent) return;
+
+    modalContent.innerHTML = `
+        <div class="modal-body text-center py-5">
+            <div class="spinner-border text-success" role="status"></div>
+            <p class="mt-2 text-muted">Đang tải biểu mẫu xác nhận nhập kho...</p>
+        </div>
+    `;
+    
+    const myModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    myModal.show();
+    
+    const url = `${contextPath}/inventory?action=viewReceiveOrderDetails&orderId=${orderId}`;
+    
+    fetch(url)
+        .then(response => response.text())
+        .then(html => {
+            modalContent.innerHTML = html;
+        })
+        .catch(err => {
+            console.error('Error fetching receive order details:', err);
+            modalContent.innerHTML = `
+                <div class="modal-body py-5 text-center text-danger">
+                    <p>Lỗi khi tải biểu mẫu nhập kho.</p>
+                </div>
+            `;
+        });
+}
+
+/**
  * Open reject modal for stock transfers
  */
 function openRejectModal(ticketId) {
@@ -126,16 +185,20 @@ function openRejectModal(ticketId) {
     if (rejectIdInput) {
         rejectIdInput.value = ticketId;
     }
-    const myModal = new bootstrap.Modal(document.getElementById('rejectModal'));
-    myModal.show();
+    const modalEl = document.getElementById('rejectModal');
+    if (modalEl) {
+        const myModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        myModal.show();
+    }
 }
 
 /**
  * Open receipt verification modal with details of discrepancies
  */
 function openReceiptModal(ticketId) {
+    const modalEl = document.getElementById('receiptModal');
     const modalContent = document.getElementById('receiptModalContent');
-    if (!modalContent) return;
+    if (!modalEl || !modalContent) return;
 
     modalContent.innerHTML = `
         <div class="modal-body text-center py-5">
@@ -144,7 +207,7 @@ function openReceiptModal(ticketId) {
         </div>
     `;
     
-    const myModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+    const myModal = bootstrap.Modal.getOrCreateInstance(modalEl);
     myModal.show();
     
     const url = `${contextPath}/inventory?action=viewReceiptForm&ticketId=${ticketId}&warehouseId=${selectedWarehouseId}`;
