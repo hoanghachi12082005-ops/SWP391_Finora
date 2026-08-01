@@ -351,11 +351,35 @@
                                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
                                             <a class="page-link" href="?page=${currentPage - 1}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">Trước</a>
                                         </li>
-                                        <c:forEach var="p" begin="1" end="${totalPage}">
-                                            <li class="page-item ${p == currentPage ? 'active' : ''}">
-                                                <a class="page-link ${p == currentPage ? 'bg-winered border-winered' : ''}" href="?page=${p}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">${p}</a>
-                                            </li>
-                                        </c:forEach>
+                                        <c:choose>
+                                            <c:when test="${totalPage <= 5}">
+                                                <c:forEach var="p" begin="1" end="${totalPage}">
+                                                    <li class="page-item ${p == currentPage ? 'active' : ''}">
+                                                        <a class="page-link ${p == currentPage ? 'bg-winered border-winered' : ''}" href="?page=${p}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">${p}</a>
+                                                    </li>
+                                                </c:forEach>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <li class="page-item ${currentPage == 1 ? 'active' : ''}">
+                                                    <a class="page-link ${currentPage == 1 ? 'bg-winered border-winered' : ''}" href="?page=1&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">1</a>
+                                                </li>
+                                                <c:if test="${currentPage > 3}">
+                                                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                                                </c:if>
+                                                <c:forEach var="p" begin="${currentPage - 1 < 2 ? 2 : currentPage - 1}"
+                                                           end="${currentPage + 1 > totalPage - 1 ? totalPage - 1 : currentPage + 1}">
+                                                    <li class="page-item ${p == currentPage ? 'active' : ''}">
+                                                        <a class="page-link ${p == currentPage ? 'bg-winered border-winered' : ''}" href="?page=${p}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">${p}</a>
+                                                    </li>
+                                                </c:forEach>
+                                                <c:if test="${currentPage < totalPage - 2}">
+                                                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                                                </c:if>
+                                                <li class="page-item ${currentPage == totalPage ? 'active' : ''}">
+                                                    <a class="page-link ${currentPage == totalPage ? 'bg-winered border-winered' : ''}" href="?page=${totalPage}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">${totalPage}</a>
+                                                </li>
+                                            </c:otherwise>
+                                        </c:choose>
                                         <li class="page-item ${currentPage == totalPage ? 'disabled' : ''}">
                                             <a class="page-link" href="?page=${currentPage + 1}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">Sau</a>
                                         </li>
