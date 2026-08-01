@@ -432,8 +432,8 @@ public class OrderDAO {
             INSERT INTO [order] 
             (order_code, order_type, customer_id, branch_id, supplier_id, emp_id, 
              warehouse_id, subtotal, discount_amount, total_amount, 
-             payment_method, status, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
+             payment_method, status, description, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
             """;
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, order.getOrderCode());
@@ -456,6 +456,7 @@ public class OrderDAO {
             ps.setDouble(10, order.getTotalAmount());
             ps.setString(11, order.getPaymentMethod());
             ps.setString(12, order.getStatus() != null ? order.getStatus().name() : "PENDING");
+            ps.setString(13, order.getDescription());
 
             int affected = ps.executeUpdate();
             if (affected == 0) {
@@ -473,6 +474,9 @@ public class OrderDAO {
         o.setOrderId(rs.getInt("order_id"));
         o.setOrderCode(rs.getString("order_code"));
         o.setOrderType(rs.getString("order_type"));
+        try {
+            o.setDescription(rs.getString("description"));
+        } catch (SQLException ignored) {}
         
         int customerId = rs.getInt("customer_id");
         o.setCustomerId(rs.wasNull() ? null : customerId);

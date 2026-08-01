@@ -38,15 +38,7 @@
                     <span class="material-symbols-outlined">money_off</span>
                 </div>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-card-info">
-                    <p>Dòng tiền ròng</p>
-                    <h3><fmt:formatNumber value="${kpi.netCashFlow}" maxFractionDigits="0"/> ₫</h3>
-                </div>
-                <div class="kpi-card-icon ${kpi.netCashFlow >= 0 ? 'green' : 'red'}">
-                    <span class="material-symbols-outlined">trending_up</span>
-                </div>
-            </div>
+
             <div class="kpi-card">
                 <div class="kpi-card-info">
                     <p>Giá trị giao dịch TB</p>

@@ -119,5 +119,20 @@
     <c:if test="${param.additionalJS != null}">
         <script src="${pageContext.request.contextPath}/assets/js/${param.additionalJS}"></script>
     </c:if>
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/vn.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            flatpickr("input[type='date']", {
+                altInput: true,
+                altFormat: "d/m/Y",
+                dateFormat: "Y-m-d",
+                locale: "vn",
+                allowInput: true
+            });
+        });
+    </script>
 </body>
 </html>

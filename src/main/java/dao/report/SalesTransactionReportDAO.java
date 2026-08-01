@@ -14,15 +14,16 @@ import java.util.Set;
 public class SalesTransactionReportDAO {
 
     private static final String SELECT =
-        "SELECT p.payment_id, p.transaction_code, p.payment_date, p.PaymentType, " +
-        "p.payment_method, p.payment_amount, p.Description, p.payment_status, " +
-        "p.order_id, o.order_code AS orderCode, o.order_type AS orderType, " +
+        "SELECT o.order_id AS payment_id, o.order_code AS transaction_code, o.created_at AS payment_date, " +
+        "CASE WHEN o.order_type IN ('SALE', 'RECEIPT') THEN 'INCOME' ELSE 'EXPENSE' END AS PaymentType, " +
+        "o.payment_method, o.total_amount AS payment_amount, o.description AS Description, o.status AS payment_status, " +
+        "o.order_id, o.order_code AS orderCode, o.order_type AS orderType, " +
         "e.fullName AS employeeName, b.branch_name AS branchName " +
-        "FROM payment p " +
-        "LEFT JOIN [order] o ON p.order_id = o.order_id " +
-        "LEFT JOIN Employee e ON p.EmployeeID = e.emp_id " +
-        "LEFT JOIN Branch b ON p.BranchID = b.branch_id " +
-        "WHERE p.payment_status IN ('COMPLETED', 'PAID')";
+        "FROM [order] o " +
+        "LEFT JOIN Employee e ON o.emp_id = e.emp_id " +
+        "LEFT JOIN Branch b ON o.branch_id = b.branch_id " +
+        "WHERE o.status IN ('COMPLETED', 'PAID') " +
+        "  AND o.order_type IN ('SALE', 'PURCHASE', 'IMPORT', 'RECEIPT', 'EXPENSE')";
 
     private static final Set<String> ALLOWED_SORT = Set.of(
         "payment_date", "payment_amount", "PaymentType", "branch_name", "employee_name"
@@ -34,17 +35,19 @@ public class SalesTransactionReportDAO {
         List<Object> params = new ArrayList<>();
         appendFilters(sql, params, f);
 
-        String sortCol = "p.payment_date";
+        String sortCol = "o.created_at";
         if (f.getSortBy() != null && ALLOWED_SORT.contains(f.getSortBy())) {
-            sortCol = "p." + f.getSortBy();
-            if ("branch_name".equals(f.getSortBy())) sortCol = "b.branch_name";
-            if ("employee_name".equals(f.getSortBy())) sortCol = "e.fullName";
+            if ("payment_date".equals(f.getSortBy())) sortCol = "o.created_at";
+            else if ("payment_amount".equals(f.getSortBy())) sortCol = "o.total_amount";
+            else if ("PaymentType".equals(f.getSortBy())) sortCol = "o.order_type";
+            else if ("branch_name".equals(f.getSortBy())) sortCol = "b.branch_name";
+            else if ("employee_name".equals(f.getSortBy())) sortCol = "e.fullName";
         }
         String sortDir = "DESC";
         if ("ASC".equalsIgnoreCase(f.getSortDir())) sortDir = "ASC";
 
         sql.append(" ORDER BY ").append(sortCol).append(" ").append(sortDir)
-           .append(", p.payment_id DESC");
+           .append(", o.order_id DESC");
         sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
         try (Connection conn = DBContext.getConnection();
@@ -63,9 +66,9 @@ public class SalesTransactionReportDAO {
     }
 
     public int countTransactions(SalesTransactionFilter f) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM payment p ");
-        sql.append("LEFT JOIN [order] o ON p.order_id = o.order_id ");
-        sql.append("LEFT JOIN Employee e ON p.EmployeeID = e.emp_id WHERE p.payment_status IN ('COMPLETED', 'PAID') ");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM [order] o ");
+        sql.append("LEFT JOIN Employee e ON o.emp_id = e.emp_id WHERE o.status IN ('COMPLETED', 'PAID') ");
+        sql.append("  AND o.order_type IN ('SALE', 'PURCHASE', 'IMPORT', 'RECEIPT', 'EXPENSE') ");
         List<Object> params = new ArrayList<>();
         appendFilters(sql, params, f);
         try (Connection conn = DBContext.getConnection();
@@ -86,13 +89,13 @@ public class SalesTransactionReportDAO {
         StringBuilder sql = new StringBuilder(
             "SELECT " +
             "COUNT(*) AS total_transactions, " +
-            "COALESCE(SUM(CASE WHEN p.PaymentType = 'INCOME' THEN p.payment_amount ELSE 0 END), 0) AS total_revenue, " +
-            "COALESCE(SUM(CASE WHEN p.PaymentType = 'EXPENSE' THEN p.payment_amount ELSE 0 END), 0) AS total_expense, " +
-            "COALESCE(AVG(p.payment_amount), 0) AS avg_transaction_value " +
-            "FROM payment p " +
-            "LEFT JOIN [order] o ON p.order_id = o.order_id " +
-            "LEFT JOIN Employee e ON p.EmployeeID = e.emp_id " +
-            "WHERE p.payment_status IN ('COMPLETED', 'PAID')"
+            "COALESCE(SUM(CASE WHEN o.order_type IN ('SALE', 'RECEIPT') THEN o.total_amount ELSE 0 END), 0) AS total_revenue, " +
+            "COALESCE(SUM(CASE WHEN o.order_type IN ('PURCHASE', 'IMPORT', 'EXPENSE') THEN o.total_amount ELSE 0 END), 0) AS total_expense, " +
+            "COALESCE(AVG(o.total_amount), 0) AS avg_transaction_value " +
+            "FROM [order] o " +
+            "LEFT JOIN Employee e ON o.emp_id = e.emp_id " +
+            "WHERE o.status IN ('COMPLETED', 'PAID') " +
+            "  AND o.order_type IN ('SALE', 'PURCHASE', 'IMPORT', 'RECEIPT', 'EXPENSE')"
         );
         List<Object> params = new ArrayList<>();
         appendFilters(sql, params, f);
@@ -119,21 +122,12 @@ public class SalesTransactionReportDAO {
     }
 
     public List<String> getDistinctTransactionTypes() {
-        List<String> types = new ArrayList<>();
-        String sql = "SELECT DISTINCT PaymentType FROM payment ORDER BY PaymentType";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) types.add(rs.getString(1));
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return types;
+        return List.of("INCOME", "EXPENSE");
     }
 
     private int countSalesOrders(SalesTransactionFilter f) {
         StringBuilder sql = new StringBuilder(
-            "SELECT COUNT(*) FROM [Order] WHERE order_type = 'SALE'"
+            "SELECT COUNT(*) FROM [order] WHERE order_type = 'SALE'"
         );
         List<Object> params = new ArrayList<>();
         if (f.getDateFrom() != null) {
@@ -167,49 +161,52 @@ public class SalesTransactionReportDAO {
 
     private void appendFilters(StringBuilder sql, List<Object> params, SalesTransactionFilter f) {
         if (f.getDateFrom() != null) {
-            sql.append(" AND CAST(p.payment_date AS DATE) >= ?");
+            sql.append(" AND CAST(o.created_at AS DATE) >= ?");
             params.add(Date.valueOf(f.getDateFrom()));
         }
         if (f.getDateTo() != null) {
-            sql.append(" AND CAST(p.payment_date AS DATE) <= ?");
+            sql.append(" AND CAST(o.created_at AS DATE) <= ?");
             params.add(Date.valueOf(f.getDateTo()));
         }
         if (f.getTransactionCode() != null && !f.getTransactionCode().isBlank()) {
-            sql.append(" AND p.transaction_code LIKE ?");
+            sql.append(" AND o.order_code LIKE ?");
             params.add("%" + f.getTransactionCode().trim() + "%");
         }
         if (f.getTransactionType() != null && !f.getTransactionType().isBlank()) {
-            sql.append(" AND p.PaymentType = ?");
-            params.add(f.getTransactionType());
+            if ("INCOME".equalsIgnoreCase(f.getTransactionType().trim())) {
+                sql.append(" AND o.order_type IN ('SALE', 'RECEIPT')");
+            } else if ("EXPENSE".equalsIgnoreCase(f.getTransactionType().trim())) {
+                sql.append(" AND o.order_type IN ('PURCHASE', 'IMPORT', 'EXPENSE')");
+            }
         }
         if (f.getOrderType() != null && !f.getOrderType().isBlank()) {
             sql.append(" AND o.order_type = ?");
             params.add(f.getOrderType().trim());
         }
         if (f.getPaymentMethod() != null && !f.getPaymentMethod().isBlank()) {
-            sql.append(" AND p.payment_method = ?");
+            sql.append(" AND o.payment_method = ?");
             params.add(f.getPaymentMethod());
         }
         if (f.getAmountFrom() != null) {
-            sql.append(" AND p.payment_amount >= ?");
+            sql.append(" AND o.total_amount >= ?");
             params.add(f.getAmountFrom());
         }
         if (f.getAmountTo() != null) {
-            sql.append(" AND p.payment_amount <= ?");
+            sql.append(" AND o.total_amount <= ?");
             params.add(f.getAmountTo());
         }
         if (f.getBranchId() != null) {
-            sql.append(" AND p.BranchID = ?");
+            sql.append(" AND o.branch_id = ?");
             params.add(f.getBranchId());
         }
         if (f.getEmpId() != null) {
-            sql.append(" AND p.EmployeeID = ?");
+            sql.append(" AND o.emp_id = ?");
             params.add(f.getEmpId());
         }
         if (f.getKeyword() != null && !f.getKeyword().isBlank()) {
             String kw = "%" + f.getKeyword().trim() + "%";
-            sql.append(" AND (p.transaction_code LIKE ? OR o.order_code LIKE ? OR p.Description LIKE ? OR e.fullName LIKE ?)");
-            params.add(kw); params.add(kw); params.add(kw); params.add(kw);
+            sql.append(" AND (o.order_code LIKE ? OR o.description LIKE ? OR e.fullName LIKE ?)");
+            params.add(kw); params.add(kw); params.add(kw);
         }
     }
 

@@ -33,6 +33,7 @@ public class Order {
     private String paymentMethod;   // "CASH", "CARD", "TRANSFER", v.v.
     private OrderStatus status;
     private String createdAt;       // yyyy-MM-dd HH:mm:ss
+    private String description;     // Chi tiết/Mô tả giao dịch
 
     // Transient fields for join queries
     // View-only / Additional properties
@@ -43,6 +44,9 @@ public class Order {
     private String branchName;
     private String supplierName;
     private String note;
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
     // ── Constructors ─────────────────────────────────────────
 

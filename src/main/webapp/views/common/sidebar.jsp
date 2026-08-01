@@ -378,12 +378,6 @@ class="sidebar-menu-item ${originalUri.contains('/manager/emp') ? 'active' : ''}
                                                     style="font-size: 1rem; margin-right: 4px;">account_balance</span>
                                                 Giao dịch & Doanh thu
                                             </a>
-                                            <a href="${pageContext.request.contextPath}/reports/inventory"
-                                                class="sidebar-submenu-item ${originalUri.contains('/reports/inventory') ? 'active' : ''}">
-                                                <span class="material-icons"
-                                                    style="font-size: 1rem; margin-right: 4px;">inventory_2</span>
-                                                Hàng tồn kho
-                                            </a>
                                             <a href="${pageContext.request.contextPath}/reports/customer-loyal"
                                                 class="sidebar-submenu-item ${originalUri.contains('/reports/customer-loyal') ? 'active' : ''}">
                                                 <span class="material-icons"
