@@ -53,6 +53,8 @@ public class IncomeExpenseController extends BaseController {
                     targetBranchId = Integer.parseInt(branchParam);
                 } catch (NumberFormatException ignored) {}
             }
+            dao.branch.BranchDAO branchDAO = new dao.branch.BranchDAO();
+            request.setAttribute("branches", branchDAO.findAll());
         } else {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập Sổ Quỹ.");
             return;
@@ -204,11 +206,22 @@ public class IncomeExpenseController extends BaseController {
                     } catch (NumberFormatException ignored) {}
                 }
 
+                Integer branchId = null;
+                String branchIdStr = request.getParameter("branchId");
+                if (branchIdStr != null && !branchIdStr.isBlank()) {
+                    try {
+                        branchId = Integer.parseInt(branchIdStr);
+                    } catch (NumberFormatException ignored) {}
+                }
+                if (branchId == null) {
+                    branchId = user.getBranchID();
+                }
+
                 String error;
                 if ("/cashbook/create-receipt".equals(path)) {
-                    error = service.createReceipt(p, user.getEmployeeID(), user.getBranchID());
+                    error = service.createReceipt(p, user.getEmployeeID(), branchId);
                 } else {
-                    error = service.createExpense(p, user.getEmployeeID(), user.getBranchID());
+                    error = service.createExpense(p, user.getEmployeeID(), branchId);
                 }
 
                 if (error == null) {

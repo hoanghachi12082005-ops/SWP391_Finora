@@ -104,7 +104,7 @@
                                         <h3 class="text-muted">Chưa có dữ liệu</h3>
                                     </c:when>
                                     <c:otherwise>
-                                        <h3>${employeeOverview.topEmployeeName}</h3>
+                                        <h3 style="font-size: 16px; white-space: normal; word-break: break-word; line-height: 1.2; overflow: visible; text-overflow: clip;">${employeeOverview.topEmployeeName}</h3>
                                         <small>
                                             Doanh thu:
                                             <fmt:formatNumber value="${employeeOverview.topEmployeeRevenue}" type="number" groupingUsed="true"/> ₫
