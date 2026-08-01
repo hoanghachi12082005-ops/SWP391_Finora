@@ -86,6 +86,115 @@ public class InventoryExecutionService {
         }
     }
 
+    public void confirmReceivePurchaseOrder(int orderId, java.util.Map<Integer, Integer> actualQuantities, int receiverId) throws Exception {
+        confirmReceivePurchaseOrder(orderId, null, actualQuantities, receiverId);
+    }
+
+    public void confirmReceivePurchaseOrder(int orderId, Integer targetSupplierId, java.util.Map<Integer, Integer> actualQuantities, int receiverId) throws Exception {
+        Order order = orderDAO.findById(orderId);
+        if (order == null) {
+            throw new Exception("Đơn nhập hàng không tồn tại.");
+        }
+        if (!"PURCHASE".equalsIgnoreCase(order.getOrderType())) {
+            throw new Exception("Đơn hàng này không phải là đơn nhập hàng từ nhà cung cấp.");
+        }
+
+        List<OrderDetail> details = orderDAO.findDetailsByOrderId(orderId);
+        double supplierTotal = 0.0;
+        String supplierNameForNote = "";
+
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                for (OrderDetail d : details) {
+                    // If targetSupplierId is specified, skip items from other suppliers
+                    if (targetSupplierId != null && targetSupplierId > 0) {
+                        if (d.getSupplierId() == null || d.getSupplierId().intValue() != targetSupplierId.intValue()) {
+                            continue;
+                        }
+                    }
+
+                    // Skip items already completed
+                    if ("COMPLETED".equalsIgnoreCase(d.getSupplierStatus())) {
+                        continue;
+                    }
+
+                    int actualQty = d.getQuantity();
+                    if (actualQuantities != null && actualQuantities.containsKey(d.getOrderDetailId())) {
+                        actualQty = actualQuantities.get(d.getOrderDetailId());
+                    }
+                    if (actualQty < 0) actualQty = 0;
+
+                    // Update detail in DB as COMPLETED for this supplier
+                    orderDAO.updateOrderDetailSupplierStatus(conn, d.getOrderDetailId(), actualQty, d.getUnitPrice(), "COMPLETED");
+                    double itemTotal = actualQty * d.getUnitPrice();
+                    supplierTotal += itemTotal;
+
+                    if (d.getSupplierName() != null && !d.getSupplierName().isEmpty()) {
+                        supplierNameForNote = d.getSupplierName();
+                    }
+
+                    if (actualQty > 0) {
+                        int beforeQty = inventoryDAO.getStockInTransaction(conn, d.getProductId(), order.getWarehouseId());
+                        inventoryDAO.increaseStock(conn, order.getWarehouseId(), d.getProductId(), actualQty);
+                        
+                        inventoryDAO.logCustomStockTransaction(conn, order.getWarehouseId(), d.getProductId(),
+                                "PURCHASE_ORDER", orderId, "IMPORT",
+                                actualQty, beforeQty, beforeQty + actualQty,
+                                "Nhập hàng thực tế (" + (supplierNameForNote.isEmpty() ? "NCC" : supplierNameForNote) + ") phiếu " + order.getOrderCode(), receiverId);
+                    }
+                }
+
+                // Check if all order details for this order are now COMPLETED
+                List<OrderDetail> updatedDetails = orderDAO.findDetailsByOrderId(orderId);
+                boolean allCompleted = true;
+                double grandTotalActual = 0.0;
+                for (OrderDetail ud : updatedDetails) {
+                    int act = ud.getActualQuantity() != null ? ud.getActualQuantity() : ud.getQuantity();
+                    grandTotalActual += act * ud.getUnitPrice();
+                    if (!"COMPLETED".equalsIgnoreCase(ud.getSupplierStatus())) {
+                        allCompleted = false;
+                    }
+                }
+
+                // Update Order totals and status
+                orderDAO.updateOrderTotals(conn, orderId, grandTotalActual, grandTotalActual);
+                if (allCompleted) {
+                    orderDAO.updateStatus(conn, orderId, "COMPLETED", receiverId);
+                } else {
+                    orderDAO.updateStatus(conn, orderId, "IN_TRANSIT", receiverId);
+                }
+
+                // Payment expense voucher for this received batch/supplier
+                if (supplierTotal > 0) {
+                    try {
+                        dao.finance.PaymentDAO paymentDAO = new dao.finance.PaymentDAO();
+                        model.Payment payment = new model.Payment();
+                        payment.setOrderId(orderId);
+                        payment.setAmount(supplierTotal);
+                        payment.setStatus("PAID");
+                        payment.setName(order.getOrderCode());
+                        payment.setPaymentType("EXPENSE");
+                        payment.setMethod(order.getPaymentMethod() != null ? order.getPaymentMethod() : "BANK_TRANSFER");
+                        String note = "Chi tiền nhập hàng thực tế" + (supplierNameForNote.isEmpty() ? "" : " (NCC " + supplierNameForNote + ")") + " cho đơn " + order.getOrderCode();
+                        payment.setDescription(note);
+                        payment.setEmployeeId(receiverId > 0 ? receiverId : order.getEmpId());
+                        payment.setBranchId(order.getBranchId() > 0 ? order.getBranchId() : 1);
+                        paymentDAO.insert(conn, payment);
+                    } catch (Exception payEx) {
+                        System.err.println("WARN: Lỗi tạo phiếu chi thanh toán Sổ quỹ cho đơn nhập #" + orderId + ": " + payEx.getMessage());
+                        payEx.printStackTrace();
+                    }
+                }
+
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
+
     public void dispatchTransfer(int transferId, int empId) throws Exception {
         StockTransfer transfer = transferDAO.findById(transferId);
         if (transfer == null || !"APPROVED_DISPATCH".equals(transfer.getStatus())) {

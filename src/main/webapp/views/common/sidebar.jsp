@@ -214,7 +214,7 @@ class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab ==
                                                     </a>
                                                     <a href="${pageContext.request.contextPath}/inventory?tab=history"
                                                         class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'history' ? 'active' : ''}">
-                                                        Lịch sử xuất nhập kho
+                                                        Lịch sử 
                                                     </a>
                                                 </c:when>
                                                 <c:when test="${roleName == 'StoreManager'}">
@@ -236,7 +236,7 @@ class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab ==
                                                     </a>
                                                     <a href="${pageContext.request.contextPath}/inventory?tab=history&warehouseId=${sessionScope.selectedWarehouseId}"
                                                         class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'history' ? 'active' : ''}">
-                                                        Lịch sử xuất nhập kho
+                                                        Lịch sử
                                                     </a>
                                                 </c:when>
                                                 <c:when test="${roleName == 'WarehouseStaff'}">
@@ -258,7 +258,7 @@ class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab ==
                                                     </a>
                                                     <a href="${pageContext.request.contextPath}/inventory?tab=history&warehouseId=${sessionScope.selectedWarehouseId}"
 class="sidebar-submenu-item ${originalUri.contains('/inventory') && activeTab == 'history' ? 'active' : ''}">
-                                                        Lịch sử xuất nhập kho
+                                                        Lịch sử
                                                     </a>
                                                 </c:when>
                                             </c:choose>

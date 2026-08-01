@@ -8,6 +8,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<fmt:setLocale value="vi_VN"/>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -57,7 +58,7 @@
                     </c:if>
                 </section>
 
-                <c:if test="${not empty employeeOverview and sessionScope.currentUser.roleName ne 'Admin'}">
+                <c:if test="${not empty employeeOverview}">
                     <section class="overview-grid">
 
                         <div class="overview-card">
@@ -98,11 +99,18 @@
                             </div>
                             <div class="overview-info">
                                 <p>Nhân viên xuất sắc</p>
-                                <h3>${empty employeeOverview.topEmployeeName ? '—' : employeeOverview.topEmployeeName}</h3>
-                                <small>
-                                    Doanh thu:
-                                    <fmt:formatNumber value="${employeeOverview.topEmployeeRevenue}" type="number" groupingUsed="true"/> ₫
-                                </small>
+                                <c:choose>
+                                    <c:when test="${empty employeeOverview.topEmployeeName}">
+                                        <h3 class="text-muted">Chưa có dữ liệu</h3>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <h3>${employeeOverview.topEmployeeName}</h3>
+                                        <small>
+                                            Doanh thu:
+                                            <fmt:formatNumber value="${employeeOverview.topEmployeeRevenue}" type="number" groupingUsed="true"/> ₫
+                                        </small>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                         </div>
 
@@ -159,7 +167,8 @@
                             <select name="status">
                                 <option value="">Tất cả trạng thái</option>
                                 <option value="active" ${fn:toUpperCase(statusFilter) == 'ACTIVE' ? 'selected' : ''}>Hoạt động</option>
-                                <option value="locked" ${fn:toUpperCase(statusFilter) == 'INACTIVE' ? 'selected' : ''}>Không hoạt động</option>
+                                <option value="inactive" ${fn:toUpperCase(statusFilter) == 'INACTIVE' ? 'selected' : ''}>Không hoạt động</option>
+                                <option value="locked" ${fn:toUpperCase(statusFilter) == 'LOCKED' ? 'selected' : ''}>Khóa</option>
                             </select>
                         </div>
 
@@ -210,28 +219,36 @@
                                         <tr>
                                             <td>
                                                 <div class="user-cell">
-                                                    <div class="avatar-text">
-                                                        <c:choose>
-                                                            <c:when test="${not empty user.fullName}">
-                                                                ${fn:substring(user.fullName, 0, 1)}
-                                                            </c:when>
-                                                            <c:otherwise>U</c:otherwise>
-                                                        </c:choose>
-                                                    </div>
-
+                                                    <c:choose>
+                                                        <c:when test="${not empty user.avatarUrl}">
+                                                            <div class="avatar-text">
+                                                                <img src="${user.avatarUrl}" alt="${not empty user.fullName ? fn:substring(user.fullName, 0, 1) : 'U'}" data-name="${user.fullName}" loading="lazy"/>
+                                                            </div>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <div class="avatar-text">
+                                                                ${not empty user.fullName ? fn:substring(user.fullName, 0, 1) : 'U'}
+                                                            </div>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                     <div>
-                                                        <strong>${user.fullName}</strong>
-                                                        <span>${user.email}</span>
+                                                        <strong title="${user.fullName}">${user.fullName}</strong>
+                                                        <span title="${user.email}">${user.email}</span>
                                                     </div>
                                                 </div>
                                             </td>
 
-                                            <td>${empty user.phone ? '—' : user.phone}</td>
+                                            <td class="text-nowrap">${empty user.phone ? '—' : user.phone}</td>
 
                                             <td>
-                                                <span class="role-badge">
-                                                    ${user.roleName}
-                                                </span>
+                                                <c:set var="roleClass" value="role-default"/>
+                                                <c:set var="roleLabel" value="${user.roleName}"/>
+                                                <c:if test="${fn:containsIgnoreCase(user.roleName, 'Admin')}"><c:set var="roleClass" value="role-admin"/><c:set var="roleLabel" value="Quản trị viên"/></c:if>
+                                                <c:if test="${fn:containsIgnoreCase(user.roleName, 'Owner')}"><c:set var="roleClass" value="role-owner"/><c:set var="roleLabel" value="Chủ sở hữu"/></c:if>
+                                                <c:if test="${fn:containsIgnoreCase(user.roleName, 'StoreManager') || fn:containsIgnoreCase(user.roleName, 'Store Manager')}"><c:set var="roleClass" value="role-manager"/><c:set var="roleLabel" value="Quản lý cửa hàng"/></c:if>
+                                                <c:if test="${fn:containsIgnoreCase(user.roleName, 'SalesStaff') || fn:containsIgnoreCase(user.roleName, 'Sales Staff') || fn:containsIgnoreCase(user.roleName, 'Sales')}"><c:set var="roleClass" value="role-sales"/><c:set var="roleLabel" value="Nhân viên bán hàng"/></c:if>
+                                                <c:if test="${fn:containsIgnoreCase(user.roleName, 'WarehouseStaff') || fn:containsIgnoreCase(user.roleName, 'Warehouse Staff') || fn:containsIgnoreCase(user.roleName, 'Warehouse')}"><c:set var="roleClass" value="role-warehouse"/><c:set var="roleLabel" value="Nhân viên kho"/></c:if>
+                                                <span class="role-badge ${roleClass}">${roleLabel}</span>
                                             </td>
 
                                             <c:if test="${showBranch}">
@@ -243,61 +260,50 @@
                                                     <c:when test="${fn:toUpperCase(user.status) == 'ACTIVE'}">
                                                         <span class="status-badge active">Hoạt động</span>
                                                     </c:when>
+                                                    <c:when test="${fn:toUpperCase(user.status) == 'LOCKED' || fn:toUpperCase(user.status) == 'INACTIVE'}">
+                                                        <span class="status-badge inactive">Không hoạt động</span>
+                                                    </c:when>
                                                     <c:otherwise>
-                                                        <span class="status-badge locked">Không hoạt động</span>
+                                                        <span class="status-badge locked">Khóa</span>
                                                     </c:otherwise>
                                                 </c:choose>
                                             </td>
 
                                             <td>
                                                 <div class="table-actions">
-
-                                                    <a href="${baseUrl}?action=detail&id=${user.employeeID}" title="Xem chi tiết">
+                                                    <a href="${baseUrl}?action=detail&id=${user.employeeID}" title="Xem chi tiết" aria-label="Xem chi tiết ${user.fullName}">
                                                         <span class="material-symbols-outlined">visibility</span>
                                                     </a>
-
                                                     <c:if test="${canEdit}">
-                                                        <a href="${baseUrl}?action=edit&id=${user.employeeID}" title="Chỉnh sửa">
+                                                        <a href="${baseUrl}?action=edit&id=${user.employeeID}" title="Chỉnh sửa" aria-label="Chỉnh sửa ${user.fullName}">
                                                             <span class="material-symbols-outlined">edit</span>
                                                         </a>
                                                     </c:if>
                                                     <c:if test="${canResetPassword}">
-                                                        <a href="${baseUrl}?action=reset&id=${user.employeeID}" title="Đặt lại mật khẩu">
+                                                        <a href="${baseUrl}?action=reset&id=${user.employeeID}" title="Đặt lại mật khẩu" aria-label="Đặt lại mật khẩu ${user.fullName}">
                                                             <span class="material-symbols-outlined">key</span>
                                                         </a>
                                                     </c:if>
-
                                                     <c:if test="${canLock}">
-                                                        <form method="post" action="${baseUrl}">
-
+                                                        <form method="post" action="${baseUrl}" style="display:inline">
                                                             <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"/>
-                                                            <input type="hidden" name="employeeID" value="${user.employeeID}"/>
-
                                                             <input type="hidden" name="employeeId" value="${user.employeeID}"/>
-
-
                                                             <c:choose>
                                                                 <c:when test="${fn:toUpperCase(user.status) == 'ACTIVE'}">
                                                                     <input type="hidden" name="action" value="lock"/>
-                                                                    <button type="submit"
-                                                                            title="Khóa"
-                                                                            onclick="return confirm('Khóa tài khoản này?')">
+                                                                    <button type="submit" title="Khóa tài khoản" aria-label="Khóa tài khoản ${user.fullName}" onclick="return confirm('Khóa tài khoản này?')">
                                                                         <span class="material-symbols-outlined">lock</span>
                                                                     </button>
                                                                 </c:when>
-
                                                                 <c:otherwise>
                                                                     <input type="hidden" name="action" value="unlock"/>
-                                                                    <button type="submit"
-                                                                            title="Mở khóa"
-                                                                            onclick="return confirm('Mở khóa tài khoản này?')">
+                                                                    <button type="submit" title="Mở khóa tài khoản" aria-label="Mở khóa tài khoản ${user.fullName}" onclick="return confirm('Mở khóa tài khoản này?')">
                                                                         <span class="material-symbols-outlined">lock_open</span>
                                                                     </button>
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </form>
                                                     </c:if>
-
                                                 </div>
                                             </td>
                                         </tr>
@@ -498,13 +504,29 @@
                     <p><strong>Tên:</strong> ${detailUser.fullName}</p>
                     <p><strong>Email:</strong> ${detailUser.email}</p>
                     <p><strong>Số điện thoại:</strong> ${detailUser.phone}</p>
-                    <p><strong>Vai trò:</strong> ${detailUser.roleName}</p>
+                    <p><strong>Vai trò:</strong>
+                        <c:choose>
+                            <c:when test="${fn:containsIgnoreCase(detailUser.roleName, 'Admin')}">Quản trị viên</c:when>
+                            <c:when test="${fn:containsIgnoreCase(detailUser.roleName, 'Owner')}">Chủ sở hữu</c:when>
+                            <c:when test="${fn:containsIgnoreCase(detailUser.roleName, 'StoreManager') || fn:containsIgnoreCase(detailUser.roleName, 'Store Manager')}">Quản lý cửa hàng</c:when>
+                            <c:when test="${fn:containsIgnoreCase(detailUser.roleName, 'SalesStaff') || fn:containsIgnoreCase(detailUser.roleName, 'Sales Staff') || fn:containsIgnoreCase(detailUser.roleName, 'Sales')}">Nhân viên bán hàng</c:when>
+                            <c:when test="${fn:containsIgnoreCase(detailUser.roleName, 'WarehouseStaff') || fn:containsIgnoreCase(detailUser.roleName, 'Warehouse Staff') || fn:containsIgnoreCase(detailUser.roleName, 'Warehouse')}">Nhân viên kho</c:when>
+                            <c:otherwise>${detailUser.roleName}</c:otherwise>
+                        </c:choose>
+                    </p>
 
                     <c:if test="${showBranch}">
                         <p><strong>Chi nhánh:</strong> ${empty detailUser.branchName ? '—' : detailUser.branchName}</p>
                     </c:if>
 
-                    <p><strong>Trạng thái:</strong> ${detailUser.status}</p>
+                    <p><strong>Trạng thái:</strong>
+                        <c:choose>
+                            <c:when test="${fn:toUpperCase(detailUser.status) == 'ACTIVE'}">Hoạt động</c:when>
+                            <c:when test="${fn:toUpperCase(detailUser.status) == 'INACTIVE'}">Không hoạt động</c:when>
+                            <c:when test="${fn:toUpperCase(detailUser.status) == 'LOCKED'}">Khóa</c:when>
+                            <c:otherwise>${detailUser.status}</c:otherwise>
+                        </c:choose>
+                    </p>
 
                     <p>
                         <strong>Ngày tạo:</strong>
@@ -523,19 +545,25 @@
         </div>
     </c:if>
 
+<script>
+var avatarColors = ['#f3e8ff','#dbeafe','#dcfce7','#fef3c7','#ffedd5','#fce7f3','#e0e7ff','#d1fae5','#ffe4e6','#e0f2fe'];
+function applyAvatarColor(el) {
+    var idx = (el.textContent.trim().charCodeAt(0) || 65) % avatarColors.length;
+    el.style.background = avatarColors[idx];
+    el.style.color = '#4a1d96';
+}
+document.querySelectorAll('.avatar-text:not(:has(img))').forEach(applyAvatarColor);
+document.querySelectorAll('.avatar-text img').forEach(function(img) {
+    img.addEventListener('error', function() {
+        var parent = this.parentElement;
+        var initial = this.getAttribute('alt') || 'U';
+        var name = this.getAttribute('data-name') || '';
+        parent.textContent = initial;
+        parent.className = 'avatar-text';
+        parent.setAttribute('title', name);
+        applyAvatarColor(parent);
+    });
+});
+</script>
     </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-

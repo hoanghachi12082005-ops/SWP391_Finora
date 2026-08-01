@@ -349,37 +349,9 @@ public class StockController extends InventoryBaseController {
                                 dao.sales.OrderDetailDAO detailDao = new dao.sales.OrderDetailDAO();
                                 detailDao.insertBatchPurchase(conn, orderId, allDetails);
                                 
-                                // Owner tạo -> tự động duyệt và cộng tồn kho luôn
+                                // Owner tạo -> Tự động duyệt và chuyển sang IN_TRANSIT (Chờ kiểm tra xác nhận nhập kho thực tế)
                                 if (isOwner) {
-                                    orderDAO.updateStatus(conn, orderId, "COMPLETED");
-                                    dao.inventory.InventoryDAO invDAO = new dao.inventory.InventoryDAO();
-                                    for (model.OrderDetail d : allDetails) {
-                                        int beforeQty = invDAO.getStockInTransaction(conn, d.getProductId(), currentWarehouseId);
-                                        invDAO.increaseStock(conn, currentWarehouseId, d.getProductId(), d.getQuantity());
-                                        invDAO.logCustomStockTransaction(conn, currentWarehouseId, d.getProductId(),
-                                                "PURCHASE_ORDER", orderId, "IMPORT",
-                                                d.getQuantity(), beforeQty, beforeQty + d.getQuantity(),
-                                                "Nhập hàng từ phiếu PO-" + orderId, currentUser.getEmployeeId());
-                                    }
-
-                                    // Ghi nhận phiếu chi vào Sổ quỹ (bảng payment)
-                                    try {
-                                        dao.finance.PaymentDAO paymentDAO = new dao.finance.PaymentDAO();
-                                        model.Payment payment = new model.Payment();
-                                        payment.setOrderId(orderId);
-                                        payment.setAmount(totalCost);
-                                        payment.setStatus("PAID");
-                                        payment.setName(purchaseOrder.getOrderCode());
-                                        payment.setPaymentType("EXPENSE");
-                                        payment.setMethod(purchaseOrder.getPaymentMethod() != null ? purchaseOrder.getPaymentMethod() : "BANK_TRANSFER");
-                                        payment.setDescription("Chi tiền nhập hàng cho đơn " + purchaseOrder.getOrderCode());
-                                        payment.setEmployeeId(currentUser.getEmployeeId());
-                                        payment.setBranchId(purchaseOrder.getBranchId() > 0 ? purchaseOrder.getBranchId() : 1);
-                                        paymentDAO.insert(conn, payment);
-                                    } catch (Exception payEx) {
-                                        System.err.println("WARN: Lỗi tạo phiếu chi Sổ quỹ khi Owner nhập hàng: " + payEx.getMessage());
-                                        payEx.printStackTrace();
-                                    }
+                                    orderDAO.updateStatus(conn, orderId, "IN_TRANSIT", currentUser.getEmployeeId());
                                 }
                                 
                                 conn.commit();
@@ -391,11 +363,11 @@ public class StockController extends InventoryBaseController {
                     }
 
                     if (isOwner) {
-                        request.getSession().setAttribute("message", "Đã nhập hàng và cập nhật tồn kho thành công!");
+                        request.getSession().setAttribute("message", "Đã tạo đơn nhập hàng (Đã duyệt, chuyển sang Chờ Xác Nhận Nhập Kho).");
                     } else {
-                        request.getSession().setAttribute("message", "Đã tạo phiếu nhập hàng (Chờ duyệt).");
+                        request.getSession().setAttribute("message", "Tạo yêu cầu nhập hàng thành công! Đã gửi cho quản lý duyệt.");
                     }
-                    redirect(response, request.getContextPath() + "/inventory?tab=stock&warehouseId=" + currentWarehouseId);
+                    redirect(response, request.getContextPath() + "/inventory?tab=transfer&warehouseId=" + currentWarehouseId);
                     break;
                 }
                 // [MOVED FROM InventoryController] - Original lines 1871-1885

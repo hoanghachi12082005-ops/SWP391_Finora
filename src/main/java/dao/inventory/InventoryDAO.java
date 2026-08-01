@@ -1,6 +1,7 @@
 package dao.inventory;
 
 import model.Inventory;
+import model.Product;
 import util.database.DBContext;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -23,6 +24,7 @@ public class InventoryDAO {
                 i.status,
                 i.updated_at,
                 p.product_name as product_name, 
+                p.ImageUrl as image_url,
                 '' as product_codebar, 
                 p.selling_price as selling_price,
                 c.category_name as category_name, 
@@ -161,6 +163,11 @@ public class InventoryDAO {
             inv.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
         }
         inv.setProductName(rs.getString("product_name"));
+        String rawImage = rs.getString("image_url");
+        List<String> urls = Product.parseJsonArray(rawImage);
+        if (!urls.isEmpty()) {
+            inv.setImageUrl(urls.get(0));
+        }
         inv.setProductCodebar(rs.getString("product_codebar"));
         inv.setSellingPrice(rs.getBigDecimal("selling_price"));
         inv.setCategoryName(rs.getString("category_name"));

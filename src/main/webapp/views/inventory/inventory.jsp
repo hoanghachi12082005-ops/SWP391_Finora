@@ -18,33 +18,6 @@
     <jsp:param name="additionalCSS" value="inventory.css?v=5"/>
 </jsp:include>
 
-<script>
-    window.addEventListener('error', function(e) {
-        var errDiv = document.getElementById('js-diagnostic-error');
-        if (!errDiv) {
-            errDiv = document.createElement('div');
-            errDiv.id = 'js-diagnostic-error';
-            errDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#fef2f2;color:#991b1b;padding:15px;z-index:99999;border-bottom:3px solid #ef4444;font-family:monospace;font-size:14px;white-space:pre-wrap;box-shadow:0 4px 6px rgba(0,0,0,0.1);';
-            var closeBtn = document.createElement('button');
-            closeBtn.textContent = 'Dismiss';
-            closeBtn.style.cssText = 'float:right;background:#991b1b;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;margin-left:15px;';
-            closeBtn.onclick = function() { errDiv.remove(); };
-            errDiv.appendChild(closeBtn);
-            var title = document.createElement('strong');
-            title.textContent = 'JS Error Detected: ';
-            errDiv.appendChild(title);
-            var msg = document.createElement('span');
-            msg.id = 'js-diagnostic-error-msg';
-            errDiv.appendChild(msg);
-            document.body.appendChild(errDiv);
-        }
-        var msgSpan = document.getElementById('js-diagnostic-error-msg');
-        if (msgSpan) {
-            msgSpan.textContent += '\n- ' + e.message + ' (at ' + e.filename + ':' + e.lineno + ':' + e.colno + ')';
-        }
-    });
-</script>
-
 <div class="app-container">
     <jsp:include page="/views/common/sidebar.jsp" />
     

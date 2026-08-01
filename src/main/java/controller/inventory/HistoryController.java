@@ -172,8 +172,8 @@ public class HistoryController extends InventoryBaseController {
                 map.put("createdAt", parsedDate != null ? sdf.format(parsedDate) : (po.getCreatedAt() != null ? po.getCreatedAtFormatted() : ""));
                 map.put("rawDate", parsedDate != null ? parsedDate : new java.util.Date(0));
                 map.put("status", po.getStatus());
-                map.put("statusLabel", "COMPLETED".equalsIgnoreCase(po.getStatus()) ? "Đã hoàn thành" : ("REJECTED".equalsIgnoreCase(po.getStatus()) ? "Bị từ chối" : "Đã hủy"));
-                map.put("statusColor", "COMPLETED".equalsIgnoreCase(po.getStatus()) ? "bg-success" : ("REJECTED".equalsIgnoreCase(po.getStatus()) ? "bg-danger" : "bg-secondary"));
+                map.put("statusLabel", "COMPLETED".equalsIgnoreCase(po.getStatus()) ? "Đã hoàn thành" : ("IN_TRANSIT".equalsIgnoreCase(po.getStatus()) ? "Đang vận chuyển (Chờ nhập kho)" : ("REJECTED".equalsIgnoreCase(po.getStatus()) ? "Bị từ chối" : "Đã hủy")));
+                map.put("statusColor", "COMPLETED".equalsIgnoreCase(po.getStatus()) ? "bg-success" : ("IN_TRANSIT".equalsIgnoreCase(po.getStatus()) ? "bg-info text-dark" : ("REJECTED".equalsIgnoreCase(po.getStatus()) ? "bg-danger" : "bg-secondary")));
                 map.put("detailCallback", "viewOrderDetails(" + po.getOrderId() + ")");
                 unifiedVoucherHistory.add(map);
             }

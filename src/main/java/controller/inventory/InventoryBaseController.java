@@ -78,24 +78,21 @@ public abstract class InventoryBaseController extends BaseController {
     protected void attachImageUrls(HttpServletRequest request, List<Inventory> stockList) {
         if (stockList == null || stockList.isEmpty()) return;
         
-        // Lấy đường dẫn vật lý tuyệt đối của thư mục chứa ảnh sản phẩm trên ổ cứng server
-        String real = request.getServletContext().getRealPath("/assets/images/product/");
-        java.io.File dir = new java.io.File(real);
-        if (!dir.exists()) return;
-        
-        // Liệt kê danh sách tất cả các tập tin ảnh có trong thư mục
-        java.io.File[] files = dir.listFiles();
-        if (files == null) return;
-        
         String ctx = request.getContextPath();
-        // Quét từng sản phẩm, tìm kiếm ảnh có tên định dạng: product_[ID_sản_phẩm].[phần_mở_rộng]
+        String real = request.getServletContext().getRealPath("/assets/images/product/");
+        java.io.File dir = (real != null) ? new java.io.File(real) : null;
+        java.io.File[] files = (dir != null && dir.exists()) ? dir.listFiles() : null;
+
         for (Inventory item : stockList) {
-            String prefix = "product_" + item.getProductId() + ".";
-            for (java.io.File f : files) {
-                if (f.isFile() && f.getName().toLowerCase().startsWith(prefix)) {
-                    // Thêm tham số timestamp lastModified để tránh cơ chế lưu cache ảnh cũ của trình duyệt
-                    item.setImageUrl(ctx + "/assets/images/product/" + f.getName() + "?v=" + f.lastModified());
-                    break;
+            if (item.getImageUrl() != null && !item.getImageUrl().isBlank()) {
+                item.setImageUrl(model.Product.formatDisplayUrl(item.getImageUrl(), ctx));
+            } else if (files != null) {
+                String prefix = "product_" + item.getProductId();
+                for (java.io.File f : files) {
+                    if (f.isFile() && f.getName().toLowerCase().startsWith(prefix.toLowerCase())) {
+                        item.setImageUrl(ctx + "/assets/images/product/" + f.getName() + "?v=" + f.lastModified());
+                        break;
+                    }
                 }
             }
         }

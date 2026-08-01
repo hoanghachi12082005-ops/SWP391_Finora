@@ -10,6 +10,7 @@ public class Order {
 
     public enum OrderStatus {
         PENDING("Chờ thanh toán"),
+        IN_TRANSIT("Đang vận chuyển"),
         PAID("Đã thanh toán"),
         CANCELLED("Đã hủy"), COMPLETED("Hoàn thành"), REJECTED("Bị từ chối");
 

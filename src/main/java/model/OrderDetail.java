@@ -17,6 +17,7 @@ public class OrderDetail {
     private double importPrice; // Added import_price column field
     private Integer supplierId;    // FK -> Supplier (for multi-supplier purchase orders)
     private String supplierStatus; // PENDING, APPROVED, SHIPPED, DELIVERED
+    private Integer actualQuantity; // Actual received quantity in warehouse
 
     // Transient fields for join queries
     private String productName;
@@ -145,8 +146,16 @@ public class OrderDetail {
         this.supplierName = supplierName;
     }
 
+    public Integer getActualQuantity() {
+        return actualQuantity;
+    }
+
+    public void setActualQuantity(Integer actualQuantity) {
+        this.actualQuantity = actualQuantity;
+    }
+
     @Override
     public String toString() {
-        return "OrderDetail{orderDetailId=" + orderDetailId + ", orderId=" + orderId + ", productId=" + productId + ", quantity=" + quantity + ", totalPrice=" + totalPrice + ", importPrice=" + importPrice + ", productName='" + productName + "'}";
+        return "OrderDetail{orderDetailId=" + orderDetailId + ", orderId=" + orderId + ", productId=" + productId + ", quantity=" + quantity + ", actualQuantity=" + actualQuantity + ", totalPrice=" + totalPrice + ", importPrice=" + importPrice + ", productName='" + productName + "'}";
     }
 }

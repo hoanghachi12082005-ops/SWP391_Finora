@@ -11,13 +11,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 
 import java.io.IOException;
-import javax.imageio.ImageIO;
+import java.nio.file.Files;
 import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.util.HashMap;
@@ -432,31 +429,15 @@ public class BranchController extends HttpServlet {
         String submittedFileName = imagePart.getSubmittedFileName();
 
         if (submittedFileName == null || submittedFileName.trim().isEmpty()) {
-            return   null;
+            return null;
         }
 
-        // Read all bytes from the input stream first
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        try (var input = imagePart.getInputStream()) {
-            input.transferTo(buffer);
-        }
-        byte[] imageBytes = buffer.toByteArray();
-
-        // Validate actual file content by attempting to read as image
-        BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageBytes));
-        if (image == null) {
-            throw new IOException("File tải lên không phải hình ảnh hợp lệ.");
+        int dotIndex = submittedFileName.lastIndexOf(".");
+        if (dotIndex == -1) {
+            throw new IOException("File phải có phần mở rộng.");
         }
 
-        String extension = submittedFileName.substring(
-                submittedFileName.lastIndexOf(".")).toLowerCase();
-
-        // Force the extension to match the actual image type
-        // This prevents a malicuous user from uploading a valid PNG with a .jpg extension
-        String detectedType = getImageExtension(imageBytes);
-        if (detectedType != null) {
-            extension = detectedType;
-        }
+        String extension = submittedFileName.substring(dotIndex).toLowerCase();
 
         String fileName = branchCode + extension;
 
@@ -467,43 +448,13 @@ public class BranchController extends HttpServlet {
                     + folder.getAbsolutePath());
         }
 
-        // Save the validated image
         File file = new File(folder, fileName);
-        // Use ImageIO to write the image, which ensures only valid image data is saved
-        ImageIO.write(image, extension.substring(1), file);
+        try (var input = imagePart.getInputStream()) {
+            Files.copy(input, file.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        }
 
         return fileName;
-    }
-
-    private String getImageExtension(byte[] imageBytes) {
-        // Detect the actual image format from the byte content (magic bytes)
-        if (imageBytes.length < 4) {
-            return ".png";
-        }
-        // PNG: 89 50 4E 47
-        if ((imageBytes[0] & 0xff) == 0x89 && imageBytes[1] == 0x50
-                && imageBytes[2] == 0x4E && imageBytes[3] == 0x47) {
-            return ".png";
-        }
-        // JPEG: FF D8 FF
-        if ((imageBytes[0] & 0xff) == 0xFF && (imageBytes[1] & 0xff) == 0xD8
-                && (imageBytes[2] & 0xff) == 0xFF) {
-            return ".jpg";
-        }
-        // GIF: 47 49 46 38
-        if (imageBytes[0] == 0x47 && imageBytes[1] == 0x49
-                && imageBytes[2] == 0x46 && imageBytes[3] == 0x38) {
-            return ".gif";
-        }
-        // WEBP: 52 49 46 46 ... 57 45 42 50
-        if (imageBytes[0] == 0x52 && imageBytes[1] == 0x49
-                && imageBytes[2] == 0x46 && imageBytes[3] == 0x46
-                && imageBytes.length > 12
-                && imageBytes[8] == 0x57 && imageBytes[9] == 0x45
-                && imageBytes[10] == 0x42 && imageBytes[11] == 0x50) {
-            return ".webp";
-        }
-        return ".png";
     }
 
     private File resolvePersistentUploadFolder(HttpServletRequest request)

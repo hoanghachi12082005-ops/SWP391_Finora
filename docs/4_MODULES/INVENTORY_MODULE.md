@@ -177,63 +177,26 @@ Branch (Chi nhánh)
 
 | Loại | Mã | Mô tả |
 |---|---|---|
-| Nhập từ nhà cung cấp | `import_po` | Nhận hàng từ Purchase Order |
+| Nhập từ nhà cung cấp | `import_po` | Nhận hàng từ Purchase Order (hỗ trợ nhập theo từng Nhà Cung Cấp) |
 | Nhập chuyển kho | `transfer_in` | Nhận hàng từ kho khác |
 | Nhập điều chỉnh | `adjustment_in` | Điều chỉnh tăng tồn kho |
 | Nhập trả lại | `return_in` | Nhận hàng trả lại từ khách |
 
-**Quy trình nhập kho:**
-1. Tạo phiếu nhập kho với danh sách sản phẩm
-2. Hệ thống kiểm tra và xác nhận thông tin
-3. Cập nhật số lượng tồn kho
-4. Ghi nhận stock_transaction
-5. Cập nhật trạng thái phiếu nhập
-
-### 6.2. Xuất kho (Stock Out)
-
-**Các loại xuất kho:**
-
-| Loại | Mã | Mô tả |
-|---|---|---|
-| Xuất bán | `sale` | Xuất kho khi bán hàng |
-| Xuất chuyển kho | `transfer_out` | Chuyển hàng sang kho khác |
-| Xuất điều chỉnh | `adjustment_out` | Điều chỉnh giảm tồn kho |
-| Xuất hủy | `discard` | Hàng hỏng, hết hạn |
-
-**Quy trình xuất kho:**
-1. Kiểm tra số lượng tồn kho khả dụng
-2. Tạo phiếu xuất kho với danh sách sản phẩm
-3. Cập nhật số lượng tồn kho
-4. Ghi nhận stock_transaction
-5. Cập nhật trạng thái phiếu xuất
-
-### 6.3. Chuyển kho (Stock Transfer)
-
-**Quy trình chuyển kho giữa các chi nhánh:**
-
-```
-Kho nguồn (From Warehouse)
-    → Tạo yêu cầu chuyển kho
-    → Giảm tồn kho tại kho nguồn (reserved)
-    
-Kho đích (To Warehouse)
-    → Phê duyệt yêu cầu
-    → Xác nhận nhận hàng
-    → Tăng tồn kho tại kho đích
-    → Hoàn tất giao dịch
-```
-
-| Trạng thái | Mô tả |
-|---|---|
-| `pending` | Chờ phê duyệt |
-| `approved` | Đã phê duyệt, đang vận chuyển |
-| `completed` | Đã hoàn thành |
-| `rejected` | Bị từ chối |
-| `cancelled` | Đã hủy |
+**Quy trình nhập kho đa Nhà Cung Cấp (Multi-Supplier PO Flow):**
+1. **Duyệt đơn tổng (Owner / Store Manager)**: Đơn hàng nhập (`PO-...`) chứa sản phẩm từ một hoặc nhiều Nhà cung cấp được duyệt dưới dạng 1 phiếu tổng chung. Trạng thái chuyển sang `IN_TRANSIT` (Đang vận chuyển).
+2. **Kiểm kho & Nhập kho thực tế (Warehouse Staff)**:
+   - Trong popup *Xác Nhận Nhập Kho*, hệ thống phân nhóm sản phẩm theo từng **Nhà Cung Cấp** (`supplier_id`).
+   - Kho bấm xác nhận nhập cho riêng từng Nhà Cung Cấp khi giao hàng ở các thời điểm khác nhau.
+   - Với mỗi đợt nhập của NCC:
+     - Tăng số lượng tồn kho sản phẩm của NCC đó.
+     - Ghi nhận `stock_transaction` với diễn giải NCC tương ứng.
+     - Tạo **Phiếu chi Sổ quỹ** cho riêng tổng tiền của NCC đó.
+     - Cập nhật `supplier_status = 'COMPLETED'` cho các dòng sản phẩm của NCC đó.
+3. **Hoàn tất đơn tổng**: Nếu còn NCC chưa giao, đơn hàng giữ trạng thái `IN_TRANSIT`. Khi TẤT CẢ các NCC đã nhập kho thành công ➔ Đơn tổng tự động chuyển sang `COMPLETED`.
 
 ---
 
-## 7. Cảnh báo tồn kho
+## 7. Cảnh báo tồn kho & Bản in phiếu
 
 ### 7.1. Cảnh báo mức tồn kho
 
@@ -243,14 +206,9 @@ Kho đích (To Warehouse)
 | Hết hàng | `available_quantity = 0` | Đánh dấu sản phẩm là "out of stock" |
 | Vượt mức tối đa | `quantity > max_stock_level` | Cảnh báo tồn kho quá nhiều |
 
-### 7.2. Dashboard tồn kho
-
-Trang dashboard cung cấp:
-- Tổng quan số lượng sản phẩm đang tồn
-- Danh sách sản phẩm sắp hết hàng
-- Danh sách sản phẩm vượt mức tối đa
-- Biểu đồ tồn kho theo danh mục
-- So sánh tồn kho giữa các chi nhánh
+### 7.2. In phiếu & Chứng từ hóa đơn (`_print_order.jsp`)
+- Đảm bảo mẫu in hóa đơn đen trắng truyền thống (Font `Times New Roman`, viền bảng hóa đơn, chữ ký 2 bên).
+- Khi đơn hàng ở trạng thái `COMPLETED`: Mẫu in tự động hiển thị cột **SL Đặt** và **SL Nhập** thực tế để lưu chứng từ kiểm kê kho.
 
 ---
 
@@ -258,14 +216,12 @@ Trang dashboard cung cấp:
 
 | Thành phần | Trạng thái | Ghi chú |
 |---|---|---|
-| InventoryController | Skeleton | Chỉ có routing |
-| InventoryItem.java | Hoàn chỉnh | Model định nghĩa đầy đủ |
-| StockTransaction.java | Hoàn chỉnh | Model định nghĩa đầy đủ |
-| InventoryItemDAO.java | Skeleton | Chưa triển khai SQL |
-| StockTransactionDAO.java | Skeleton | Chưa triển khai SQL |
-| Views (5 files) | Template | Template HTML, chưa kết nối backend |
-
-**Đánh giá tổng thể:** Module đang ở mức Skeleton - đã có cấu trúc model và workflow đầy đủ nhưng chưa triển khai logic nghiệp vụ.
+| InventoryController | Hoàn chỉnh | Định tuyến & chuyển tiếp các tab tồn kho |
+| OrderVoucherController | Hoàn chỉnh | Xử lý duyệt đơn, nhập kho thực tế theo NCC, in phiếu |
+| StockController | Hoàn chỉnh | Điều hướng tạo đơn nhập kho trực tiếp về `tab=transfer&warehouseId=X` |
+| InventoryExecutionService | Hoàn chỉnh | Xử lý transaction tăng kho, tạo phiếu chi Sổ quỹ theo NCC, tự động chuyển `COMPLETED` |
+| OrderDAO | Hoàn chỉnh | PreparedStatement an toàn, map `actual_quantity`, `supplier_id`, `supplier_status` |
+| Views & Modals | Hoàn chỉnh | Giao diện gom nhóm NCC, tự động tính chênh lệch realtime JS, ẩn alert rườm rà |
 
 ---
 
@@ -288,6 +244,6 @@ Trang dashboard cung cấp:
 
 ---
 
-*Document version: 1.0*
-*Last updated: 2026-06-21*
+*Document version: 3.0*
+*Last updated: 2026-07-31*
 *Project: SWP391_Finora (FinoraRetail)*

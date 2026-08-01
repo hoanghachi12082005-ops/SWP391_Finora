@@ -346,6 +346,7 @@ public class UserManagementDao extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        loadTopEmployee(overview, null);
         return overview;
     }
 
