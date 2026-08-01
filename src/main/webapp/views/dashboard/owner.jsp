@@ -412,7 +412,7 @@
                     <div class="dashboard-card">
                         <div class="dashboard-card-title">
                             <h5>Hiệu suất các chi nhánh</h5>
-                            <a href="${pageContext.request.contextPath}/stores" style="font-size:12px;font-weight:600;">Quản lý chi nhánh</a>
+                            <a href="${pageContext.request.contextPath}/branch" style="font-size:12px;font-weight:600;">Quản lý chi nhánh</a>
                         </div>
                         
                         <div class="premium-table-container">
@@ -458,7 +458,7 @@
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <a href="${pageContext.request.contextPath}/stores/detail?id=${br.branchId}" class="table-action-link">Chi tiết</a>
+                                                        <a href="${pageContext.request.contextPath}/branch?action=detail&amp;id=${br.branchId}" class="table-action-link">Chi tiết</a>
                                                     </td>
                                                 </tr>
                                             </c:forEach>
