@@ -106,10 +106,16 @@ public class SalesTransactionReportDAO {
             for (Object p : params) ps.setObject(idx++, p);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    kpi.setTotalTransactions(rs.getInt("total_transactions"));
-                    kpi.setTotalRevenue(rs.getDouble("total_revenue"));
+                    int totalTransactions = rs.getInt("total_transactions");
+                    double totalRevenue = rs.getDouble("total_revenue");
+                    kpi.setTotalTransactions(totalTransactions);
+                    kpi.setTotalRevenue(totalRevenue);
                     kpi.setTotalExpense(rs.getDouble("total_expense"));
-                    kpi.setAvgTransactionValue(rs.getDouble("avg_transaction_value"));
+                    if (totalTransactions > 0) {
+                        kpi.setAvgTransactionValue(totalRevenue / totalTransactions);
+                    } else {
+                        kpi.setAvgTransactionValue(0);
+                    }
                     kpi.setNetCashFlow(kpi.getTotalRevenue() - kpi.getTotalExpense());
                 }
             }
