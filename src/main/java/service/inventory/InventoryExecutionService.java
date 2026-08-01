@@ -57,27 +57,6 @@ public class InventoryExecutionService {
                     }
                 }
 
-                // Ghi nhận phiếu chi vào Sổ quỹ (bảng payment) nếu đây là đơn nhập hàng
-                if ("PURCHASE".equals(order.getOrderType())) {
-                    try {
-                        dao.finance.PaymentDAO paymentDAO = new dao.finance.PaymentDAO();
-                        model.Payment payment = new model.Payment();
-                        payment.setOrderId(orderId);
-                        payment.setAmount(order.getTotalAmount());
-                        payment.setStatus("PAID");
-                        payment.setName(order.getOrderCode());
-                        payment.setPaymentType("EXPENSE");
-                        payment.setMethod(order.getPaymentMethod() != null ? order.getPaymentMethod() : "BANK_TRANSFER");
-                        payment.setDescription("Chi tiền nhập hàng cho đơn " + order.getOrderCode());
-                        payment.setEmployeeId(approverId > 0 ? approverId : order.getEmpId());
-                        payment.setBranchId(order.getBranchId() > 0 ? order.getBranchId() : 1);
-                        paymentDAO.insert(conn, payment);
-                    } catch (Exception payEx) {
-                        System.err.println("WARN: Lỗi tạo phiếu chi thanh toán Sổ quỹ cho đơn nhập #" + orderId + ": " + payEx.getMessage());
-                        payEx.printStackTrace();
-                    }
-                }
-                
                 conn.commit();
             } catch (Exception e) {
                 conn.rollback();
@@ -100,7 +79,6 @@ public class InventoryExecutionService {
         }
 
         List<OrderDetail> details = orderDAO.findDetailsByOrderId(orderId);
-        double supplierTotal = 0.0;
         String supplierNameForNote = "";
 
         try (Connection conn = DBContext.getConnection()) {
@@ -127,8 +105,6 @@ public class InventoryExecutionService {
 
                     // Update detail in DB as COMPLETED for this supplier
                     orderDAO.updateOrderDetailSupplierStatus(conn, d.getOrderDetailId(), actualQty, d.getUnitPrice(), "COMPLETED");
-                    double itemTotal = actualQty * d.getUnitPrice();
-                    supplierTotal += itemTotal;
 
                     if (d.getSupplierName() != null && !d.getSupplierName().isEmpty()) {
                         supplierNameForNote = d.getSupplierName();
@@ -163,28 +139,6 @@ public class InventoryExecutionService {
                     orderDAO.updateStatus(conn, orderId, "COMPLETED", receiverId);
                 } else {
                     orderDAO.updateStatus(conn, orderId, "IN_TRANSIT", receiverId);
-                }
-
-                // Payment expense voucher for this received batch/supplier
-                if (supplierTotal > 0) {
-                    try {
-                        dao.finance.PaymentDAO paymentDAO = new dao.finance.PaymentDAO();
-                        model.Payment payment = new model.Payment();
-                        payment.setOrderId(orderId);
-                        payment.setAmount(supplierTotal);
-                        payment.setStatus("PAID");
-                        payment.setName(order.getOrderCode());
-                        payment.setPaymentType("EXPENSE");
-                        payment.setMethod(order.getPaymentMethod() != null ? order.getPaymentMethod() : "BANK_TRANSFER");
-                        String note = "Chi tiền nhập hàng thực tế" + (supplierNameForNote.isEmpty() ? "" : " (NCC " + supplierNameForNote + ")") + " cho đơn " + order.getOrderCode();
-                        payment.setDescription(note);
-                        payment.setEmployeeId(receiverId > 0 ? receiverId : order.getEmpId());
-                        payment.setBranchId(order.getBranchId() > 0 ? order.getBranchId() : 1);
-                        paymentDAO.insert(conn, payment);
-                    } catch (Exception payEx) {
-                        System.err.println("WARN: Lỗi tạo phiếu chi thanh toán Sổ quỹ cho đơn nhập #" + orderId + ": " + payEx.getMessage());
-                        payEx.printStackTrace();
-                    }
                 }
 
                 conn.commit();

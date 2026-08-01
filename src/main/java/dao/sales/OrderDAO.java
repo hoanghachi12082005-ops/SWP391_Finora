@@ -432,8 +432,8 @@ public class OrderDAO {
             INSERT INTO [order] 
             (order_code, order_type, customer_id, branch_id, supplier_id, emp_id, 
              warehouse_id, subtotal, discount_amount, total_amount, 
-             payment_method, status, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
+             payment_method, status, description, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
             """;
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, order.getOrderCode());
@@ -456,6 +456,11 @@ public class OrderDAO {
             ps.setDouble(10, order.getTotalAmount());
             ps.setString(11, order.getPaymentMethod());
             ps.setString(12, order.getStatus() != null ? order.getStatus().name() : "PENDING");
+            if (order.getDescription() != null && !order.getDescription().isBlank()) {
+                ps.setString(13, order.getDescription());
+            } else {
+                ps.setNull(13, java.sql.Types.NVARCHAR);
+            }
 
             int affected = ps.executeUpdate();
             if (affected == 0) {
@@ -489,6 +494,9 @@ public class OrderDAO {
         o.setDiscountAmount(rs.getDouble("discount_amount"));
         o.setTotalAmount(rs.getDouble("total_amount"));
         o.setPaymentMethod(rs.getString("payment_method"));
+        try {
+            o.setDescription(rs.getString("description"));
+        } catch (SQLException ignored) {}
         
         String statusStr = rs.getString("status");
         if (statusStr != null) {

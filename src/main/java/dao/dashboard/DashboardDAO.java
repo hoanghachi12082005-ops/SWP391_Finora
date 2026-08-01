@@ -426,30 +426,28 @@ public class DashboardDAO {
         FinancialData fd = new FinancialData();
         
         String orderTimeFilter = "";
-        String paymentTimeFilter = "";
         
         if ("day".equalsIgnoreCase(range) || "today".equalsIgnoreCase(range)) {
             orderTimeFilter = " AND CAST(o.created_at AS DATE) = CAST(GETDATE() AS DATE) ";
-            paymentTimeFilter = " AND CAST(p.payment_date AS DATE) = CAST(GETDATE() AS DATE) ";
         } else if ("week".equalsIgnoreCase(range) || "this_week".equalsIgnoreCase(range)) {
             orderTimeFilter = " AND DATEPART(WEEK, o.created_at) = DATEPART(WEEK, GETDATE()) AND YEAR(o.created_at) = YEAR(GETDATE()) ";
-            paymentTimeFilter = " AND DATEPART(WEEK, p.payment_date) = DATEPART(WEEK, GETDATE()) AND YEAR(p.payment_date) = YEAR(GETDATE()) ";
         } else { // default is month
             orderTimeFilter = " AND YEAR(o.created_at) = YEAR(GETDATE()) AND MONTH(o.created_at) = MONTH(GETDATE()) ";
-            paymentTimeFilter = " AND YEAR(p.payment_date) = YEAR(GETDATE()) AND MONTH(p.payment_date) = MONTH(GETDATE()) ";
         }
 
         if (branchId != null) {
             orderTimeFilter += " AND o.branch_id = " + branchId + " ";
-            paymentTimeFilter += " AND p.BranchID = " + branchId + " ";
         }
 
         // 1. Total Revenue
         String revSql = "SELECT ISNULL(SUM(o.total_amount), 0) FROM [order] o WITH (NOLOCK) WHERE o.status = 'COMPLETED' AND o.order_type = 'SALE' " + orderTimeFilter;
         fd.totalRevenue = queryBigDecimal(revSql);
 
-        // 2. Total Expenses
-        String expSql = "SELECT ISNULL(SUM(p.payment_amount), 0) FROM payment p WITH (NOLOCK) WHERE p.payment_status = 'PAID' AND p.PaymentType = 'EXPENSE' " + paymentTimeFilter;
+        // 2. Total Expenses (đơn nhập hàng + phiếu chi sổ quỹ)
+        String expSql = "SELECT ISNULL(SUM(o.total_amount), 0) FROM [order] o WITH (NOLOCK) "
+                     + "WHERE o.status IN ('COMPLETED','PAID') "
+                     + "  AND (o.order_type = 'PURCHASE' OR (o.order_type = 'OTHER' AND o.order_code LIKE 'ORD-PV-%')) "
+                     + orderTimeFilter;
         fd.totalExpenses = queryBigDecimal(expSql);
 
         // 3. Net Profit
@@ -491,21 +489,16 @@ public class DashboardDAO {
         List<model.Payment> list = new ArrayList<>();
         
         String orderTimeFilter = "";
-        String paymentTimeFilter = "";
         
         if ("day".equalsIgnoreCase(range) || "today".equalsIgnoreCase(range)) {
             orderTimeFilter = " AND CAST(o.created_at AS DATE) = CAST(GETDATE() AS DATE) ";
-            paymentTimeFilter = " AND CAST(p.payment_date AS DATE) = CAST(GETDATE() AS DATE) ";
         } else if ("week".equalsIgnoreCase(range) || "this_week".equalsIgnoreCase(range)) {
             orderTimeFilter = " AND DATEPART(WEEK, o.created_at) = DATEPART(WEEK, GETDATE()) AND YEAR(o.created_at) = YEAR(GETDATE()) ";
-            paymentTimeFilter = " AND DATEPART(WEEK, p.payment_date) = DATEPART(WEEK, GETDATE()) AND YEAR(p.payment_date) = YEAR(GETDATE()) ";
         } else { // month
             orderTimeFilter = " AND YEAR(o.created_at) = YEAR(GETDATE()) AND MONTH(o.created_at) = MONTH(GETDATE()) ";
-            paymentTimeFilter = " AND YEAR(p.payment_date) = YEAR(GETDATE()) AND MONTH(p.payment_date) = MONTH(GETDATE()) ";
         }
         
         String orderBranchFilter = (branchId != null) ? " AND o.branch_id = " + branchId + " " : "";
-        String paymentBranchFilter = (branchId != null) ? " AND p.BranchID = " + branchId + " " : "";
         
         String sql = "SELECT TransactionCode, PaymentDate, PaymentType, PaymentMethod, PaymentAmount, Description FROM ("
                    + "  SELECT o.order_code AS TransactionCode, o.created_at AS PaymentDate, 'INCOME' AS PaymentType, "
@@ -514,10 +507,13 @@ public class DashboardDAO {
                    + "  FROM [order] o WITH (NOLOCK) "
                    + "  WHERE o.status = 'COMPLETED' AND o.order_type = 'SALE' " + orderBranchFilter + orderTimeFilter
                    + "  UNION ALL "
-                   + "  SELECT p.transaction_code AS TransactionCode, p.payment_date AS PaymentDate, p.PaymentType AS PaymentType, "
-                   + "         p.payment_method AS PaymentMethod, p.payment_amount AS PaymentAmount, p.Description AS Description "
-                   + "  FROM payment p WITH (NOLOCK) "
-                   + "  WHERE p.PaymentType = 'EXPENSE' " + paymentBranchFilter + paymentTimeFilter
+                   + "  SELECT o.order_code AS TransactionCode, o.created_at AS PaymentDate, 'EXPENSE' AS PaymentType, "
+                   + "         o.payment_method AS PaymentMethod, o.total_amount AS PaymentAmount, "
+                   + "         COALESCE(o.description, N'Chi tiền nhập hàng cho đơn ' + o.order_code) AS Description "
+                   + "  FROM [order] o WITH (NOLOCK) "
+                   + "  WHERE o.status IN ('COMPLETED','PAID') "
+                   + "    AND (o.order_type = 'PURCHASE' OR (o.order_type = 'OTHER' AND o.order_code LIKE 'ORD-PV-%')) "
+                   + orderBranchFilter + orderTimeFilter
                    + ") t "
                    + "ORDER BY PaymentDate DESC";
                    

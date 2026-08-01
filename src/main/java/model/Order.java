@@ -33,6 +33,7 @@ public class Order {
     private String paymentMethod;   // "CASH", "CARD", "TRANSFER", v.v.
     private OrderStatus status;
     private String createdAt;       // yyyy-MM-dd HH:mm:ss
+    private String description;     // Mô tả/nội dung (dùng cho phiếu thu/chi sổ quỹ)
 
     // Transient fields for join queries
     // View-only / Additional properties
@@ -236,6 +237,14 @@ public class Order {
 
     public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     // ── Backward Compatibility Aliases ────────────────────────

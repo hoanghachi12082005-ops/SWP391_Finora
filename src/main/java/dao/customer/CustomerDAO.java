@@ -560,7 +560,7 @@ public class CustomerDAO {
     public void syncLoyaltyFromPaidOrders(int customerId) {
         String sql = "SELECT COALESCE(SUM(total_amount), 0) AS spent "
                 + "FROM [order] o "
-                + "WHERE o.customer_id = ? AND (LOWER(COALESCE(o.status, '')) = 'paid' OR EXISTS (SELECT 1 FROM payment p WHERE p.order_id = o.order_id AND LOWER(COALESCE(p.payment_status, '')) = 'paid'))";
+                + "WHERE o.customer_id = ? AND LOWER(COALESCE(o.status, '')) IN ('paid', 'completed')";
         String pointSql = "SELECT current_points FROM customer_point WHERE cus_id = ?";
         String updateSql = "UPDATE customer SET total_spent = ?, updated_at = GETDATE() WHERE cus_id = ?";
         String upsertPointSql = "MERGE customer_point AS target "

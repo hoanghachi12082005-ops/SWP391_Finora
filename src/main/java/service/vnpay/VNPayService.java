@@ -1,6 +1,5 @@
 package service.vnpay;
 
-import dao.finance.PaymentDAO;
 import dao.inventory.InventoryDAO;
 import dao.sales.CustomerPointDAO;
 import dao.sales.OrderDAO;
@@ -8,7 +7,6 @@ import dao.sales.OrderDetailDAO;
 import jakarta.servlet.http.HttpServletRequest;
 import model.Order;
 import model.OrderDetail;
-import model.Payment;
 import util.database.DBContext;
 import util.vnpay.Config;
 
@@ -25,7 +23,6 @@ import java.util.*;
 public class VNPayService {
 
     private final OrderDAO orderDAO = new OrderDAO();
-    private final PaymentDAO paymentDAO = new PaymentDAO();
     private final OrderDetailDAO orderDetailDAO = new OrderDetailDAO();
     private final InventoryDAO inventoryDAO = new InventoryDAO();
     // ==================== TẠO LINK THANH TOÁN ====================
@@ -85,7 +82,7 @@ public class VNPayService {
         return calculated.equalsIgnoreCase(receivedHash);
     }
 
-    /** Xử lý thanh toán thành công: cập nhật order + tạo Payment. */
+    /** Xử lý thanh toán thành công: cập nhật trạng thái order + tích điểm. */
     public boolean processSuccess(String orderCode, String transactionNo, long amount, String bankCode) {
         try (Connection conn = DBContext.getConnection()) {
             int orderId = orderDAO.findIdByCode(conn, orderCode);
@@ -96,26 +93,8 @@ public class VNPayService {
 
             orderDAO.updateStatus(conn, orderId, "COMPLETED");
 
-            // Lấy thông tin order để gán employee + branch cho payment
-            Order order = orderDAO.findByCode(conn, orderCode);
-
-            Payment payment = new Payment();
-            payment.setOrderId(orderId);
-            payment.setAmount(amount / 100.0);
-            payment.setStatus("PAID");
-            payment.setName("VNPAY-" + (transactionNo != null ? transactionNo : "N/A"));
-            payment.setMethod("VNPAY");
-            payment.setPaymentType("INCOME");
-            payment.setDescription("Thanh toán VNPAY đơn hàng " + orderCode
-                    + ", GD: " + (transactionNo != null ? transactionNo : "N/A"));
-            if (order != null) {
-                payment.setEmployeeId(order.getEmpId());
-                payment.setBranchId(order.getBranchId());
-            }
-
-            paymentDAO.insert(conn, payment);
-
             // Earn loyalty points
+            Order order = orderDAO.findByCode(conn, orderCode);
             if (order != null && order.getCustomerId() != null && order.getCustomerId() > 0) {
                 new CustomerPointDAO().addPoints(conn, order.getCustomerId(), order.getTotalAmount(), orderId);
             }

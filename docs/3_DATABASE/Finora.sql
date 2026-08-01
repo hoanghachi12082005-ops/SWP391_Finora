@@ -331,6 +331,7 @@ CREATE TABLE [dbo].[order](
 	[status] [nvarchar](30) NULL,
 	[created_at] [datetime] NULL,
 	[approved_by] [int] NULL,
+	[description] [nvarchar](500) NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[order_id] ASC
@@ -355,29 +356,6 @@ CREATE TABLE [dbo].[order_detail](
 PRIMARY KEY CLUSTERED 
 (
 	[order_detail_id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-GO
-/****** Object:  Table [dbo].[payment]    Script Date: 16/07/2026 16:56:29 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[payment](
-	[payment_id] [int] IDENTITY(1,1) NOT NULL,
-	[order_id] [int] NULL,
-	[payment_amount] [decimal](18, 2) NULL,
-	[payment_date] [datetime] NULL,
-	[payment_status] [nvarchar](30) NULL,
-	[transaction_code] [nvarchar](100) NULL,
-	[PaymentType] [nvarchar](20) NOT NULL,
-	[Description] [nvarchar](500) NULL,
-	[EmployeeID] [int] NULL,
-	[BranchID] [int] NULL,
-	[payment_method] [nvarchar](50) NOT NULL,
-PRIMARY KEY CLUSTERED 
-(
-	[payment_id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
@@ -3347,12 +3325,6 @@ ALTER TABLE [dbo].[order_detail] ADD  DEFAULT ((0)) FOR [import_price]
 GO
 ALTER TABLE [dbo].[order_detail] ADD  DEFAULT ('PENDING') FOR [supplier_status]
 GO
-ALTER TABLE [dbo].[payment] ADD  DEFAULT ((0)) FOR [payment_amount]
-GO
-ALTER TABLE [dbo].[payment] ADD  DEFAULT (getdate()) FOR [payment_date]
-GO
-ALTER TABLE [dbo].[payment] ADD  DEFAULT ('PENDING') FOR [payment_status]
-GO
 ALTER TABLE [dbo].[point_transaction] ADD  DEFAULT ((0)) FOR [before_points]
 GO
 ALTER TABLE [dbo].[point_transaction] ADD  DEFAULT ((0)) FOR [after_points]
@@ -3516,21 +3488,6 @@ REFERENCES [dbo].[supplier] ([supplier_id])
 GO
 ALTER TABLE [dbo].[order_detail] CHECK CONSTRAINT [FK_OrderDetail_Supplier]
 GO
-ALTER TABLE [dbo].[payment]  WITH CHECK ADD  CONSTRAINT [FK_Payment_Branch] FOREIGN KEY([BranchID])
-REFERENCES [dbo].[Branch] ([branch_id])
-GO
-ALTER TABLE [dbo].[payment] CHECK CONSTRAINT [FK_Payment_Branch]
-GO
-ALTER TABLE [dbo].[payment]  WITH CHECK ADD  CONSTRAINT [FK_Payment_Employee] FOREIGN KEY([EmployeeID])
-REFERENCES [dbo].[Employee] ([emp_id])
-GO
-ALTER TABLE [dbo].[payment] CHECK CONSTRAINT [FK_Payment_Employee]
-GO
-ALTER TABLE [dbo].[payment]  WITH CHECK ADD  CONSTRAINT [FK_Payment_Order] FOREIGN KEY([order_id])
-REFERENCES [dbo].[order] ([order_id])
-GO
-ALTER TABLE [dbo].[payment] CHECK CONSTRAINT [FK_Payment_Order]
-GO
 ALTER TABLE [dbo].[point_transaction]  WITH CHECK ADD  CONSTRAINT [FK_PointTransaction_CustomerPoint] FOREIGN KEY([cus_point_id])
 REFERENCES [dbo].[customer_point] ([cus_point_id])
 GO
@@ -3639,16 +3596,6 @@ GO
 ALTER TABLE [dbo].[order]  WITH CHECK ADD CHECK  (([payment_method]='BANK_TRANSFER' OR [payment_method]='CASH'))
 GO
 ALTER TABLE [dbo].[order]  WITH CHECK ADD CHECK  (([status]='CANCELLED' OR [status]='COMPLETED' OR [status]='PENDING'))
-GO
-ALTER TABLE [dbo].[payment]  WITH CHECK ADD CHECK  (([payment_status]='FAILED' OR [payment_status]='PAID' OR [payment_status]='PENDING'))
-GO
-ALTER TABLE [dbo].[payment]  WITH CHECK ADD  CONSTRAINT [CK_Payment_PaymentMethod] CHECK  (([payment_method]='CARD' OR [payment_method]='BANKING' OR [payment_method]='VNPAY' OR [payment_method]='BANK_TRANSFER' OR [payment_method]='CASH'))
-GO
-ALTER TABLE [dbo].[payment] CHECK CONSTRAINT [CK_Payment_PaymentMethod]
-GO
-ALTER TABLE [dbo].[payment]  WITH CHECK ADD  CONSTRAINT [CK_Payment_PaymentType] CHECK  (([PaymentType]='EXPENSE' OR [PaymentType]='INCOME'))
-GO
-ALTER TABLE [dbo].[payment] CHECK CONSTRAINT [CK_Payment_PaymentType]
 GO
 ALTER TABLE [dbo].[product]  WITH CHECK ADD CHECK  (([status]='INACTIVE' OR [status]='ACTIVE'))
 GO
