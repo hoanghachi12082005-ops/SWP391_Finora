@@ -69,6 +69,9 @@ public class InventoryController extends BaseController {
         } else if ("getImportTemplateDataApi".equals(action)) {
             new StockController().doGet(request, response);
             return;
+        } else if ("exportStockExcel".equals(action) || "exportExcel".equals(action)) {
+            new StockController().doGet(request, response);
+            return;
         } else if ("viewTicket".equals(action)) {
             new TransferController().doGet(request, response);
             return;

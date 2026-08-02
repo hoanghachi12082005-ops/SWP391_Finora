@@ -569,37 +569,35 @@ function parseImportExcel(rows) {
                 let selectOptions = '';
                 const linkedSupplierIds = new Set();
 
-                if (apiProd) {
-                    if (apiProd.suppliers && apiProd.suppliers.length > 0) {
-                        apiProd.suppliers.forEach(sup => {
-                            linkedSupplierIds.add(sup.supplierId);
-                            const isSelected = sup.supplierId === sId;
-                            if (isSelected) {
-                                matchedPrice = sup.importPrice || 0;
-                                hasValidSupplier = true;
-                            }
-                            selectOptions += `<option value="${sup.supplierId}" ${isSelected ? 'selected' : ''} data-price="${sup.importPrice || 0}" data-linked="true">${sup.supplierName}</option>`;
-                        });
+                if (apiProd && apiProd.suppliers && apiProd.suppliers.length > 0) {
+                    let targetSelectedId = sId;
+                    const matchedSupplier = apiProd.suppliers.find(sup => sup.supplierId === sId);
+                    if (!matchedSupplier && (isNaN(sId) || sId <= 0)) {
+                        targetSelectedId = apiProd.suppliers[0].supplierId;
                     }
+
+                    apiProd.suppliers.forEach(sup => {
+                        linkedSupplierIds.add(sup.supplierId);
+                        const isSelected = sup.supplierId === targetSelectedId;
+                        if (isSelected) {
+                            matchedPrice = sup.importPrice || 0;
+                            hasValidSupplier = true;
+                        }
+                        selectOptions += `<option value="${sup.supplierId}" ${isSelected ? 'selected' : ''} data-price="${sup.importPrice || 0}" data-linked="true" style="color: #212529; background-color: #ffffff;">${sup.supplierName}</option>`;
+                    });
                 }
 
                 if (!hasValidSupplier && !isNaN(sId) && sId > 0) {
                     const activeSuppliers = window.ACTIVE_SUPPLIERS || [];
                     const foundSup = activeSuppliers.find(sup => sup.supplierId === sId);
                     const supName = foundSup ? foundSup.supplierName : ('NCC #' + sId);
-                    selectOptions += `<option value="${sId}" selected data-price="0" data-linked="false">${supName} (Lỗi: Nhà cung cấp này không có sản phẩm này)</option>`;
-                }
-
-                if (!hasValidSupplier) {
-                    selectOptions = `<option value="" selected data-price="0" data-linked="false">Không có nhà cung cấp</option>` + selectOptions;
-                } else {
-                    selectOptions = `<option value="" data-price="0" data-linked="false">Không có nhà cung cấp</option>` + selectOptions;
+                    selectOptions += `<option value="${sId}" selected data-price="0" data-linked="false" class="text-danger fw-bold" style="color: #dc3545; background-color: #fff5f5; font-weight: bold;">${supName} (Lỗi: Nhà cung cấp này không có sản phẩm này)</option>`;
                 }
 
                 const activeSuppliers = window.ACTIVE_SUPPLIERS || [];
                 activeSuppliers.forEach(sup => {
                     if (!linkedSupplierIds.has(sup.supplierId) && sup.supplierId !== sId) {
-                        selectOptions += `<option value="${sup.supplierId}" data-price="0" data-linked="false">${sup.supplierName} (Lỗi: Nhà cung cấp này không có sản phẩm này)</option>`;
+                        selectOptions += `<option value="${sup.supplierId}" data-price="0" data-linked="false" class="text-danger" style="color: #dc3545; background-color: #fff5f5;">${sup.supplierName} (Lỗi: Nhà cung cấp này không có sản phẩm này)</option>`;
                     }
                 });
 
@@ -630,7 +628,7 @@ function parseImportExcel(rows) {
                     `;
                 }
 
-                const supplierBorderStyle = supplierValid ? '' : 'border: 2px solid #dc3545; background-color: #fff5f5; color: #dc3545;';
+                const supplierBorderStyle = supplierValid ? '' : 'border: 2px solid #dc3545; background-color: #fff5f5; font-weight: bold;';
                 const selectHtml = `
                     <select name="supplierId[]" class="form-select form-select-sm e-row-supplier-select" style="border-radius: 8px; font-size:13.5px; ${supplierBorderStyle}" onchange="validateExcelRow(this.closest('tr'))">
                         ${selectOptions}
@@ -701,10 +699,12 @@ function validateExcelRow(tr) {
         selectEl.style.border = '';
         selectEl.style.backgroundColor = '';
         selectEl.style.color = '';
+        selectEl.style.fontWeight = '';
     } else {
         selectEl.style.border = '2px solid #dc3545';
         selectEl.style.backgroundColor = '#fff5f5';
-        selectEl.style.color = '#dc3545';
+        selectEl.style.color = '';
+        selectEl.style.fontWeight = 'bold';
     }
 
     // Apply styles to qty input

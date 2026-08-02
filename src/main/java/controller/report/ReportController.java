@@ -76,33 +76,11 @@ public class ReportController extends BaseController {
             return;
         }
 
-        if ("/reports/inventory".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            loadInventoryReport(request);
-            forward(request, response, "reports/inventory");
-            return;
-        }
-
-        if ("/reports/inventory-preview".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            loadInventoryPreview(request);
-            forward(request, response, "reports/inventory-preview");
-            return;
-        }
-
-        if ("/reports/inventory-export".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            exportInventoryPdf(request, response);
-            return;
-        }
-
-        if ("/reports/inventory-export-excel".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            exportInventoryExcel(request, response);
+        if ("/reports/inventory".equals(path)
+                || "/reports/inventory-preview".equals(path)
+                || "/reports/inventory-export".equals(path)
+                || "/reports/inventory-export-excel".equals(path)) {
+            response.sendRedirect(ctx + "/inventory?tab=stock");
             return;
         }
 
