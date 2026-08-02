@@ -96,6 +96,37 @@ public class SecurityFilter implements Filter {
             return;
         }
 
+        // Verify that employee and branch are still active
+        try {
+            dao.employee.EmployeeDAO empDAO = new dao.employee.EmployeeDAO();
+            Employee dbEmp = empDAO.findByEmailOrPhone(employee.getEmail());
+            if (dbEmp == null || !"ACTIVE".equalsIgnoreCase(dbEmp.getStatus())) {
+                if (session != null) {
+                    session.invalidate();
+                }
+                resp.sendRedirect(req.getContextPath() + "/login?error=" + java.net.URLEncoder.encode("Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động.", "UTF-8"));
+                return;
+            }
+            boolean isSystemRole = "owner".equalsIgnoreCase(dbEmp.getRoleName()) || "admin".equalsIgnoreCase(dbEmp.getRoleName());
+            if (!isSystemRole && dbEmp.getBranchId() != null && dbEmp.getBranchId() > 0) {
+                dao.branch.BranchDAO branchDAO = new dao.branch.BranchDAO();
+                model.Branch branch = branchDAO.findById(dbEmp.getBranchId());
+                if (branch == null || !"ACTIVE".equalsIgnoreCase(branch.getStatus())) {
+                    if (session != null) {
+                        session.invalidate();
+                    }
+                    resp.sendRedirect(req.getContextPath() + "/login?error=" + java.net.URLEncoder.encode("Chi nhánh của bạn đã ngừng hoạt động.", "UTF-8"));
+                    return;
+                }
+            }
+            // Keep session in sync
+            session.setAttribute("currentUser", dbEmp);
+            session.setAttribute("employee", dbEmp);
+            employee = dbEmp;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         // 3. Anti-cache headers for authenticated pages
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         resp.setHeader("Pragma", "no-cache");

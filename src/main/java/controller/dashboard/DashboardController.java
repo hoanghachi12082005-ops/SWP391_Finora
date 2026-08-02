@@ -6,6 +6,8 @@ import dao.system.ActivityLogDAO;
 import model.ActivityLog;
 import model.DashboardOverview;
 import model.Employee;
+import util.pagination.PaginationHelper;
+import util.pagination.PaginationHelper.PageResult;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -95,20 +97,30 @@ public class DashboardController extends BaseController {
                 return;
             }
             String range = request.getParameter("range");
-            if (range == null || range.trim().isEmpty()) {
+            String fromDate = request.getParameter("fromDate");
+            String toDate = request.getParameter("toDate");
+            if ((fromDate == null || fromDate.isEmpty()) && (toDate == null || toDate.isEmpty()) && (range == null || range.trim().isEmpty())) {
                 range = "month";
             }
             try {
-                DashboardDAO.FinancialData financialData = dashboardDAO.getFinancialData(range);
+                DashboardDAO.FinancialData financialData = dashboardDAO.getFinancialData(range, fromDate, toDate, null);
                 request.setAttribute("totalRevenue", financialData.totalRevenue);
                 request.setAttribute("totalExpenses", financialData.totalExpenses);
                 request.setAttribute("netProfit", financialData.netProfit);
                 request.setAttribute("totalInvoices", financialData.totalInvoices);
                 request.setAttribute("branchRevenues", financialData.branchRevenues);
                 request.setAttribute("selectedRange", range);
+                request.setAttribute("selectedFromDate", fromDate);
+                request.setAttribute("selectedToDate", toDate);
                 
-                // Nạp danh sách phát sinh chi tiết toàn hệ thống
-                List<model.Payment> globalPayments = dashboardDAO.getBranchPayments(range, null);
+                // Nạp danh sách phát sinh chi tiết toàn hệ thống có phân trang
+                int page = parseInt(request.getParameter("page"), 1);
+                int sizeValue = parseInt(request.getParameter("sizeValue"), 10);
+                int total = dashboardDAO.getBranchPaymentsCount(range, fromDate, toDate, null);
+                PageResult pr = PaginationHelper.compute(total, page, sizeValue);
+                pr.setAttributes(request);
+
+                List<model.Payment> globalPayments = dashboardDAO.getBranchPayments(range, fromDate, toDate, null, pr.getCurrentPage(), pr.getPageSize());
                 request.setAttribute("globalPayments", globalPayments);
             } catch (SQLException ex) {
                 ex.printStackTrace();
@@ -139,5 +151,9 @@ public class DashboardController extends BaseController {
         if (role == null) return false;
         String r = role.trim().toLowerCase();
         return "owner".equals(r) || "admin".equals(r);
+    }
+
+    private int parseInt(String s, int def) {
+        try { return Integer.parseInt(s); } catch (Exception e) { return def; }
     }
 }

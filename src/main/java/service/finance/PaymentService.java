@@ -244,11 +244,12 @@ public class PaymentService {
         try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                // 1. Create specialized Order (order_type = OTHER, status = COMPLETED)
+                String code = paymentDAO.generateTransactionCode(conn, paymentType, prefix);
+
+                // 1. Create specialized Order (order_type = RECEIPT/EXPENSE, status = COMPLETED)
                 Order order = new Order();
-                String orderCode = orderCodePrefix + String.format("%06d", System.currentTimeMillis() % 1000000);
-                order.setOrderCode(orderCode);
-                order.setOrderType("OTHER");
+                order.setOrderCode(code);
+                order.setOrderType(isReceipt ? "RECEIPT" : "EXPENSE");
                 order.setStatus(Order.OrderStatus.COMPLETED);
                 order.setBranchId(branchId);
                 order.setEmpId(employeeId);
@@ -257,6 +258,7 @@ public class PaymentService {
                 order.setDiscountAmount(0.0);
                 order.setTotalAmount(payment.getAmount());
                 order.setPaymentMethod(payment.getMethod() != null ? payment.getMethod() : "CASH");
+                order.setDescription(payment.getDescription());
 
                 int orderId = orderDAO.createOrderInTransaction(conn, order);
 
@@ -266,8 +268,6 @@ public class PaymentService {
                 payment.setBranchId(branchId);
                 payment.setPaymentType(paymentType);
                 payment.setStatus("PAID");
-
-                String code = paymentDAO.generateTransactionCode(conn, paymentType, prefix);
                 payment.setName(code);
 
                 int paymentId = paymentDAO.insert(conn, payment);
@@ -277,7 +277,7 @@ public class PaymentService {
                 // Audit log
                 try {
                     String actionName = isReceipt ? "TẠO_PHIẾU_THU" : "TẠO_PHIẾU_CHI";
-                    String logMsg = (isReceipt ? "Tạo phiếu thu " : "Tạo phiếu chi ") + code + " cho đơn hàng " + orderCode + " - Số tiền: " + payment.getAmount();
+                    String logMsg = (isReceipt ? "Tạo phiếu thu " : "Tạo phiếu chi ") + code + " cho đơn hàng " + code + " - Số tiền: " + payment.getAmount();
                     activityLogDAO.insertLog(employeeId, actionName, "cashbook", paymentId, null, logMsg);
                 } catch (Exception ignored) {}
 

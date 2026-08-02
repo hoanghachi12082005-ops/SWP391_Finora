@@ -30,7 +30,16 @@ public class AuthService {
         // ─────────────────────────────────────────────────────────────
 
         if (!"ACTIVE".equalsIgnoreCase(employee.getStatus())) {
-            throw new RuntimeException("Tài khoản của bạn đã bị khóa hoặc chưa được kích hoạt. Vui lòng liên hệ Admin/Owner để mở khóa.");
+            throw new RuntimeException("Tài khoản của bạn đã bị khóa hoặc chưa được kích hoạt. Vui lòng liên hệ Owner để mở khóa.");
+        }
+
+        boolean isSystemRole = "owner".equalsIgnoreCase(employee.getRoleName()) || "admin".equalsIgnoreCase(employee.getRoleName());
+        if (!isSystemRole && employee.getBranchId() != null && employee.getBranchId() > 0) {
+            dao.branch.BranchDAO branchDAO = new dao.branch.BranchDAO();
+            model.Branch branch = branchDAO.findById(employee.getBranchId());
+            if (branch == null || !"ACTIVE".equalsIgnoreCase(branch.getStatus())) {
+                throw new RuntimeException("Chi nhánh của bạn đã ngừng hoạt động. Vui lòng liên hệ Owner.");
+            }
         }
 
         boolean verify = PasswordUtil.verify(password, dbHash);

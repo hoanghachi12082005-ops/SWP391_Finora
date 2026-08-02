@@ -19,7 +19,7 @@ public class SyncProductImages {
     // ===== CAU HINH - SUA LAI CHO DB CUA BAN =====
     static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=DBFinoraV3;encrypt=false;trustServerCertificate=true;";
     static final String DB_USER = "sa";
-    static final String DB_PASS = "your_password";
+    static final String DB_PASS = "1234";
     static final String CONTEXT_PATH = "/SWP391_Finora";
     static final String IMAGE_DIR = "assets/images/product/"; // relative path
 

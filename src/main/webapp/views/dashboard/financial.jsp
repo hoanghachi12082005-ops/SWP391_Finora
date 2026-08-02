@@ -24,12 +24,18 @@
                     <h2 style="font-weight:700; color:#0f172a; margin:0;">Tổng quan tài chính</h2>
                     <p style="color:#64748b; margin:4px 0 0 0;">Tổng quan doanh thu, chi phí và lợi nhuận của toàn chuỗi cửa hàng</p>
                 </div>
-                <!-- Time range filter buttons -->
-                <div class="d-flex align-items-center gap-2" style="background: #f1f5f9; padding: 4px; border-radius: 8px;">
-                    <a href="?range=day" class="btn btn-sm" style="font-weight:600; border-radius:6px; padding: 6px 14px; text-decoration:none; transition:0.2s; ${selectedRange == 'day' ? 'background:#93000b; color:white; border:none;' : 'color:#475569; background:transparent; border:none;'}">Hôm nay</a>
-                    <a href="?range=week" class="btn btn-sm" style="font-weight:600; border-radius:6px; padding: 6px 14px; text-decoration:none; transition:0.2s; ${selectedRange == 'week' ? 'background:#93000b; color:white; border:none;' : 'color:#475569; background:transparent; border:none;'}">Tuần này</a>
-                    <a href="?range=month" class="btn btn-sm" style="font-weight:600; border-radius:6px; padding: 6px 14px; text-decoration:none; transition:0.2s; ${selectedRange == 'month' ? 'background:#93000b; color:white; border:none;' : 'color:#475569; background:transparent; border:none;'}">Tháng này</a>
-                </div>
+                <!-- Time range filter form -->
+                <form method="get" class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-1">
+                        <label style="font-size: 13px; color: #64748b; margin-bottom: 0; font-weight: 500;">Từ ngày:</label>
+                        <input type="date" name="fromDate" value="${selectedFromDate}" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: white; width: 140px;">
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <label style="font-size: 13px; color: #64748b; margin-bottom: 0; font-weight: 500;">Đến ngày:</label>
+                        <input type="date" name="toDate" value="${selectedToDate}" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: white; width: 140px;">
+                    </div>
+                    <button type="submit" class="btn btn-sm" style="background:#93000b; color:white; font-weight:600; border-radius:6px; padding: 6px 16px; border:none; height: 33px; transition: 0.2s;">Lọc</button>
+                </form>
             </div>
 
             <c:if test="${not empty financialError}">
@@ -64,17 +70,7 @@
                     </div>
                 </div>
 
-                <!-- Card 3: Lợi nhuận -->
-                <div class="kpi-card">
-                    <div class="kpi-card-info">
-                        <p>Lợi nhuận ròng</p>
-                        <h3 style="color: ${netProfit >= 0 ? '#10b981' : '#ef4444'};"><fmt:formatNumber value="${netProfit != null ? netProfit : 0}" type="number" maxFractionDigits="0"/> đ</h3>
-                        <span class="kpi-subtext">Doanh thu - Chi phí</span>
-                    </div>
-                    <div class="kpi-card-icon blue" style="background: rgba(59, 130, 246, 0.08); color: #3b82f6;">
-                        <span class="material-icons">trending_up</span>
-                    </div>
-                </div>
+
 
                 <!-- Card 4: Tổng hóa đơn -->
                 <div class="kpi-card">
@@ -229,6 +225,11 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- Phân trang -->
+                    <jsp:include page="/views/common/pagination.jsp">
+                        <jsp:param name="queryString" value="&range=${selectedRange}&fromDate=${selectedFromDate}&toDate=${selectedToDate}" />
+                    </jsp:include>
                 </div>
             </div>
         </div>

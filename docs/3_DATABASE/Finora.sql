@@ -331,6 +331,7 @@ CREATE TABLE [dbo].[order](
 	[status] [nvarchar](30) NULL,
 	[created_at] [datetime] NULL,
 	[approved_by] [int] NULL,
+	[description] [nvarchar](500) NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[order_id] ASC
@@ -358,29 +359,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[payment]    Script Date: 16/07/2026 16:56:29 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[payment](
-	[payment_id] [int] IDENTITY(1,1) NOT NULL,
-	[order_id] [int] NULL,
-	[payment_amount] [decimal](18, 2) NULL,
-	[payment_date] [datetime] NULL,
-	[payment_status] [nvarchar](30) NULL,
-	[transaction_code] [nvarchar](100) NULL,
-	[PaymentType] [nvarchar](20) NOT NULL,
-	[Description] [nvarchar](500) NULL,
-	[EmployeeID] [int] NULL,
-	[BranchID] [int] NULL,
-	[payment_method] [nvarchar](50) NOT NULL,
-PRIMARY KEY CLUSTERED 
-(
-	[payment_id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-GO
+-- Payment table has been removed. Sổ quỹ và tài chính lấy dữ liệu trực tiếp từ bảng order.
 /****** Object:  Table [dbo].[point_transaction]    Script Date: 16/07/2026 16:56:29 ******/
 SET ANSI_NULLS ON
 GO

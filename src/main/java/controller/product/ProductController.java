@@ -70,6 +70,7 @@ public class ProductController extends BaseController {
             page = Math.max(1, Math.min(page, totalPages > 0 ? totalPages : 1));
 
             List<Product> products = productDAO.findAll((page - 1) * ITEMS_PER_PAGE, ITEMS_PER_PAGE, keyword, status, categoryID, unitID);
+            attachProductImageUrls(request, products);
 
             request.setAttribute("products",    products);
             request.setAttribute("categories",  productDAO.findAllCategories());
@@ -84,6 +85,51 @@ public class ProductController extends BaseController {
             forward(request, response, "products/index.jsp");
         } catch (SQLException e) {
             throw new ServletException("Database error retrieving products", e);
+        }
+    }
+
+    private void attachProductImageUrls(HttpServletRequest request, List<Product> products) {
+        if (products == null || products.isEmpty()) return;
+        
+        String ctx = request.getContextPath();
+        String real = request.getServletContext().getRealPath("/assets/images/product/");
+        java.io.File dir = (real != null) ? new java.io.File(real) : null;
+        java.io.File[] files = (dir != null && dir.exists()) ? dir.listFiles() : null;
+
+        for (Product item : products) {
+            List<String> list = item.getImageUrlList();
+            boolean fileExists = false;
+            if (!list.isEmpty()) {
+                String firstUrl = list.get(0);
+                if (firstUrl != null && !firstUrl.isBlank()) {
+                    String cleanUrl = model.Product.normalizeUrl(firstUrl);
+                    String physicalPath = request.getServletContext().getRealPath(cleanUrl);
+                    if (physicalPath != null) {
+                        java.io.File physicalFile = new java.io.File(physicalPath);
+                        if (physicalFile.exists() && physicalFile.isFile()) {
+                            fileExists = true;
+                        }
+                    }
+                }
+            }
+
+            if (fileExists) {
+                List<String> formatted = new java.util.ArrayList<>();
+                for (String url : list) {
+                    formatted.add(model.Product.formatDisplayUrl(url, ctx));
+                }
+                item.setImageUrlList(formatted);
+            } else if (files != null) {
+                String prefix = "product_" + item.getProductID() + "_";
+                String fallbackPrefix = "product_" + item.getProductID() + ".";
+                for (java.io.File f : files) {
+                    String name = f.getName().toLowerCase();
+                    if (f.isFile() && (name.startsWith(prefix.toLowerCase()) || name.startsWith(fallbackPrefix.toLowerCase()))) {
+                        item.setImageUrlList(java.util.Collections.singletonList(ctx + "/assets/images/product/" + f.getName()));
+                        break;
+                    }
+                }
+            }
         }
     }
 
