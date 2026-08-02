@@ -126,7 +126,7 @@ public class AdminUserServlet extends HttpServlet {
                 break;
 
             default:
-                setFlash(request, "errorMessage", "Invalid action.");
+                setFlash(request, "errorMessage", "Thao tác không hợp lệ.");
                 break;
         }
 
@@ -188,19 +188,19 @@ public class AdminUserServlet extends HttpServlet {
         int roleId = parseInt(request.getParameter("roleId"), -1);
 
         if (isUpdate && employeeId <= 0) {
-            setFlash(request, "errorMessage", "Invalid employee ID.");
+            setFlash(request, "errorMessage", "Mã nhân viên không hợp lệ.");
             return;
         }
 
         if (isBlank(fullName) || isBlank(email) || branchId <= 0 || roleId <= 0) {
-            setFlash(request, "errorMessage", "Please enter full name, email, branch and a role.");
+            setFlash(request, "errorMessage", "Vui lòng nhập họ tên, email, chi nhánh và vai trò.");
             return;
         }
 
         Integer excludeEmployeeId = isUpdate ? employeeId : null;
 
         if (adminUserDao.isEmailExists(email, phone, excludeEmployeeId)) {
-            setFlash(request, "errorMessage", "Email/Phone already exists.");
+            setFlash(request, "errorMessage", "Email/SĐT đã tồn tại.");
             return;
         }
 
@@ -230,7 +230,7 @@ public class AdminUserServlet extends HttpServlet {
             );
 
             if (!isMailSent) {
-                setFlash(request, "errorMessage", "Cannot send password email. Please check email configuration.");
+                setFlash(request, "errorMessage", "Không thể gửi email mật khẩu. Vui lòng kiểm tra cấu hình email.");
                 return;
             }
 
@@ -276,7 +276,7 @@ public class AdminUserServlet extends HttpServlet {
         Employee profile = adminUserDao.getEmployeeByIdAllRoles(employeeId);
 
         if (profile == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Employee not found.");
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Không tìm thấy nhân viên.");
             return;
         }
 
@@ -302,7 +302,7 @@ public class AdminUserServlet extends HttpServlet {
         }
 
         if (employeeId <= 0) {
-            setFlash(request, "errorMessage", "ID nhân viên không hợp lệ.");
+            setFlash(request, "errorMessage", "Mã nhân viên không hợp lệ.");
             return;
         }
 
@@ -344,7 +344,7 @@ public class AdminUserServlet extends HttpServlet {
         boolean success = adminUserDao.resetPasswordByAdmin(employeeId, hashedPassword);
 
         if (!success) {
-            setFlash(request, "errorMessage", "Cannot reset employee password.");
+            setFlash(request, "errorMessage", "Không thể đặt lại mật khẩu nhân viên.");
             return;
         }
 
@@ -355,11 +355,11 @@ public class AdminUserServlet extends HttpServlet {
         );
 
         if (!isMailSent) {
-            setFlash(request, "errorMessage", "Password was reset, but email could not be sent. Please check email configuration.");
+            setFlash(request, "errorMessage", "Đặt lại mật khẩu thành công nhưng không thể gửi email. Vui lòng kiểm tra cấu hình email.");
             return;
         }
 
-        setFlash(request, "successMessage", "Employee password reset successfully.");
+        setFlash(request, "successMessage", "Đặt lại mật khẩu nhân viên thành công.");
 
         Employee currentUser = getCurrentUser(request);
         activityLogService.log(currentUser.getEmployeeID(), "RESET_PASSWORD", "Employee", employeeId, null, employee.getEmail());

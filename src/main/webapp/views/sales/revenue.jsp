@@ -463,15 +463,15 @@
                                                             <c:choose>
                                                                 <c:when test="${tx.status == 'COMPLETED'}">
                                                                     <span
-                                                                        class="text-[9px] font-bold bg-tertiary-fixed text-on-tertiary-fixed px-1.5 py-0.5 rounded">COMPLETED</span>
+                                                                        class="text-[9px] font-bold bg-tertiary-fixed text-on-tertiary-fixed px-1.5 py-0.5 rounded">Hoàn thành</span>
                                                                 </c:when>
                                                                 <c:when test="${tx.status == 'CANCELLED'}">
                                                                     <span
-                                                                        class="text-[9px] font-bold bg-error-container text-on-error-container px-1.5 py-0.5 rounded">CANCELLED</span>
+                                                                        class="text-[9px] font-bold bg-error-container text-on-error-container px-1.5 py-0.5 rounded">Đã hủy</span>
                                                                 </c:when>
                                                                 <c:otherwise>
                                                                     <span
-                                                                        class="text-[9px] font-bold bg-surface-container-highest text-on-surface px-1.5 py-0.5 rounded">PENDING</span>
+                                                                        class="text-[9px] font-bold bg-surface-container-highest text-on-surface px-1.5 py-0.5 rounded">Chờ thanh toán</span>
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </div>

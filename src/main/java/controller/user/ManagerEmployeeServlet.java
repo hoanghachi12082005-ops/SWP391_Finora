@@ -36,7 +36,7 @@ public class ManagerEmployeeServlet extends HttpServlet {
 
         Integer branchID = AuthUtil.getBranchId(request);
         if (branchID == null || branchID <= 0) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Your account is not assigned to any branch.");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Tài khoản của bạn chưa được gán cho chi nhánh nào.");
             return;
         }
 
@@ -99,14 +99,14 @@ public class ManagerEmployeeServlet extends HttpServlet {
         int employeeID = AuthUtil.parseInt(request.getParameter("id"), -1);
 
         if (employeeID <= 0) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid employee ID.");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Mã nhân viên không hợp lệ.");
             return;
         }
 
         Employee profile = managerEmployeeDao.getEmployeeByIdInBranch(employeeID, branchID);
 
         if (profile == null) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "You can only view employees in your branch.");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn chỉ có thể xem nhân viên trong chi nhánh của mình.");
             return;
         }
 

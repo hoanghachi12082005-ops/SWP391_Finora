@@ -245,7 +245,7 @@ public class CheckoutServlet extends HttpServlet {
             if (customerId != null && customerId > 0 && redeemPoints > 0) {
                 int available = pointDao.getCurrentPoints(customerId);
                 if (available < redeemPoints) {
-                    throw new SQLException("Insufficient loyalty points.");
+                    throw new SQLException("Không đủ điểm tích lũy.");
                 }
                 pointDao.deductPoints(conn, customerId, redeemPoints, orderId);
             }

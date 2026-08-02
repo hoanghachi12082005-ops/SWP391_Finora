@@ -18,9 +18,9 @@
             <button class="btn secondary">Lọc</button>
         </div>
         <table>
-            <thead><tr><th>ID</th><th>Tên</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+            <thead><tr><th>Mã</th><th>Tên</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
             <tbody>
-                <tr><td>1</td><td>Dữ liệu mẫu</td><td>ACTIVE</td><td><a href="#">Xem</a> | <a href="#">Sửa</a></td></tr>
+                <tr><td>1</td><td>Dữ liệu mẫu</td><td>Hoạt động</td><td><a href="#">Xem</a> | <a href="#">Sửa</a></td></tr>
             </tbody>
         </table>
     </div>

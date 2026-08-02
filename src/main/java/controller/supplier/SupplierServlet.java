@@ -176,7 +176,7 @@ public class SupplierServlet extends HttpServlet {
             response.getOutputStream().flush();
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Excel export failed: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Xuất Excel thất bại: " + e.getMessage());
         }
     }
 

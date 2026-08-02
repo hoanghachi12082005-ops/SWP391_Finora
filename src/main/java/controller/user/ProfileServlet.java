@@ -65,7 +65,7 @@ public class ProfileServlet extends HttpServlet {
         } else if ("changePassword".equals(action)) {
             changePassword(request);
         } else {
-            setFlash(request, "errorMessage", "Invalid action.");
+            setFlash(request, "errorMessage", "Thao tác không hợp lệ.");
         }
 
         response.sendRedirect(request.getContextPath() + "/profile");
@@ -108,7 +108,7 @@ public class ProfileServlet extends HttpServlet {
         String phone = trim(request.getParameter("phone"));
 
         if (AuthUtil.isBlank(fullName) || AuthUtil.isBlank(email)) {
-            setFlash(request, "errorMessage", "Full name and email are required.");
+            setFlash(request, "errorMessage", "Vui lòng nhập họ tên và email.");
             return;
         }
 
@@ -128,7 +128,7 @@ public class ProfileServlet extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            setFlash(request, "errorMessage", "Cannot upload avatar image.");
+            setFlash(request, "errorMessage", "Không thể tải ảnh đại diện.");
             return;
         }
 
@@ -161,7 +161,7 @@ public class ProfileServlet extends HttpServlet {
         setFlash(
                 request,
                 success ? "successMessage" : "errorMessage",
-                success ? "Profile updated successfully." : "Cannot update profile."
+                success ? "Cập nhật hồ sơ thành công." : "Không thể cập nhật hồ sơ."
         );
     }
     private String saveAvatarFile(HttpServletRequest request, Part avatarPart, int employeeID)
@@ -260,19 +260,19 @@ public class ProfileServlet extends HttpServlet {
         String confirmPassword = request.getParameter("confirmPassword");
 
         if (AuthUtil.isBlank(oldPassword) || AuthUtil.isBlank(newPassword) || AuthUtil.isBlank(confirmPassword)) {
-            setFlash(request, "errorMessage", "Please fill all password fields.");
+            setFlash(request, "errorMessage", "Vui lòng nhập đầy đủ các trường mật khẩu.");
             return;
         }
 
         if (!newPassword.equals(confirmPassword)) {
-            setFlash(request, "errorMessage", "Confirm password does not match.");
+            setFlash(request, "errorMessage", "Mật khẩu xác nhận không khớp.");
             return;
         }
 
         String currentHash = profileDao.getPasswordHash(employeeID);
 
         if (currentHash == null || !PasswordUtil.verify(oldPassword, currentHash)) {
-            setFlash(request, "errorMessage", "Old password is incorrect.");
+            setFlash(request, "errorMessage", "Mật khẩu cũ không đúng.");
             return;
         }
 
@@ -283,7 +283,7 @@ public class ProfileServlet extends HttpServlet {
         setFlash(
                 request,
                 success ? "successMessage" : "errorMessage",
-                success ? "Password changed successfully." : "Cannot change password."
+                success ? "Đổi mật khẩu thành công." : "Không thể đổi mật khẩu."
         );
     }
 

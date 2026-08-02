@@ -129,7 +129,7 @@
                     <table class="table align-middle">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Mã</th>
                                 <th>Tên Nhà cung cấp</th>
                                 <th>Điện thoại</th>
                                 <th>Địa chỉ</th>
@@ -241,8 +241,8 @@
             <div class="mb-3">
                 <label class="form-label">Trạng thái</label>
                 <select id="modal-status" name="status" class="form-select" required>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="active">Hoạt động</option>
+                    <option value="inactive">Không hoạt động</option>
                 </select>
             </div>
             <div class="d-flex justify-content-end">

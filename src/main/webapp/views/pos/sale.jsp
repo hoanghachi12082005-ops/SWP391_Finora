@@ -58,7 +58,7 @@
                 <div class="customer-card" id="customerSection">
                     <label>Khách hàng</label>
                     <div class="search-wrapper">
-                        <input type="text" id="phoneSearch" placeholder="Search phone number..." autocomplete="off"/>
+                        <input type="text" id="phoneSearch" placeholder="Tìm số điện thoại..." autocomplete="off"/>
                         <button class="clear-btn" id="clearSearchBtn">&times;</button>
                         <span class="spinner" id="searchSpinner"></span>
                         <div id="posSearchDropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant z-50 animate-fadeIn" style="max-height:320px;overflow-y:auto;"></div>
@@ -76,23 +76,23 @@
                     </div>
 
                     <div class="no-customer" id="noCustomer" style="display:none;">
-                        <p>No customer found.</p>
+                        <p>Không tìm thấy khách hàng.</p>
                         <button id="addCustomerBtn">
                             <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">person_add</span>
-                            + Add New Customer
+                            + Thêm khách hàng mới
                         </button>
                     </div>
                 </div>
 
                 <div class="card" style="padding:16px; min-height:200px;">
-                    <p style="color:#888;text-align:center;padding:40px 0;">Product area — awaiting cart implementation</p>
+                    <p style="color:#888;text-align:center;padding:40px 0;">Khu vực sản phẩm — chờ triển khai giỏ hàng</p>
                 </div>
             </div>
 
             <div class="pos-right">
                 <div class="card" style="padding:16px; min-height:300px;">
-                    <h3 style="margin:0 0 12px;font-size:16px;">Cart</h3>
-                    <p style="color:#888;text-align:center;padding:40px 0;">Cart area — awaiting cart implementation</p>
+                    <h3 style="margin:0 0 12px;font-size:16px;">Giỏ hàng</h3>
+                    <p style="color:#888;text-align:center;padding:40px 0;">Khu vực giỏ hàng — chờ triển khai giỏ hàng</p>
                 </div>
             </div>
         </div>
@@ -102,7 +102,7 @@
     <div class="modal-overlay-pos" id="newCustomerModal">
         <div class="modal-box-pos">
             <div class="modal-header-pos">
-                <h3>Add New Customer</h3>
+                <h3>Thêm khách hàng mới</h3>
                 <button class="modal-close-pos" id="closeModalBtn">&times;</button>
             </div>
             <div class="modal-message" id="modalMessage"></div>
@@ -110,21 +110,22 @@
                 <input type="hidden" id="modalAction" value="create"/>
                 <input type="hidden" id="modalCustomerId" value=""/>
                 <div class="form-group">
-                    <label>Full Name *</label>
-                    <input type="text" id="modalFullName" placeholder="Enter full name" required/>
+                    <label>Họ tên *</label>
+                    <input type="text" id="modalFullName" placeholder="Nhập họ tên" required/>
                 </div>
                 <div class="form-group">
-                    <label>Phone *</label>
-                    <input type="text" id="modalPhone" placeholder="Enter phone number" required/>
+                    <label>Số điện thoại *</label>
+                    <input type="text" id="modalPhone" placeholder="Nhập số điện thoại" required/>
+                </div>
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" id="modalEmail" placeholder="Enter email"/>
+                    <input type="email" id="modalEmail" placeholder="Nhập email"/>
                 </div>
             </div>
             <div class="modal-footer-pos">
-                <button class="btn btn-secondary" id="cancelModalBtn">Cancel</button>
-                <button class="btn btn-primary" id="saveCustomerBtn">Save Customer</button>
+                <button class="btn btn-secondary" id="cancelModalBtn">Hủy</button>
+                <button class="btn btn-primary" id="saveCustomerBtn">Lưu khách hàng</button>
             </div>
         </div>
     </div>
@@ -170,7 +171,7 @@
                 noCustomer.style.display = 'none';
                 custName.textContent = customer.fullName;
                 custPhone.textContent = customer.phone;
-                custPoints.textContent = (customer.loyaltyPoint || 0) + ' Points';
+                custPoints.textContent = (customer.loyaltyPoint || 0) + ' Điểm';
                 removeBtn.style.display = 'block';
                 selectedCustomer = customer;
             }
@@ -180,11 +181,11 @@
                 if (customers.length === 0) {
                     var div = document.createElement('div');
                     div.className = 'px-4 py-3 text-caption text-outline text-center';
-                    div.textContent = 'No customer found';
+                    div.textContent = 'Không tìm thấy khách hàng';
                     dropdown.appendChild(div);
                     var btn = document.createElement('button');
                     btn.className = 'w-full flex items-center gap-2 px-4 py-3 text-label-md text-primary hover:bg-surface-container-high transition-colors border-t border-outline-variant/50';
-                    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">person_add</span> + Add New Customer';
+                    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">person_add</span> + Thêm khách hàng mới';
                     btn.onclick = function() {
                         modalPhone.value = searchInput.value.trim();
                         dropdown.classList.add('hidden');
@@ -204,7 +205,7 @@
                         item.innerHTML =
                             '<div style="display:flex;align-items:center;gap:6px;"><span class="material-symbols-outlined" style="font-size:16px;color:#666;">person</span><span style="font-size:14px;font-weight:600;">' + escHtml(c.fullName) + '</span></div>' +
                             '<div style="display:flex;align-items:center;gap:6px;padding-left:22px;"><span class="material-symbols-outlined" style="font-size:14px;color:#666;">call</span><span style="font-size:13px;color:#666;">' + escHtml(c.phone) + '</span></div>' +
-                            '<div style="display:flex;align-items:center;gap:6px;padding-left:22px;"><span class="material-symbols-outlined" style="font-size:14px;color:#1a1a2e;">stars</span><span style="font-size:13px;color:#1a1a2e;font-weight:600;">' + (c.loyaltyPoint || 0) + ' Loyalty Points</span></div>';
+                            '<div style="display:flex;align-items:center;gap:6px;padding-left:22px;"><span class="material-symbols-outlined" style="font-size:14px;color:#1a1a2e;">stars</span><span style="font-size:13px;color:#1a1a2e;font-weight:600;">' + (c.loyaltyPoint || 0) + ' Điểm tích lũy</span></div>';
                         item.onclick = function() { selectCustomer(c); };
                         dropdown.appendChild(item);
                     });
@@ -333,16 +334,16 @@
                 var email = modalEmail.value.trim();
 
                 if (!fullName) {
-                    showModalError('Please enter full name.');
+                    showModalError('Vui lòng nhập họ tên.');
                     return;
                 }
                 if (!phone) {
-                    showModalError('Please enter phone number.');
+                    showModalError('Vui lòng nhập số điện thoại.');
                     return;
                 }
 
                 saveBtn.disabled = true;
-                saveBtn.textContent = 'Saving...';
+                saveBtn.textContent = 'Đang lưu...';
 
                 var params = new URLSearchParams();
                 params.append('action', 'create-api');
@@ -362,7 +363,7 @@
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     saveBtn.disabled = false;
-                    saveBtn.textContent = 'Save Customer';
+                    saveBtn.textContent = 'Lưu khách hàng';
                     if (data.status === 'success' && data.customerId) {
                         closeModal();
                         showCustomer(data);
@@ -378,13 +379,13 @@
                             doSearch(phone);
                         }
                     } else {
-                        showModalError(data.message || 'Cannot create customer.');
+                        showModalError(data.message || 'Không thể tạo khách hàng.');
                     }
                 })
                 .catch(function() {
                     saveBtn.disabled = false;
-                    saveBtn.textContent = 'Save Customer';
-                    showModalError('Network error. Please try again.');
+                    saveBtn.textContent = 'Lưu khách hàng';
+                    showModalError('Lỗi mạng. Vui lòng thử lại.');
                 });
             });
 

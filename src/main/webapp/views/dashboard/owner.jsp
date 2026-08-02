@@ -17,7 +17,7 @@
         <div class="page-container">
             <!-- Breadcrumbs -->
             <div class="page-breadcrumb">
-                <a href="#">Dashboard</a>
+                <a href="#">Tổng quan</a>
                 <span class="material-icons">chevron_right</span>
                 <span>Tổng quan</span>
             </div>

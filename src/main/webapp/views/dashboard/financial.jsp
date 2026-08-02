@@ -13,7 +13,7 @@
         <div class="page-container">
             <!-- Breadcrumbs -->
             <div class="page-breadcrumb" style="display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:13px; color:#64748b;">
-                <a href="${pageContext.request.contextPath}/dashboard/owner" style="color:#64748b; text-decoration:none;">Dashboard</a>
+                <a href="${pageContext.request.contextPath}/dashboard/owner" style="color:#64748b; text-decoration:none;">Tổng quan</a>
                 <span class="material-icons" style="font-size: 16px;">chevron_right</span>
                 <span>Tài chính</span>
             </div>

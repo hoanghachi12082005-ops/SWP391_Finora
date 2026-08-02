@@ -123,12 +123,12 @@ public class CartServlet extends HttpServlet {
                         } else {
                             int rate = dao.sales.CustomerPointDAO.getRedeemRate();
                             if (rate <= 0) {
-                                out.write("{\"error\":\"Loyalty point redemption rate not configured. Go to System → Business Configuration to set it.\"}");
+                                out.write("{\"error\":\"Tỷ lệ quy đổi điểm tích lũy chưa được cấu hình. Vào Hệ thống → Cấu hình kinh doanh để thiết lập.\"}");
                                 return;
                             }
                             int available = targetTab.getSelectedCustomer().getLoyaltyPoint();
                             if (pts > available) {
-                                out.write("{\"error\":\"Insufficient loyalty points.\"}");
+                                out.write("{\"error\":\"Không đủ điểm tích lũy.\"}");
                                 return;
                             }
                             targetTab.setRedeemPoints(pts);
@@ -150,7 +150,7 @@ public class CartServlet extends HttpServlet {
                     }
                 }
                 default -> {
-                    out.write("{\"error\":\"Action không hợp lệ.\"}");
+                    out.write("{\"error\":\"Thao tác không hợp lệ.\"}");
                     return;
                 }
             }

@@ -93,8 +93,8 @@
                                         <%   } } %>
                                     </optgroup>
                                     <optgroup label="Trạng thái">
-                                        <option value="status_Active" <%="Active".equals(filterStatus) ? "selected" : ""%>>Active</option>
-                                        <option value="status_Inactive" <%="Inactive".equals(filterStatus) ? "selected" : ""%>>Inactive</option>
+                                        <option value="status_Active" <%="Active".equals(filterStatus) ? "selected" : ""%>>Hoạt động</option>
+                                        <option value="status_Inactive" <%="Inactive".equals(filterStatus) ? "selected" : ""%>>Không hoạt động</option>
                                     </optgroup>
                                 </select>
                             </div>
@@ -114,7 +114,7 @@
                     <table class="table align-middle table-hover">
                         <thead>
                             <tr>
-                                <th style="width: 80px;">ID</th>
+                                <th style="width: 80px;">Mã</th>
                                 <th style="width: 80px; text-align: center;">Ảnh</th>
                                 <th>Tên sản phẩm</th>
                                 <th style="width: 180px;">Danh mục</th>
@@ -158,7 +158,7 @@
                                             <% } %>
                                         </div>
                                     <% } else { %>
-                                        <span class="text-muted" style="font-size:12px;">No image</span>
+                                        <span class="text-muted" style="font-size:12px;">Không có ảnh</span>
                                     <% } %>
                                 </td>
                                 <td><strong><%= p.getName() != null ? p.getName() : "" %></strong></td>
@@ -292,8 +292,8 @@
             <div class="mb-3">
                 <label class="form-label">Trạng thái</label>
                 <select id="modal-status" name="status" class="form-select" required>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
+                    <option value="Active">Hoạt động</option>
+                    <option value="Inactive">Không hoạt động</option>
                 </select>
             </div>
             <div class="mb-3">
