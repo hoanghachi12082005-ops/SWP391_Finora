@@ -33,7 +33,7 @@ public class Order {
     private String paymentMethod;   // "CASH", "CARD", "TRANSFER", v.v.
     private OrderStatus status;
     private String createdAt;       // yyyy-MM-dd HH:mm:ss
-    private String description;     // Chi tiết/Mô tả giao dịch
+    private String description;     // Chi tiết/Mô tả giao dịch (dùng cho phiếu thu/chi sổ quỹ)
 
     // Transient fields for join queries
     // View-only / Additional properties
