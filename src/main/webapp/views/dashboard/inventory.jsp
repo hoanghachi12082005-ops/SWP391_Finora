@@ -66,7 +66,7 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>Mã</th>
                         <th>Sản phẩm</th>
                         <th>Tồn kho</th>
                         <th>Trạng thái</th>

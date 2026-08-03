@@ -8,18 +8,18 @@
         <table class="data-table">
             <thead>
             <tr>
-                <th>#</th>
-                <th>Mã giao dịch</th>
-                <th>Mã đơn hàng</th>
-                <th>Loại đơn</th>
-                <th>Loại phiếu</th>
-                <th>Phương thức</th>
-                <th class="text-right">Số tiền</th>
-                <th>Mô tả</th>
-                <th>Chi nhánh</th>
-                <th>Nhân viên</th>
-                <th>Thời gian</th>
-                <th>Trạng thái</th>
+                <th style="width: 40px;">#</th>
+                <th style="white-space: nowrap;">Mã giao dịch</th>
+                <th style="white-space: nowrap;">Mã đơn hàng</th>
+                <th style="white-space: nowrap;">Loại đơn</th>
+                <th style="white-space: nowrap;">Loại phiếu</th>
+                <th style="white-space: nowrap;">Phương thức</th>
+                <th class="text-right" style="white-space: nowrap;">Số tiền</th>
+                <th style="min-width: 220px; max-width: 320px;">Mô tả</th>
+                <th style="white-space: nowrap;">Chi nhánh</th>
+                <th style="white-space: nowrap;">Nhân viên</th>
+                <th style="white-space: nowrap;">Thời gian</th>
+                <th style="white-space: nowrap;">Trạng thái</th>
             </tr>
             </thead>
             <tbody>
@@ -39,37 +39,43 @@
                     <c:forEach var="t" items="${transactions}" varStatus="st">
                         <tr>
                             <td>${(currentPage - 1) * pageSize + st.index + 1}</td>
-                            <td><strong>${t.transactionCode}</strong></td>
-                            <td>${empty t.orderCode ? '—' : t.orderCode}</td>
-                            <td>
+                            <td style="white-space: nowrap;"><strong>${t.transactionCode}</strong></td>
+                            <td style="white-space: nowrap;">${empty t.orderCode ? '—' : t.orderCode}</td>
+                            <td style="white-space: nowrap;">
                                 <c:choose>
-                                    <c:when test="${t.orderType == 'SALE'}"><span class="badge badge-sale">SALE</span></c:when>
-                                    <c:when test="${t.orderType == 'PURCHASE'}"><span class="badge badge-purchase">PURCHASE</span></c:when>
-                                    <c:otherwise><span class="badge badge-other">${empty t.orderType ? 'OTHER' : t.orderType}</span></c:otherwise>
+                                    <c:when test="${t.orderType == 'SALE'}"><span class="badge badge-sale">Bán hàng</span></c:when>
+                                    <c:when test="${t.orderType == 'PURCHASE'}"><span class="badge badge-purchase">Nhập hàng</span></c:when>
+                                    <c:otherwise><span class="badge badge-other">${empty t.orderType ? 'Thu/Chi khác' : t.orderType}</span></c:otherwise>
                                 </c:choose>
                             </td>
-                            <td>
+                            <td style="white-space: nowrap;">
                                 <c:choose>
                                     <c:when test="${t.transactionType == 'INCOME'}"><span class="text-success fw-bold">Thu</span></c:when>
                                     <c:when test="${t.transactionType == 'EXPENSE'}"><span class="text-danger fw-bold">Chi</span></c:when>
                                     <c:otherwise>${t.transactionType}</c:otherwise>
                                 </c:choose>
                             </td>
-                            <td>
+                            <td style="white-space: nowrap;">
                                 <c:choose>
                                     <c:when test="${t.paymentMethod == 'CASH'}">Tiền mặt</c:when>
                                     <c:when test="${t.paymentMethod == 'BANK_TRANSFER'}">Chuyển khoản</c:when>
                                     <c:otherwise>${t.paymentMethod}</c:otherwise>
                                 </c:choose>
                             </td>
-                            <td class="text-right"><fmt:formatNumber value="${t.amount}" type="number" groupingUsed="true"/> ₫</td>
-                            <td>${empty t.description ? '—' : t.description}</td>
-                            <td>${empty t.branchName ? '—' : t.branchName}</td>
-                            <td>${empty t.employeeName ? '—' : t.employeeName}</td>
-                            <td>${fn:substring(t.paymentDate, 0, 19)}</td>
-                            <td>
+                            <td class="text-right" style="white-space: nowrap;"><fmt:formatNumber value="${t.amount}" type="number" groupingUsed="true"/> ₫</td>
+                            <td style="min-width: 220px; max-width: 320px; white-space: normal; word-break: break-word; line-height: 1.4;">${empty t.description ? '—' : t.description}</td>
+                            <td style="white-space: nowrap;">${empty t.branchName ? '—' : t.branchName}</td>
+                            <td style="white-space: nowrap;">${empty t.employeeName ? '—' : t.employeeName}</td>
+                            <td style="white-space: nowrap;">${fn:substring(t.paymentDate, 0, 19)}</td>
+                            <td style="white-space: nowrap;">
                                 <span class="status-badge ${t.status == 'PAID' || t.status == 'COMPLETED' ? 'completed' : ''} ${t.status == 'PENDING' ? 'pending' : ''} ${t.status == 'FAILED' ? 'cancelled' : ''}">
-                                    ${t.status}
+                                    <c:choose>
+                                        <c:when test="${t.status == 'PAID'}">Đã thanh toán</c:when>
+                                        <c:when test="${t.status == 'COMPLETED'}">Hoàn thành</c:when>
+                                        <c:when test="${t.status == 'PENDING'}">Chờ thanh toán</c:when>
+                                        <c:when test="${t.status == 'FAILED'}">Thất bại</c:when>
+                                        <c:otherwise>${t.status}</c:otherwise>
+                                    </c:choose>
                                 </span>
                             </td>
                         </tr>

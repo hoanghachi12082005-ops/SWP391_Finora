@@ -194,17 +194,6 @@
                                                                 onclick="viewOrderDetails(${po.orderId})">
                                                             <span class="material-icons" style="font-size: 16px;">visibility</span>
                                                         </button>
-                                                        <c:if test="${po.status == 'IN_TRANSIT'}">
-                                                            <button type="button" class="btn btn-sm d-inline-flex align-items-center justify-content-center px-2" 
-                                                                    style="height: 32px; border-radius: 6px; border: 1px solid #d1fae5; background-color: #ecfdf5; color: #059669; cursor: pointer; font-weight: 500; font-size: 12px; gap: 4px;" 
-                                                                    title="Xác nhận nhập kho thực tế"
-                                                                    onmouseover="this.style.backgroundColor='#d1fae5';"
-                                                                    onmouseout="this.style.backgroundColor='#ecfdf5';"
-                                                                    onclick="openReceiveOrderModal(${po.orderId})">
-                                                                <span class="material-icons" style="font-size: 16px;">move_to_inbox</span>
-                                                                Nhập Kho
-                                                            </button>
-                                                        </c:if>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -622,14 +611,18 @@
                         </thead>
                         <tbody>
                             <c:set var="hasReceive" value="false" />
-                            <c:forEach var="po" items="${inTransitOrders}">
+                            <c:forEach var="po" items="${pendingReceiveShipments}">
                                 <c:if test="${empty selectedWarehouseId || selectedWarehouseId == 0 || po.warehouseId == 0 || po.warehouseId == null || selectedWarehouseId == po.warehouseId}">
                                     <c:set var="hasReceive" value="true" />
                                     <tr>
                                         <td class="fw-bold" style="color: var(--primary-color);">
                                             ${po.orderCode}
                                         </td>
-                                        <td>${not empty po.supplierName ? po.supplierName : 'Nhà Cung Cấp'}</td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border px-2 py-1" style="font-size: 12px; font-weight: 500;">
+                                                <i class="material-icons align-middle fs-6 me-1 text-primary">storefront</i>${not empty po.supplierName ? po.supplierName : 'Nhà Cung Cấp Khác'}
+                                            </span>
+                                        </td>
                                         <td>${po.empName}</td>
                                         <td>${po.createdAtFormatted}</td>
                                         <td class="text-center">
@@ -639,7 +632,7 @@
                                                         title="Xem chi tiết"
                                                         onmouseover="this.style.backgroundColor='#dbeafe';"
                                                         onmouseout="this.style.backgroundColor='#eff6ff';"
-                                                        onclick="viewOrderDetails(${po.orderId})">
+                                                        onclick="viewOrderDetails(${po.orderId}, ${not empty po.supplierId ? po.supplierId : 'null'})">
                                                     <span class="material-icons" style="font-size: 16px;">visibility</span>
                                                 </button>
                                                 <button type="button" class="btn btn-sm d-inline-flex align-items-center justify-content-center px-2" 
@@ -647,7 +640,7 @@
                                                         title="Xác nhận nhập kho thực tế"
                                                         onmouseover="this.style.backgroundColor='#d1fae5';"
                                                         onmouseout="this.style.backgroundColor='#ecfdf5';"
-                                                        onclick="openReceiveOrderModal(${po.orderId})">
+                                                        onclick="openReceiveOrderModal(${po.orderId}, ${not empty po.supplierId ? po.supplierId : 'null'})">
                                                     <span class="material-icons" style="font-size: 16px;">move_to_inbox</span>
                                                     Xác Nhận Nhập Kho
                                                 </button>

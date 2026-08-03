@@ -17,7 +17,7 @@
         <div class="page-container">
             <!-- Breadcrumbs -->
             <div class="page-breadcrumb">
-                <a href="#">Dashboard</a>
+                <a href="#">Tổng quan</a>
                 <span class="material-icons">chevron_right</span>
                 <span>Tổng quan</span>
             </div>
@@ -308,7 +308,7 @@
             <div class="dashboard-card">
                 <div class="dashboard-card-title">
                     <h5>Top 5 sản phẩm bán chạy (Tháng này)</h5>
-                    <a href="${pageContext.request.contextPath}/reports/inventory" style="font-size:12px;font-weight:600;">Xem báo cáo</a>
+                    <a href="${pageContext.request.contextPath}/inventory?tab=stock" style="font-size:12px;font-weight:600;">Xem báo cáo</a>
                 </div>
 
                 <div class="premium-table-container">

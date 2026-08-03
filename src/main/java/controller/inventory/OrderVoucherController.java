@@ -43,10 +43,25 @@ public class OrderVoucherController extends InventoryBaseController {
             // Xem chi tiết phiếu nhập/xuất kho
             if ("viewOrderDetails".equals(action)) {
                 int orderId = Integer.parseInt(request.getParameter("orderId"));
+                String suppIdParam = request.getParameter("supplierId");
+                Integer targetSupplierId = null;
+                if (suppIdParam != null && !suppIdParam.trim().isEmpty()) {
+                    try {
+                        targetSupplierId = Integer.parseInt(suppIdParam.trim());
+                    } catch (Exception ex) {}
+                }
+
                 model.Order order = orderDAO.findById(orderId);
                 List<model.OrderDetail> details = orderDAO.findDetailsByOrderId(orderId);
-                // Tìm kiếm vết lịch sử tăng/giảm tồn kho thực tế gắn với phiếu này
                 List<model.StockTransaction> txs = transactionDAO.findByReference("PURCHASE_ORDER", orderId);
+
+                if (targetSupplierId != null && targetSupplierId > 0) {
+                    final int filterSuppId = targetSupplierId;
+                    details = details.stream()
+                        .filter(d -> d.getSupplierId() != null && d.getSupplierId().intValue() == filterSuppId)
+                        .collect(java.util.stream.Collectors.toList());
+                    request.setAttribute("targetSupplierId", targetSupplierId);
+                }
                 
                 request.setAttribute("order", order);
                 request.setAttribute("orderDetails", details);
@@ -70,8 +85,24 @@ public class OrderVoucherController extends InventoryBaseController {
             // Form xác nhận nhập kho thực tế cho đơn nhập hàng NCC
             } else if ("viewReceiveOrderDetails".equals(action)) {
                 int orderId = Integer.parseInt(request.getParameter("orderId"));
+                String suppIdParam = request.getParameter("supplierId");
+                Integer targetSupplierId = null;
+                if (suppIdParam != null && !suppIdParam.trim().isEmpty()) {
+                    try {
+                        targetSupplierId = Integer.parseInt(suppIdParam.trim());
+                    } catch (Exception ex) {}
+                }
+
                 model.Order order = orderDAO.findById(orderId);
                 List<model.OrderDetail> details = orderDAO.findDetailsByOrderId(orderId);
+
+                if (targetSupplierId != null && targetSupplierId > 0) {
+                    final int filterSuppId = targetSupplierId;
+                    details = details.stream()
+                        .filter(d -> d.getSupplierId() != null && d.getSupplierId().intValue() == filterSuppId)
+                        .collect(java.util.stream.Collectors.toList());
+                    request.setAttribute("targetSupplierId", targetSupplierId);
+                }
                 
                 request.setAttribute("order", order);
                 request.setAttribute("orderDetails", details);

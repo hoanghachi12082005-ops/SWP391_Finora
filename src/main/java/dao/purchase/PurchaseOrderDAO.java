@@ -71,6 +71,62 @@ public class PurchaseOrderDAO {
         return list;
     }
 
+    public List<PurchaseOrder> findInTransitSupplierShipments(int warehouseId) {
+        List<PurchaseOrder> baseOrders = findAllByWarehouseAndType(warehouseId, "PURCHASE", "IN_TRANSIT");
+        List<PurchaseOrder> result = new ArrayList<>();
+        dao.sales.OrderDAO orderDAO = new dao.sales.OrderDAO();
+
+        for (PurchaseOrder po : baseOrders) {
+            List<model.OrderDetail> details = orderDAO.findDetailsByOrderId(po.getOrderId());
+            if (details == null || details.isEmpty()) {
+                result.add(po);
+                continue;
+            }
+
+            java.util.Map<String, Integer> suppIdMap = new java.util.LinkedHashMap<>();
+            java.util.Set<String> uncompletedSuppliers = new java.util.LinkedHashSet<>();
+
+            for (model.OrderDetail d : details) {
+                if ("COMPLETED".equalsIgnoreCase(d.getSupplierStatus())) {
+                    continue;
+                }
+                String sName = (d.getSupplierName() != null && !d.getSupplierName().trim().isEmpty())
+                        ? d.getSupplierName() : (po.getSupplierName() != null && !po.getSupplierName().trim().isEmpty() ? po.getSupplierName() : "Nhà Cung Cấp Khác");
+                uncompletedSuppliers.add(sName);
+                if (d.getSupplierId() != null) {
+                    suppIdMap.put(sName, d.getSupplierId());
+                }
+            }
+
+            if (uncompletedSuppliers.isEmpty()) {
+                continue;
+            }
+
+            for (String suppName : uncompletedSuppliers) {
+                PurchaseOrder copy = new PurchaseOrder();
+                copy.setOrderId(po.getOrderId());
+                copy.setOrderCode(po.getOrderCode());
+                copy.setSupplierId(suppIdMap.get(suppName) != null ? suppIdMap.get(suppName) : po.getSupplierId());
+                copy.setBranchId(po.getBranchId());
+                copy.setEmpId(po.getEmpId());
+                copy.setWarehouseId(po.getWarehouseId());
+                copy.setSubtotal(po.getSubtotal());
+                copy.setDiscountAmount(po.getDiscountAmount());
+                copy.setTotalAmount(po.getTotalAmount());
+                copy.setStatus(po.getStatus());
+                copy.setCreatedAt(po.getCreatedAt());
+                copy.setOrderType(po.getOrderType());
+                copy.setSupplierName(suppName);
+                copy.setBranchName(po.getBranchName());
+                copy.setEmpName(po.getEmpName());
+                copy.setApprovedBy(po.getApprovedBy());
+                copy.setApprovedByName(po.getApprovedByName());
+                result.add(copy);
+            }
+        }
+        return result;
+    }
+
     public List<PurchaseOrder> findAll() {
         return findAllByWarehouseAndType(0, "PURCHASE", null);
     }

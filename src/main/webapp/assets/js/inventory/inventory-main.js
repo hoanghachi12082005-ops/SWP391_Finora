@@ -88,7 +88,7 @@ function viewCheckDetails(checkId) {
 /**
  * View purchase order details in modal
  */
-function viewOrderDetails(orderId) {
+function viewOrderDetails(orderId, supplierId) {
     const modalEl = document.getElementById('ticketDetailsModal');
     const modalContent = document.getElementById('ticketDetailsModalContent');
     if (!modalEl || !modalContent) return;
@@ -103,7 +103,10 @@ function viewOrderDetails(orderId) {
     const myModal = bootstrap.Modal.getOrCreateInstance(modalEl);
     myModal.show();
     
-    const url = `${contextPath}/inventory?action=viewOrderDetails&orderId=${orderId}`;
+    let url = `${contextPath}/inventory?action=viewOrderDetails&orderId=${orderId}`;
+    if (supplierId) {
+        url += `&supplierId=${supplierId}`;
+    }
     
     fetch(url)
         .then(response => response.text())
@@ -145,7 +148,7 @@ window.updateDiffBadge = function(detailId, targetQty) {
 /**
  * Open receive order modal for purchase orders from suppliers
  */
-function openReceiveOrderModal(orderId) {
+function openReceiveOrderModal(orderId, supplierId) {
     const modalEl = document.getElementById('ticketDetailsModal');
     const modalContent = document.getElementById('ticketDetailsModalContent');
     if (!modalEl || !modalContent) return;
@@ -160,7 +163,10 @@ function openReceiveOrderModal(orderId) {
     const myModal = bootstrap.Modal.getOrCreateInstance(modalEl);
     myModal.show();
     
-    const url = `${contextPath}/inventory?action=viewReceiveOrderDetails&orderId=${orderId}`;
+    let url = `${contextPath}/inventory?action=viewReceiveOrderDetails&orderId=${orderId}`;
+    if (supplierId) {
+        url += `&supplierId=${supplierId}`;
+    }
     
     fetch(url)
         .then(response => response.text())

@@ -212,9 +212,9 @@
                                         <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Loại đơn hàng</label>
                                         <select name="orderType" class="form-select form-select-sm rounded-pill px-3" style="width: 150px;">
                                             <option value="" ${empty orderType ? 'selected' : ''}>Tất cả loại đơn</option>
-                                            <option value="SALE" ${orderType == 'SALE' ? 'selected' : ''}>Bán hàng (SALE)</option>
-                                            <option value="PURCHASE" ${orderType == 'PURCHASE' ? 'selected' : ''}>Nhập hàng (PURCHASE)</option>
-                                            <option value="OTHER" ${orderType == 'OTHER' ? 'selected' : ''}>Thu/Chi khác (OTHER)</option>
+                                            <option value="SALE" ${orderType == 'SALE' ? 'selected' : ''}>Bán hàng</option>
+                                            <option value="PURCHASE" ${orderType == 'PURCHASE' ? 'selected' : ''}>Nhập hàng</option>
+                                            <option value="OTHER" ${orderType == 'OTHER' ? 'selected' : ''}>Thu/Chi khác</option>
                                         </select>
                                     </div>
 
@@ -235,6 +235,18 @@
                                             <option value="BANK_TRANSFER" ${paymentMethod == 'BANK_TRANSFER' ? 'selected' : ''}>Ngân hàng</option>
                                         </select>
                                     </div>
+
+                                    <c:if test="${not empty branches}">
+                                        <div>
+                                            <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Chi nhánh</label>
+                                            <select name="branchId" class="form-select form-select-sm rounded-pill px-3" style="width: 170px;">
+                                                <option value="" ${empty selectedBranchId ? 'selected' : ''}>Tất cả chi nhánh</option>
+                                                <c:forEach var="br" items="${branches}">
+                                                    <option value="${br.branchId}" ${selectedBranchId == br.branchId ? 'selected' : ''}>${br.branchName}</option>
+                                                </c:forEach>
+                                            </select>
+                                        </div>
+                                    </c:if>
                                 </div>
 
                                 <!-- Row 2: Date pickers & Action Buttons -->
@@ -293,13 +305,13 @@
                                                         <td>
                                                             <c:choose>
                                                                 <c:when test="${item.orderType == 'SALE'}">
-                                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2">SALE</span>
+                                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2">Bán hàng</span>
                                                                 </c:when>
                                                                 <c:when test="${item.orderType == 'PURCHASE'}">
-                                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2">PURCHASE</span>
+                                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2">Nhập hàng</span>
                                                                 </c:when>
                                                                 <c:otherwise>
-                                                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2">OTHER</span>
+                                                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2">Thu/Chi khác</span>
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </td>
@@ -349,15 +361,39 @@
                                 <nav aria-label="Page navigation">
                                     <ul class="pagination pagination-sm mb-0">
                                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                                            <a class="page-link" href="?page=${currentPage - 1}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">Trước</a>
+                                            <a class="page-link" href="?page=${currentPage - 1}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}&branchId=${selectedBranchId}">Trước</a>
                                         </li>
-                                        <c:forEach var="p" begin="1" end="${totalPage}">
-                                            <li class="page-item ${p == currentPage ? 'active' : ''}">
-                                                <a class="page-link ${p == currentPage ? 'bg-winered border-winered' : ''}" href="?page=${p}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">${p}</a>
-                                            </li>
-                                        </c:forEach>
+                                        <c:choose>
+                                            <c:when test="${totalPage <= 5}">
+                                                <c:forEach var="p" begin="1" end="${totalPage}">
+                                                    <li class="page-item ${p == currentPage ? 'active' : ''}">
+                                                        <a class="page-link ${p == currentPage ? 'bg-winered border-winered' : ''}" href="?page=${p}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}&branchId=${selectedBranchId}">${p}</a>
+                                                    </li>
+                                                </c:forEach>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <li class="page-item ${currentPage == 1 ? 'active' : ''}">
+                                                    <a class="page-link ${currentPage == 1 ? 'bg-winered border-winered' : ''}" href="?page=1&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}&branchId=${selectedBranchId}">1</a>
+                                                </li>
+                                                <c:if test="${currentPage > 3}">
+                                                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                                                </c:if>
+                                                <c:forEach var="p" begin="${currentPage - 1 < 2 ? 2 : currentPage - 1}"
+                                                           end="${currentPage + 1 > totalPage - 1 ? totalPage - 1 : currentPage + 1}">
+                                                    <li class="page-item ${p == currentPage ? 'active' : ''}">
+                                                        <a class="page-link ${p == currentPage ? 'bg-winered border-winered' : ''}" href="?page=${p}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}&branchId=${selectedBranchId}">${p}</a>
+                                                    </li>
+                                                </c:forEach>
+                                                <c:if test="${currentPage < totalPage - 2}">
+                                                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                                                </c:if>
+                                                <li class="page-item ${currentPage == totalPage ? 'active' : ''}">
+                                                    <a class="page-link ${currentPage == totalPage ? 'bg-winered border-winered' : ''}" href="?page=${totalPage}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}&branchId=${selectedBranchId}">${totalPage}</a>
+                                                </li>
+                                            </c:otherwise>
+                                        </c:choose>
                                         <li class="page-item ${currentPage == totalPage ? 'disabled' : ''}">
-                                            <a class="page-link" href="?page=${currentPage + 1}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}">Sau</a>
+                                            <a class="page-link" href="?page=${currentPage + 1}&keyword=${keyword}&type=${type}&orderType=${orderType}&paymentMethod=${paymentMethod}&fromDate=${fromDate}&toDate=${toDate}&timeRange=${timeRange}&branchId=${selectedBranchId}">Sau</a>
                                         </li>
                                     </ul>
                                 </nav>
@@ -398,6 +434,16 @@
                             <option value="BANK_TRANSFER">Chuyển khoản / Ngân hàng</option>
                         </select>
                     </div>
+                    <c:if test="${not empty branches}">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Chi nhánh lập phiếu <span class="text-danger">*</span></label>
+                            <select name="branchId" class="form-select" required>
+                                <c:forEach var="br" items="${branches}">
+                                    <option value="${br.branchId}">${br.branchName}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                    </c:if>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nội dung thu <span class="text-danger">*</span></label>
                         <textarea name="description" class="form-control" rows="3" placeholder="Ví dụ: Thu tiền bán hàng, Thu hồi công nợ, Thu nhập khác..." required></textarea>
@@ -434,6 +480,16 @@
                             <option value="BANK_TRANSFER">Chuyển khoản / Ngân hàng</option>
                         </select>
                     </div>
+                    <c:if test="${not empty branches}">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Chi nhánh lập phiếu <span class="text-danger">*</span></label>
+                            <select name="branchId" class="form-select" required>
+                                <c:forEach var="br" items="${branches}">
+                                    <option value="${br.branchId}">${br.branchName}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                    </c:if>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nội dung chi <span class="text-danger">*</span></label>
                         <textarea name="description" class="form-control" rows="3" placeholder="Ví dụ: Thanh toán tiền điện, Nhập hàng, Chi trả lương, Chi phí vận hành..." required></textarea>

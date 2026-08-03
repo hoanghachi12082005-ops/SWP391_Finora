@@ -9,33 +9,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Bảng payment đã được gỡ bỏ, mọi truy vấn sổ quỹ (thu/chi) giờ đọc trực tiếp
- * từ bảng [order]. Loại thu/chi (INCOME/EXPENSE) được suy ra từ order_type và order_code.
- */
 public class PaymentDAO {
 
-    /** Suy ra loại thu/chi (INCOME/EXPENSE) từ dữ liệu bảng order */
-    private static final String PT_CASE = """
-        CASE
-            WHEN o.order_type = 'SALE' THEN 'INCOME'
-            WHEN o.order_type = 'PURCHASE' THEN 'EXPENSE'
-            WHEN o.order_type = 'OTHER' AND o.order_code LIKE 'ORD-PV-%' THEN 'EXPENSE'
-            WHEN o.order_type = 'OTHER' AND o.order_code LIKE 'ORD-RV-%' THEN 'INCOME'
-            ELSE 'OTHER'
-        END""";
-
-    /** Suy ra nội dung giao dịch khi order không lưu description */
-    private static final String DESC_EXPR = """
-        CASE
-            WHEN o.description IS NOT NULL AND o.description <> '' THEN o.description
-            WHEN o.order_type = 'SALE' THEN N'Thanh toán đơn hàng ' + o.order_code
-            WHEN o.order_type = 'PURCHASE' THEN N'Chi tiền nhập hàng cho đơn ' + o.order_code
-            ELSE o.order_code
-        END""";
-
     /**
-     * Lấy danh sách giao dịch có phân trang và bộ lọc
+     * Lấy danh sách giao dịch có phân trang và bộ lọc từ bảng order
      */
     public List<Payment> getTransactionsPaging(
             String keyword,
@@ -87,8 +64,7 @@ public class PaymentDAO {
             int pageSize) {
 
         List<Payment> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder();
-        sql.append("""
+        StringBuilder sql = new StringBuilder("""
             SELECT 
                 o.order_id AS PaymentID,
                 o.order_id AS OrderID,
@@ -98,10 +74,8 @@ public class PaymentDAO {
                 o.created_at AS PaymentDate,
                 o.status AS PaymentStatus,
                 o.order_code AS TransactionCode,
-            """);
-        sql.append(PT_CASE).append(" AS PaymentType,\n");
-        sql.append(DESC_EXPR).append(" AS Description,\n");
-        sql.append("""
+                CASE WHEN o.order_type IN ('SALE', 'RECEIPT') THEN 'INCOME' ELSE 'EXPENSE' END AS PaymentType,
+                o.description AS Description,
                 o.emp_id AS EmployeeID,
                 o.branch_id AS BranchID,
                 o.payment_method AS PaymentMethod,
@@ -111,21 +85,24 @@ public class PaymentDAO {
             LEFT JOIN Employee e WITH (NOLOCK) ON o.emp_id = e.emp_id
             LEFT JOIN Branch b WITH (NOLOCK) ON o.branch_id = b.branch_id
             WHERE o.status IN ('COMPLETED', 'PAID')
-              AND o.order_type IN ('SALE', 'PURCHASE', 'OTHER')
+              AND o.order_type IN ('SALE', 'PURCHASE', 'IMPORT', 'RECEIPT', 'EXPENSE')
         """);
 
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (o.order_code LIKE ? OR ").append(DESC_EXPR).append(" LIKE ?) ");
+            sql.append(" AND (o.order_code LIKE ? OR o.description LIKE ?) ");
             String kw = "%" + keyword.trim() + "%";
             params.add(kw);
             params.add(kw);
         }
 
         if (type != null && !type.isBlank()) {
-            sql.append(" AND ").append(PT_CASE).append(" = ? ");
-            params.add(type.trim());
+            if ("INCOME".equalsIgnoreCase(type.trim())) {
+                sql.append(" AND o.order_type IN ('SALE', 'RECEIPT') ");
+            } else if ("EXPENSE".equalsIgnoreCase(type.trim())) {
+                sql.append(" AND o.order_type IN ('PURCHASE', 'IMPORT', 'EXPENSE') ");
+            }
         }
 
         if (orderType != null && !orderType.isBlank()) {
@@ -240,26 +217,28 @@ public class PaymentDAO {
             String timeRange,
             Integer branchId) {
 
-        StringBuilder sql = new StringBuilder();
-        sql.append("""
+        StringBuilder sql = new StringBuilder("""
             SELECT COUNT(*)
             FROM [order] o WITH (NOLOCK)
             WHERE o.status IN ('COMPLETED', 'PAID')
-              AND o.order_type IN ('SALE', 'PURCHASE', 'OTHER')
+              AND o.order_type IN ('SALE', 'PURCHASE', 'IMPORT', 'RECEIPT', 'EXPENSE')
         """);
 
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (o.order_code LIKE ? OR ").append(DESC_EXPR).append(" LIKE ?) ");
+            sql.append(" AND (o.order_code LIKE ? OR o.description LIKE ?) ");
             String kw = "%" + keyword.trim() + "%";
             params.add(kw);
             params.add(kw);
         }
 
         if (type != null && !type.isBlank()) {
-            sql.append(" AND ").append(PT_CASE).append(" = ? ");
-            params.add(type.trim());
+            if ("INCOME".equalsIgnoreCase(type.trim())) {
+                sql.append(" AND o.order_type IN ('SALE', 'RECEIPT') ");
+            } else if ("EXPENSE".equalsIgnoreCase(type.trim())) {
+                sql.append(" AND o.order_type IN ('PURCHASE', 'IMPORT', 'EXPENSE') ");
+            }
         }
 
         if (orderType != null && !orderType.isBlank()) {
@@ -325,20 +304,18 @@ public class PaymentDAO {
     public double getTotalCashBalance(Integer branchId) {
         if (branchId != null && branchId > 0) {
             String sql = """
-                SELECT SUM(CASE WHEN """ + PT_CASE + """
-                 = 'INCOME' THEN o.total_amount ELSE -o.total_amount END)
+                SELECT SUM(CASE WHEN o.order_type IN ('SALE', 'RECEIPT') THEN o.total_amount ELSE -o.total_amount END)
                 FROM [order] o
-                WHERE o.payment_method = 'CASH' AND o.status IN ('COMPLETED','PAID')
-                  AND o.order_type IN ('SALE','PURCHASE','OTHER') AND o.branch_id = ?
+                WHERE o.payment_method = 'CASH' AND o.branch_id = ? AND o.status IN ('COMPLETED', 'PAID')
+                  AND o.order_type IN ('SALE', 'PURCHASE', 'IMPORT', 'RECEIPT', 'EXPENSE')
             """;
             return getDoubleScalarWithIntParam(sql, branchId);
         }
         String sql = """
-            SELECT SUM(CASE WHEN """ + PT_CASE + """
-             = 'INCOME' THEN o.total_amount ELSE -o.total_amount END)
+            SELECT SUM(CASE WHEN o.order_type IN ('SALE', 'RECEIPT') THEN o.total_amount ELSE -o.total_amount END)
             FROM [order] o
-            WHERE o.payment_method = 'CASH' AND o.status IN ('COMPLETED','PAID')
-              AND o.order_type IN ('SALE','PURCHASE','OTHER')
+            WHERE o.payment_method = 'CASH' AND o.status IN ('COMPLETED', 'PAID')
+              AND o.order_type IN ('SALE', 'PURCHASE', 'IMPORT', 'RECEIPT', 'EXPENSE')
         """;
         return getDoubleScalar(sql);
     }
@@ -353,20 +330,18 @@ public class PaymentDAO {
     public double getTotalBankBalance(Integer branchId) {
         if (branchId != null && branchId > 0) {
             String sql = """
-                SELECT SUM(CASE WHEN """ + PT_CASE + """
-                 = 'INCOME' THEN o.total_amount ELSE -o.total_amount END)
+                SELECT SUM(CASE WHEN o.order_type IN ('SALE', 'RECEIPT') THEN o.total_amount ELSE -o.total_amount END)
                 FROM [order] o
-                WHERE o.payment_method = 'BANK_TRANSFER' AND o.status IN ('COMPLETED','PAID')
-                  AND o.order_type IN ('SALE','PURCHASE','OTHER') AND o.branch_id = ?
+                WHERE o.payment_method = 'BANK_TRANSFER' AND o.branch_id = ? AND o.status IN ('COMPLETED', 'PAID')
+                  AND o.order_type IN ('SALE', 'PURCHASE', 'IMPORT', 'RECEIPT', 'EXPENSE')
             """;
             return getDoubleScalarWithIntParam(sql, branchId);
         }
         String sql = """
-            SELECT SUM(CASE WHEN """ + PT_CASE + """
-             = 'INCOME' THEN o.total_amount ELSE -o.total_amount END)
+            SELECT SUM(CASE WHEN o.order_type IN ('SALE', 'RECEIPT') THEN o.total_amount ELSE -o.total_amount END)
             FROM [order] o
-            WHERE o.payment_method = 'BANK_TRANSFER' AND o.status IN ('COMPLETED','PAID')
-              AND o.order_type IN ('SALE','PURCHASE','OTHER')
+            WHERE o.payment_method = 'BANK_TRANSFER' AND o.status IN ('COMPLETED', 'PAID')
+              AND o.order_type IN ('SALE', 'PURCHASE', 'IMPORT', 'RECEIPT', 'EXPENSE')
         """;
         return getDoubleScalar(sql);
     }
@@ -383,18 +358,14 @@ public class PaymentDAO {
             String sql = """
                 SELECT SUM(o.total_amount)
                 FROM [order] o
-                WHERE """ + PT_CASE + """
-                 = 'INCOME' AND o.payment_method = ? AND o.status IN ('COMPLETED','PAID')
-                  AND o.order_type IN ('SALE','PURCHASE','OTHER') AND o.branch_id = ?
+                WHERE o.order_type IN ('SALE', 'RECEIPT') AND o.payment_method = ? AND o.branch_id = ? AND o.status IN ('COMPLETED', 'PAID')
             """;
             return getDoubleScalarWithParams(sql, paymentMethod, branchId);
         }
         String sql = """
             SELECT SUM(o.total_amount)
             FROM [order] o
-            WHERE """ + PT_CASE + """
-             = 'INCOME' AND o.payment_method = ? AND o.status IN ('COMPLETED','PAID')
-              AND o.order_type IN ('SALE','PURCHASE','OTHER')
+            WHERE o.order_type IN ('SALE', 'RECEIPT') AND o.payment_method = ? AND o.status IN ('COMPLETED', 'PAID')
         """;
         return getDoubleScalarWithParam(sql, paymentMethod);
     }
@@ -411,18 +382,14 @@ public class PaymentDAO {
             String sql = """
                 SELECT SUM(o.total_amount)
                 FROM [order] o
-                WHERE """ + PT_CASE + """
-                 = 'EXPENSE' AND o.payment_method = ? AND o.status IN ('COMPLETED','PAID')
-                  AND o.order_type IN ('SALE','PURCHASE','OTHER') AND o.branch_id = ?
+                WHERE o.order_type IN ('PURCHASE', 'IMPORT', 'EXPENSE') AND o.payment_method = ? AND o.branch_id = ? AND o.status IN ('COMPLETED', 'PAID')
             """;
             return getDoubleScalarWithParams(sql, paymentMethod, branchId);
         }
         String sql = """
             SELECT SUM(o.total_amount)
             FROM [order] o
-            WHERE """ + PT_CASE + """
-             = 'EXPENSE' AND o.payment_method = ? AND o.status IN ('COMPLETED','PAID')
-              AND o.order_type IN ('SALE','PURCHASE','OTHER')
+            WHERE o.order_type IN ('PURCHASE', 'IMPORT', 'EXPENSE') AND o.payment_method = ? AND o.status IN ('COMPLETED', 'PAID')
         """;
         return getDoubleScalarWithParam(sql, paymentMethod);
     }
@@ -447,30 +414,30 @@ public class PaymentDAO {
             String timeRange,
             Integer branchId) {
         List<Map<String, Object>> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder();
-        sql.append("""
+        StringBuilder sql = new StringBuilder("""
             SELECT 
                 DATEPART(week, o.created_at) - DATEPART(week, DATEADD(month, DATEDIFF(month, 0, o.created_at), 0)) + 1 AS WeekNum,
-                SUM(CASE WHEN """ + PT_CASE + """
-                 = 'INCOME' THEN o.total_amount ELSE 0 END) AS TotalIncome,
-                SUM(CASE WHEN """ + PT_CASE + """
-                 = 'EXPENSE' THEN o.total_amount ELSE 0 END) AS TotalExpense
+                SUM(CASE WHEN o.order_type IN ('SALE', 'RECEIPT') THEN o.total_amount ELSE 0 END) AS TotalIncome,
+                SUM(CASE WHEN o.order_type IN ('PURCHASE', 'IMPORT', 'EXPENSE') THEN o.total_amount ELSE 0 END) AS TotalExpense
             FROM [order] o
-            WHERE o.status IN ('COMPLETED','PAID')
-              AND o.order_type IN ('SALE','PURCHASE','OTHER')
+            WHERE o.status IN ('COMPLETED', 'PAID')
+              AND o.order_type IN ('SALE', 'PURCHASE', 'IMPORT', 'RECEIPT', 'EXPENSE')
         """);
 
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (o.order_code LIKE ? OR ").append(DESC_EXPR).append(" LIKE ?) ");
+            sql.append(" AND (o.order_code LIKE ? OR o.description LIKE ?) ");
             params.add("%" + keyword.trim() + "%");
             params.add("%" + keyword.trim() + "%");
         }
 
         if (type != null && !type.isBlank()) {
-            sql.append(" AND ").append(PT_CASE).append(" = ? ");
-            params.add(type);
+            if ("INCOME".equalsIgnoreCase(type.trim())) {
+                sql.append(" AND o.order_type IN ('SALE', 'RECEIPT') ");
+            } else if ("EXPENSE".equalsIgnoreCase(type.trim())) {
+                sql.append(" AND o.order_type IN ('PURCHASE', 'IMPORT', 'EXPENSE') ");
+            }
         }
 
         if (paymentMethod != null && !paymentMethod.isBlank()) {
@@ -513,6 +480,63 @@ public class PaymentDAO {
         }
 
         return list;
+    }
+
+    /**
+     * Thêm mới một phiếu thu hoặc phiếu chi thủ công (Tạo/Cập nhật vào bảng order)
+     */
+    public boolean insert(Payment payment) {
+        if (payment.getOrderId() != null) {
+            try (Connection conn = DBContext.getConnection()) {
+                return insert(conn, payment) > 0;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Sinh mã giao dịch tăng tự động (ví dụ: PT00001, PC00001) trong cùng Connection
+     */
+    public String generateTransactionCode(Connection conn, String type, String prefix) {
+        String orderType = "INCOME".equalsIgnoreCase(type) ? "RECEIPT" : "EXPENSE";
+        String sql = "SELECT MAX(order_code) FROM [order] WITH (NOLOCK) WHERE order_type = ? AND order_code LIKE ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, orderType);
+            ps.setString(2, prefix + "%");
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String maxCode = rs.getString(1);
+                    if (maxCode != null && maxCode.length() > prefix.length()) {
+                        String numberStr = maxCode.substring(prefix.length());
+                        try {
+                            int nextNum = Integer.parseInt(numberStr) + 1;
+                            return String.format("%s%05d", prefix, nextNum);
+                        } catch (NumberFormatException ignored) {}
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return prefix + "00001";
+    }
+
+    /**
+     * Sinh mã giao dịch tăng tự động (ví dụ: PT00001, PC00001)
+     */
+    public String generateTransactionCode(String type, String prefix) {
+        try (Connection conn = DBContext.getConnection()) {
+            return generateTransactionCode(conn, type, prefix);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return prefix + "00001";
     }
 
     private double getDoubleScalar(String sql) {
@@ -627,15 +651,27 @@ public class PaymentDAO {
         p.setDescription(rs.getString("Description"));
         p.setEmployeeId(rs.getObject("EmployeeID") != null ? rs.getInt("EmployeeID") : null);
         p.setBranchId(rs.getObject("BranchID") != null ? rs.getInt("BranchID") : null);
-
+        
         try {
             p.setCreatorName(rs.getString("CreatorName"));
         } catch (SQLException ignored) {}
-
+        
         try {
             p.setBranchName(rs.getString("BranchName"));
         } catch (SQLException ignored) {}
 
         return p;
+    }
+
+    // Cập nhật thông tin mô tả/phương thức thanh toán cho đơn hàng
+    public int insert(Connection conn, Payment p) throws SQLException {
+        String sql = "UPDATE [order] SET description = ?, payment_method = ? WHERE order_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, p.getDescription() != null ? p.getDescription() : "Thanh toán đơn hàng " + p.getOrderId());
+            ps.setString(2, p.getMethod() != null ? p.getMethod() : "CASH");
+            ps.setInt(3, p.getOrderId());
+            ps.executeUpdate();
+            return p.getOrderId();
+        }
     }
 }

@@ -167,16 +167,7 @@
                             </div>
                         </div>
 
-                        <div class="kpi-card">
-                            <div class="kpi-card-info">
-                                <p>Lợi nhuận ròng</p>
-                                <h3 style="color: ${netProfit >= 0 ? '#10b981' : '#ef4444'};"><fmt:formatNumber value="${netProfit != null ? netProfit : 0}" type="number" maxFractionDigits="0"/> đ</h3>
-                                <span class="kpi-subtext">Doanh thu - Chi phí</span>
-                            </div>
-                            <div class="kpi-card-icon blue" style="background: rgba(59, 130, 246, 0.08); color: #3b82f6;">
-                                <span class="material-icons">trending_up</span>
-                            </div>
-                        </div>
+
 
                         <div class="kpi-card">
                             <div class="kpi-card-info">
@@ -254,7 +245,7 @@
                     <table class="branch-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Mã</th>
                                 <th>Họ tên</th>
                                 <th>Chức vụ</th>
                                 <th>SĐT</th>

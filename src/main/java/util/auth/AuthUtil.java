@@ -74,7 +74,7 @@ public final class AuthUtil {
             throws IOException {
         if (!requireLoggedIn(request, response)) return false;
         if (!hasRole(request, role)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied. " + role + " only.");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Truy cập bị từ chối. Chỉ dành cho vai trò: " + role + ".");
             return false;
         }
         return true;
@@ -84,7 +84,7 @@ public final class AuthUtil {
             throws IOException {
         if (!requireLoggedIn(request, response)) return false;
         if (!hasAnyRole(request, roles)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Truy cập bị từ chối.");
             return false;
         }
         return true;

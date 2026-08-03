@@ -418,21 +418,45 @@ public class DashboardDAO {
         public List<model.DashboardOverview.BranchRevenue> branchRevenues = new ArrayList<>();
     }
 
+    private String sanitizeDate(String date) {
+        if (date == null || date.trim().isEmpty()) return null;
+        String clean = date.trim();
+        if (clean.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
+            return clean;
+        }
+        return null;
+    }
+
     public FinancialData getFinancialData(String range) throws SQLException {
-        return getFinancialData(range, null);
+        return getFinancialData(range, null, null, null);
     }
 
     public FinancialData getFinancialData(String range, Integer branchId) throws SQLException {
+        return getFinancialData(range, null, null, branchId);
+    }
+
+    public FinancialData getFinancialData(String range, String fromDate, String toDate, Integer branchId) throws SQLException {
         FinancialData fd = new FinancialData();
         
         String orderTimeFilter = "";
-        
-        if ("day".equalsIgnoreCase(range) || "today".equalsIgnoreCase(range)) {
-            orderTimeFilter = " AND CAST(o.created_at AS DATE) = CAST(GETDATE() AS DATE) ";
-        } else if ("week".equalsIgnoreCase(range) || "this_week".equalsIgnoreCase(range)) {
-            orderTimeFilter = " AND DATEPART(WEEK, o.created_at) = DATEPART(WEEK, GETDATE()) AND YEAR(o.created_at) = YEAR(GETDATE()) ";
-        } else { // default is month
-            orderTimeFilter = " AND YEAR(o.created_at) = YEAR(GETDATE()) AND MONTH(o.created_at) = MONTH(GETDATE()) ";
+        String cleanFrom = sanitizeDate(fromDate);
+        String cleanTo = sanitizeDate(toDate);
+
+        if (cleanFrom != null) {
+            orderTimeFilter += " AND CAST(o.created_at AS DATE) >= '" + cleanFrom + "' ";
+        }
+        if (cleanTo != null) {
+            orderTimeFilter += " AND CAST(o.created_at AS DATE) <= '" + cleanTo + "' ";
+        }
+
+        if (cleanFrom == null && cleanTo == null) {
+            if ("day".equalsIgnoreCase(range) || "today".equalsIgnoreCase(range)) {
+                orderTimeFilter = " AND CAST(o.created_at AS DATE) = CAST(GETDATE() AS DATE) ";
+            } else if ("week".equalsIgnoreCase(range) || "this_week".equalsIgnoreCase(range)) {
+                orderTimeFilter = " AND DATEPART(WEEK, o.created_at) = DATEPART(WEEK, GETDATE()) AND YEAR(o.created_at) = YEAR(GETDATE()) ";
+            } else { // default is month
+                orderTimeFilter = " AND YEAR(o.created_at) = YEAR(GETDATE()) AND MONTH(o.created_at) = MONTH(GETDATE()) ";
+            }
         }
 
         if (branchId != null) {
@@ -440,14 +464,11 @@ public class DashboardDAO {
         }
 
         // 1. Total Revenue
-        String revSql = "SELECT ISNULL(SUM(o.total_amount), 0) FROM [order] o WITH (NOLOCK) WHERE o.status = 'COMPLETED' AND o.order_type = 'SALE' " + orderTimeFilter;
+        String revSql = "SELECT ISNULL(SUM(o.total_amount), 0) FROM [order] o WITH (NOLOCK) WHERE o.status IN ('COMPLETED', 'PAID') AND o.order_type IN ('SALE', 'RECEIPT') " + orderTimeFilter;
         fd.totalRevenue = queryBigDecimal(revSql);
 
-        // 2. Total Expenses (đơn nhập hàng + phiếu chi sổ quỹ)
-        String expSql = "SELECT ISNULL(SUM(o.total_amount), 0) FROM [order] o WITH (NOLOCK) "
-                     + "WHERE o.status IN ('COMPLETED','PAID') "
-                     + "  AND (o.order_type = 'PURCHASE' OR (o.order_type = 'OTHER' AND o.order_code LIKE 'ORD-PV-%')) "
-                     + orderTimeFilter;
+        // 2. Total Expenses
+        String expSql = "SELECT ISNULL(SUM(o.total_amount), 0) FROM [order] o WITH (NOLOCK) WHERE o.status IN ('COMPLETED', 'PAID') AND o.order_type IN ('PURCHASE', 'IMPORT', 'EXPENSE') " + orderTimeFilter;
         fd.totalExpenses = queryBigDecimal(expSql);
 
         // 3. Net Profit
@@ -486,16 +507,77 @@ public class DashboardDAO {
     }
 
     public List<model.Payment> getBranchPayments(String range, Integer branchId) throws SQLException {
+        return getBranchPayments(range, null, null, branchId, 1, 999999);
+    }
+
+    public List<model.Payment> getBranchPayments(String range, String fromDate, String toDate, Integer branchId) throws SQLException {
+        return getBranchPayments(range, fromDate, toDate, branchId, 1, 999999);
+    }
+
+    public int getBranchPaymentsCount(String range, String fromDate, String toDate, Integer branchId) throws SQLException {
+        String orderTimeFilter = "";
+        String cleanFrom = sanitizeDate(fromDate);
+        String cleanTo = sanitizeDate(toDate);
+
+        if (cleanFrom != null) {
+            orderTimeFilter += " AND CAST(o.created_at AS DATE) >= '" + cleanFrom + "' ";
+        }
+        if (cleanTo != null) {
+            orderTimeFilter += " AND CAST(o.created_at AS DATE) <= '" + cleanTo + "' ";
+        }
+
+        if (cleanFrom == null && cleanTo == null) {
+            if ("day".equalsIgnoreCase(range) || "today".equalsIgnoreCase(range)) {
+                orderTimeFilter = " AND CAST(o.created_at AS DATE) = CAST(GETDATE() AS DATE) ";
+            } else if ("week".equalsIgnoreCase(range) || "this_week".equalsIgnoreCase(range)) {
+                orderTimeFilter = " AND DATEPART(WEEK, o.created_at) = DATEPART(WEEK, GETDATE()) AND YEAR(o.created_at) = YEAR(GETDATE()) ";
+            } else { // month
+                orderTimeFilter = " AND YEAR(o.created_at) = YEAR(GETDATE()) AND MONTH(o.created_at) = MONTH(GETDATE()) ";
+            }
+        }
+        
+        String orderBranchFilter = (branchId != null) ? " AND o.branch_id = " + branchId + " " : "";
+        
+        String sql = "SELECT COUNT(*) FROM ("
+                   + "  SELECT o.order_id "
+                   + "  FROM [order] o WITH (NOLOCK) "
+                   + "  WHERE o.status IN ('COMPLETED', 'PAID') AND o.order_type IN ('SALE', 'RECEIPT') " + orderBranchFilter + orderTimeFilter
+                   + "  UNION ALL "
+                   + "  SELECT o.order_id "
+                   + "  FROM [order] o WITH (NOLOCK) "
+                   + "  WHERE o.status IN ('COMPLETED', 'PAID') AND o.order_type IN ('PURCHASE', 'IMPORT', 'EXPENSE') " + orderBranchFilter + orderTimeFilter
+                   + ") t";
+                   
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        }
+        return 0;
+    }
+
+    public List<model.Payment> getBranchPayments(String range, String fromDate, String toDate, Integer branchId, int page, int pageSize) throws SQLException {
         List<model.Payment> list = new ArrayList<>();
         
         String orderTimeFilter = "";
-        
-        if ("day".equalsIgnoreCase(range) || "today".equalsIgnoreCase(range)) {
-            orderTimeFilter = " AND CAST(o.created_at AS DATE) = CAST(GETDATE() AS DATE) ";
-        } else if ("week".equalsIgnoreCase(range) || "this_week".equalsIgnoreCase(range)) {
-            orderTimeFilter = " AND DATEPART(WEEK, o.created_at) = DATEPART(WEEK, GETDATE()) AND YEAR(o.created_at) = YEAR(GETDATE()) ";
-        } else { // month
-            orderTimeFilter = " AND YEAR(o.created_at) = YEAR(GETDATE()) AND MONTH(o.created_at) = MONTH(GETDATE()) ";
+        String cleanFrom = sanitizeDate(fromDate);
+        String cleanTo = sanitizeDate(toDate);
+
+        if (cleanFrom != null) {
+            orderTimeFilter += " AND CAST(o.created_at AS DATE) >= '" + cleanFrom + "' ";
+        }
+        if (cleanTo != null) {
+            orderTimeFilter += " AND CAST(o.created_at AS DATE) <= '" + cleanTo + "' ";
+        }
+
+        if (cleanFrom == null && cleanTo == null) {
+            if ("day".equalsIgnoreCase(range) || "today".equalsIgnoreCase(range)) {
+                orderTimeFilter = " AND CAST(o.created_at AS DATE) = CAST(GETDATE() AS DATE) ";
+            } else if ("week".equalsIgnoreCase(range) || "this_week".equalsIgnoreCase(range)) {
+                orderTimeFilter = " AND DATEPART(WEEK, o.created_at) = DATEPART(WEEK, GETDATE()) AND YEAR(o.created_at) = YEAR(GETDATE()) ";
+            } else { // month
+                orderTimeFilter = " AND YEAR(o.created_at) = YEAR(GETDATE()) AND MONTH(o.created_at) = MONTH(GETDATE()) ";
+            }
         }
         
         String orderBranchFilter = (branchId != null) ? " AND o.branch_id = " + branchId + " " : "";
@@ -503,32 +585,34 @@ public class DashboardDAO {
         String sql = "SELECT TransactionCode, PaymentDate, PaymentType, PaymentMethod, PaymentAmount, Description FROM ("
                    + "  SELECT o.order_code AS TransactionCode, o.created_at AS PaymentDate, 'INCOME' AS PaymentType, "
                    + "         o.payment_method AS PaymentMethod, o.total_amount AS PaymentAmount, "
-                   + "         N'Bán hàng - Hóa đơn ' + o.order_code AS Description "
+                   + "         ISNULL(o.description, N'Bán hàng - Hóa đơn ' + o.order_code) AS Description "
                    + "  FROM [order] o WITH (NOLOCK) "
-                   + "  WHERE o.status = 'COMPLETED' AND o.order_type = 'SALE' " + orderBranchFilter + orderTimeFilter
+                   + "  WHERE o.status IN ('COMPLETED', 'PAID') AND o.order_type IN ('SALE', 'RECEIPT') " + orderBranchFilter + orderTimeFilter
                    + "  UNION ALL "
                    + "  SELECT o.order_code AS TransactionCode, o.created_at AS PaymentDate, 'EXPENSE' AS PaymentType, "
                    + "         o.payment_method AS PaymentMethod, o.total_amount AS PaymentAmount, "
-                   + "         COALESCE(o.description, N'Chi tiền nhập hàng cho đơn ' + o.order_code) AS Description "
+                   + "         ISNULL(o.description, N'Chi phí phát sinh - Hóa đơn ' + o.order_code) AS Description "
                    + "  FROM [order] o WITH (NOLOCK) "
-                   + "  WHERE o.status IN ('COMPLETED','PAID') "
-                   + "    AND (o.order_type = 'PURCHASE' OR (o.order_type = 'OTHER' AND o.order_code LIKE 'ORD-PV-%')) "
-                   + orderBranchFilter + orderTimeFilter
+                   + "  WHERE o.status IN ('COMPLETED', 'PAID') AND o.order_type IN ('PURCHASE', 'IMPORT', 'EXPENSE') " + orderBranchFilter + orderTimeFilter
                    + ") t "
-                   + "ORDER BY PaymentDate DESC";
+                   + "ORDER BY PaymentDate DESC "
+                   + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
                    
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                model.Payment p = new model.Payment();
-                p.setName(rs.getString("TransactionCode"));
-                p.setPaymentDate(rs.getTimestamp("PaymentDate"));
-                p.setPaymentType(rs.getString("PaymentType"));
-                p.setMethod(rs.getString("PaymentMethod"));
-                p.setAmount(rs.getDouble("PaymentAmount"));
-                p.setDescription(rs.getString("Description"));
-                list.add(p);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, (page - 1) * pageSize);
+            ps.setInt(2, pageSize);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    model.Payment p = new model.Payment();
+                    p.setName(rs.getString("TransactionCode"));
+                    p.setPaymentDate(rs.getTimestamp("PaymentDate"));
+                    p.setPaymentType(rs.getString("PaymentType"));
+                    p.setMethod(rs.getString("PaymentMethod"));
+                    p.setAmount(rs.getDouble("PaymentAmount"));
+                    p.setDescription(rs.getString("Description"));
+                    list.add(p);
+                }
             }
         }
         return list;

@@ -456,11 +456,7 @@ public class OrderDAO {
             ps.setDouble(10, order.getTotalAmount());
             ps.setString(11, order.getPaymentMethod());
             ps.setString(12, order.getStatus() != null ? order.getStatus().name() : "PENDING");
-            if (order.getDescription() != null && !order.getDescription().isBlank()) {
-                ps.setString(13, order.getDescription());
-            } else {
-                ps.setNull(13, java.sql.Types.NVARCHAR);
-            }
+            ps.setString(13, order.getDescription());
 
             int affected = ps.executeUpdate();
             if (affected == 0) {
@@ -478,6 +474,9 @@ public class OrderDAO {
         o.setOrderId(rs.getInt("order_id"));
         o.setOrderCode(rs.getString("order_code"));
         o.setOrderType(rs.getString("order_type"));
+        try {
+            o.setDescription(rs.getString("description"));
+        } catch (SQLException ignored) {}
         
         int customerId = rs.getInt("customer_id");
         o.setCustomerId(rs.wasNull() ? null : customerId);
@@ -494,9 +493,6 @@ public class OrderDAO {
         o.setDiscountAmount(rs.getDouble("discount_amount"));
         o.setTotalAmount(rs.getDouble("total_amount"));
         o.setPaymentMethod(rs.getString("payment_method"));
-        try {
-            o.setDescription(rs.getString("description"));
-        } catch (SQLException ignored) {}
         
         String statusStr = rs.getString("status");
         if (statusStr != null) {

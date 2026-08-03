@@ -66,13 +66,13 @@ public class InventoryItemDAO {
             ps.setInt(1, warehouseId);
             ps.setInt(2, productId);
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) throw new SQLException("Product " + productId + " not found in warehouse " + warehouseId);
+                if (!rs.next()) throw new SQLException("Sản phẩm " + productId + " không tồn tại trong kho " + warehouseId);
                 invId = rs.getInt("inventory_id");
                 beforeQty = rs.getInt("quantity_in_stock");
             }
         }
         int afterQty = beforeQty - quantity;
-        if (afterQty < 0) throw new SQLException("Insufficient stock for product " + productId + ": have " + beforeQty + ", need " + quantity);
+        if (afterQty < 0) throw new SQLException("Không đủ tồn kho cho sản phẩm " + productId + ": có " + beforeQty + ", cần " + quantity);
         try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
             ps.setInt(1, afterQty);
             ps.setInt(2, invId);

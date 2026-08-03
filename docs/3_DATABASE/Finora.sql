@@ -359,6 +359,7 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
+-- Payment table has been removed. Sổ quỹ và tài chính lấy dữ liệu trực tiếp từ bảng order.
 /****** Object:  Table [dbo].[point_transaction]    Script Date: 16/07/2026 16:56:29 ******/
 SET ANSI_NULLS ON
 GO

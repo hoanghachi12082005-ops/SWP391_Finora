@@ -1128,7 +1128,7 @@ function cancelVNPayQR() {
         }
         const available = cartState.activeTab.selectedCustomer ? cartState.activeTab.selectedCustomer.loyaltyPoint : 0;
         if (val > available) {
-            redeemError.textContent = 'Insufficient loyalty points.';
+            redeemError.textContent = 'Không đủ điểm tích lũy.';
             redeemError.classList.remove('hidden');
             return;
         }

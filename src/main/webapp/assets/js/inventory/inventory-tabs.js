@@ -38,83 +38,22 @@ function selectWarehouse(id) {
 }
 
 /**
- * Export current stock table to Excel (.xls) format
+ * Export current stock table to Excel (.xlsx) format via backend server generator
  */
 function exportStockExcel() {
-    const table = document.querySelector('.premium-table');
-    if (!table) return;
-    
-    const rows = table.querySelectorAll('tbody tr');
-    if (rows.length === 0 || (rows.length === 1 && rows[0].querySelector('td').colSpan)) {
-        alert('Không có dữ liệu tồn kho để xuất.');
-        return;
-    }
-    
-    const warehouseName = (document.querySelector('h4.mb-0')?.innerText || 'Cửa hàng Finora').trim();
-    
-    const htmlAttr = 'xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"';
-    let excelHtml = '<html ' + htmlAttr + '><head><meta charset="utf-8" />'
-        + '<style>'
-        + 'table { border-collapse: collapse; width: 100%; font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif; }'
-        + 'th { background-color: #1e293b; color: #ffffff; font-weight: bold; border: 1px solid #cbd5e1; padding: 12px 10px; font-size: 11pt; text-align: left; }'
-        + 'td { border: 1px solid #cbd5e1; padding: 10px; font-size: 10pt; color: #334155; }'
-        + '.text-center { text-align: center; }'
-        + '.text-right { text-align: right; }'
-        + 'tr:nth-child(even) { background-color: #f8fafc; }'
-        + '.title-header { font-size: 16pt; font-weight: bold; color: #0f172a; margin-bottom: 5px; }'
-        + '.meta-info { font-size: 10pt; color: #64748b; margin-bottom: 20px; }'
-        + '</style>'
-        + '</head><body>'
-        + '<div class="title-header">BÁO CÁO TỒN KHO - ' + warehouseName.toUpperCase() + '</div>'
-        + '<div class="meta-info">Ngày xuất file: ' + new Date().toLocaleDateString('vi-VN') + ' | Tổng cộng: ' + rows.length + ' mặt hàng</div>'
-        + '<table>'
-        + '<colgroup>'
-        + '  <col width="60" />'
-        + '  <col width="300" />'
-        + '  <col width="150" />'
-        + '  <col width="180" />'
-        + '  <col width="120" />'
-        + '</colgroup>'
-        + '<thead><tr>'
-        + '  <th class="text-center">STT</th>'
-        + '  <th>Tên Sản Phẩm</th>'
-        + '  <th>Mã SKU</th>'
-        + '  <th>Danh Mục</th>'
-        + '  <th class="text-right">Số Lượng Tồn</th>'
-        + '</tr></thead>'
-        + '<tbody>';
-    
-    let stt = 1;
-    rows.forEach(tr => {
-        const cols = tr.querySelectorAll('td');
-        if (cols.length < 6) return;
-        
-        const productName = cols[0].querySelector('h6') ? cols[0].querySelector('h6').innerText.trim() : cols[0].innerText.trim();
-        const sku = cols[1].innerText.trim();
-        const category = cols[2].innerText.trim();
-        const systemStock = cols[5].querySelector('span') ? cols[5].querySelector('span').innerText.trim() : cols[5].innerText.trim();
-        
-        excelHtml += '<tr>'
-                   + '<td class="text-center">' + stt + '</td>'
-                   + '<td>' + productName + '</td>'
-                   + '<td>' + sku + '</td>'
-                   + '<td>' + category + '</td>'
-                   + '<td class="text-right">' + systemStock + '</td>'
-                   + '</tr>';
-        stt++;
-    });
-    
-    excelHtml += '</tbody></table></body></html>';
-    
-    const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", "Bao_Cao_Ton_Kho_" + warehouseName.replace(/\s+/g, '_') + "_" + new Date().toISOString().slice(0,10) + ".xls");
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const urlParams = new URLSearchParams(window.location.search);
+    const warehouseId = urlParams.get('warehouseId') || document.getElementById('warehouseIdInput')?.value || '';
+    const keyword = urlParams.get('keyword') || '';
+    const status = urlParams.get('status') || '';
+    const sort = urlParams.get('sort') || '';
+
+    let exportUrl = window.location.pathname + '?tab=stock&action=exportStockExcel';
+    if (warehouseId) exportUrl += '&warehouseId=' + encodeURIComponent(warehouseId);
+    if (keyword) exportUrl += '&keyword=' + encodeURIComponent(keyword);
+    if (status) exportUrl += '&status=' + encodeURIComponent(status);
+    if (sort) exportUrl += '&sort=' + encodeURIComponent(sort);
+
+    window.location.href = exportUrl;
 }
 
 /**

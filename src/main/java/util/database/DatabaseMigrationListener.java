@@ -63,6 +63,14 @@ public class DatabaseMigrationListener implements ServletContextListener {
                     BEGIN
                         ALTER TABLE [dbo].[order_detail] ADD [actual_quantity] INT NULL;
                     END
+                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[order_detail]') AND name = 'supplier_status')
+                    BEGIN
+                        ALTER TABLE [dbo].[order_detail] ADD [supplier_status] NVARCHAR(20) NULL;
+                    END
+                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[order_detail]') AND name = 'supplier_id')
+                    BEGIN
+                        ALTER TABLE [dbo].[order_detail] ADD [supplier_id] INT NULL;
+                    END
                     IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[stock_transfer_detail]') AND name = 'actual_quantity')
                     BEGIN
                         ALTER TABLE [dbo].[stock_transfer_detail] ADD [actual_quantity] INT NULL;
@@ -70,7 +78,7 @@ public class DatabaseMigrationListener implements ServletContextListener {
                 """;
                 stmt.execute(sqlAddActualQty);
             } catch (SQLException ex) {
-                System.err.println("Failed to add actual_quantity column: " + ex.getMessage());
+                System.err.println("Failed to add columns to order_detail: " + ex.getMessage());
             }
 
             boolean shiftExists = false;

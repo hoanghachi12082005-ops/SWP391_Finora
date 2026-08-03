@@ -386,11 +386,15 @@ public class TransferController extends InventoryBaseController {
                 partnerWarehouseQuery
             );
             List<model.PurchaseOrder> inTransitOrders = new dao.purchase.PurchaseOrderDAO().findAllByWarehouseAndType(
-                0,
+                warehouseId != null ? warehouseId : 0,
                 "PURCHASE",
                 "IN_TRANSIT"
             );
+            List<model.PurchaseOrder> pendingReceiveShipments = new dao.purchase.PurchaseOrderDAO().findInTransitSupplierShipments(
+                warehouseId != null ? warehouseId : 0
+            );
             request.setAttribute("inTransitOrders", inTransitOrders);
+            request.setAttribute("pendingReceiveShipments", pendingReceiveShipments);
         } else {
             transfers = transferDAO.findAllGrouped(
                 warehouseId != null ? warehouseId : 0,

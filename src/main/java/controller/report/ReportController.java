@@ -76,33 +76,11 @@ public class ReportController extends BaseController {
             return;
         }
 
-        if ("/reports/inventory".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            loadInventoryReport(request);
-            forward(request, response, "reports/inventory");
-            return;
-        }
-
-        if ("/reports/inventory-preview".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            loadInventoryPreview(request);
-            forward(request, response, "reports/inventory-preview");
-            return;
-        }
-
-        if ("/reports/inventory-export".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            exportInventoryPdf(request, response);
-            return;
-        }
-
-        if ("/reports/inventory-export-excel".equals(path)) {
-            if (!isOwnerOrManager(request, response)) return;
-            applyBranchFilterForManager(request);
-            exportInventoryExcel(request, response);
+        if ("/reports/inventory".equals(path)
+                || "/reports/inventory-preview".equals(path)
+                || "/reports/inventory-export".equals(path)
+                || "/reports/inventory-export-excel".equals(path)) {
+            response.sendRedirect(ctx + "/inventory?tab=stock");
             return;
         }
 
@@ -287,7 +265,7 @@ public class ReportController extends BaseController {
             response.getOutputStream().flush();
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(500, "Excel export failed: " + e.getMessage());
+            response.sendError(500, "Xuất Excel thất bại: " + e.getMessage());
         }
     }
 
@@ -343,7 +321,7 @@ public class ReportController extends BaseController {
             response.getOutputStream().flush();
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(500, "Excel export failed: " + e.getMessage());
+            response.sendError(500, "Xuất Excel thất bại: " + e.getMessage());
         }
     }
 
@@ -366,7 +344,7 @@ public class ReportController extends BaseController {
         boolean isManager = "StoreManager".equalsIgnoreCase(role) || "Store Manager".equalsIgnoreCase(role);
 
         if (!isOwner && !isManager) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied. Owner or Manager only.");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Truy cập bị từ chối. Chỉ dành cho Chủ sở hữu hoặc Quản lý cửa hàng.");
             return false;
         }
 

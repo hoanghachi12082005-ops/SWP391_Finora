@@ -58,6 +58,9 @@ public class StockController extends InventoryBaseController {
             } else if ("getImportTemplateDataApi".equals(action)) {
                 handleGetImportTemplateDataApi(request, response);
                 return;
+            } else if ("exportStockExcel".equals(action) || "exportExcel".equals(action)) {
+                handleExportStockExcel(request, response);
+                return;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -514,5 +517,68 @@ public class StockController extends InventoryBaseController {
         }
         json.append("]");
         response.getWriter().write(json.toString());
+    }
+
+    /**
+     * Xuất báo cáo tồn kho hàng hóa thành tệp Excel (.xlsx) dựa trên bộ lọc hiện tại.
+     */
+    void handleExportStockExcel(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            String keyword = request.getParameter("keyword");
+            if (keyword != null) {
+                keyword = keyword.trim().replaceAll("\\s+", " ");
+            }
+            String status = request.getParameter("status");
+            String sortParam = request.getParameter("sort");
+
+            Integer warehouseId = null;
+            String wIdStr = request.getParameter("warehouseId");
+            if (wIdStr != null && !wIdStr.trim().isEmpty() && !"null".equalsIgnoreCase(wIdStr.trim())) {
+                try {
+                    warehouseId = Integer.parseInt(wIdStr.trim());
+                } catch (NumberFormatException ignored) {}
+            }
+            if (warehouseId == null) {
+                HttpSession session = request.getSession(false);
+                if (session != null) {
+                    warehouseId = (Integer) session.getAttribute("selectedWarehouseId");
+                }
+            }
+
+            String warehouseName = "Tất cả kho";
+            if (warehouseId != null) {
+                dao.inventory.WarehouseDAO wDao = new dao.inventory.WarehouseDAO();
+                List<model.Warehouse> allW = wDao.findAll();
+                if (allW != null) {
+                    final int targetWId = warehouseId;
+                    model.Warehouse w = allW.stream().filter(item -> item.getWarehouseId() == targetWId).findFirst().orElse(null);
+                    if (w != null) {
+                        warehouseName = w.getWarehouseName();
+                    }
+                }
+            }
+
+            List<Inventory> stockList = inventoryDAO.findAll(0, 1000000, keyword, status, null, null, warehouseId, sortParam);
+
+            String generatedBy = "Unknown";
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Employee currentUser = (Employee) session.getAttribute("currentUser");
+                if (currentUser != null) generatedBy = currentUser.getFullName();
+            }
+
+            byte[] excelBytes = util.report.ExcelExportUtil.generateStockInventoryReport(
+                    generatedBy, stockList, warehouseName, keyword, status);
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=\"" +
+                    util.report.ExportUtil.buildExportFileName("BaoCaoTonKho") + ".xlsx\"");
+            response.setContentLength(excelBytes.length);
+            response.getOutputStream().write(excelBytes);
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(500, "Lỗi xuất file Excel tồn kho: " + e.getMessage());
+        }
     }
 }

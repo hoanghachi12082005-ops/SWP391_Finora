@@ -214,7 +214,7 @@ public class CustomerController extends HttpServlet {
         String email = trim(request.getParameter("email"));
 
         if (isBlank(fullName) || isBlank(phone)) {
-            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Please enter full name and phone number.\"}");
+            sendJsonResponse(response, "{\"status\":\"error\",\"message\":\"Vui lòng nhập họ tên và số điện thoại.\"}");
             return;
         }
 
@@ -453,7 +453,7 @@ public class CustomerController extends HttpServlet {
         String dateOfBirthStr = trim(request.getParameter("dateOfBirth"));
 
         if (isUpdate && customerId <= 0) {
-            setFlash(request, "errorMessage", "ID khách hàng không hợp lệ.");
+            setFlash(request, "errorMessage", "Mã khách hàng không hợp lệ.");
             return;
         }
 
@@ -537,7 +537,7 @@ public class CustomerController extends HttpServlet {
     private void deleteCustomer(HttpServletRequest request) {
         int customerId = parseInt(request.getParameter("customerId"), -1);
         if (customerId <= 0) {
-            setFlash(request, "errorMessage", "ID khách hàng không hợp lệ.");
+            setFlash(request, "errorMessage", "Mã khách hàng không hợp lệ.");
             return;
         }
 
@@ -568,7 +568,7 @@ public class CustomerController extends HttpServlet {
     private void syncLoyalty(HttpServletRequest request) {
         int customerId = parseInt(request.getParameter("customerId"), -1);
         if (customerId <= 0) {
-            setFlash(request, "errorMessage", "ID khách hàng không hợp lệ.");
+            setFlash(request, "errorMessage", "Mã khách hàng không hợp lệ.");
             return;
         }
 
@@ -581,7 +581,7 @@ public class CustomerController extends HttpServlet {
         int redeemPointsValue = parseInt(request.getParameter("redeemPoints"), 0);
 
         if (customerId <= 0) {
-            setFlash(request, "errorMessage", "ID khách hàng không hợp lệ.");
+            setFlash(request, "errorMessage", "Mã khách hàng không hợp lệ.");
             return;
         }
 
@@ -595,7 +595,7 @@ public class CustomerController extends HttpServlet {
         setFlash(
                 request,
                 ok ? "successMessage" : "errorMessage",
-                ok ? "Points redeemed successfully." : "Cannot redeem points. Please check available balance."
+                ok ? "Trừ điểm thành công." : "Không thể trừ điểm. Vui lòng kiểm tra số điểm khả dụng."
         );
     }
 
@@ -620,7 +620,7 @@ public class CustomerController extends HttpServlet {
 
         String roleName = currentUser.getRoleName();
         if (roleName == null) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Truy cập bị từ chối.");
             return false;
         }
 
@@ -633,7 +633,7 @@ public class CustomerController extends HttpServlet {
                 && !"owner".equals(roleLower)
                 && !"storemanager".equals(roleLower)
                 && !"salesstaff".equals(roleLower)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Truy cập bị từ chối.");
             return false;
         }
 
@@ -667,7 +667,7 @@ public class CustomerController extends HttpServlet {
             return true;
         }
 
-        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
+        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Truy cập bị từ chối.");
         return false;
     }
 

@@ -24,6 +24,36 @@
     
     <div class="modal-body pt-3">
 
+        <%
+            java.util.List<model.OrderDetail> allDetails = (java.util.List<model.OrderDetail>) request.getAttribute("orderDetails");
+            java.util.Map<String, java.util.List<model.OrderDetail>> supplierGroups = new java.util.LinkedHashMap<>();
+            java.util.Map<String, Integer> supplierIdsMap = new java.util.HashMap<>();
+            String singleSupplierName = null;
+            Integer singleSupplierId = null;
+            
+            if (allDetails != null) {
+                for (model.OrderDetail d : allDetails) {
+                    String sName = (d.getSupplierName() != null && !d.getSupplierName().trim().isEmpty()) 
+                                   ? d.getSupplierName() : "Nhà Cung Cấp Khác";
+                    if (!supplierGroups.containsKey(sName)) {
+                        supplierGroups.put(sName, new java.util.ArrayList<model.OrderDetail>());
+                    }
+                    supplierGroups.get(sName).add(d);
+                    if (d.getSupplierId() != null) {
+                        supplierIdsMap.put(sName, d.getSupplierId());
+                    }
+                }
+            }
+            if (supplierGroups.size() == 1) {
+                singleSupplierName = supplierGroups.keySet().iterator().next();
+                singleSupplierId = supplierIdsMap.get(singleSupplierName);
+            }
+            pageContext.setAttribute("supplierGroups", supplierGroups);
+            pageContext.setAttribute("supplierIdsMap", supplierIdsMap);
+            pageContext.setAttribute("singleSupplierName", singleSupplierName);
+            pageContext.setAttribute("singleSupplierId", singleSupplierId);
+        %>
+
         <!-- Thông tin đơn nhập -->
         <div class="card border-0 bg-light p-3 mb-4" style="border-radius: 12px;">
             <div class="row g-3">
@@ -46,34 +76,16 @@
                 </div>
                 <div class="col-6 col-md-3 text-end">
                     <div class="text-muted small mb-1">Đối Tác NCC</div>
-                    <div class="fw-bold text-dark" style="font-size: 14px;">
-                        ${not empty order.customerName ? order.customerName : 'Nhiều Nhà Cung Cấp'}
+                    <div class="fw-bold text-primary" style="font-size: 14px;">
+                        <c:choose>
+                            <c:when test="${not empty singleSupplierName}">${singleSupplierName}</c:when>
+                            <c:when test="${not empty order.customerName}">${order.customerName}</c:when>
+                            <c:otherwise>Nhiều Nhà Cung Cấp</c:otherwise>
+                        </c:choose>
                     </div>
                 </div>
             </div>
         </div>
-
-        <%
-            java.util.List<model.OrderDetail> allDetails = (java.util.List<model.OrderDetail>) request.getAttribute("orderDetails");
-            java.util.Map<String, java.util.List<model.OrderDetail>> supplierGroups = new java.util.LinkedHashMap<>();
-            java.util.Map<String, Integer> supplierIdsMap = new java.util.HashMap<>();
-            
-            if (allDetails != null) {
-                for (model.OrderDetail d : allDetails) {
-                    String sName = (d.getSupplierName() != null && !d.getSupplierName().trim().isEmpty()) 
-                                   ? d.getSupplierName() : "Nhà Cung Cấp Khác";
-                    if (!supplierGroups.containsKey(sName)) {
-                        supplierGroups.put(sName, new java.util.ArrayList<model.OrderDetail>());
-                    }
-                    supplierGroups.get(sName).add(d);
-                    if (d.getSupplierId() != null) {
-                        supplierIdsMap.put(sName, d.getSupplierId());
-                    }
-                }
-            }
-            pageContext.setAttribute("supplierGroups", supplierGroups);
-            pageContext.setAttribute("supplierIdsMap", supplierIdsMap);
-        %>
 
         <!-- Danh sách mặt hàng phân nhóm theo Nhà Cung Cấp -->
         <c:forEach var="entry" items="${supplierGroups}">
@@ -96,28 +108,30 @@
             %>
 
             <div class="card border mb-4 shadow-sm" style="border-radius: 12px; overflow: hidden;">
-                <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between border-bottom" style="background-color: #f8fafc !important;">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="material-icons text-primary" style="font-size: 20px;">storefront</span>
-                        <h6 class="mb-0 fw-bold text-dark" style="font-size: 15px;">
-                            Nhà Cung Cấp: <span class="text-primary">${suppName}</span>
-                        </h6>
+                <c:if test="${supplierGroups.size() > 1}">
+                    <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between border-bottom" style="background-color: #f8fafc !important;">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="material-icons text-primary" style="font-size: 20px;">storefront</span>
+                            <h6 class="mb-0 fw-bold text-dark" style="font-size: 15px;">
+                                Nhà Cung Cấp: <span class="text-primary">${suppName}</span>
+                            </h6>
+                        </div>
+                        <div>
+                            <c:choose>
+                                <c:when test="${isGroupCompleted}">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1" style="font-size: 12px; border-radius: 6px;">
+                                        <span class="material-icons align-middle me-1" style="font-size: 14px;">check_circle</span>Đã Nhập Kho Thành Công
+                                    </span>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1" style="font-size: 12px; border-radius: 6px;">
+                                        <span class="material-icons align-middle me-1" style="font-size: 14px;">schedule</span>Chờ Giao Hàng & Nhập Kho
+                                    </span>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
                     </div>
-                    <div>
-                        <c:choose>
-                            <c:when test="${isGroupCompleted}">
-                                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1" style="font-size: 12px; border-radius: 6px;">
-                                    <span class="material-icons align-middle me-1" style="font-size: 14px;">check_circle</span>Đã Nhập Kho Thành Công
-                                </span>
-                            </c:when>
-                            <c:otherwise>
-                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1" style="font-size: 12px; border-radius: 6px;">
-                                    <span class="material-icons align-middle me-1" style="font-size: 14px;">schedule</span>Chờ Giao Hàng & Nhập Kho
-                                </span>
-                            </c:otherwise>
-                        </c:choose>
-                    </div>
-                </div>
+                </c:if>
 
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0" style="font-size: 13.5px;">
@@ -134,8 +148,7 @@
                             <c:forEach var="d" items="${itemList}">
                                 <tr>
                                     <td class="text-start fw-semibold ps-3 py-3 text-dark">
-                                        ${d.productName}<br>
-                                        <small class="text-muted">${d.productCode}</small>
+                                        ${d.productName}
                                     </td>
                                     <td class="text-center text-muted">
                                         <fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="₫"/>
@@ -192,7 +205,7 @@
                     </table>
                 </div>
 
-                <c:if test="${!isGroupCompleted}">
+                <c:if test="${supplierGroups.size() > 1 && !isGroupCompleted}">
                     <div class="card-footer bg-light text-end py-2 px-3">
                         <button type="submit" 
                                 onclick="document.getElementById('targetSupplierIdInput').value='${not empty suppId ? suppId : ''}'; return confirm('Xác nhận nhập kho hàng từ nhà cung cấp [${suppName}]?');" 
@@ -207,8 +220,29 @@
         </c:forEach>
     </div>
     
-    <div class="modal-footer border-top-0 pt-0">
+    <div class="modal-footer border-top pt-3 d-flex justify-content-between align-items-center">
         <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 8px;">Đóng</button>
+        
+        <c:choose>
+            <c:when test="${not empty targetSupplierId}">
+                <button type="submit" 
+                        onclick="document.getElementById('targetSupplierIdInput').value='${targetSupplierId}'; return confirm('Xác nhận nhập kho hàng thực tế từ nhà cung cấp này?');" 
+                        class="btn btn-success px-4 fw-bold d-inline-flex align-items-center gap-2" 
+                        style="border-radius: 8px;">
+                    <span class="material-icons" style="font-size: 18px;">check_circle</span>
+                    Xác Nhận Nhập Kho
+                </button>
+            </c:when>
+            <c:when test="${supplierGroups.size() == 1}">
+                <button type="submit" 
+                        onclick="document.getElementById('targetSupplierIdInput').value='${not empty singleSupplierId ? singleSupplierId : ''}'; return confirm('Xác nhận nhập kho hàng thực tế?');" 
+                        class="btn btn-success px-4 fw-bold d-inline-flex align-items-center gap-2" 
+                        style="border-radius: 8px;">
+                    <span class="material-icons" style="font-size: 18px;">check_circle</span>
+                    Xác Nhận Nhập Kho
+                </button>
+            </c:when>
+        </c:choose>
     </div>
 </form>
 

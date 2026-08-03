@@ -1,10 +1,14 @@
 package service.finance;
 
+import dao.finance.ExpenseVoucherDAO;
 import dao.finance.PaymentDAO;
+import dao.finance.ReceiptVoucherDAO;
 import dao.report.SalesTransactionReportDAO;
 import dao.sales.OrderDAO;
+import model.ExpenseVoucher;
 import model.Order;
 import model.Payment;
+import model.ReceiptVoucher;
 import model.SalesTransaction;
 import model.SalesTransactionFilter;
 import model.SalesTransactionKpi;
@@ -18,6 +22,8 @@ import java.util.Map;
 public class PaymentService {
     private final PaymentDAO paymentDAO = new PaymentDAO();
     private final OrderDAO orderDAO = new OrderDAO();
+    private final ReceiptVoucherDAO receiptVoucherDAO = new ReceiptVoucherDAO();
+    private final ExpenseVoucherDAO expenseVoucherDAO = new ExpenseVoucherDAO();
     private final SalesTransactionReportDAO reportDAO = new SalesTransactionReportDAO();
     private final ActivityLogDAO activityLogDAO = new ActivityLogDAO();
 
@@ -171,6 +177,10 @@ public class PaymentService {
         return paymentDAO.getWeeklyOverview(keyword, type, paymentMethod, fromDate, toDate, timeRange, branchId);
     }
 
+    public boolean insert(Payment payment) {
+        return paymentDAO.insert(payment);
+    }
+
     public String createReceipt(Payment payment, int employeeId, int branchId) throws Exception {
         return createVoucher(payment, employeeId, branchId, true);
     }
@@ -210,7 +220,10 @@ public class PaymentService {
     }
 
     private String createVoucher(Payment payment, int employeeId, int branchId, boolean isReceipt) throws Exception {
+        String paymentType = isReceipt ? "INCOME" : "EXPENSE";
+        String prefix = isReceipt ? "PT" : "PC";
         String orderCodePrefix = isReceipt ? "ORD-RV-" : "ORD-PV-";
+        String voucherPrefix = isReceipt ? "PTV" : "PCV";
 
         if (payment.getAmount() <= 0) {
             throw new Exception("Số tiền phiếu phải lớn hơn 0.");
@@ -231,11 +244,12 @@ public class PaymentService {
         try (Connection conn = DBContext.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                // Tạo đơn order chuyên dụng (order_type = OTHER, status = COMPLETED) làm phiếu thu/chi sổ quỹ
+                String code = paymentDAO.generateTransactionCode(conn, paymentType, prefix);
+
+                // 1. Create specialized Order (order_type = RECEIPT/EXPENSE, status = COMPLETED)
                 Order order = new Order();
-                String orderCode = orderCodePrefix + String.format("%06d", System.currentTimeMillis() % 1000000);
-                order.setOrderCode(orderCode);
-                order.setOrderType("OTHER");
+                order.setOrderCode(code);
+                order.setOrderType(isReceipt ? "RECEIPT" : "EXPENSE");
                 order.setStatus(Order.OrderStatus.COMPLETED);
                 order.setBranchId(branchId);
                 order.setEmpId(employeeId);
@@ -248,13 +262,23 @@ public class PaymentService {
 
                 int orderId = orderDAO.createOrderInTransaction(conn, order);
 
+                // 2. Create Payment linked to Order (payment_status = PAID)
+                payment.setOrderId(orderId);
+                payment.setEmployeeId(employeeId);
+                payment.setBranchId(branchId);
+                payment.setPaymentType(paymentType);
+                payment.setStatus("PAID");
+                payment.setName(code);
+
+                int paymentId = paymentDAO.insert(conn, payment);
+
                 conn.commit();
 
                 // Audit log
                 try {
                     String actionName = isReceipt ? "TẠO_PHIẾU_THU" : "TẠO_PHIẾU_CHI";
-                    String logMsg = (isReceipt ? "Tạo phiếu thu " : "Tạo phiếu chi ") + orderCode + " - Số tiền: " + payment.getAmount();
-                    activityLogDAO.insertLog(employeeId, actionName, "cashbook", orderId, null, logMsg);
+                    String logMsg = (isReceipt ? "Tạo phiếu thu " : "Tạo phiếu chi ") + code + " cho đơn hàng " + code + " - Số tiền: " + payment.getAmount();
+                    activityLogDAO.insertLog(employeeId, actionName, "cashbook", paymentId, null, logMsg);
                 } catch (Exception ignored) {}
 
                 return null;

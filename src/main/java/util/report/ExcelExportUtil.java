@@ -51,6 +51,91 @@ public final class ExcelExportUtil {
         }
     }
 
+    public static byte[] generateStockInventoryReport(
+            String generatedBy, List<Inventory> rows, String warehouseName,
+            String keyword, String statusFilter) {
+        try (Workbook wb = new XSSFWorkbook()) {
+            Sheet sheet = wb.createSheet("Tồn kho hàng hóa");
+            setupReport(wb, sheet, "BÁO CÁO TỒN KHO HÀNG HÓA", generatedBy, keyword, warehouseName, null, null);
+
+            int totalProducts = rows != null ? rows.size() : 0;
+            int totalQuantity = 0;
+            BigDecimal totalValue = BigDecimal.ZERO;
+            int lowStockCount = 0;
+            int outOfStockCount = 0;
+
+            if (rows != null) {
+                for (Inventory r : rows) {
+                    int qty = r.getQuantityInStock();
+                    totalQuantity += qty;
+                    BigDecimal price = r.getSellingPrice() != null ? r.getSellingPrice() : BigDecimal.ZERO;
+                    totalValue = totalValue.add(price.multiply(BigDecimal.valueOf(qty)));
+                    if (qty == 0) {
+                        outOfStockCount++;
+                    } else if (qty <= 10) {
+                        lowStockCount++;
+                    }
+                }
+            }
+
+            String[] headers = {
+                "Mã SP", "Mã SKU", "Tên Sản Phẩm", "Danh Mục", "Đơn Vị Tính",
+                "Kho Hàng", "Số Lượng Tồn", "Giá Bán (VNĐ)", "Tổng Giá Trị Tồn (VNĐ)", "Trạng Thái"
+            };
+            int[] widths = {10, 16, 35, 20, 12, 20, 15, 18, 22, 16};
+            int rowNum = fillHeader(wb, sheet, headers, widths, 4);
+
+            CellStyle currencyStyle = createCurrencyStyle(wb);
+
+            if (rows != null) {
+                for (Inventory r : rows) {
+                    Row row = sheet.createRow(rowNum++);
+                    row.createCell(0).setCellValue(r.getProductId());
+                    row.createCell(1).setCellValue(nullToDash(r.getProductCodebar()));
+                    row.createCell(2).setCellValue(nullToDash(r.getProductName()));
+                    row.createCell(3).setCellValue(nullToDash(r.getCategoryName()));
+                    row.createCell(4).setCellValue(nullToDash(r.getUnitName()));
+                    row.createCell(5).setCellValue(nullToDash(r.getWarehouseName()));
+                    row.createCell(6).setCellValue(r.getQuantityInStock());
+
+                    Cell priceCell = row.createCell(7);
+                    double price = r.getSellingPrice() != null ? r.getSellingPrice().doubleValue() : 0.0;
+                    priceCell.setCellValue(price);
+                    priceCell.setCellStyle(currencyStyle);
+
+                    Cell valCell = row.createCell(8);
+                    double val = price * r.getQuantityInStock();
+                    valCell.setCellValue(val);
+                    valCell.setCellStyle(currencyStyle);
+
+                    String stText = "Bình thường";
+                    if (r.getQuantityInStock() == 0) {
+                        stText = "Hết hàng";
+                    } else if (r.getQuantityInStock() <= 5) {
+                        stText = "Sắp hết";
+                    } else if (r.getQuantityInStock() <= 10) {
+                        stText = "Tồn thấp";
+                    }
+                    row.createCell(9).setCellValue(stText);
+                }
+            }
+
+            rowNum += 1;
+            Row summaryTitle = sheet.createRow(rowNum++);
+            summaryTitle.createCell(0).setCellValue("TỔNG QUAN KHO HÀNG");
+
+            addSumRow(sheet, rowNum++, "Tổng số mặt hàng", totalProducts, null);
+            addSumRow(sheet, rowNum++, "Tổng số lượng tồn", totalQuantity, null);
+            addSumRow(sheet, rowNum++, "Tổng giá trị tồn kho", totalValue.doubleValue(), currencyStyle);
+            addSumRow(sheet, rowNum++, "Số sản phẩm tồn thấp", lowStockCount, null);
+            addSumRow(sheet, rowNum++, "Số sản phẩm hết hàng", outOfStockCount, null);
+
+            return toBytes(wb);
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi xuất file Excel tồn kho", e);
+        }
+    }
+
     public static byte[] generateCustomerLoyaltyReport(
             String generatedBy, List<LoyalCustomerSummary> rows, LoyalCustomerOverview overview,
             String keyword, String branchName, LocalDate dateFrom, LocalDate dateTo) {

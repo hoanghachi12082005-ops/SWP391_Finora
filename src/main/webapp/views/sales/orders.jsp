@@ -87,9 +87,9 @@
                                 <select name="status"
                                         class="text-sm bg-white rounded-lg border border-outline-variant/60 px-3 py-2 pr-10 outline-none cursor-pointer focus:border-primary">
                                     <option value="">Tất cả trạng thái</option>
-                                    <option value="COMPLETED" ${selectedStatus == 'COMPLETED' ? 'selected' : ''}>COMPLETED</option>
-                                    <option value="CANCELLED" ${selectedStatus == 'CANCELLED' ? 'selected' : ''}>CANCELLED</option>
-                                    <option value="PENDING" ${selectedStatus == 'PENDING' ? 'selected' : ''}>PENDING</option>
+                                    <option value="COMPLETED" ${selectedStatus == 'COMPLETED' ? 'selected' : ''}>Hoàn thành</option>
+                                    <option value="CANCELLED" ${selectedStatus == 'CANCELLED' ? 'selected' : ''}>Đã hủy</option>
+                                    <option value="PENDING" ${selectedStatus == 'PENDING' ? 'selected' : ''}>Chờ thanh toán</option>
                                 </select>
                                 <select name="paymentMethod"
                                         class="text-sm bg-white rounded-lg border border-outline-variant/60 px-3 py-2 pr-10 outline-none cursor-pointer focus:border-primary">
@@ -157,15 +157,15 @@
                                                             <c:choose>
                                                                 <c:when test="${o.status == 'COMPLETED'}">
                                                                     <span
-                                                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-tertiary-fixed text-on-tertiary-fixed">COMPLETED</span>
+class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-tertiary-fixed text-on-tertiary-fixed">Hoàn thành</span>
                                                                 </c:when>
                                                                 <c:when test="${o.status == 'CANCELLED'}">
                                                                     <span
-                                                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-error-container text-on-error-container">CANCELLED</span>
+class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-error-container text-on-error-container">Đã hủy</span>
                                                                 </c:when>
                                                                 <c:otherwise>
                                                                     <span
-                                                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-container-highest text-on-surface">PENDING</span>
+class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-container-highest text-on-surface">Chờ thanh toán</span>
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </td>
@@ -482,11 +482,11 @@
                                     // Status Badge in panel
                                     let badgeHtml = '';
                                     if (data.status === 'COMPLETED') {
-                                        badgeHtml = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-tertiary-fixed text-on-tertiary-fixed">COMPLETED</span>';
+                                        badgeHtml = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-tertiary-fixed text-on-tertiary-fixed">Hoàn thành</span>';
                                     } else if (data.status === 'CANCELLED') {
-                                        badgeHtml = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-error-container text-on-error-container">CANCELLED</span>';
+                                        badgeHtml = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-error-container text-on-error-container">Đã hủy</span>';
                                     } else {
-                                        badgeHtml = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-container-highest text-on-surface">PENDING</span>';
+                                        badgeHtml = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-container-highest text-on-surface">Chờ thanh toán</span>';
                                     }
                                     document.getElementById('detailStatusBadge').innerHTML = badgeHtml;
 
