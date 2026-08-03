@@ -258,6 +258,59 @@ public class OrderDAO {
         return list;
     }
 
+    public List<Order> findByEmployeeIdPaged(int empId, int offset, int pageSize) {
+        List<Order> list = new ArrayList<>();
+        String sql = """
+            SELECT o.*,
+                   c.full_name AS customerName,
+                   c.phone AS customerPhone,
+                   e.fullName AS employeeName,
+                   b.branch_name AS branchName
+            FROM [order] o
+            LEFT JOIN Customer c ON o.customer_id = c.cus_id
+            LEFT JOIN Employee e ON o.emp_id = e.emp_id
+            LEFT JOIN Branch b ON o.branch_id = b.branch_id
+            WHERE o.emp_id = ?
+            ORDER BY o.created_at DESC, o.order_id DESC
+            OFFSET ? ROWS
+            FETCH NEXT ? ROWS ONLY
+            """;
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, empId);
+            ps.setInt(2, offset);
+            ps.setInt(3, pageSize);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Order o = mapRow(rs);
+                    o.setCustomerName(rs.getString("customerName"));
+                    o.setEmployeeName(rs.getString("employeeName"));
+                    o.setBranchName(rs.getString("branchName"));
+                    list.add(o);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int countByEmployeeId(int empId) {
+        String sql = "SELECT COUNT(*) FROM [order] WHERE emp_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, empId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     public boolean updateStatus(int orderId, String status) {
         String sql = "UPDATE [order] SET status = ? WHERE order_id = ?";
         try (Connection conn = DBContext.getConnection()) {

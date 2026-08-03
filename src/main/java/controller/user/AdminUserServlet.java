@@ -282,7 +282,17 @@ public class AdminUserServlet extends HttpServlet {
 
         request.setAttribute("profile", profile);
         request.setAttribute("salesSummary", profileDao.getEmployeeSalesSummary(employeeId));
-        request.setAttribute("orderHistory", new OrderDAO().findByEmployeeId(employeeId));
+
+        int page = parseInt(request.getParameter("page"), 1);
+        int sizeValue = parseInt(request.getParameter("sizeValue"), 10);
+        int totalRecords = new OrderDAO().countByEmployeeId(employeeId);
+        PageResult pr = PaginationHelper.compute(totalRecords, page, sizeValue);
+        pr.setAttributes(request);
+
+        request.setAttribute("orderHistory", new OrderDAO().findByEmployeeIdPaged(
+                employeeId, (pr.getCurrentPage() - 1) * pr.getPageSize(), pr.getPageSize()));
+        request.setAttribute("baseUrl", request.getContextPath() + "/admin/user");
+        request.setAttribute("queryString", "&action=detail&id=" + employeeId);
         request.setAttribute("showSalesSection", true);
 
         request.setAttribute("readOnlyProfile", true);
