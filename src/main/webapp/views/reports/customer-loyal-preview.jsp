@@ -227,8 +227,8 @@
             <h1>Báo cáo khách hàng thân thiết</h1>
             <div class="company">Finora Retail</div>
             <div class="meta">
-                Generated: <fmt:formatDate value="<%= new java.util.Date() %>" pattern="dd/MM/yyyy HH:mm"/>
-                | By: ${sessionScope.currentUser.fullName}
+                Xuất lúc: <fmt:formatDate value="<%= new java.util.Date() %>" pattern="dd/MM/yyyy HH:mm"/>
+                | Bởi: ${sessionScope.currentUser.fullName}
             </div>
         </div>
         <hr class="report-divider"/>

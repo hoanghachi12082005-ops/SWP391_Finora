@@ -2,7 +2,6 @@ package controller.sales;
 
 import dao.sales.*;
 import dao.inventory.InventoryDAO;
-import dao.finance.PaymentDAO;
 import model.*;
 import util.database.DBContext;
 import jakarta.servlet.annotation.WebServlet;
@@ -131,6 +130,7 @@ public class CheckoutServlet extends HttpServlet {
                 order.setTotalAmount(totalAmount);
                 order.setPaymentMethod("BANK_TRANSFER");
                 order.setStatus(Order.OrderStatus.PENDING);
+                order.setDescription("Thanh toán đơn hàng " + orderCode);
 
                 int orderId = orderDao.createOrderInTransaction(conn, order);
                 detailDao.insertBatch(conn, orderId, cart);
@@ -184,7 +184,6 @@ public class CheckoutServlet extends HttpServlet {
             InventoryDAO inventoryDao = new InventoryDAO();
             OrderDAO orderDao = new OrderDAO();
             OrderDetailDAO detailDao = new OrderDetailDAO();
-            PaymentDAO paymentDao = new PaymentDAO();
             CustomerPointDAO pointDao = new CustomerPointDAO();
             // 1. Kiểm tra tồn kho từng sản phẩm
             for (CartItem item : cart) {
@@ -211,26 +210,14 @@ public class CheckoutServlet extends HttpServlet {
             order.setTotalAmount(totalAmount);
             order.setPaymentMethod(paymentMethod);
             order.setStatus(Order.OrderStatus.PENDING);
+            order.setDescription("Thanh toán đơn hàng " + orderCode);
 
             int orderId = orderDao.createOrderInTransaction(conn, order);
 
             // 3. Chèn chi tiết đơn hàng
             detailDao.insertBatch(conn, orderId, cart);
 
-            // 4. Tạo payment record (dựa trên totalAmount đã trừ redeem discount)
-            Payment payment = new Payment();
-            payment.setOrderId(orderId);
-            payment.setPaymentAmount(totalAmount);
-            payment.setPaymentStatus("PAID");
-            payment.setTransactionCode(paymentMethod.equals("CASH") ? "CASH-" + orderId : "BANK-" + orderId);
-            payment.setPaymentType("INCOME");
-            payment.setMethod(paymentMethod);
-            payment.setDescription("Thanh toán đơn hàng " + orderCode);
-            payment.setEmployeeId(emp.getEmpId());
-            payment.setBranchId(emp.getBranchId());
-            paymentDao.insert(conn, payment);
-
-            // 5. Trừ kho + log stock_transaction
+            // 4. Trừ kho + log stock_transaction
             for (CartItem item : cart) {
                 int beforeQty = inventoryDao.getStockInTransaction(conn, item.getProductId(), warehouseId);
                 int deducted = inventoryDao.deductStock(conn, item.getProductId(), warehouseId, item.getQuantity());
@@ -245,7 +232,7 @@ public class CheckoutServlet extends HttpServlet {
             if (customerId != null && customerId > 0 && redeemPoints > 0) {
                 int available = pointDao.getCurrentPoints(customerId);
                 if (available < redeemPoints) {
-                    throw new SQLException("Insufficient loyalty points.");
+                    throw new SQLException("Không đủ điểm tích lũy.");
                 }
                 pointDao.deductPoints(conn, customerId, redeemPoints, orderId);
             }

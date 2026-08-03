@@ -212,9 +212,9 @@
                                         <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.85rem;">Loại đơn hàng</label>
                                         <select name="orderType" class="form-select form-select-sm rounded-pill px-3" style="width: 150px;">
                                             <option value="" ${empty orderType ? 'selected' : ''}>Tất cả loại đơn</option>
-                                            <option value="SALE" ${orderType == 'SALE' ? 'selected' : ''}>Bán hàng (SALE)</option>
-                                            <option value="PURCHASE" ${orderType == 'PURCHASE' ? 'selected' : ''}>Nhập hàng (PURCHASE)</option>
-                                            <option value="OTHER" ${orderType == 'OTHER' ? 'selected' : ''}>Thu/Chi khác (OTHER)</option>
+                                            <option value="SALE" ${orderType == 'SALE' ? 'selected' : ''}>Bán hàng</option>
+                                            <option value="PURCHASE" ${orderType == 'PURCHASE' ? 'selected' : ''}>Nhập hàng</option>
+                                            <option value="OTHER" ${orderType == 'OTHER' ? 'selected' : ''}>Thu/Chi khác</option>
                                         </select>
                                     </div>
 
@@ -305,13 +305,13 @@
                                                         <td>
                                                             <c:choose>
                                                                 <c:when test="${item.orderType == 'SALE'}">
-                                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2">SALE</span>
+                                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2">Bán hàng</span>
                                                                 </c:when>
                                                                 <c:when test="${item.orderType == 'PURCHASE'}">
-                                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2">PURCHASE</span>
+                                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2">Nhập hàng</span>
                                                                 </c:when>
                                                                 <c:otherwise>
-                                                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2">OTHER</span>
+                                                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2">Thu/Chi khác</span>
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </td>

@@ -23,7 +23,7 @@ public class OrderStatusServlet extends HttpServlet {
 
         String orderCode = req.getParameter("orderCode");
         if (orderCode == null || orderCode.isBlank()) {
-            resp.getWriter().write("{\"status\":\"error\",\"message\":\"Missing orderCode\"}");
+            resp.getWriter().write("{\"status\":\"error\",\"message\":\"Thiếu mã đơn hàng\"}");
             return;
         }
 

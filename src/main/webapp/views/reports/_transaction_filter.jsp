@@ -35,9 +35,9 @@
             <label>Loại đơn hàng</label>
             <select name="orderType">
                 <option value="">Tất cả loại đơn</option>
-                <option value="SALE" ${filter.orderType == 'SALE' ? 'selected' : ''}>SALE (Bán hàng)</option>
-                <option value="PURCHASE" ${filter.orderType == 'PURCHASE' ? 'selected' : ''}>PURCHASE (Nhập hàng)</option>
-                <option value="OTHER" ${filter.orderType == 'OTHER' ? 'selected' : ''}>OTHER (Thu/Chi khác)</option>
+                <option value="SALE" ${filter.orderType == 'SALE' ? 'selected' : ''}>Bán hàng</option>
+                <option value="PURCHASE" ${filter.orderType == 'PURCHASE' ? 'selected' : ''}>Nhập hàng</option>
+                <option value="OTHER" ${filter.orderType == 'OTHER' ? 'selected' : ''}>Thu/Chi khác</option>
             </select>
         </div>
 
@@ -45,8 +45,8 @@
             <label>Loại phiếu</label>
             <select name="transactionType">
                 <option value="">Tất cả loại</option>
-                <option value="INCOME" ${filter.transactionType == 'INCOME' ? 'selected' : ''}>INCOME (Thu)</option>
-                <option value="EXPENSE" ${filter.transactionType == 'EXPENSE' ? 'selected' : ''}>EXPENSE (Chi)</option>
+                <option value="INCOME" ${filter.transactionType == 'INCOME' ? 'selected' : ''}>Thu</option>
+                <option value="EXPENSE" ${filter.transactionType == 'EXPENSE' ? 'selected' : ''}>Chi</option>
                 <c:forEach var="t" items="${transactionTypes}">
                     <c:if test="${t != 'INCOME' && t != 'EXPENSE'}">
                         <option value="${t}" ${filter.transactionType == t ? 'selected' : ''}>${t}</option>

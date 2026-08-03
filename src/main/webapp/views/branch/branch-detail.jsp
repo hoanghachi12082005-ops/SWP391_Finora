@@ -245,7 +245,7 @@
                     <table class="branch-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Mã</th>
                                 <th>Họ tên</th>
                                 <th>Chức vụ</th>
                                 <th>SĐT</th>

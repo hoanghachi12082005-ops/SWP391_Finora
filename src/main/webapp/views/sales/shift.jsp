@@ -324,10 +324,10 @@
                                                 <td class="py-3 px-4 text-center">
                                                     <c:choose>
                                                         <c:when test="${s.status == 'OPEN'}">
-                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full font-bold bg-tertiary-fixed text-on-tertiary-fixed text-[10px]">OPEN</span>
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full font-bold bg-tertiary-fixed text-on-tertiary-fixed text-[10px]">Đang mở</span>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full font-bold bg-surface-container-highest text-on-surface text-[10px]">CLOSED</span>
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full font-bold bg-surface-container-highest text-on-surface text-[10px]">Đã đóng</span>
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </td>

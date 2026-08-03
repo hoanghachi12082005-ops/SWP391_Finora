@@ -43,9 +43,9 @@
                             <td style="white-space: nowrap;">${empty t.orderCode ? '—' : t.orderCode}</td>
                             <td style="white-space: nowrap;">
                                 <c:choose>
-                                    <c:when test="${t.orderType == 'SALE'}"><span class="badge badge-sale">SALE</span></c:when>
-                                    <c:when test="${t.orderType == 'PURCHASE'}"><span class="badge badge-purchase">PURCHASE</span></c:when>
-                                    <c:otherwise><span class="badge badge-other">${empty t.orderType ? 'OTHER' : t.orderType}</span></c:otherwise>
+                                    <c:when test="${t.orderType == 'SALE'}"><span class="badge badge-sale">Bán hàng</span></c:when>
+                                    <c:when test="${t.orderType == 'PURCHASE'}"><span class="badge badge-purchase">Nhập hàng</span></c:when>
+                                    <c:otherwise><span class="badge badge-other">${empty t.orderType ? 'Thu/Chi khác' : t.orderType}</span></c:otherwise>
                                 </c:choose>
                             </td>
                             <td style="white-space: nowrap;">
@@ -69,7 +69,13 @@
                             <td style="white-space: nowrap;">${fn:substring(t.paymentDate, 0, 19)}</td>
                             <td style="white-space: nowrap;">
                                 <span class="status-badge ${t.status == 'PAID' || t.status == 'COMPLETED' ? 'completed' : ''} ${t.status == 'PENDING' ? 'pending' : ''} ${t.status == 'FAILED' ? 'cancelled' : ''}">
-                                    ${t.status}
+                                    <c:choose>
+                                        <c:when test="${t.status == 'PAID'}">Đã thanh toán</c:when>
+                                        <c:when test="${t.status == 'COMPLETED'}">Hoàn thành</c:when>
+                                        <c:when test="${t.status == 'PENDING'}">Chờ thanh toán</c:when>
+                                        <c:when test="${t.status == 'FAILED'}">Thất bại</c:when>
+                                        <c:otherwise>${t.status}</c:otherwise>
+                                    </c:choose>
                                 </span>
                             </td>
                         </tr>

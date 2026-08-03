@@ -265,7 +265,7 @@ public class ReportController extends BaseController {
             response.getOutputStream().flush();
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(500, "Excel export failed: " + e.getMessage());
+            response.sendError(500, "Xuất Excel thất bại: " + e.getMessage());
         }
     }
 
@@ -321,7 +321,7 @@ public class ReportController extends BaseController {
             response.getOutputStream().flush();
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(500, "Excel export failed: " + e.getMessage());
+            response.sendError(500, "Xuất Excel thất bại: " + e.getMessage());
         }
     }
 
@@ -344,7 +344,7 @@ public class ReportController extends BaseController {
         boolean isManager = "StoreManager".equalsIgnoreCase(role) || "Store Manager".equalsIgnoreCase(role);
 
         if (!isOwner && !isManager) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied. Owner or Manager only.");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Truy cập bị từ chối. Chỉ dành cho Chủ sở hữu hoặc Quản lý cửa hàng.");
             return false;
         }
 
