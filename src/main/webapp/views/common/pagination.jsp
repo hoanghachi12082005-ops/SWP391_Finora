@@ -3,7 +3,7 @@
 
 <div class="table-footer mt-3" style="width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
     <div class="pagination-info d-flex align-items-center">
-        <form method="get" action="${pageContext.request.contextPath}/inventory" class="d-flex align-items-center gap-2 m-0">
+        <form method="get" action="${not empty baseUrl ? baseUrl : (not empty param.baseUrl ? param.baseUrl : '')}" class="d-flex align-items-center gap-2 m-0">
             <input type="hidden" name="tab" value="${not empty activeTab ? activeTab : (not empty param.tab ? param.tab : 'stock')}" />
             <c:if test="${not empty currentSubtab}">
                 <input type="hidden" name="subtab" value="${currentSubtab}" />
