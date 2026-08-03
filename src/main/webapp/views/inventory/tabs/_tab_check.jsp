@@ -168,5 +168,9 @@
                 </tbody>
             </table>
         </div>
+        <!-- Pagination -->
+        <div class="px-2 pt-3">
+            <jsp:include page="/views/common/pagination.jsp" />
+        </div>
     </div>
 </div>

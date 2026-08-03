@@ -431,8 +431,11 @@
                                     </c:forEach>
                                 </c:otherwise>
                             </c:choose>
-                        </tbody>
                     </table>
+                </div>
+                <!-- Pagination -->
+                <div class="px-2 pb-3">
+                    <jsp:include page="/views/common/pagination.jsp" />
                 </div>
             </c:when>
 

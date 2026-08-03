@@ -183,12 +183,15 @@ public class InventoryController extends BaseController {
             int pendingTransferCount = transferDAO.getPendingCount(selectedWarehouseId != null ? selectedWarehouseId : 0);
             request.setAttribute("pendingTransferCount", pendingTransferCount);
 
-            // Calculate total pending approvals across all types (Transfers, Orders, Checks)
+            String origQs = (String) request.getAttribute("queryString");
+            String origBaseUrl = (String) request.getAttribute("baseUrl");
             new ApprovalTabController().handleApprovalTab(request, role);
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> unifiedApprovals = (List<Map<String, Object>>) request.getAttribute("unifiedApprovals");
             int pendingApprovalCount = (unifiedApprovals != null) ? unifiedApprovals.size() : 0;
             request.setAttribute("pendingApprovalCount", pendingApprovalCount);
+            request.setAttribute("queryString", origQs);
+            request.setAttribute("baseUrl", origBaseUrl);
 
             String tab = request.getParameter("tab");
             if ("createTransfer".equals(action)) {

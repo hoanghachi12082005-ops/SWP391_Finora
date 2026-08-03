@@ -426,12 +426,44 @@ public class TransferController extends InventoryBaseController {
                 if (b.getDate() == null) return -1;
                 return b.getDate().compareTo(a.getDate());
             });
-            request.setAttribute("unifiedTransferItems", unifiedTransferItems);
+
+            int page = 1;
+            try {
+                if (request.getParameter("page") != null) {
+                    page = Integer.parseInt(request.getParameter("page"));
+                }
+            } catch (Exception ignored) {}
+
+            int sizeValue = 10;
+            try {
+                if (request.getParameter("sizeValue") != null) {
+                    sizeValue = Integer.parseInt(request.getParameter("sizeValue"));
+                }
+            } catch (Exception ignored) {}
+
+            util.pagination.PaginationHelper.PageResult pr = util.pagination.PaginationHelper.compute(unifiedTransferItems.size(), page, sizeValue);
+            pr.setAttributes(request);
+
+            int fromIndex = (pr.getCurrentPage() - 1) * pr.getPageSize();
+            int toIndex = Math.min(fromIndex + pr.getPageSize(), unifiedTransferItems.size());
+            List<dto.inventory.TransferTabItem> pagedTransferItems = (fromIndex < unifiedTransferItems.size()) ? unifiedTransferItems.subList(fromIndex, toIndex) : new ArrayList<>();
+
+            request.setAttribute("unifiedTransferItems", pagedTransferItems);
         }
         request.setAttribute("transfers", transfers);
         request.setAttribute("transferCodeQuery", transferCodeQuery);
         request.setAttribute("partnerWarehouseQuery", partnerWarehouseQuery);
         request.setAttribute("statusQuery", statusQuery);
+
+        request.setAttribute("baseUrl", request.getContextPath() + "/inventory");
+        StringBuilder qs = new StringBuilder();
+        qs.append("&tab=transfer");
+        if (subtab != null) qs.append("&subtab=").append(subtab);
+        if (warehouseId != null) qs.append("&warehouseId=").append(warehouseId);
+        if (transferCodeQuery != null && !transferCodeQuery.isEmpty()) qs.append("&transferCodeQuery=").append(java.net.URLEncoder.encode(transferCodeQuery, "UTF-8"));
+        if (partnerWarehouseQuery != null) qs.append("&partnerWarehouseQuery=").append(partnerWarehouseQuery);
+        if (statusQuery != null && !statusQuery.isEmpty()) qs.append("&statusQuery=").append(statusQuery);
+        request.setAttribute("queryString", qs.toString());
     }
 
     /**

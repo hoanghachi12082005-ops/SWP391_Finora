@@ -420,23 +420,39 @@ public class StockController extends InventoryBaseController {
         String sortParam = request.getParameter("sort");
         
         int page = 1;
-        int limit = 20;
-        if (request.getParameter("page") != null) {
-            page = Integer.parseInt(request.getParameter("page"));
-        }
-        int offset = (page - 1) * limit;
+        try {
+            if (request.getParameter("page") != null) {
+                page = Integer.parseInt(request.getParameter("page"));
+            }
+        } catch (Exception ignored) {}
+        
+        int sizeValue = 10;
+        try {
+            if (request.getParameter("sizeValue") != null) {
+                sizeValue = Integer.parseInt(request.getParameter("sizeValue"));
+            }
+        } catch (Exception ignored) {}
 
-        List<Inventory> stockList = inventoryDAO.findAll(offset, limit, keyword, status, null, null, warehouseId, sortParam);
-        attachImageUrls(request, stockList);
         int totalCount = inventoryDAO.getTotalCount(keyword, status, null, null, warehouseId);
-        int totalPages = (int) Math.ceil((double) totalCount / limit);
+        util.pagination.PaginationHelper.PageResult pr = util.pagination.PaginationHelper.compute(totalCount, page, sizeValue);
+        pr.setAttributes(request);
+
+        List<Inventory> stockList = inventoryDAO.findAll((pr.getCurrentPage() - 1) * pr.getPageSize(), pr.getPageSize(), keyword, status, null, null, warehouseId, sortParam);
+        attachImageUrls(request, stockList);
 
         request.setAttribute("stockList", stockList);
-        request.setAttribute("currentPage", page);
-        request.setAttribute("totalPages", totalPages);
         request.setAttribute("keyword", keyword);
         request.setAttribute("statusFilter", status);
         request.setAttribute("sortParam", sortParam);
+
+        request.setAttribute("baseUrl", request.getContextPath() + "/inventory");
+        StringBuilder qs = new StringBuilder();
+        qs.append("&tab=stock");
+        if (warehouseId != null) qs.append("&warehouseId=").append(warehouseId);
+        if (keyword != null && !keyword.isEmpty()) qs.append("&keyword=").append(java.net.URLEncoder.encode(keyword, "UTF-8"));
+        if (status != null && !status.isEmpty()) qs.append("&status=").append(status);
+        if (sortParam != null && !sortParam.isEmpty()) qs.append("&sort=").append(sortParam);
+        request.setAttribute("queryString", qs.toString());
         
         // Setup KPI Summary manually for simplicity
         request.setAttribute("totalItems", totalCount);

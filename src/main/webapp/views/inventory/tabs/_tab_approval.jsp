@@ -24,6 +24,9 @@
     <div class="p-3 bg-white border-bottom rounded-3 mb-3 mx-3">
         <form action="${pageContext.request.contextPath}/inventory" method="GET" id="approvalFilterForm" class="row g-3 align-items-end m-0">
             <input type="hidden" name="tab" value="approval">
+            <c:if test="${not empty selectedWarehouseId}">
+                <input type="hidden" name="warehouseId" value="${selectedWarehouseId}">
+            </c:if>
             
             <div class="col-md-4 col-sm-6">
                 <label class="form-label small text-muted fw-semibold mb-1 ms-1">Mã phiếu</label>
@@ -39,7 +42,7 @@
                 <label class="form-label small text-muted fw-semibold mb-1 ms-1">Kho xuất (Gửi)</label>
                 <div class="position-relative">
                     <span class="material-icons position-absolute text-muted" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; pointer-events: none;">warehouse</span>
-                    <select name="fromWarehouseQuery" class="form-select rounded-pill inventory-filter-select" 
+                    <select name="fromWarehouseQuery" class="form-select rounded-pill inventory-filter-select" onchange="this.form.submit()" 
                             style="padding-left: 42px; padding-right: 36px; padding-top: 10px; padding-bottom: 10px; font-size: 14px; box-shadow: none; appearance: none; cursor: pointer; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 14px top 50%; background-size: 10px auto;">
                         <option value="">Tất cả kho xuất</option>
                         <c:forEach var="w" items="${warehouses}">
@@ -53,7 +56,7 @@
                 <label class="form-label small text-muted fw-semibold mb-1 ms-1">Kho nhập (Nhận)</label>
                 <div class="position-relative">
                     <span class="material-icons position-absolute text-muted" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; pointer-events: none;">warehouse</span>
-                    <select name="toWarehouseQuery" class="form-select rounded-pill inventory-filter-select" 
+                    <select name="toWarehouseQuery" class="form-select rounded-pill inventory-filter-select" onchange="this.form.submit()" 
                             style="padding-left: 42px; padding-right: 36px; padding-top: 10px; padding-bottom: 10px; font-size: 14px; box-shadow: none; appearance: none; cursor: pointer; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 14px top 50%; background-size: 10px auto;">
                         <option value="">Tất cả kho nhập</option>
                         <c:forEach var="w" items="${warehouses}">
@@ -174,6 +177,10 @@
                         </c:choose>
                     </tbody>
                 </table>
+            </div>
+            <!-- Pagination -->
+            <div class="px-3 pb-3">
+                <jsp:include page="/views/common/pagination.jsp" />
             </div>
         </div>
     </div>

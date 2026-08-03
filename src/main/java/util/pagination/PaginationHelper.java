@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public final class PaginationHelper {
 
-    private static final int[] SIZE_VALUES = {30, 50, 70, 100};
+    private static final int[] SIZE_VALUES = {10, 30, 100, 100000};
 
     private PaginationHelper() {}
 
@@ -15,8 +15,7 @@ public final class PaginationHelper {
         sizeValue = validateSizeValue(sizeValue);
         r.sizeValue = sizeValue;
 
-        int pageSize = calcPageSize(totalRecords, sizeValue);
-        if (pageSize <= 0) pageSize = 1;
+        int pageSize = (sizeValue >= 100000) ? (totalRecords > 0 ? totalRecords : 100000) : sizeValue;
         r.pageSize = pageSize;
 
         int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
@@ -30,29 +29,19 @@ public final class PaginationHelper {
         r.startRecord = totalRecords == 0 ? 0 : (page - 1) * pageSize + 1;
         r.endRecord = Math.min(page * pageSize, totalRecords);
 
-        r.option30 = (int) Math.ceil(totalRecords * 0.3);
-        r.option50 = (int) Math.ceil(totalRecords * 0.5);
-        r.option70 = (int) Math.ceil(totalRecords * 0.7);
+        r.option30 = 10;
+        r.option50 = 30;
+        r.option70 = 100;
         r.option100 = totalRecords;
 
         return r;
-    }
-
-    private static int calcPageSize(int totalRecords, int sizeValue) {
-        switch (sizeValue) {
-            case 30:  return (int) Math.ceil(totalRecords * 0.3);
-            case 50:  return (int) Math.ceil(totalRecords * 0.5);
-            case 70:  return (int) Math.ceil(totalRecords * 0.7);
-            case 100: return totalRecords;
-            default:  return (int) Math.ceil(totalRecords * 0.3);
-        }
     }
 
     private static int validateSizeValue(int sizeValue) {
         for (int v : SIZE_VALUES) {
             if (v == sizeValue) return v;
         }
-        return 30;
+        return 10;
     }
 
     public static class PageResult {

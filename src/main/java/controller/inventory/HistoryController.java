@@ -59,64 +59,9 @@ public class HistoryController extends InventoryBaseController {
         if (request.getParameter("page") != null) page = Integer.parseInt(request.getParameter("page"));
         int offset = (page - 1) * 20;
 
-        // Chuẩn hóa chuỗi truy vấn tên sản phẩm
+        // Clean & trim productNameQuery
         if (productNameQuery != null) {
             productNameQuery = productNameQuery.trim();
-        }
-
-        // Kiểm tra năm 'Từ ngày' tránh lỗi tràn năm SQL Server (giới hạn từ 1000 đến 9999)
-        if (fromDate != null && !fromDate.trim().isEmpty()) {
-            try {
-                String[] parts = fromDate.split("-");
-                if (parts.length > 0) {
-                    int year = Integer.parseInt(parts[0]);
-                    if (year < 1000 || year > 9999) {
-                        request.setAttribute("error", "Từ ngày không hợp lệ! Năm phải nằm trong khoảng từ 1000 đến 9999.");
-                        request.setAttribute("history", new ArrayList<StockTransaction>());
-                        request.setAttribute("typeFilter", typeFilter);
-                        request.setAttribute("fromDate", fromDate);
-                        request.setAttribute("toDate", toDate);
-                        request.setAttribute("productNameQuery", productNameQuery);
-                        return;
-                    }
-                }
-            } catch (Exception e) {
-                // Bỏ qua lỗi định dạng ở đây
-            }
-        }
-        
-        // Kiểm tra năm 'Đến ngày' tránh lỗi tràn năm SQL Server (giới hạn từ 1000 đến 9999)
-        if (toDate != null && !toDate.trim().isEmpty()) {
-            try {
-                String[] parts = toDate.split("-");
-                if (parts.length > 0) {
-                    int year = Integer.parseInt(parts[0]);
-                    if (year < 1000 || year > 9999) {
-                        request.setAttribute("error", "Đến ngày không hợp lệ! Năm phải nằm trong khoảng từ 1000 đến 9999.");
-                        request.setAttribute("history", new ArrayList<StockTransaction>());
-                        request.setAttribute("typeFilter", typeFilter);
-                        request.setAttribute("fromDate", fromDate);
-                        request.setAttribute("toDate", toDate);
-                        request.setAttribute("productNameQuery", productNameQuery);
-                        return;
-                    }
-                }
-            } catch (Exception e) {
-                // Bỏ qua lỗi định dạng ở đây
-            }
-        }
-
-        // Đảm bảo Từ ngày không được sau Đến ngày
-        if (fromDate != null && !fromDate.trim().isEmpty() && toDate != null && !toDate.trim().isEmpty()) {
-            if (fromDate.compareTo(toDate) > 0) {
-                request.setAttribute("error", "Khoảng ngày lọc không hợp lệ! Từ ngày phải trước hoặc bằng Đến ngày.");
-                request.setAttribute("history", new ArrayList<StockTransaction>());
-                request.setAttribute("typeFilter", typeFilter);
-                request.setAttribute("fromDate", fromDate);
-                request.setAttribute("toDate", toDate);
-                request.setAttribute("productNameQuery", productNameQuery);
-                return;
-            }
         }
 
         // Lấy danh sách giao dịch tồn kho thực tế (Stock Transactions)
@@ -278,26 +223,110 @@ public class HistoryController extends InventoryBaseController {
             e.printStackTrace();
         }
         
-        // Filter by dates if present
+        // 1. Filter by dates (fromDate & toDate)
         if (fromDate != null && !fromDate.trim().isEmpty()) {
-            try {
-                java.util.Date fd = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(fromDate);
-                unifiedVoucherHistory.removeIf(map -> ((java.util.Date) map.get("rawDate")).before(fd));
-            } catch (Exception e) {}
+            java.util.Date fd = parseFlexibleDate(fromDate);
+            if (fd != null) {
+                final java.util.Date finalFd = fd;
+                unifiedVoucherHistory.removeIf(map -> {
+                    java.util.Date d = (java.util.Date) map.get("rawDate");
+                    return d != null && d.before(finalFd);
+                });
+            }
         }
         if (toDate != null && !toDate.trim().isEmpty()) {
-            try {
-                java.util.Date td = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(toDate);
+            java.util.Date td = parseFlexibleDate(toDate);
+            if (td != null) {
                 java.util.Calendar cal = java.util.Calendar.getInstance();
                 cal.setTime(td);
-                cal.add(java.util.Calendar.DAY_OF_YEAR, 1);
-                java.util.Date nextDay = cal.getTime();
-                unifiedVoucherHistory.removeIf(map -> ((java.util.Date) map.get("rawDate")).after(nextDay));
-            } catch (Exception e) {}
+                cal.set(java.util.Calendar.HOUR_OF_DAY, 23);
+                cal.set(java.util.Calendar.MINUTE, 59);
+                cal.set(java.util.Calendar.SECOND, 59);
+                final java.util.Date endOfDay = cal.getTime();
+                unifiedVoucherHistory.removeIf(map -> {
+                    java.util.Date d = (java.util.Date) map.get("rawDate");
+                    return d != null && d.after(endOfDay);
+                });
+            }
         }
-        
+
+        // 2. Filter by productNameQuery if present
+        if (productNameQuery != null && !productNameQuery.trim().isEmpty()) {
+            String q = productNameQuery.trim().toLowerCase();
+            unifiedVoucherHistory.removeIf(map -> {
+                String code = map.get("code") != null ? map.get("code").toString().toLowerCase() : "";
+                String cb = map.get("createdBy") != null ? map.get("createdBy").toString().toLowerCase() : "";
+                String partner = map.get("partner") != null ? map.get("partner").toString().toLowerCase() : "";
+                String approvedBy = map.get("approvedBy") != null ? map.get("approvedBy").toString().toLowerCase() : "";
+                String note = map.get("note") != null ? map.get("note").toString().toLowerCase() : "";
+                String typeLabel = map.get("typeLabel") != null ? map.get("typeLabel").toString().toLowerCase() : "";
+                return !code.contains(q) && !cb.contains(q) && !partner.contains(q) && !approvedBy.contains(q) && !note.contains(q) && !typeLabel.contains(q);
+            });
+        }
+
+        // 3. Filter by typeFilter
+        if (typeFilter != null && !typeFilter.trim().isEmpty()) {
+            String filter = typeFilter.trim().toUpperCase();
+            unifiedVoucherHistory.removeIf(map -> {
+                String type = map.get("type") != null ? map.get("type").toString().toUpperCase() : "";
+                if (filter.startsWith("TRANSFER") && type.startsWith("TRANSFER")) {
+                    return false;
+                }
+                return !filter.equalsIgnoreCase(type);
+            });
+        }
+
         // Sort by created time descending
         unifiedVoucherHistory.sort((m1, m2) -> ((java.util.Date) m2.get("rawDate")).compareTo((java.util.Date) m1.get("rawDate")));
-        request.setAttribute("voucherHistory", unifiedVoucherHistory);
+
+        try {
+            if (request.getParameter("page") != null) {
+                page = Integer.parseInt(request.getParameter("page"));
+            }
+        } catch (Exception ignored) {}
+
+        int sizeValue = 10;
+        try {
+            if (request.getParameter("sizeValue") != null) {
+                sizeValue = Integer.parseInt(request.getParameter("sizeValue"));
+            }
+        } catch (Exception ignored) {}
+
+        int totalRecords = unifiedVoucherHistory.size();
+        util.pagination.PaginationHelper.PageResult pr = util.pagination.PaginationHelper.compute(totalRecords, page, sizeValue);
+        pr.setAttributes(request);
+
+        int fromIndex = (pr.getCurrentPage() - 1) * pr.getPageSize();
+        int toIndex = Math.min(fromIndex + pr.getPageSize(), totalRecords);
+        List<Map<String, Object>> pagedHistory = (fromIndex < totalRecords) ? unifiedVoucherHistory.subList(fromIndex, toIndex) : new ArrayList<>();
+
+        request.setAttribute("voucherHistory", pagedHistory);
+        request.setAttribute("productNameQuery", productNameQuery);
+        request.setAttribute("typeFilter", typeFilter);
+        request.setAttribute("fromDate", fromDate);
+        request.setAttribute("toDate", toDate);
+
+        request.setAttribute("baseUrl", request.getContextPath() + "/inventory");
+        StringBuilder qs = new StringBuilder();
+        qs.append("&tab=history");
+        if (warehouseId != null) qs.append("&warehouseId=").append(warehouseId);
+        if (productNameQuery != null && !productNameQuery.isEmpty()) qs.append("&productNameQuery=").append(java.net.URLEncoder.encode(productNameQuery, "UTF-8"));
+        if (typeFilter != null && !typeFilter.isEmpty()) qs.append("&typeFilter=").append(typeFilter);
+        if (fromDate != null && !fromDate.isEmpty()) qs.append("&fromDate=").append(fromDate);
+        request.setAttribute("queryString", qs.toString());
+    }
+
+    private java.util.Date parseFlexibleDate(String input) {
+        if (input == null || input.trim().isEmpty()) return null;
+        String s = input.trim();
+        String[] formats = {"yyyy-MM-dd", "dd/MM/yyyy", "d/M/yyyy", "yyyy/MM/dd"};
+        for (String fmt : formats) {
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(fmt);
+                sdf.setLenient(false);
+                return sdf.parse(s);
+            } catch (Exception ignored) {}
+        }
+        return null;
     }
 }
