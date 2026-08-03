@@ -408,6 +408,25 @@ public class TransferController extends InventoryBaseController {
                 statusQuery
             );
             request.setAttribute("purchaseOrders", purchaseOrders);
+
+            List<dto.inventory.TransferTabItem> unifiedTransferItems = new ArrayList<>();
+            if (purchaseOrders != null) {
+                for (model.PurchaseOrder po : purchaseOrders) {
+                    unifiedTransferItems.add(new dto.inventory.TransferTabItem(po));
+                }
+            }
+            if (transfers != null) {
+                for (model.StockTransfer st : transfers) {
+                    unifiedTransferItems.add(new dto.inventory.TransferTabItem(st));
+                }
+            }
+            unifiedTransferItems.sort((a, b) -> {
+                if (a.getDate() == null && b.getDate() == null) return 0;
+                if (a.getDate() == null) return 1;
+                if (b.getDate() == null) return -1;
+                return b.getDate().compareTo(a.getDate());
+            });
+            request.setAttribute("unifiedTransferItems", unifiedTransferItems);
         }
         request.setAttribute("transfers", transfers);
         request.setAttribute("transferCodeQuery", transferCodeQuery);

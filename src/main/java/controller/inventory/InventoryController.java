@@ -203,6 +203,10 @@ public class InventoryController extends BaseController {
             request.setAttribute("activeTab", tab);
             request.setAttribute("selectedWarehouseId", selectedWarehouseId);
 
+            dao.inventory.InventoryCheckDAO inventoryCheckDAO = new dao.inventory.InventoryCheckDAO();
+            model.InventoryCheck pendingCheck = inventoryCheckDAO.getPendingCheckByWarehouse(selectedWarehouseId != null ? selectedWarehouseId : 0);
+            request.setAttribute("pendingCheck", pendingCheck);
+
             switch (tab) {
                 case "stock":
                     new StockController().handleStockTab(request, selectedWarehouseId);
@@ -238,6 +242,11 @@ public class InventoryController extends BaseController {
                     break;
                 }
                 case "createCheck":
+                    if (pendingCheck != null) {
+                        request.getSession().setAttribute("error", "Kho hàng đang có phiếu kiểm kho chưa được duyệt (Mã phiếu: " + pendingCheck.getCheckCode() + "). Không thể tạo phiếu mới cho đến khi phiếu cũ được duyệt hoặc bị hủy!");
+                        redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + selectedWarehouseId);
+                        return;
+                    }
                     break;
                 case "editCheck": {
                     int checkId = Integer.parseInt(request.getParameter("checkId"));

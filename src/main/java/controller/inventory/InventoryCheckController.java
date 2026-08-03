@@ -107,6 +107,14 @@ public class InventoryCheckController extends InventoryBaseController {
 
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
 
+                    dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
+                    ValidationResult canCreateResult = InventoryValidator.validateCanCreateCheck(currentWarehouseId, checkDAO);
+                    if (!canCreateResult.isValid()) {
+                        request.getSession().setAttribute("error", canCreateResult.getFirstError());
+                        redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
+                        return;
+                    }
+
                     // Backend Validation khi lập phiếu kiểm kho
                     ValidationResult valResult = InventoryValidator.validateCheckRequest(currentWarehouseId, productIds, actualQtys, notes);
                     if (!valResult.isValid()) {
@@ -148,7 +156,6 @@ public class InventoryCheckController extends InventoryBaseController {
                         check.setStatus(isApprover ? "APPROVED" : "PENDING");
                         check.setTotalDiscrepancy(totalDiscrepancy);
 
-                        dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
                         int checkId = checkDAO.createCheck(check, details);
 
                         if (isApprover) {

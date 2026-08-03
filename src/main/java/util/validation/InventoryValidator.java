@@ -265,4 +265,24 @@ public class InventoryValidator {
 
         return result;
     }
+
+    /**
+     * Kiểm tra xem kho hàng có được phép tạo phiếu kiểm kho mới không.
+     * Chặn hoàn toàn nếu kho hàng đang có phiếu kiểm chưa được duyệt (status = PENDING).
+     */
+    public static ValidationResult validateCanCreateCheck(int warehouseId, dao.inventory.InventoryCheckDAO checkDAO) {
+        ValidationResult result = new ValidationResult();
+        if (warehouseId <= 0) {
+            result.addError("Kho kiểm kê không hợp lệ.");
+            return result;
+        }
+        if (checkDAO != null) {
+            model.InventoryCheck pendingCheck = checkDAO.getPendingCheckByWarehouse(warehouseId);
+            if (pendingCheck != null) {
+                result.addError("Kho hàng này đang có phiếu kiểm kho chưa được duyệt (Mã phiếu: " + 
+                        pendingCheck.getCheckCode() + "). Không thể tạo phiếu kiểm kho mới cho đến khi phiếu cũ được duyệt hoặc bị hủy!");
+            }
+        }
+        return result;
+    }
 }

@@ -24,17 +24,26 @@
     </div>
 
     <div class="card-body">
+        <c:if test="${empty check && not empty pendingCheck}">
+            <div class="alert alert-danger d-flex align-items-center mb-4 shadow-sm" role="alert" style="border-radius: 8px;">
+                <span class="material-icons text-danger me-2" style="font-size: 24px;">error_outline</span>
+                <div>
+                    <strong>Chặn Thao Tác:</strong> Kho hàng này đang có phiếu kiểm kho <strong><c:out value="${pendingCheck.checkCode}"/></strong> chưa được duyệt (Lập bởi: <c:out value="${pendingCheck.createdByName}"/>). Bạn không thể tạo phiếu kiểm kho mới cho đến khi phiếu cũ được phê duyệt hoặc bị hủy.
+                </div>
+            </div>
+        </c:if>
+
         <!-- Action Cards Section -->
         <div class="row g-3 mb-4">
             <div class="col-md-6 text-center">
-                <div class="action-card p-4 border bg-white h-100" onclick="exportCheckTemplate()">
+                <div class="action-card p-4 border bg-white h-100" onclick="${empty check && not empty pendingCheck ? "alert('Kho đang có phiếu chưa duyệt. Không thể thao tác!');" : 'exportCheckTemplate()'}">
                     <span class="material-icons text-primary mb-2" style="font-size: 44px;">download</span>
                     <h6 class="fw-bold text-dark mb-1">1. Lấy Tồn Kho Hiện Tại (Tải Excel)</h6>
                     <p class="text-muted small mb-0 px-3">Tải xuống tệp Excel chứa danh sách sản phẩm và số lượng hệ thống hiện tại để nhân viên kho điền số lượng đếm thực tế</p>
                 </div>
             </div>
             <div class="col-md-6 text-center">
-                <div class="action-card p-4 border bg-white h-100" onclick="triggerExcelImport()">
+                <div class="action-card p-4 border bg-white h-100" onclick="${empty check && not empty pendingCheck ? "alert('Kho đang có phiếu chưa duyệt. Không thể thao tác!');" : 'triggerExcelImport()'}">
                     <span class="material-icons text-success mb-2" style="font-size: 44px;">cloud_upload</span>
                     <h6 class="fw-bold text-dark mb-1">2. Nhập Sau Khi Kiểm (Excel)</h6>
                     <p class="text-muted small mb-0 px-3">Tải lên tệp Excel chứa kết quả số lượng đếm thực tế sau khi nhân viên đã kiểm kho xong để đối chiếu tự động</p>
@@ -84,7 +93,7 @@
             </div>
 
             <div class="d-flex justify-content-end">
-                <button type="submit" class="page-action-btn px-4 py-2" id="submitBtn" disabled>
+                <button type="submit" class="page-action-btn px-4 py-2" id="submitBtn" ${empty check && not empty pendingCheck ? 'disabled' : 'disabled'}>
                     <span class="material-icons" style="font-size: 18px; vertical-align: text-bottom; margin-right: 4px;">save</span>
                     ${not empty check ? 'Lưu Phiếu Cập Nhật' : 'Lưu Phiếu Nhập Kiểm Kho'}
                 </button>
@@ -122,6 +131,17 @@
                     actualQty: parseInt(tr.getAttribute('data-actual-qty')),
                     note: tr.getAttribute('data-note')
                 });
+            });
+        }
+
+        const formEl = document.getElementById('checkForm');
+        if (formEl) {
+            formEl.addEventListener('submit', function(e) {
+                <c:if test="${empty check && not empty pendingCheck}">
+                    e.preventDefault();
+                    alert('Kho hàng đang có phiếu kiểm kho chưa được duyệt (${pendingCheck.checkCode}). Không thể tạo phiếu mới!');
+                    return false;
+                </c:if>
             });
         }
     })();
