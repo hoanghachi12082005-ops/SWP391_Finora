@@ -242,14 +242,6 @@ public class Order {
         this.createdAt = createdAt;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     // ── Backward Compatibility Aliases ────────────────────────
 
     public int getOrderID() { return getOrderId(); }
