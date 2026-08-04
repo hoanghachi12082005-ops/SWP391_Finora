@@ -437,7 +437,15 @@
                                                             <span
                                                                 class="text-sm font-bold text-primary">${tx.orderCode}</span>
                                                             <span
-                                                                class="text-[10px] text-outline font-medium">${tx.createdAt}</span>
+                                                                class="text-[10px] text-outline font-medium">
+                                                                <c:choose>
+                                                                    <c:when test="${fn:length(tx.createdAt) >= 19}">
+                                                                        <fmt:parseDate value="${fn:substring(tx.createdAt, 0, 19)}" pattern="yyyy-MM-dd HH:mm:ss" var="txCreated"/>
+                                                                        <fmt:formatDate value="${txCreated}" pattern="dd/MM/yyyy HH:mm"/>
+                                                                    </c:when>
+                                                                    <c:otherwise>—</c:otherwise>
+                                                                </c:choose>
+                                                            </span>
                                                         </div>
                                                         <div class="text-xs text-on-surface-variant mt-1">
                                                             Khách hàng: <span class="font-medium text-on-surface">${not

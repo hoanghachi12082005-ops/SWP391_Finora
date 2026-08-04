@@ -369,7 +369,7 @@ public final class ExcelExportUtil {
                 row.createCell(0).setCellValue(t.getTransactionCode());
                 row.createCell(1).setCellValue(t.getOrderCode() != null ? t.getOrderCode() : "");
                 row.createCell(2).setCellValue(t.getOrderType() != null ? t.getOrderType() : "");
-                row.createCell(3).setCellValue(t.getPaymentDate() != null ? t.getPaymentDate().toString() : "");
+                row.createCell(3).setCellValue(t.getPaymentDate() != null ? t.getPaymentDate().toLocalDateTime().format(DATETIME_FMT) : "");
                 row.createCell(4).setCellValue(t.getTransactionType());
                 row.createCell(5).setCellValue(t.getPaymentMethod());
                 Cell amt = row.createCell(6);

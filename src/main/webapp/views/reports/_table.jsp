@@ -58,7 +58,15 @@
                                     ${o.status.displayName}
                                 </span>
                             </td>
-                            <td>${fn:substring(o.createdAt, 0, 10)}</td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${fn:length(o.createdAt) >= 19}">
+                                        <fmt:parseDate value="${fn:substring(o.createdAt, 0, 19)}" pattern="yyyy-MM-dd HH:mm:ss" var="oCreated"/>
+                                        <fmt:formatDate value="${oCreated}" pattern="dd/MM/yyyy"/>
+                                    </c:when>
+                                    <c:otherwise>—</c:otherwise>
+                                </c:choose>
+                            </td>
                             <td class="text-right"><fmt:formatNumber value="${o.totalAmount}" type="number" groupingUsed="true"/> ₫</td>
                             <td>
                                 <div class="table-actions">

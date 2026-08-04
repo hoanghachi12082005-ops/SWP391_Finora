@@ -58,7 +58,7 @@ function openOrderDetail(orderId) {
             body.innerHTML =
                 '<div class="detail-grid">' +
                     '<div class="detail-field"><label>Mã đơn</label><span>' + d.orderCode + '</span></div>' +
-                    '<div class="detail-field"><label>Ngày tạo</label><span>' + d.createdAt + '</span></div>' +
+                    '<div class="detail-field"><label>Ngày tạo</label><span>' + fmtDate(d.createdAt) + '</span></div>' +
                     '<div class="detail-field"><label>Chi nhánh</label><span>' + d.branchName + '</span></div>' +
                     '<div class="detail-field"><label>Nhân viên</label><span>' + d.employeeName + '</span></div>' +
                     '<div class="detail-field"><label>Khách hàng</label><span>' + d.customerName + '</span></div>' +
@@ -79,6 +79,13 @@ function closeOrderDetail() {
 }
 
 function fmt(n) { return n.toLocaleString('en-US'); }
+
+function fmtDate(s) {
+    if (!s) return '—';
+    var m = s.match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+    if (!m) return s;
+    return m[3] + '/' + m[2] + '/' + m[1] + ' ' + m[4] + ':' + m[5];
+}
 
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeOrderDetail();

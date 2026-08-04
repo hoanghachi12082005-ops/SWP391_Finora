@@ -253,7 +253,9 @@ public class OrderReportController extends BaseController {
                 row.createCell(4).setCellValue(o.getTotalAmount());
                 row.createCell(5).setCellValue(o.getPaymentMethod());
                 row.createCell(6).setCellValue(o.getStatus() != null ? o.getStatus().name() : "");
-                row.createCell(7).setCellValue(o.getCreatedAt());
+                row.createCell(7).setCellValue(o.getCreatedAt() != null && o.getCreatedAt().length() >= 10
+                        ? LocalDate.parse(o.getCreatedAt().substring(0, 10)).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                        : "");
             }
             for (int i = 0; i < cols.length; i++) sheet.autoSizeColumn(i);
             sheet.autoSizeColumn(0);

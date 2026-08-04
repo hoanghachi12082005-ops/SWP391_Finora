@@ -164,7 +164,7 @@ public class ProfileDao extends DBContext {
                 "    COALESCE(AVG(o.total_amount), 0) AS AverageOrderValue " +
                 "FROM Employee e " +
                 "LEFT JOIN Branch b ON e.branch_id = b.branch_id " +
-                "LEFT JOIN [Order] o ON e.emp_id = o.emp_id " +
+                "LEFT JOIN [Order] o ON e.emp_id = o.emp_id AND o.status = 'COMPLETED' " +
                 "WHERE e.emp_id = ? " +
                 "GROUP BY e.emp_id, e.FullName, b.branch_name";
 
@@ -203,7 +203,7 @@ public class ProfileDao extends DBContext {
                 "    COALESCE(AVG(o.total_amount), 0) AS AverageOrderValue " +
                 "FROM Employee e " +
                 "LEFT JOIN Branch b ON e.branch_id = b.branch_id " +
-                "LEFT JOIN [Order] o ON e.emp_id = o.emp_id AND o.branch_id = ? " +
+                "LEFT JOIN [Order] o ON e.emp_id = o.emp_id AND o.branch_id = ? AND o.status = 'COMPLETED' " +
                 "WHERE e.emp_id = ? " +
                 "AND e.branch_id = ? " +
                 "GROUP BY e.emp_id, e.FullName, b.branch_name";

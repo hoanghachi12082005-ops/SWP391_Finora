@@ -25,12 +25,12 @@
 
         <div class="form-group">
             <label>Từ ngày</label>
-            <input type="date" name="dateFrom" id="dateFrom" value="${filter.dateFrom}"/>
+            <input type="text" name="dateFrom" id="dateFrom" value="${filter.dateFrom}" placeholder="dd/MM/yyyy" maxlength="10"/>
         </div>
 
         <div class="form-group">
             <label>Đến ngày</label>
-            <input type="date" name="dateTo" id="dateTo" value="${filter.dateTo}"/>
+            <input type="text" name="dateTo" id="dateTo" value="${filter.dateTo}" placeholder="dd/MM/yyyy" maxlength="10"/>
         </div>
 
         <div class="form-group">
@@ -124,4 +124,28 @@ function toggleDateRange() {
     }
 }
 toggleDateRange();
+
+function dateToDisplay(v) {
+    var m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return m ? m[3] + '/' + m[2] + '/' + m[1] : v;
+}
+function displayToISO(v) {
+    var m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    return m ? m[3] + '-' + m[2] + '-' + m[1] : '';
+}
+(function () {
+    var form = document.querySelector('form.filter-card');
+    var inputs = [document.getElementById('dateFrom'), document.getElementById('dateTo')];
+    inputs.forEach(function (inp) { if (inp) inp.value = dateToDisplay(inp.value); });
+    if (form) form.addEventListener('submit', function (e) {
+        inputs.forEach(function (inp) {
+            if (!inp || inp.disabled) return;
+            var v = inp.value.trim();
+            if (!v) { inp.value = ''; return; }
+            var iso = displayToISO(v);
+            if (!iso) { e.preventDefault(); alert('Ngày phải có định dạng dd/MM/yyyy'); inp.focus(); return; }
+            inp.value = iso;
+        });
+    });
+})();
 </script>

@@ -86,7 +86,15 @@
                                         data-status="${o.status}">
                                         <td style="font-weight: 700; color: var(--primary);">${o.orderCode}</td>
                                         <td>${empty o.customerName ? 'Khách lẻ' : o.customerName}</td>
-                                        <td>${o.createdAt}</td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${fn:length(o.createdAt) >= 19}">
+                                                    <fmt:parseDate value="${fn:substring(o.createdAt, 0, 19)}" pattern="yyyy-MM-dd HH:mm:ss" var="oCreated"/>
+                                                    <fmt:formatDate value="${oCreated}" pattern="dd/MM/yyyy HH:mm"/>
+                                                </c:when>
+                                                <c:otherwise>—</c:otherwise>
+                                            </c:choose>
+                                        </td>
                                         <td style="font-weight: 600;">
                                             <fmt:formatNumber value="${o.totalAmount}" type="number" maxFractionDigits="0"/> ₫
                                         </td>

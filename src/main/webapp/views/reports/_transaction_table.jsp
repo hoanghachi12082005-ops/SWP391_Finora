@@ -66,7 +66,12 @@
                             <td style="min-width: 220px; max-width: 320px; white-space: normal; word-break: break-word; line-height: 1.4;">${empty t.description ? '—' : t.description}</td>
                             <td style="white-space: nowrap;">${empty t.branchName ? '—' : t.branchName}</td>
                             <td style="white-space: nowrap;">${empty t.employeeName ? '—' : t.employeeName}</td>
-                            <td style="white-space: nowrap;">${fn:substring(t.paymentDate, 0, 19)}</td>
+                            <td style="white-space: nowrap;">
+                                <c:choose>
+                                    <c:when test="${not empty t.paymentDate}"><fmt:formatDate value="${t.paymentDate}" pattern="dd/MM/yyyy HH:mm"/></c:when>
+                                    <c:otherwise>—</c:otherwise>
+                                </c:choose>
+                            </td>
                             <td style="white-space: nowrap;">
                                 <span class="status-badge ${t.status == 'PAID' || t.status == 'COMPLETED' ? 'completed' : ''} ${t.status == 'PENDING' ? 'pending' : ''} ${t.status == 'FAILED' ? 'cancelled' : ''}">
                                     <c:choose>

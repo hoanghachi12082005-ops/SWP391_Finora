@@ -140,7 +140,14 @@
                                                         class="hover:bg-surface-container-low/50 cursor-pointer transition-colors duration-150"
                                                         id="row-order-${o.orderId}">
                                                         <td class="py-4 px-6 text-primary font-bold">${o.orderCode}</td>
-                                                        <td class="py-4 px-6 text-on-surface-variant">${o.createdAt}
+                                                        <td class="py-4 px-6 text-on-surface-variant">
+                                                            <c:choose>
+                                                                <c:when test="${fn:length(o.createdAt) >= 19}">
+                                                                    <fmt:parseDate value="${fn:substring(o.createdAt, 0, 19)}" pattern="yyyy-MM-dd HH:mm:ss" var="oCreated"/>
+                                                                    <fmt:formatDate value="${oCreated}" pattern="dd/MM/yyyy HH:mm"/>
+                                                                </c:when>
+                                                                <c:otherwise>—</c:otherwise>
+                                                            </c:choose>
                                                         </td>
                                                         <td class="py-4 px-6 font-medium">${not empty o.customerName ?
                                                             o.customerName : 'Khách vãng lai'}</td>
@@ -476,7 +483,7 @@ class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold b
                                     currentOrderDetailData = data;
 
                                     document.getElementById('detailOrderCode').innerText = data.orderCode;
-                                    document.getElementById('detailTime').innerText = data.createdAt;
+                                    document.getElementById('detailTime').innerText = formatDate(data.createdAt);
                                     document.getElementById('detailEmployee').innerText = data.employeeName;
 
                                     // Status Badge in panel

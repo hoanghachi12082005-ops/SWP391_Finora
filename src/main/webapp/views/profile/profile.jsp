@@ -354,7 +354,15 @@
                                                         <td class="amount"><fmt:formatNumber value="${ord.totalAmount}" type="number" groupingUsed="true"/> ₫</td>
                                                         <td class="payment">${ord.paymentMethod}</td>
                                                         <td><span class="status-badge ${ord.status == 'COMPLETED' ? 'active' : 'locked'}">${ord.status}</span></td>
-                                                        <td class="date">${ord.createdAt}</td>
+                                                        <td class="date">
+                                                            <c:choose>
+                                                                <c:when test="${fn:length(ord.createdAt) >= 19}">
+                                                                    <fmt:parseDate value="${fn:substring(ord.createdAt, 0, 19)}" pattern="yyyy-MM-dd HH:mm:ss" var="ordCreated"/>
+                                                                    <fmt:formatDate value="${ordCreated}" pattern="dd/MM/yyyy HH:mm"/>
+                                                                </c:when>
+                                                                <c:otherwise>—</c:otherwise>
+                                                            </c:choose>
+                                                        </td>
                                                     </tr>
                                                 </c:forEach>
                                             </tbody>

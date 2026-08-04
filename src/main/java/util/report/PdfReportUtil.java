@@ -684,7 +684,7 @@ public final class PdfReportUtil {
                     table.addCell(colCell(nullToDash(t.getTransactionCode()), Element.ALIGN_LEFT, odd, altColor));
                     table.addCell(colCell(nullToDash(t.getOrderCode()), Element.ALIGN_LEFT, odd, altColor));
                     table.addCell(colCell(nullToDash(t.getOrderType()), Element.ALIGN_CENTER, odd, altColor));
-                    table.addCell(colCell(t.getPaymentDate() != null ? t.getPaymentDate().toString() : "", Element.ALIGN_LEFT, odd, altColor));
+                    table.addCell(colCell(t.getPaymentDate() != null ? t.getPaymentDate().toLocalDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "", Element.ALIGN_LEFT, odd, altColor));
                     table.addCell(colCell(t.getTransactionType(), Element.ALIGN_CENTER, odd, altColor));
                     table.addCell(colCell(t.getPaymentMethod(), Element.ALIGN_CENTER, odd, altColor));
                     table.addCell(colCell(nf.format(t.getAmount()) + " ₫", Element.ALIGN_RIGHT, odd, altColor));

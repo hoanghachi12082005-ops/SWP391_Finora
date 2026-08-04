@@ -329,7 +329,7 @@ public class UserManagementDao extends DBContext {
                 "    COUNT(o.order_id) AS TotalOrders, " +
                 "    COALESCE(SUM(o.total_amount), 0) AS TotalRevenue " +
                 "FROM Employee e " +
-                "LEFT JOIN [order] o ON e.emp_id = o.emp_id " +
+                "LEFT JOIN [order] o ON e.emp_id = o.emp_id AND o.status = 'COMPLETED' " +
                 "LEFT JOIN Role r ON e.role_id = r.role_id " +
                 "WHERE (r.role_name IS NULL OR r.role_name NOT IN ('Admin'))";
 
@@ -789,7 +789,7 @@ public class UserManagementDao extends DBContext {
                 "    COUNT(o.order_id) AS TotalOrders, " +
                 "    COALESCE(SUM(o.total_amount), 0) AS TotalRevenue " +
                 "FROM Employee e " +
-                "LEFT JOIN [order] o ON e.emp_id = o.emp_id " +
+                "LEFT JOIN [order] o ON e.emp_id = o.emp_id AND o.status = 'COMPLETED' " +
                 "WHERE NOT EXISTS ( " +
                 "    SELECT 1 " +
                 "    FROM Role r " +
@@ -829,7 +829,7 @@ public class UserManagementDao extends DBContext {
                 "    e.fullName, " +
                 "    COALESCE(SUM(o.total_amount), 0) AS EmployeeRevenue " +
                 "FROM Employee e " +
-                "LEFT JOIN [order] o ON e.emp_id = o.emp_id " +
+                "LEFT JOIN [order] o ON e.emp_id = o.emp_id AND o.status = 'COMPLETED' " +
                 "WHERE NOT EXISTS ( " +
                 "    SELECT 1 " +
                 "    FROM Role r " +
