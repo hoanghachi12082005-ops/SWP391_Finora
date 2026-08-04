@@ -36,9 +36,9 @@ public class VNPayResultServlet extends HttpServlet {
         req.setAttribute("bankCode", bankCode != null ? bankCode : "");
 
         if ("success".equals(status)) {
-            req.setAttribute("message", "Giao dịch thành công!");
+            req.setAttribute("message", "Thanh toán thành công! Cảm ơn bạn đã mua hàng.");
         } else {
-            req.setAttribute("message", "Giao dịch thất bại!");
+            req.setAttribute("message", "Giao dịch thất bại! Vui lòng kiểm tra lại.");
         }
 
         req.getRequestDispatcher("/views/common/vnpay_result.jsp").forward(req, resp);
