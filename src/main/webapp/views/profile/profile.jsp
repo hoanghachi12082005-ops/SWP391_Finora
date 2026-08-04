@@ -360,6 +360,13 @@
                                             </tbody>
                                         </table>
                                     </div>
+
+                                    <c:if test="${not empty baseUrl}">
+                                        <jsp:include page="/views/common/pagination.jsp">
+                                            <jsp:param name="baseUrl" value="${baseUrl}"/>
+                                            <jsp:param name="activeTab" value="order-history"/>
+                                        </jsp:include>
+                                    </c:if>
                                 </c:otherwise>
                             </c:choose>
                         </div>

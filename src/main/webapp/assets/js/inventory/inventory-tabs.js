@@ -881,10 +881,26 @@ function initHistoryTab() {
 
     if (!historyForm || !fromDateEl || !toDateEl) return;
 
+    function getYearFromVal(val) {
+        if (!val) return null;
+        val = val.trim();
+        if (val.includes('-')) {
+            const parts = val.split('-');
+            if (parts.length >= 1) return parseInt(parts[0]);
+        } else if (val.includes('/')) {
+            const parts = val.split('/');
+            if (parts.length >= 3) return parseInt(parts[2]);
+        }
+        return null;
+    }
+
     historyForm.addEventListener('submit', function(e) {
-        if (fromDateEl.value) {
-            const fromYear = parseInt(fromDateEl.value.split('-')[0]);
-            if (isNaN(fromYear) || fromYear < 1000 || fromYear > 9999) {
+        const fromVal = fromDateEl.value ? fromDateEl.value.trim() : '';
+        const toVal = toDateEl.value ? toDateEl.value.trim() : '';
+
+        if (fromVal) {
+            const fromYear = getYearFromVal(fromVal);
+            if (fromYear !== null && (isNaN(fromYear) || fromYear < 1000 || fromYear > 9999)) {
                 e.preventDefault();
                 alert('Lỗi validate: Năm của Từ ngày phải nằm trong khoảng từ 1000 đến 9999!');
                 fromDateEl.style.borderColor = '#dc3545';
@@ -892,22 +908,13 @@ function initHistoryTab() {
             }
         }
         
-        if (toDateEl.value) {
-            const toYear = parseInt(toDateEl.value.split('-')[0]);
-            if (isNaN(toYear) || toYear < 1000 || toYear > 9999) {
+        if (toVal) {
+            const toYear = getYearFromVal(toVal);
+            if (toYear !== null && (isNaN(toYear) || toYear < 1000 || toYear > 9999)) {
                 e.preventDefault();
                 alert('Lỗi validate: Năm của Đến ngày phải nằm trong khoảng từ 1000 đến 9999!');
                 toDateEl.style.borderColor = '#dc3545';
                 return;
-            }
-        }
-        
-        if (fromDateEl.value && toDateEl.value) {
-            if (fromDateEl.value > toDateEl.value) {
-                e.preventDefault();
-                alert('Lỗi validate: Ngày bắt đầu (Từ ngày) không được lớn hơn Ngày kết thúc (Đến ngày)!');
-                fromDateEl.style.borderColor = '#dc3545';
-                toDateEl.style.borderColor = '#dc3545';
             }
         }
     });

@@ -5,6 +5,8 @@ import dao.user.ProfileDao;
 import model.Employee;
 import util.auth.AuthUtil;
 import util.security.PasswordUtil;
+import util.pagination.PaginationHelper;
+import util.pagination.PaginationHelper.PageResult;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -81,7 +83,16 @@ public class ProfileServlet extends HttpServlet {
         request.setAttribute("showSalesSection", isSalesStaff(profile));
 
         if (isSalesStaff(profile)) {
-            request.setAttribute("orderHistory", orderDao.findByEmployeeId(employeeID));
+            int page = parseInt(request.getParameter("page"), 1);
+            int sizeValue = parseInt(request.getParameter("sizeValue"), 10);
+
+            int totalRecords = orderDao.countByEmployeeId(employeeID);
+            PageResult pr = PaginationHelper.compute(totalRecords, page, sizeValue);
+            pr.setAttributes(request);
+
+            int offset = (pr.getCurrentPage() - 1) * pr.getPageSize();
+            request.setAttribute("orderHistory", orderDao.findByEmployeeIdPaged(employeeID, offset, pr.getPageSize()));
+            request.setAttribute("baseUrl", request.getContextPath() + "/profile");
         }
 
         request.setAttribute("readOnlyProfile", false);

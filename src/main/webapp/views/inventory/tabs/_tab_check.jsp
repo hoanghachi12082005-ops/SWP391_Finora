@@ -15,14 +15,32 @@
     <div class="card-header border-bottom-0 pb-0 d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0 fw-bold text-dark">Lịch Sử Kiểm Kho</h5>
         <c:if test="${roleName == 'WarehouseStaff' || roleName == 'Admin' || roleName == 'Owner' || roleName == 'StoreManager'}">
-            <a href="${pageContext.request.contextPath}/inventory?tab=createCheck&warehouseId=${selectedWarehouseId}" class="page-action-btn text-decoration-none d-flex align-items-center gap-1">
-                <span class="material-icons" style="font-size:18px;">add</span>
-                <span>Nhập Phiếu Kiểm Kho</span>
-            </a>
+            <c:choose>
+                <c:when test="${not empty pendingCheck}">
+                    <button class="btn btn-secondary text-white d-flex align-items-center gap-1 opacity-75" style="border-radius: 8px; cursor: not-allowed;" onclick="alert('Không thể tạo phiếu mới! Kho hàng này đang có phiếu kiểm kho chưa được duyệt (${pendingCheck.checkCode}).'); return false;" title="Kho hàng đang có phiếu kiểm chưa duyệt">
+                        <span class="material-icons" style="font-size:18px;">block</span>
+                        <span>Nhập Phiếu Kiểm Kho</span>
+                    </button>
+                </c:when>
+                <c:otherwise>
+                    <a href="${pageContext.request.contextPath}/inventory?tab=createCheck&warehouseId=${selectedWarehouseId}" class="page-action-btn text-decoration-none d-flex align-items-center gap-1">
+                        <span class="material-icons" style="font-size:18px;">add</span>
+                        <span>Nhập Phiếu Kiểm Kho</span>
+                    </a>
+                </c:otherwise>
+            </c:choose>
         </c:if>
     </div>
 
     <div class="card-body pt-0">
+        <c:if test="${not empty pendingCheck}">
+            <div class="alert alert-warning d-flex align-items-center mb-3 shadow-sm" role="alert" style="border-radius: 8px; border-left: 4px solid #ffc107;">
+                <span class="material-icons text-warning me-2" style="font-size: 24px;">warning</span>
+                <div>
+                    <strong>Cảnh báo:</strong> Kho hàng này đang có phiếu kiểm kho <strong><c:out value="${pendingCheck.checkCode}"/></strong> chưa được duyệt (Lập bởi: <c:out value="${pendingCheck.createdByName}"/>). Bạn không thể tạo phiếu kiểm kho mới cho đến khi phiếu cũ được phê duyệt hoặc bị hủy.
+                </div>
+            </div>
+        </c:if>
         <!-- Filter Section -->
         <div class="filter-section mb-4 p-3 bg-light rounded" style="border: 1px solid #e2e8f0; border-radius: 8px;">
             <form action="${pageContext.request.contextPath}/inventory" method="GET" class="row g-2 align-items-center">
@@ -149,6 +167,10 @@
                     </c:choose>
                 </tbody>
             </table>
+        </div>
+        <!-- Pagination -->
+        <div class="px-2 pt-3">
+            <jsp:include page="/views/common/pagination.jsp" />
         </div>
     </div>
 </div>

@@ -183,12 +183,15 @@ public class InventoryController extends BaseController {
             int pendingTransferCount = transferDAO.getPendingCount(selectedWarehouseId != null ? selectedWarehouseId : 0);
             request.setAttribute("pendingTransferCount", pendingTransferCount);
 
-            // Calculate total pending approvals across all types (Transfers, Orders, Checks)
+            String origQs = (String) request.getAttribute("queryString");
+            String origBaseUrl = (String) request.getAttribute("baseUrl");
             new ApprovalTabController().handleApprovalTab(request, role);
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> unifiedApprovals = (List<Map<String, Object>>) request.getAttribute("unifiedApprovals");
             int pendingApprovalCount = (unifiedApprovals != null) ? unifiedApprovals.size() : 0;
             request.setAttribute("pendingApprovalCount", pendingApprovalCount);
+            request.setAttribute("queryString", origQs);
+            request.setAttribute("baseUrl", origBaseUrl);
 
             String tab = request.getParameter("tab");
             if ("createTransfer".equals(action)) {
@@ -202,6 +205,10 @@ public class InventoryController extends BaseController {
             }
             request.setAttribute("activeTab", tab);
             request.setAttribute("selectedWarehouseId", selectedWarehouseId);
+
+            dao.inventory.InventoryCheckDAO inventoryCheckDAO = new dao.inventory.InventoryCheckDAO();
+            model.InventoryCheck pendingCheck = inventoryCheckDAO.getPendingCheckByWarehouse(selectedWarehouseId != null ? selectedWarehouseId : 0);
+            request.setAttribute("pendingCheck", pendingCheck);
 
             switch (tab) {
                 case "stock":
@@ -238,6 +245,11 @@ public class InventoryController extends BaseController {
                     break;
                 }
                 case "createCheck":
+                    if (pendingCheck != null) {
+                        request.getSession().setAttribute("error", "Kho hàng đang có phiếu kiểm kho chưa được duyệt (Mã phiếu: " + pendingCheck.getCheckCode() + "). Không thể tạo phiếu mới cho đến khi phiếu cũ được duyệt hoặc bị hủy!");
+                        redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + selectedWarehouseId);
+                        return;
+                    }
                     break;
                 case "editCheck": {
                     int checkId = Integer.parseInt(request.getParameter("checkId"));

@@ -395,6 +395,8 @@ public class ApprovalTabController extends InventoryBaseController {
                         map.put("detailCallback", "viewTicketDetails(" + representative.getStockTransferId() + ")");
                         map.put("rawDate", representative.getTransferDate() != null ? representative.getTransferDate() : new java.util.Date(0));
                         map.put("warehouseName", representative.getFromWarehouseName() + " ➔ " + representative.getToWarehouseName());
+                        map.put("fromWarehouseId", representative.getFromWarehouseId());
+                        map.put("toWarehouseId", representative.getToWarehouseId());
                         map.put("actionApprove", "approveTransfer");
                         map.put("actionReject", "rejectTransfer");
                         unifiedApprovals.add(map);
@@ -415,6 +417,8 @@ public class ApprovalTabController extends InventoryBaseController {
                 map.put("type", order.getOrderType());
                 map.put("typeLabel", "PURCHASE".equalsIgnoreCase(order.getOrderType()) ? "Nhập" : "Xuất");
                 map.put("warehouseName", order.getCustomerName()); // customerName stores warehouseName
+                map.put("fromWarehouseId", 0);
+                map.put("toWarehouseId", order.getWarehouseId());
                 map.put("createdBy", order.getEmployeeName());
                 
                 String dateStr = order.getCreatedAt();
@@ -449,6 +453,8 @@ public class ApprovalTabController extends InventoryBaseController {
                 map.put("type", "CHECK");
                 map.put("typeLabel", "Kiểm Kho");
                 map.put("warehouseName", check.getWarehouseName());
+                map.put("fromWarehouseId", check.getWarehouseId());
+                map.put("toWarehouseId", check.getWarehouseId());
                 map.put("createdBy", check.getCreatedByName());
                 
                 java.util.Date parsedDate = null;
@@ -473,11 +479,70 @@ public class ApprovalTabController extends InventoryBaseController {
         // Sort by rawDate descending
         unifiedApprovals.sort((m1, m2) -> ((java.util.Date) m2.get("rawDate")).compareTo((java.util.Date) m1.get("rawDate")));
 
+        if (transferCodeQuery != null && !transferCodeQuery.trim().isEmpty()) {
+            String q = transferCodeQuery.trim().toLowerCase();
+            List<Map<String, Object>> filtered = new ArrayList<>();
+            for (Map<String, Object> map : unifiedApprovals) {
+                String code = map.get("code") != null ? map.get("code").toString().toLowerCase() : "";
+                String createdBy = map.get("createdBy") != null ? map.get("createdBy").toString().toLowerCase() : "";
+                String warehouseName = map.get("warehouseName") != null ? map.get("warehouseName").toString().toLowerCase() : "";
+                if (code.contains(q) || createdBy.contains(q) || warehouseName.contains(q)) {
+                    filtered.add(map);
+                }
+            }
+            unifiedApprovals = filtered;
+        }
+
+        if (fromWarehouseQuery != null && fromWarehouseQuery > 0) {
+            final int fwId = fromWarehouseQuery;
+            unifiedApprovals.removeIf(map -> {
+                Integer fId = (Integer) map.get("fromWarehouseId");
+                return fId != null && fId > 0 && fId != fwId;
+            });
+        }
+
+        if (toWarehouseQuery != null && toWarehouseQuery > 0) {
+            final int twId = toWarehouseQuery;
+            unifiedApprovals.removeIf(map -> {
+                Integer tId = (Integer) map.get("toWarehouseId");
+                return tId != null && tId > 0 && tId != twId;
+            });
+        }
+
+        int page = 1;
+        try {
+            if (request.getParameter("page") != null) {
+                page = Integer.parseInt(request.getParameter("page"));
+            }
+        } catch (Exception ignored) {}
+
+        int sizeValue = 10;
+        try {
+            if (request.getParameter("sizeValue") != null) {
+                sizeValue = Integer.parseInt(request.getParameter("sizeValue"));
+            }
+        } catch (Exception ignored) {}
+
+        util.pagination.PaginationHelper.PageResult pr = util.pagination.PaginationHelper.compute(unifiedApprovals.size(), page, sizeValue);
+        pr.setAttributes(request);
+
+        int fromIndex = (pr.getCurrentPage() - 1) * pr.getPageSize();
+        int toIndex = Math.min(fromIndex + pr.getPageSize(), unifiedApprovals.size());
+        List<Map<String, Object>> pagedApprovals = (fromIndex < unifiedApprovals.size()) ? unifiedApprovals.subList(fromIndex, toIndex) : new ArrayList<>();
+
         request.setAttribute("pendingTransfers", pendingTransfers);
         request.setAttribute("pendingOrders", pendingOrders);
-        request.setAttribute("unifiedApprovals", unifiedApprovals);
+        request.setAttribute("unifiedApprovals", pagedApprovals);
         request.setAttribute("transferCodeQuery", transferCodeQuery);
         request.setAttribute("fromWarehouseQuery", fromWarehouseQuery);
         request.setAttribute("toWarehouseQuery", toWarehouseQuery);
+
+        request.setAttribute("baseUrl", request.getContextPath() + "/inventory");
+        StringBuilder qs = new StringBuilder();
+        qs.append("&tab=approval");
+        if (transferCodeQuery != null && !transferCodeQuery.isEmpty()) qs.append("&transferCodeQuery=").append(java.net.URLEncoder.encode(transferCodeQuery, "UTF-8"));
+        if (fromWarehouseQuery != null) qs.append("&fromWarehouseQuery=").append(fromWarehouseQuery);
+        if (toWarehouseQuery != null) qs.append("&toWarehouseQuery=").append(toWarehouseQuery);
+        request.setAttribute("queryString", qs.toString());
     }
 }

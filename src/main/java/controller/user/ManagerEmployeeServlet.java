@@ -118,7 +118,16 @@ public class ManagerEmployeeServlet extends HttpServlet {
         boolean isSalesStaff = profile.getRoleID() == 4
             || (profile.getRoleName() != null && profile.getRoleName().toLowerCase().contains("sales"));
         if (isSalesStaff) {
-            request.setAttribute("orderHistory", new OrderDAO().findByEmployeeId(employeeID));
+            int page = AuthUtil.parseInt(request.getParameter("page"), 1);
+            int sizeValue = AuthUtil.parseInt(request.getParameter("sizeValue"), 10);
+            int totalRecords = new OrderDAO().countByEmployeeId(employeeID);
+            PageResult pr = PaginationHelper.compute(totalRecords, page, sizeValue);
+            pr.setAttributes(request);
+
+            request.setAttribute("orderHistory", new OrderDAO().findByEmployeeIdPaged(
+                    employeeID, (pr.getCurrentPage() - 1) * pr.getPageSize(), pr.getPageSize()));
+            request.setAttribute("baseUrl", request.getContextPath() + "/manager/emp");
+            request.setAttribute("queryString", "&action=detail&id=" + employeeID);
         }
         request.setAttribute("showSalesSection", isSalesStaff);
 

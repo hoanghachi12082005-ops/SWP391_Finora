@@ -107,6 +107,14 @@ public class InventoryCheckController extends InventoryBaseController {
 
                     Employee currentUser = (Employee) request.getSession().getAttribute("currentUser");
 
+                    dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
+                    ValidationResult canCreateResult = InventoryValidator.validateCanCreateCheck(currentWarehouseId, checkDAO);
+                    if (!canCreateResult.isValid()) {
+                        request.getSession().setAttribute("error", canCreateResult.getFirstError());
+                        redirect(response, request.getContextPath() + "/inventory?tab=check&warehouseId=" + currentWarehouseId);
+                        return;
+                    }
+
                     // Backend Validation khi lập phiếu kiểm kho
                     ValidationResult valResult = InventoryValidator.validateCheckRequest(currentWarehouseId, productIds, actualQtys, notes);
                     if (!valResult.isValid()) {
@@ -148,7 +156,6 @@ public class InventoryCheckController extends InventoryBaseController {
                         check.setStatus(isApprover ? "APPROVED" : "PENDING");
                         check.setTotalDiscrepancy(totalDiscrepancy);
 
-                        dao.inventory.InventoryCheckDAO checkDAO = new dao.inventory.InventoryCheckDAO();
                         int checkId = checkDAO.createCheck(check, details);
 
                         if (isApprover) {
@@ -359,7 +366,42 @@ public class InventoryCheckController extends InventoryBaseController {
             statusQuery,
             discrepancyQuery
         );
-        request.setAttribute("checks", checks);
+
+        int page = 1;
+        try {
+            if (request.getParameter("page") != null) {
+                page = Integer.parseInt(request.getParameter("page"));
+            }
+        } catch (Exception ignored) {}
+
+        int sizeValue = 10;
+        try {
+            if (request.getParameter("sizeValue") != null) {
+                sizeValue = Integer.parseInt(request.getParameter("sizeValue"));
+            }
+        } catch (Exception ignored) {}
+
+        int totalRecords = checks != null ? checks.size() : 0;
+        util.pagination.PaginationHelper.PageResult pr = util.pagination.PaginationHelper.compute(totalRecords, page, sizeValue);
+        pr.setAttributes(request);
+
+        int fromIndex = (pr.getCurrentPage() - 1) * pr.getPageSize();
+        int toIndex = Math.min(fromIndex + pr.getPageSize(), totalRecords);
+        List<model.InventoryCheck> pagedChecks = (checks != null && fromIndex < totalRecords) ? checks.subList(fromIndex, toIndex) : new ArrayList<>();
+
+        request.setAttribute("checks", pagedChecks);
+        request.setAttribute("checkCodeQuery", checkCodeQuery);
+        request.setAttribute("statusQuery", statusQuery);
+        request.setAttribute("discrepancyQuery", discrepancyQuery);
+
+        request.setAttribute("baseUrl", request.getContextPath() + "/inventory");
+        StringBuilder qs = new StringBuilder();
+        qs.append("&tab=check");
+        if (warehouseId != null) qs.append("&warehouseId=").append(warehouseId);
+        if (checkCodeQuery != null && !checkCodeQuery.isEmpty()) qs.append("&checkCodeQuery=").append(java.net.URLEncoder.encode(checkCodeQuery, "UTF-8"));
+        if (statusQuery != null && !statusQuery.isEmpty()) qs.append("&statusQuery=").append(statusQuery);
+        if (discrepancyQuery != null && !discrepancyQuery.isEmpty()) qs.append("&discrepancyQuery=").append(discrepancyQuery);
+        request.setAttribute("queryString", qs.toString());
     }
 
     /**

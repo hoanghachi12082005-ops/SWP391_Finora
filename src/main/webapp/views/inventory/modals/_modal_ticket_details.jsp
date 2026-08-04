@@ -111,46 +111,25 @@
         java.util.List<model.StockTransfer> filteredSubTransfers = new java.util.ArrayList<>();
         if (subTransfers != null) {
             for (model.StockTransfer sub : subTransfers) {
-                if (selectedWarehouseId > 0) {
-                    boolean keep = false;
-                    if (isCreatorBranch) {
-                        // Kho tạo phiếu luôn được xem đầy đủ cả 2 chiều nhập/xuất liên quan đến kho
-                        keep = (sub.getFromWarehouseId() == selectedWarehouseId || 
-                                sub.getToWarehouseId() == selectedWarehouseId);
+                boolean keep = false;
+                if (!showAll && ticket != null) {
+                    String tStatus = ticket.getStatus();
+                    if ("PENDING_PARTNER".equals(tStatus)) {
+                        boolean subFromIsCreator = (sub.getFromBranchId() == ticket.getCreatorBranchId());
+                        int subPartnerId = subFromIsCreator ? sub.getToWarehouseId() : sub.getFromWarehouseId();
+                        keep = (subPartnerId == clickedPartnerId);
                     } else {
-                        // Kho đối tác: phân biệt chiều xuất/nhập khi xử lý, hoặc hiện cả 2 chiều (nhưng giới hạn kho mình) khi xem ở tab danh sách chính
-                        if (!showAll && ticket != null) {
-                            String tStatus = ticket.getStatus();
-                            if ("APPROVED_DISPATCH".equals(tStatus) || "DISPATCH_REJECTED".equals(tStatus)) {
-                                keep = (sub.getFromWarehouseId() == selectedWarehouseId);
-                            } else if ("IN_TRANSIT".equals(tStatus) || "RECEIVE_REJECTED".equals(tStatus)) {
-                                keep = (sub.getToWarehouseId() == selectedWarehouseId);
-                            } else {
-                                keep = (sub.getFromWarehouseId() == selectedWarehouseId || 
-                                        sub.getToWarehouseId() == selectedWarehouseId);
-                            }
-                        } else {
-                            keep = (sub.getFromWarehouseId() == selectedWarehouseId || 
-                                    sub.getToWarehouseId() == selectedWarehouseId);
-                        }
-                    }
-                    if (keep) {
-                        filteredSubTransfers.add(sub);
+                        keep = (sub.getStockTransferId() == ticket.getStockTransferId());
                     }
                 } else {
-                    if (isSystemOwner) {
-                        if (!showAll && ticket != null && "PENDING_PARTNER".equals(ticket.getStatus())) {
-                            boolean subFromIsCreator = (sub.getFromBranchId() == ticket.getCreatorBranchId());
-                            int subPartnerId = subFromIsCreator ? sub.getToWarehouseId() : sub.getFromWarehouseId();
-                            if (subPartnerId == clickedPartnerId) {
-                                filteredSubTransfers.add(sub);
-                            }
-                        } else {
-                            filteredSubTransfers.add(sub);
-                        }
+                    if (selectedWarehouseId > 0) {
+                        keep = (sub.getFromWarehouseId() == selectedWarehouseId || sub.getToWarehouseId() == selectedWarehouseId);
                     } else {
-                        filteredSubTransfers.add(sub);
+                        keep = true;
                     }
+                }
+                if (keep) {
+                    filteredSubTransfers.add(sub);
                 }
             }
         }

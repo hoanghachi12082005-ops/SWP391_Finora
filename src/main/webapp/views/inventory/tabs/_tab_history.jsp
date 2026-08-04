@@ -43,14 +43,12 @@
                 <label class="form-label small text-muted fw-semibold mb-1 ms-1">Loại giao dịch</label>
                 <div class="position-relative">
                     <span class="material-icons position-absolute text-muted" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; pointer-events: none;">category</span>
-                    <select name="typeFilter" class="form-select rounded-pill inventory-filter-select" 
+                    <select name="typeFilter" class="form-select rounded-pill inventory-filter-select" onchange="this.form.submit()" 
                             style="padding-left: 42px; padding-right: 36px; padding-top: 10px; padding-bottom: 10px; font-size: 14px; box-shadow: none; appearance: none; cursor: pointer; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 14px top 50%; background-size: 10px auto;">
                         <option value="">Tất cả loại</option>
                         <option value="IMPORT" ${typeFilter == 'IMPORT' ? 'selected' : ''}>Nhập hàng (Import)</option>
                         <option value="EXPORT" ${typeFilter == 'EXPORT' ? 'selected' : ''}>Xuất hàng (Export)</option>
-                        <option value="RETURN" ${typeFilter == 'RETURN' ? 'selected' : ''}>Trả hàng (Return)</option>
-                        <option value="TRANSFER_IN" ${typeFilter == 'TRANSFER_IN' ? 'selected' : ''}>Nhận điều chuyển</option>
-                        <option value="TRANSFER_OUT" ${typeFilter == 'TRANSFER_OUT' ? 'selected' : ''}>Xuất điều chuyển</option>
+                        <option value="TRANSFER" ${typeFilter == 'TRANSFER' || typeFilter == 'TRANSFER_IN' || typeFilter == 'TRANSFER_OUT' ? 'selected' : ''}>Điều chuyển (Transfer)</option>
                         <option value="CHECK" ${typeFilter == 'CHECK' ? 'selected' : ''}>Kiểm kho (Check)</option>
                     </select>
                 </div>
@@ -58,16 +56,18 @@
             
             <div class="col-md-2 col-sm-6">
                 <label class="form-label small text-muted fw-semibold mb-1 ms-1">Từ ngày</label>
-                <input type="date" name="fromDate" id="fromDate" class="form-control rounded-pill inventory-search-input w-100" 
-                       min="1000-01-01" max="9999-12-31"
-                       style="padding-top: 10px; padding-bottom: 10px; padding-left: 20px; padding-right: 20px; font-size: 14px; box-shadow: none;" value="${fromDate}">
+                <input type="text" name="fromDate" id="fromDate" class="form-control rounded-pill inventory-search-input w-100" 
+                       placeholder="dd/mm/yyyy"
+                       oninput="autoFormatDateInput(this)"
+                       style="padding-top: 10px; padding-bottom: 10px; padding-left: 20px; padding-right: 20px; font-size: 13.5px; box-shadow: none;" value="${fromDate}">
             </div>
             
             <div class="col-md-2 col-sm-6">
                 <label class="form-label small text-muted fw-semibold mb-1 ms-1">Đến ngày</label>
-                <input type="date" name="toDate" id="toDate" class="form-control rounded-pill inventory-search-input w-100" 
-                       min="1000-01-01" max="9999-12-31"
-                       style="padding-top: 10px; padding-bottom: 10px; padding-left: 20px; padding-right: 20px; font-size: 14px; box-shadow: none;" value="${toDate}">
+                <input type="text" name="toDate" id="toDate" class="form-control rounded-pill inventory-search-input w-100" 
+                       placeholder="dd/mm/yyyy"
+                       oninput="autoFormatDateInput(this)"
+                       style="padding-top: 10px; padding-bottom: 10px; padding-left: 20px; padding-right: 20px; font-size: 13.5px; box-shadow: none;" value="${toDate}">
             </div>
             
             <div class="col-md-2 col-sm-12">
@@ -78,6 +78,22 @@
             </div>
         </form>
     </div>
+
+<script>
+function autoFormatDateInput(input) {
+    let val = input.value;
+    if (val.includes('-')) return; // Allow yyyy-mm-dd format if user types hyphens
+    let v = val.replace(/\D/g, '');
+    if (v.length > 8) v = v.substring(0, 8);
+    if (v.length >= 5) {
+        input.value = v.substring(0, 2) + '/' + v.substring(2, 4) + '/' + v.substring(4);
+    } else if (v.length >= 3) {
+        input.value = v.substring(0, 2) + '/' + v.substring(2);
+    } else {
+        input.value = v;
+    }
+}
+</script>
 
 
 
@@ -159,6 +175,10 @@
                     </c:choose>
                 </tbody>
             </table>
+        </div>
+        <!-- Pagination -->
+        <div class="px-2 pt-3">
+            <jsp:include page="/views/common/pagination.jsp" />
         </div>
     </div>
 

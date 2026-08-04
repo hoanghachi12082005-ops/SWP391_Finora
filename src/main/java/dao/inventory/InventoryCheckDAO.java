@@ -58,6 +58,37 @@ public class InventoryCheckDAO {
         return checkId;
     }
 
+    public InventoryCheck getPendingCheckByWarehouse(int warehouseId) {
+        if (warehouseId <= 0) return null;
+        String sql = """
+            SELECT TOP 1 ic.*, 
+                   w.warehouse_name as warehouseName, 
+                   e1.fullName as createdByName, 
+                   e2.fullName as approvedByName
+            FROM inventory_check ic
+            JOIN warehouse w ON ic.warehouse_id = w.warehouse_id
+            JOIN Employee e1 ON ic.created_by = e1.emp_id
+            LEFT JOIN Employee e2 ON ic.approved_by = e2.emp_id
+            WHERE ic.warehouse_id = ? AND ic.status = 'PENDING'
+            ORDER BY ic.check_id DESC
+            """;
+        try (Connection conn = DBContext.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, warehouseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean hasPendingCheck(int warehouseId) {
+        return getPendingCheckByWarehouse(warehouseId) != null;
+    }
+
     public List<InventoryCheck> findAllByWarehouse(int warehouseId) {
         List<InventoryCheck> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""

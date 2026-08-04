@@ -180,15 +180,7 @@
     </div>
 
         <!-- Pagination -->
-        <c:if test="${totalPages > 1}">
-            <nav aria-label="Page navigation" class="mt-4">
-                <jsp:include page="/views/common/pagination.jsp">
-                    <jsp:param name="currentPage" value="${currentPage}"/>
-                    <jsp:param name="totalPages" value="${totalPages}"/>
-                    <jsp:param name="url" value="?tab=stock&warehouseId=${selectedWarehouseId}&status=${statusFilter}&sort=${sortParam}&keyword=${keyword}&page="/>
-                </jsp:include>
-            </nav>
-        </c:if>
+        <jsp:include page="/views/common/pagination.jsp" />
     </div>
             </c:otherwise>
         </c:choose>
